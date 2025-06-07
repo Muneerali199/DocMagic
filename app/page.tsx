@@ -4,6 +4,7 @@ import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { DocumentCard } from "@/components/document-card";
 import { File as FileIcon, FileText, Presentation as LayoutPresentation, Mail } from "lucide-react";
+import SettingsPage from "./settings/page";
 
 export default function Home() {
   return (
@@ -11,7 +12,7 @@ export default function Home() {
       <SiteHeader />
       <main className="flex-1">
         <HeroSection />
-        
+
         <section id="document-types" className="py-24">
           <div className="container">
             <h2 className="text-3xl font-bold text-center mb-12">Choose Your Document Type</h2>
@@ -43,10 +44,13 @@ export default function Home() {
             </div>
           </div>
         </section>
-        
+
         <FeaturesSection />
         <TestimonialsSection />
       </main>
+      <div>
+        <SettingsPage/>
+      </div>
 
       <footer className="border-t py-6 md:py-0">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 md:h-24">
