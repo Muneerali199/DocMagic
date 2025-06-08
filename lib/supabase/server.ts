@@ -1,13 +1,21 @@
-import { createServerComponentClient, createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { type Database } from '@/types/supabase';
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
-export const createServer = () => {
-  const cookieStore = cookies();
-  return createServerComponentClient<Database>({ cookies: () => cookieStore });
-};
+// Use for server-side authenticated requests
+export function createClientWithToken(accessToken: string) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("supabaseUrl and supabaseKey are required.");
+  }
 
-export const createRoute = () => {
-  const cookieStore = cookies();
-  return createRouteHandlerClient<Database>({ cookies: () => cookieStore });
-};
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    }
+  );
+}

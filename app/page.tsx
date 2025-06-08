@@ -49,9 +49,14 @@ export default function Home() {
         <TestimonialsSection />
       </main>
       <div>
+<<<<<<< HEAD
         <SettingsPage/>
       </div>
 
+=======
+        <SettingsPage></SettingsPage>
+      </div>
+>>>>>>> main
       <footer className="border-t py-6 md:py-0">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4 md:h-24">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">

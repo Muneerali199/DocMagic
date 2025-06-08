@@ -23,20 +23,20 @@ export async function POST(req: Request) {
   const supabase = createRoute();
 
   if (event.type === "checkout.session.completed") {
-    const subscription = await stripe.subscriptions.retrieve(
-      session.subscription
-    );
+    const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
-    // Create subscription in Supabase
+    if (!session.metadata?.userId) {
+      console.error("Missing userId in metadata");
+      return new NextResponse("Bad Request: No userId", { status: 400 });
+    }
+
     const { error } = await supabase
       .from('subscriptions')
       .insert({
         user_id: session.metadata.userId,
         stripe_subscription_id: subscription.id,
         stripe_price_id: subscription.items.data[0].price.id,
-        stripe_current_period_end: new Date(
-          subscription.current_period_end * 1000
-        ).toISOString(),
+        stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       });
 
     if (error) {
@@ -46,18 +46,13 @@ export async function POST(req: Request) {
   }
 
   if (event.type === "invoice.payment_succeeded") {
-    const subscription = await stripe.subscriptions.retrieve(
-      session.subscription
-    );
+    const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
-    // Update subscription in Supabase
     const { error } = await supabase
       .from('subscriptions')
       .update({
         stripe_price_id: subscription.items.data[0].price.id,
-        stripe_current_period_end: new Date(
-          subscription.current_period_end * 1000
-        ).toISOString(),
+        stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       })
       .eq('stripe_subscription_id', subscription.id);
 
