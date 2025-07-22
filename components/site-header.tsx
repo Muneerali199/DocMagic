@@ -32,7 +32,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sm:px-6 lg:px-10">
+    <header className="sticky top-0 z-40 w-full nav-professional px-4 sm:px-6 lg:px-10">
       <div className="container flex h-14 sm:h-16 items-center justify-between">
         <div className="flex items-center gap-4 sm:gap-6 md:gap-10">
           <Link href="/" className="flex items-center space-x-2 group">
@@ -50,7 +50,7 @@ export function SiteHeader() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="glass-effect border-r border-yellow-400/20 w-[280px] sm:w-[320px]">
+            <SheetContent side="left" className="professional-card border-r w-[280px] sm:w-[320px]">
               <div className="flex flex-col gap-6 pt-6">
                 <Link href="/" className="flex items-center space-x-2">
                   <div className="relative">
@@ -109,7 +109,7 @@ export function SiteHeader() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass-effect border-yellow-400/20">
+              <DropdownMenuContent align="end" className="professional-card">
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
@@ -148,5 +148,10 @@ const navItems = [
     href: "/letter",
     label: "Letter", 
     icon: <MailIcon className="h-4 w-4" />
+  },
+  {
+    href: "/about",
+    label: "About", 
+    icon: <Sparkles className="h-4 w-4" />
   }
 ];

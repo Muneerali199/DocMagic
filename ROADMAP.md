@@ -3,7 +3,7 @@
 <div align="center">
 
 ![Roadmap](https://img.shields.io/badge/Product-Roadmap-FF6B6B?style=for-the-badge)
-![Version](https://img.shields.io/badge/Current-v0.4.0-4ECDC4?style=for-the-badge)
+![Version](https://img.shields.io/badge/Current-v0.5.0-4ECDC4?style=for-the-badge)
 ![Future](https://img.shields.io/badge/Vision-2025-45B7D1?style=for-the-badge)
 
 </div>
@@ -14,7 +14,7 @@
 
 As a **100% open source project**, DocMagic aims to become the world's leading community-driven AI-powered document creation platform, transforming how professionals, students, and businesses create stunning documents in seconds. Built by the community, for the community.
 
-## 📊 Current Status (v0.4.0)
+## 📊 Current Status (v0.5.0)
 
 ### ✅ Completed Features
 

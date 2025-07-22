@@ -1,12 +1,17 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/components/auth-provider";
 import ClientRedirects from "@/components/ClientRedirects"; // Add this import
 
 const inter = Inter({ subsets: ["latin"] });
+const poppins = Poppins({ 
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-poppins"
+});
 
 export const metadata: Metadata = {
   title: "DocMagic - AI Document Creation Platform",
@@ -39,7 +44,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${poppins.variable}`}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <ClientRedirects /> {/* Add this line */}

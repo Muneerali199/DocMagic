@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red?style=for-the-badge)](https://github.com/docmagic-ai/docmagic)
 [![Netlify Status](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://docmagic1.netlify.app)
-[![Version](https://img.shields.io/badge/Version-0.4.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
+[![Version](https://img.shields.io/badge/Version-0.5.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 [![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)](./CONTRIBUTING.md)
 
@@ -36,6 +36,7 @@
 <br />
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_DocMagic-667eea?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app)
+[![About Page](https://img.shields.io/badge/📖_About_Page-Learn_More-9333EA?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app/about)
 [![Fork on GitHub](https://img.shields.io/badge/🍴_Fork-on_GitHub-black?style=for-the-badge&logo=github&logoColor=white)](https://github.com/docmagic-ai/docmagic/fork)
 [![Documentation](https://img.shields.io/badge/📚_Documentation-Read_Docs-4ECDC4?style=for-the-badge&logoColor=white)](./CONTRIBUTING.md)
 [![API Reference](https://img.shields.io/badge/🔗_API_Reference-Explore_API-FF6B6B?style=for-the-badge&logoColor=white)](./API.md)
@@ -61,7 +62,7 @@
 - **📱 Responsive Excellence**: Mobile-first design optimized for all screen sizes
 - **🌙 Dark/Light Theme**: Seamless theme switching with next-themes
 - **♿ Accessibility First**: WCAG 2.1 AA compliant components
-- **Dark/Light Themes**: Seamless theme switching with system preference detection
+- **🎯 Magical Professionalism**: Design philosophy combining cutting-edge visual effects with professional usability
 - **Micro-Interactions**: Hover effects, scale transitions, and pulse animations for enhanced user engagement
 
 ### 🤖 **AI-Powered Document Generation**
@@ -79,6 +80,8 @@
 - **Smart Editing**: Intuitive WYSIWYG editor with real-time preview
 - **Multi-Format Export**: Download as PDF, DOCX, or PPTX with one click
 - **Chart Integration**: Automatic data visualization for presentations using Recharts
+- **📄 Comprehensive About Page**: Detailed information about features, technology, security, and roadmap accessible at `/about`
+- **🧭 Intuitive Navigation**: Clean header with easy access to Resume, Presentation, Letter tools, and About page
 - **Image Integration**: Professional stock photos from Pexels API
 
 ## 🛠️ Tech Stack & Architecture
@@ -316,6 +319,17 @@ docmagic/
 
 
 ## 🚀 **Quick Start Guide**
+
+### 🌐 **Learn More**
+
+Visit our comprehensive **About Page** at [https://docmagic1.netlify.app/about](https://docmagic1.netlify.app/about) to explore:
+- 🎯 **Mission & Vision** - Our commitment to democratizing document creation
+- ⚡ **Core Features** - AI-powered tools and capabilities
+- 🛠️ **Technology Stack** - Modern tech powering DocMagic
+- 🎨 **Design Philosophy** - "Magical Professionalism" approach
+- 🔒 **Security & Quality** - Enterprise-grade security measures
+- 🗺️ **Product Roadmap** - Exciting features coming in 2025-2026
+- 👥 **Community** - Join our open source community
 
 ### 📋 **Prerequisites**
 
@@ -928,5 +942,6 @@ We sincerely thank the amazing individuals who have contributed to DocMagic. You
 
 > Want to contribute? Check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide and submit your first PR!
   <p>Built with ❤️ by the DocMagic Team</p>
+  <p><strong>Designed by <a href="https://github.com/Xenonesis">Xenonesis</a></strong></p>
   <p>© 2025 DocMagic. All rights reserved.</p>
 </div>

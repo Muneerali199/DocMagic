@@ -34,8 +34,8 @@ export default function Home() {
       <main className="flex-1">
         <HeroSection />
         
-        {/* Enhanced Document Types Section */}
-        <section id="document-types" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden bg-gradient-to-b from-background via-muted/20 to-background">
+        {/* Professional Document Types Section */}
+        <section id="document-types" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden section-header">
           {/* Animated background elements matching hero */}
           <div className="absolute inset-0 mesh-gradient opacity-20"></div>
           
@@ -68,8 +68,8 @@ export default function Home() {
                 <Wand2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-bounce" />
               </div>
               
-              {/* Main heading matching hero typography */}
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-6 sm:mb-8 leading-tight tracking-tight">
+              {/* Modern heading matching hero typography */}
+              <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center mb-6 sm:mb-8">
                 Choose Your{" "}
                 <span className="bolt-gradient-text relative inline-block">
                   Document Type
@@ -79,8 +79,8 @@ export default function Home() {
                 </span>
               </h2>
               
-              {/* Subtitle matching hero style */}
-              <p className="text-base sm:text-lg lg:text-xl leading-7 sm:leading-8 text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-0">
+              {/* Modern subtitle matching hero style */}
+              <p className="modern-body text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-0">
                 Select from our{" "}
                 <span className="font-semibold text-yellow-600">AI-powered</span>{" "}
                 document generators to create{" "}
@@ -106,37 +106,45 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Enhanced document cards grid */}
+            {/* Enhanced document cards grid with advanced animations */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
-              <DocumentCard
-                title="Resume"
-                description="Craft a professional resume for your desired role and company with AI assistance and smart formatting"
-                icon={<FileIcon className="h-5 w-5 sm:h-6 sm:w-6" />}
-                href="/resume"
-              />
-              <DocumentCard
-                title="Presentation"
-                description="Generate beautiful slide decks from simple text prompts with smart layouts and stunning visuals"
-                icon={<LayoutPresentation className="h-5 w-5 sm:h-6 sm:w-6" />}
-                href="/presentation"
-              />
-              <DocumentCard
-                title="CV"
-                description="Build a comprehensive curriculum vitae highlighting your achievements and career progression"
-                icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6" />}
-                href="/cv"
-              />
-              <DocumentCard
-                title="Letter"
-                description="Draft professional letters for any purpose in seconds with perfect formatting and tone"
-                icon={<Mail className="h-5 w-5 sm:h-6 sm:w-6" />}
-                href="/letter"
-              />
+              <div className="animate-bounce-in delay-100 will-change-transform">
+                <DocumentCard
+                  title="Resume"
+                  description="Craft a professional resume for your desired role and company with AI assistance and smart formatting"
+                  icon={<FileIcon className="h-5 w-5 sm:h-6 sm:w-6" />}
+                  href="/resume"
+                />
+              </div>
+              <div className="animate-bounce-in delay-200 will-change-transform">
+                <DocumentCard
+                  title="Presentation"
+                  description="Generate beautiful slide decks from simple text prompts with smart layouts and stunning visuals"
+                  icon={<LayoutPresentation className="h-5 w-5 sm:h-6 sm:w-6" />}
+                  href="/presentation"
+                />
+              </div>
+              <div className="animate-bounce-in delay-300 will-change-transform">
+                <DocumentCard
+                  title="CV"
+                  description="Build a comprehensive curriculum vitae highlighting your achievements and career progression"
+                  icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6" />}
+                  href="/cv"
+                />
+              </div>
+              <div className="animate-bounce-in delay-400 will-change-transform">
+                <DocumentCard
+                  title="Letter"
+                  description="Draft professional letters for any purpose in seconds with perfect formatting and tone"
+                  icon={<Mail className="h-5 w-5 sm:h-6 sm:w-6" />}
+                  href="/letter"
+                />
+              </div>
             </div>
             
-            {/* Call to action matching hero style */}
+            {/* Professional call to action */}
             <div className="text-center mt-12 sm:mt-16 lg:mt-20">
-              <div className="glass-effect p-6 sm:p-8 rounded-2xl max-w-2xl mx-auto hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+              <div className="professional-card p-6 sm:p-8 rounded-2xl max-w-2xl mx-auto hover:scale-105 transition-transform duration-300 relative overflow-hidden">
                 {/* Background shimmer effect */}
                 <div className="absolute inset-0 shimmer opacity-30"></div>
                 
@@ -150,11 +158,11 @@ export default function Home() {
                     Join thousands of professionals who trust DocMagic for their document creation needs
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                    <div className="glass-effect px-4 py-2 rounded-full text-xs sm:text-sm hover:scale-105 transition-transform duration-300">
-                      <Star className="inline h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 mr-1" />
+                    <div className="professional-card px-4 py-2 rounded-full text-xs sm:text-sm hover:scale-105 transition-transform duration-300">
+                      <Star className="inline h-3 w-3 sm:h-4 sm:w-4 text-amber-500 mr-1" />
                       <span className="bolt-gradient-text font-semibold">10K+ Documents Created</span>
                     </div>
-                    <div className="glass-effect px-4 py-2 rounded-full text-xs sm:text-sm hover:scale-105 transition-transform duration-300">
+                    <div className="professional-card px-4 py-2 rounded-full text-xs sm:text-sm hover:scale-105 transition-transform duration-300">
                       <Zap className="inline h-3 w-3 sm:h-4 sm:w-4 text-blue-500 mr-1" />
                       <span className="bolt-gradient-text font-semibold">98% Success Rate</span>
                     </div>
@@ -169,8 +177,8 @@ export default function Home() {
         <TestimonialsSection />
       </main>
 
-      {/* Enhanced Footer with Hero Section Styling */}
-      <footer className="relative overflow-hidden border-t border-border/40 bg-gradient-to-b from-background to-muted/30">
+      {/* Professional Footer */}
+      <footer className="relative overflow-hidden footer-professional">
         {/* Background elements matching hero */}
         <div className="absolute inset-0 mesh-gradient opacity-10"></div>
         <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-10 top-10 -left-16"></div>
@@ -272,26 +280,26 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Enhanced bottom section */}
-          <div className="border-t border-border/40 pt-8 sm:pt-12">
-            {/* Stats section */}
+          {/* Professional bottom section */}
+          <div className="border-t border-border pt-8 sm:pt-12">
+            {/* Professional Stats section */}
             <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8">
-              <div className="glass-effect px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
+              <div className="professional-card px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-green-500" />
-                  <span className="text-xs sm:text-sm font-medium">Secure & Private</span>
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span className="text-xs sm:text-sm font-medium professional-text">Secure & Private</span>
                 </div>
               </div>
-              <div className="glass-effect px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
+              <div className="professional-card px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-yellow-500" />
-                  <span className="text-xs sm:text-sm font-medium">Lightning Fast</span>
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  <span className="text-xs sm:text-sm font-medium professional-text">Lightning Fast</span>
                 </div>
               </div>
-              <div className="glass-effect px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
+              <div className="professional-card px-4 sm:px-6 py-3 sm:py-4 rounded-full hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs sm:text-sm font-medium">5-Star Rated</span>
+                  <span className="text-xs sm:text-sm font-medium professional-text">5-Star Rated</span>
                 </div>
               </div>
             </div>
