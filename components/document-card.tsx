@@ -35,7 +35,7 @@ export function DocumentCard({
       )}
     >
       {/* Animated gradient border effect */}
-      <div className="absolute inset-0 bolt-gradient opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-lg animate-pulse"></div>
+      <div className="absolute inset-0 bolt-gradient opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-lg"></div>
       
       {/* Enhanced shimmer effect */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -77,7 +77,7 @@ export function DocumentCard({
           {/* Preview content with enhanced effects */}
           <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors relative z-10">
             <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-yellow-500 transition-colors animate-pulse" />
-            <span className="font-medium text-sm sm:text-base">AI Preview</span>
+            <span className="font-medium text-sm sm:text-base group-hover:text-black">AI Preview</span>
             <Star className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-blue-500 transition-colors" />
           </div>
           
