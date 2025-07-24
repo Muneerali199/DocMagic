@@ -3,13 +3,20 @@ import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, Book
 export function FeaturesSection() {
   return (
     <div className="py-16 sm:py-20 lg:py-32 relative overflow-hidden section-header" id="how-it-works">
-      {/* Enhanced background elements with multiple gradients */}
+      {/* Mesh gradient background */}
       <div className="absolute inset-0 mesh-gradient opacity-20"></div>
-      <div className="absolute top-20 right-10 w-24 h-24 sm:w-32 sm:h-32 sunset-gradient rounded-full opacity-15" style={{animation: 'float 6s ease-in-out infinite'}}></div>
-      <div className="absolute bottom-20 left-10 w-16 h-16 sm:w-24 sm:h-24 ocean-gradient rounded-full opacity-20" style={{animation: 'float 8s ease-in-out infinite', animationDelay: '2s'}}></div>
-      <div className="absolute top-1/3 left-1/4 w-20 h-20 sm:w-28 sm:h-28 forest-gradient rounded-full opacity-15" style={{animation: 'float 7s ease-in-out infinite', animationDelay: '4s'}}></div>
-      <div className="absolute bottom-1/3 right-1/3 w-18 h-18 sm:w-24 sm:h-24 cosmic-gradient rounded-full opacity-18" style={{animation: 'float 9s ease-in-out infinite', animationDelay: '1s'}}></div>
-      
+      {/* Floating orbs */}
+      <div className="floating-orb w-40 h-40 sm:w-64 sm:h-64 bolt-gradient opacity-15 top-20 -left-20 sm:-left-32"></div>
+      <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-20 -top-10 right-10 sm:right-20"></div>
+      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 bolt-gradient opacity-10 bottom-10 left-1/3"></div>
+      {/* Grid pattern overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
+        }}
+      />
+      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-2xl lg:text-center">
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-4 sm:mb-6 relative">

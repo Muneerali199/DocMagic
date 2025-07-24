@@ -4,20 +4,21 @@ import { Sparkles, ArrowRight, Zap, Star, Wand2 } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background dark:bg-gradient-to-b dark:from-[#131010] dark:via-[#1a1a22] dark:to-[#232336] py-16 sm:py-24 lg:py-32">
-      {/* Enhanced animated background elements */}
-      <div className="absolute inset-0 aurora-borealis opacity-20 dark:opacity-0"></div>
-      <div className="absolute inset-0 mesh-gradient-alt opacity-10 dark:opacity-0"></div>
-      <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-[#232336] dark:via-[#1a1a22] dark:to-[#131010] dark:opacity-80"></div>
-      
+    <div className="relative overflow-hidden py-16 sm:py-24 lg:py-32">
+      {/* Mesh gradient background */}
+      <div className="absolute inset-0 mesh-gradient opacity-20"></div>
+      {/* Floating orbs */}
+      <div className="floating-orb w-40 h-40 sm:w-64 sm:h-64 bolt-gradient opacity-15 top-20 -left-20 sm:-left-32"></div>
+      <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-20 -top-10 right-10 sm:right-20"></div>
+      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 bolt-gradient opacity-10 bottom-10 left-1/3"></div>
       {/* Grid pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.02] dark:opacity-0"
+      <div
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
         }}
       />
-      
+      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center">
           {/* Enhanced Animated Badge */}
@@ -28,7 +29,6 @@ export function HeroSection() {
               <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
             </div>
           </div>
-          
           {/* Animated modern main heading */}
           <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional">
             Create professional documents with{" "}
@@ -39,7 +39,6 @@ export function HeroSection() {
               </div>
             </span>
           </h1>
-          
           {/* Animated Modern Professional Subtitle */}
           <p className="modern-body mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-muted-foreground max-w-xl sm:max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in-up delay-200 will-change-opacity">
             Transform your ideas into polished{" "}
@@ -49,7 +48,6 @@ export function HeroSection() {
             <span className="font-semibold hover:text-purple-600 transition-colors" style={{color: '#7c3aed'}}>letters</span>{" "}
             in seconds with our cutting-edge AI platform.
           </p>
-          
           {/* Animated CTA Buttons */}
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform">
             <Button 
@@ -64,7 +62,6 @@ export function HeroSection() {
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </Link>
             </Button>
-            
             <Button 
               asChild 
               variant="outline" 
@@ -78,7 +75,6 @@ export function HeroSection() {
               </Link>
             </Button>
           </div>
-          
           {/* Animated Professional Stats */}
           <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 px-4 sm:px-0">
             <div className="card-coral hover-glow-coral p-4 sm:p-6 rounded-2xl hover:scale-105 transition-all duration-300 sunset-glow animate-fade-in-up delay-400 will-change-transform">
