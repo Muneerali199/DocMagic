@@ -15,6 +15,7 @@ import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import dynamic from 'next/dynamic';
+import { FeedbackForm } from "@/components/feedback-form";
 
 // Dynamically import pptxgen with no SSR to avoid build issues
 const PptxGenJS = dynamic(() => import('pptxgenjs'), { 
@@ -639,6 +640,13 @@ export function PresentationGenerator() {
               </Button>
             </div>
           </div>
+          
+          {/* Feedback Form */}
+          {slides.length > 0 && (
+            <div className="mt-6">
+              <FeedbackForm documentType="presentation" />
+            </div>
+          )}
         </div>
       )}
     </div>

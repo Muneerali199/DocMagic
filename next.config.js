@@ -2,7 +2,7 @@
 const nextConfig = {
 
     images: { unoptimized: true },
-    trailingSlash: true,
+    trailingSlash: false,
 
     // Environment configuration
     env: {

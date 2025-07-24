@@ -1,0 +1,86 @@
+/* Resume Builder Navigation Styles */
+.resume-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .resume-nav {
+  background: rgba(30, 30, 30, 0.9);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.resume-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  color: #333;
+  margin: 0 0.25rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.dark .resume-nav-item {
+  color: #eee;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.resume-nav-item.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.dark .resume-nav-item.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.resume-nav-item:not(.active):hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
+.dark .resume-nav-item:not(.active):hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.resume-nav-icon {
+  margin-right: 0.5rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+.dark .resume-nav-icon {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .resume-nav-item {
+    padding: 0.5rem;
+  }
+  
+  .resume-nav-item span {
+    display: none;
+  }
+  
+  .resume-nav-icon {
+    margin-right: 0;
+  }
+}

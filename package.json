@@ -1,6 +1,6 @@
 {
   "name": "docmagic",
-  "version": "0.4.0",
+  "version": "0.7.0",
   "description": "🪄 Open source AI-powered document creation platform - Create professional resumes, presentations, CVs, and letters in seconds",
   "keywords": [
     "ai",
@@ -87,9 +87,10 @@
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",
     "jspdf": "^2.5.2",
+    "locomotive-scroll": "^4.1.4",
     "lucide-react": "^0.446.0",
     "mammoth": "^1.9.1",
-    "next": "^15.4.0",
+    "next": "^15.4.3",
     "next-themes": "^0.4.6",
     "nodemailer": "^6.10.1",
     "officeparser": "^5.2.0",
@@ -106,13 +107,14 @@
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.2.2",
+    "typescript": "^5.4.5",
     "vaul": "^0.9.9",
     "zod": "^3.25.76",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/locomotive-scroll": "^4.1.4",
     "@types/next": "^8.0.7",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19.1.8",

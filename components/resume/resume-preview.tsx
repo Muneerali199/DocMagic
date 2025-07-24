@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { generateWordDocument, formatResumeForWord } from "@/lib/word-export";
 
 interface ResumeData {
   name?: string;
@@ -247,11 +248,39 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
     }
   };
 
-  const exportToWord = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Word export will be available in the next update.",
-    });
+  const exportToWord = async () => {
+    if (!resume) return;
+    
+    setIsExporting(true);
+    
+    try {
+      const wordData = formatResumeForWord(resume);
+      const blob = await generateWordDocument(wordData, 'resume');
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${resume.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Resume exported!",
+        description: "Your resume has been downloaded as a Word document.",
+      });
+    } catch (error) {
+      console.error('Error exporting to Word:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export resume to Word. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const renderProfessionalTemplate = () => (

@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { generateWordDocument, formatResumeForWord } from "@/lib/word-export";
 
 interface ResumeTemplatesProps {
   selectedTemplate: string;
@@ -1143,12 +1144,76 @@ export function ResumeTemplates({
     }
   };
 
-  const exportToWord = () => {
-    // This would be implemented with a library like docx.js
-    toast({
-      title: "Coming Soon",
-      description: "Word export will be available in the next update.",
-    });
+  const exportToWord = async () => {
+    if (!previewTemplate) return;
+    
+    setIsExporting(true);
+    
+    try {
+      // For template preview, we need to create a sample resume data
+      const sampleResume = {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        phone: "+1 (555) 123-4567",
+        location: "San Francisco, CA",
+        summary: "Experienced software engineer with expertise in modern web technologies and cloud platforms.",
+        experience: [
+          {
+            title: "Senior Software Engineer",
+            company: "Tech Corp",
+            location: "San Francisco, CA",
+            date: "2020 - Present",
+            description: [
+              "• Led development of scalable web applications",
+              "• Mentored junior developers and conducted code reviews",
+              "• Implemented CI/CD pipelines and automated testing"
+            ]
+          }
+        ],
+        education: [
+          {
+            degree: "Bachelor of Science in Computer Science",
+            institution: "University of California",
+            location: "Berkeley, CA",
+            date: "2018",
+            gpa: "3.8/4.0"
+          }
+        ],
+        skills: {
+          technical: ["JavaScript", "TypeScript", "React", "Node.js"],
+          programming: ["Python", "Java", "Go"],
+          tools: ["Docker", "AWS", "Git", "Jenkins"],
+          soft: ["Leadership", "Communication", "Problem Solving"]
+        }
+      };
+      
+      const wordData = formatResumeForWord(sampleResume);
+      const blob = await generateWordDocument(wordData, 'resume');
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `resume-template-${previewTemplate}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Template exported!",
+        description: "Your resume template has been downloaded as a Word document.",
+      });
+    } catch (error) {
+      console.error('Error exporting to Word:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export template to Word. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const renderCustomizationPanel = () => {
