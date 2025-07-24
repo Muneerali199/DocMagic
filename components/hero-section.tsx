@@ -4,14 +4,15 @@ import { Sparkles, ArrowRight, Zap, Star, Wand2 } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background py-16 sm:py-24 lg:py-32">
+    <div className="relative overflow-hidden bg-background dark:bg-gradient-to-b dark:from-[#131010] dark:via-[#1a1a22] dark:to-[#232336] py-16 sm:py-24 lg:py-32">
       {/* Enhanced animated background elements */}
-      <div className="absolute inset-0 aurora-borealis opacity-20"></div>
-      <div className="absolute inset-0 mesh-gradient-alt opacity-10"></div>
+      <div className="absolute inset-0 aurora-borealis opacity-20 dark:opacity-0"></div>
+      <div className="absolute inset-0 mesh-gradient-alt opacity-10 dark:opacity-0"></div>
+      <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-[#232336] dark:via-[#1a1a22] dark:to-[#131010] dark:opacity-80"></div>
       
       {/* Grid pattern overlay */}
       <div 
-        className="absolute inset-0 opacity-[0.02]"
+        className="absolute inset-0 opacity-[0.02] dark:opacity-0"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
         }}
@@ -20,10 +21,10 @@ export function HeroSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center">
           {/* Enhanced Animated Badge */}
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform dark:backdrop-blur dark:bg-black/80 dark:bg-opacity-80">
             <div className="relative z-10 flex items-center gap-2">
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-text-glow" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
-              <span className="text-xs sm:text-sm font-medium bolt-gradient-text">AI-Powered Document Magic</span>
+              <span className="text-xs sm:text-sm font-medium bolt-gradient-text dark:ai-badge-gradient-text dark:text-white">AI-Powered Document Magic</span>
               <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
             </div>
           </div>
@@ -57,10 +58,10 @@ export function HeroSection() {
               className="bolt-gradient text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:scale-105 transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden"
               style={{animation: 'gradient-shift 4s ease infinite'}}
             >
-              <Link href="#document-types" className="flex items-center justify-center gap-2">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Start Creating Magic</span>
-                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Link href="#document-types" className="flex items-center justify-center gap-2 text-white">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                <span className="text-sm sm:text-base text-white">Start Creating Magic</span>
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </Link>
             </Button>
             
@@ -68,12 +69,12 @@ export function HeroSection() {
               asChild 
               variant="outline" 
               size="lg" 
-              className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative"
+              className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative text-white"
               style={{animation: 'gradient-shift 3s ease infinite'}}
             >
-              <Link href="#how-it-works" className="flex items-center justify-center gap-2">
-                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-                <span className="text-sm sm:text-base">See How It Works</span>
+              <Link href="#how-it-works" className="flex items-center justify-center gap-2 text-white">
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                <span className="text-sm sm:text-base text-white">See How It Works</span>
               </Link>
             </Button>
           </div>

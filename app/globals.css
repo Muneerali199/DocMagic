@@ -105,7 +105,7 @@
   }
   
   .bolt-gradient-text {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 25%, #1e40af 50%, #1e3a8a 75%, #312e81 100%);
+    background: linear-gradient(135deg, #60a5fa 0%, #818cf8 25%, #34d399 50%, #fbbf24 75%, #f472b6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -956,12 +956,7 @@ img {
 }
 
 .dark .text-muted-foreground {
-  color: hsl(var(--muted-foreground));
-  opacity: 1;
-}
-
-.text-shadow-professional {
-  text-.shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #e0e7ef;
 }
 
 .dark .text-shadow-professional {
@@ -989,6 +984,40 @@ img {
   background-clip: text;
   background-size: 200% 200%;
   animation: gradient-shift 4s ease infinite;
+}
+
+.ai-badge-gradient-text {
+  background: linear-gradient(90deg, #fbbf24 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+.dark .ai-badge-gradient-text {
+  background: linear-gradient(90deg, #fffbe6 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.bolt-gradient-text {
+  background: linear-gradient(135deg, #60a5fa 0%, #818cf8 25%, #34d399 50%, #fbbf24 75%, #f472b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+.dark .bolt-gradient-text {
+  background: linear-gradient(135deg, #fffbe6 0%, #a5b4fc 25%, #6ee7b7 50%, #fde68a 75%, #f9a8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
 }
 
 /* Ultra-visible navigation */
@@ -1038,4 +1067,9 @@ img {
   .mesh-gradient {
     display: none;
   }
+}
+
+.dark .gradient-border, .dark .bolt-gradient-text, .dark .ai-badge-gradient-text {
+  color: #fff !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
