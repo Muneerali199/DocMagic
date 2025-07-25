@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PresentationPreview } from "./presentation-preview";
 import { Button } from "@/components/ui/button";
 import { Download, ArrowLeft, Share2, Eye, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { ViewDurationTracker, AnalyticsEvents } from "@/lib/analytics";
 
 interface PresentationViewerProps {
   presentation: {
@@ -25,11 +26,39 @@ export function PresentationViewer({ presentation }: PresentationViewerProps) {
   const [isPublic, setIsPublic] = useState(presentation.isPublic);
   const { toast } = useToast();
 
+  // Analytics tracking
+  useEffect(() => {
+    const tracker = new ViewDurationTracker(presentation.id, !presentation.isOwner);
+    
+    // Track view event immediately
+    if (!presentation.isOwner) {
+      // For anonymous views, call the public API
+      fetch('/api/analytics/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: presentation.id }),
+      }).catch(console.warn);
+    } else {
+      // For owner views, use the regular analytics
+      AnalyticsEvents.documentViewed(presentation.id, 0, false);
+    }
+
+    return () => {
+      tracker.end();
+    };
+  }, [presentation.id, presentation.isOwner]);
+
   const shareUrl = `${window.location.origin}/presentation/view/${presentation.id}`;
 
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
+      
+      // Track share event
+      if (presentation.isOwner) {
+        AnalyticsEvents.documentShared(presentation.id, 'copy_link');
+      }
+      
       toast({
         title: "Link copied!",
         description: "Share link has been copied to your clipboard",

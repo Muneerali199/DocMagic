@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { isDevelopmentMode, mockUser } from "@/lib/mock-auth";
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Get initial session
+    // In development mode, automatically set mock user
+    if (isDevelopmentMode()) {
+      setUser(mockUser as User);
+      setLoading(false);
+      console.log('Development mode: Mock user authenticated');
+      return;
+    }
+
+    // Production mode: Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -41,9 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes (production only)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: any) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -66,6 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase.auth, router]);
 
   const signOut = async () => {
+    if (isDevelopmentMode()) {
+      setUser(null);
+      router.push('/');
+      console.log('Development mode: User signed out');
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
