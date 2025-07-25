@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-01-15
+
+### Added
+- **Shareable Public URLs for Presentations** - Enable sharing of created PowerPoint presentations via public URLs
+- **Share Button Integration** - Added prominent "Share Presentation" button on completion page with loading states
+- **Public Presentation Viewer** - Dedicated viewer page at `/presentation/view/[id]` for shared presentations
+- **Privacy Controls** - Toggle between public and private presentation visibility with visual indicators
+- **Automatic URL Generation** - Generate unique shareable URLs with automatic clipboard integration
+- **Anonymous Viewing Support** - Allow public presentations to be viewed without authentication
+- **Share Success UI** - Green success section with copy link and external view buttons
+
+### Enhanced
+- **Presentation Generator UI** - Complete share workflow integration with success feedback and URL display
+- **Database Schema** - Extended documents table content structure to support public presentation sharing
+- **Security Implementation** - Row Level Security (RLS) policies for public/private presentation access
+- **User Experience** - Seamless sharing workflow with automatic clipboard copying and visual feedback
+- **Component Architecture** - Modular presentation viewer component with privacy controls
+
+### Technical Improvements
+- **API Endpoints** - New presentation save/share (`/api/presentations`) and privacy toggle (`/api/presentations/[id]`) endpoints
+- **Database Migration** - Added public access policy for shared presentations (`20250628163825_add_public_presentation_access.sql`)
+- **Type Safety** - Updated TypeScript definitions for presentation content structure with slides, template, and isPublic fields
+- **Supabase Integration** - Fixed server-side Supabase client imports using correct `createRoute()` and `createServer()` functions
+- **Dependency Management** - Updated `@radix-ui/react-slot` to v1.1.2 to resolve build conflicts
+
+### Developer Experience
+- **Comprehensive Documentation** - Complete implementation guide (`Enable_shareable_public_URL_for_created_PowerPoint_presentations_73.md`)
+- **Migration Scripts** - Database migration with multiple execution options (CLI, manual, reset)
+- **Testing Guidelines** - Complete testing instructions for share functionality and privacy controls
+- **Build Fixes** - Resolved Radix UI dependency conflicts and Supabase import errors
+
+### Bug Fixes
+- **Build Issues** - Fixed `createSlot` import error from `@radix-ui/react-collection`
+- **Import Errors** - Corrected Supabase server client imports in API routes and server components
+- **Type Definitions** - Updated Supabase types to include presentation-specific content structure
+
+### Files Added
+- `app/api/presentations/route.ts` - Presentation save and share API endpoint
+- `app/api/presentations/[id]/route.ts` - Presentation retrieval and privacy update API
+- `app/presentation/view/[id]/page.tsx` - Public presentation viewing page with metadata
+- `components/presentation/presentation-viewer.tsx` - Dedicated presentation viewer component
+- `supabase/migrations/20250628163825_add_public_presentation_access.sql` - Public access RLS policy
+
+### Files Modified
+- `components/presentation/presentation-generator.tsx` - Added complete share functionality and UI
+- `types/supabase.ts` - Extended document content type for presentation data
+- `package.json` - Updated version to 0.8.0, author to Xenonesis, and fixed Radix UI dependency
+
 ## [0.7.0] - 2025-07-28
 
 ### Added

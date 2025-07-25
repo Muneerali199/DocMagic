@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red?style=for-the-badge)](https://github.com/docmagic-ai/docmagic)
 [![Netlify Status](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://docmagic1.netlify.app)
-[![Version](https://img.shields.io/badge/Version-0.7.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
+[![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 [![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)](./CONTRIBUTING.md)
 
@@ -49,7 +49,8 @@
 
 ### 🤖 **AI-Powered Document Generation**
 - **🎯 Smart Resume Builder**: Create professional resumes with Gemini AI 2.0 Flash and 9-step guided workflow
-- **📊 Presentation Generator**: Generate complete slide decks with outlines and themes
+- **📊 Presentation Generator**: Generate complete slide decks with outlines, themes, and shareable public URLs
+- **🔗 Presentation Sharing**: Share presentations via public URLs with privacy controls and anonymous viewing
 - **📄 CV Creator**: Build comprehensive curriculum vitae with intelligent formatting
 - **✉️ Letter Composer**: Draft professional letters for any purpose
 - **🔍 ATS Resume Analyzer**: Advanced ATS compatibility scoring with detailed optimization feedback
@@ -71,7 +72,8 @@
 - **Context-Aware Creation**: AI understands industry standards and target audience requirements
 - **Multiple Document Types**: 
   - 📄 **Professional Resumes** with ATS optimization
-  - 🎯 **Stunning Presentations** with smart layouts and charts
+  - 🎯 **Stunning Presentations** with smart layouts, charts, and shareable public URLs
+  - 🔗 **Shareable Presentations** with privacy controls and anonymous viewing support
   - 📋 **Comprehensive CVs** for academic and research positions
   - ✉️ **Business Letters** with perfect tone and formatting
 
@@ -81,6 +83,8 @@
 - **Guided Resume Builder**: 9-step workflow with progress tracking and intelligent navigation
 - **Smart Editing**: Intuitive WYSIWYG editor with real-time preview and mobile-first design
 - **Enhanced Export Options**: Download as PDF, DOCX, or PPTX with improved formatting and ATS compatibility
+- **Presentation Sharing**: Generate shareable public URLs with one-click sharing and privacy controls
+- **Anonymous Viewing**: Public presentations viewable without authentication for seamless sharing
 - **Chart Integration**: Automatic data visualization for presentations using Recharts
 - **Mobile-Responsive Navigation**: Touch-optimized interface that works perfectly on all devices
 - **📄 Comprehensive About Page**: Detailed information about features, technology, security, and roadmap accessible at `/about`

@@ -18,25 +18,25 @@
 
 @layer base {
   :root {
-    /* Light mode with FEFBC7 base */
-    --background: 60 75% 96%; /* #FEFBC7 */
+    /* Light mode with F3E9DC base */
+    --background: 30 56% 91%; /* #F3E9DC */
     --foreground: 210 11% 15%; /* Professional dark text */
-    --card: 60 75% 98%; /* Slightly lighter than background */
+    --card: 30 56% 96%; /* Slightly lighter than background */
     --card-foreground: 210 11% 15%;
-    --popover: 60 75% 98%;
+    --popover: 30 56% 96%;
     --popover-foreground: 210 11% 15%;
     --primary: 210 11% 15%; /* Professional dark */
-    --primary-foreground: 60 75% 96%;
-    --secondary: 60 50% 90%; /* Muted cream */
+    --primary-foreground: 30 56% 91%;
+    --secondary: 30 56% 85%; /* Muted cream */
     --secondary-foreground: 210 11% 15%;
-    --muted: 60 50% 90%;
+    --muted: 30 56% 85%;
     --muted-foreground: 210 8% 45%;
-    --accent: 60 60% 85%; /* Soft accent */
+    --accent: 30 56% 80%; /* Soft accent */
     --accent-foreground: 210 11% 15%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 60 75% 96%;
-    --border: 60 40% 85%; /* Subtle borders */
-    --input: 60 40% 85%;
+    --destructive-foreground: 30 56% 91%;
+    --border: 30 40% 80%; /* Subtle borders */
+    --input: 30 40% 80%;
     --ring: 210 11% 15%;
     --chart-1: 210 70% 50%; /* Professional blues */
     --chart-2: 195 60% 45%; /* Teals */
@@ -1068,6 +1068,7 @@ img {
     display: none;
   }
 }
+
 
 .dark .gradient-border, .dark .bolt-gradient-text, .dark .ai-badge-gradient-text {
   color: #fff !important;

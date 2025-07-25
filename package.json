@@ -1,6 +1,6 @@
 {
   "name": "docmagic",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "🪄 Open source AI-powered document creation platform - Create professional resumes, presentations, CVs, and letters in seconds",
   "keywords": [
     "ai",
@@ -23,10 +23,7 @@
     "url": "https://github.com/docmagic-ai/docmagic/issues"
   },
   "license": "MIT",
-  "author": {
-    "name": "DocMagic Contributors",
-    "url": "https://github.com/docmagic-ai/docmagic/graphs/contributors"
-  },
+  "author": "Xenonesis",
   "contributors": [
     {
       "name": "Xenonesis",
@@ -63,7 +60,7 @@
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slider": "^1.2.0",
-    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",

@@ -17,17 +17,17 @@ export function SponsorBanner() {
         </div>
         
         <Link 
-          href="https://bolt.new" 
+          href="https://teamblitz.netlify.app/" 
           target="_blank"
           className="inline-flex items-center gap-1 bolt-gradient-text font-bold hover:scale-105 transition-transform duration-200"
         >
           <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>bolt.new</span>
+          <span> Team⚡Blitz</span>
         </Link>
         
         <div className="flex items-center gap-1">
           <span className="text-muted-foreground">and the</span>
-          <span className="bolt-gradient-text font-semibold">community</span>
+          <span className="bolt-gradient-text font-semibold">opensource community</span>
           <Star className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 animate-pulse" style={{animationDelay: '0.5s'}} />
         </div>
       </div>

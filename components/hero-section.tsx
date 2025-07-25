@@ -21,12 +21,27 @@ export function HeroSection() {
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center">
+          {/* Supporting Tagline for clarity */}
+          <div className="mb-2 sm:mb-4 animate-fade-in-down will-change-transform">
+            <span className="text-xs sm:text-base font-semibold uppercase tracking-widest text-amber-600 bg-amber-50 px-2 py-1 rounded shadow-sm">
+              Your AI Assistant for Effortless Documents
+            </span>
+          </div>
+
           {/* Enhanced Animated Badge */}
+
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform dark:backdrop-blur dark:bg-black/80 dark:bg-opacity-80">
             <div className="relative z-10 flex items-center gap-2">
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-text-glow" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
               <span className="text-xs sm:text-sm font-medium bolt-gradient-text dark:ai-badge-gradient-text dark:text-white">AI-Powered Document Magic</span>
               <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
+
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform" aria-label="AI-Powered Document Magic">
+            <div className="relative z-10 flex items-center gap-2">
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-text-glow" aria-hidden="true" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
+              <span className="text-xs sm:text-sm font-medium bolt-gradient-text">AI-Powered Document Magic</span>
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" aria-hidden="true" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
+
             </div>
           </div>
           {/* Animated modern main heading */}
@@ -35,7 +50,7 @@ export function HeroSection() {
             <span className="bolt-gradient-text relative inline-block">
               AI Magic
               <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2">
-                <Wand2 className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-yellow-500 animate-bounce" />
+                <Wand2 className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-yellow-500 animate-bounce" aria-hidden="true" />
               </div>
             </span>
           </h1>
@@ -50,12 +65,14 @@ export function HeroSection() {
           </p>
           {/* Animated CTA Buttons */}
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform">
-            <Button 
-              asChild 
-              size="lg" 
-              className="bolt-gradient text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:scale-105 transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden"
+            <Button
+              asChild
+              size="lg"
+              className="bolt-gradient text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:scale-105 focus:ring-4 focus:ring-amber-400 focus:outline-none transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden shadow-lg"
               style={{animation: 'gradient-shift 4s ease infinite'}}
+              aria-label="Start Creating Magic"
             >
+
               <Link href="#document-types" className="flex items-center justify-center gap-2 text-white">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 <span className="text-sm sm:text-base text-white">Start Creating Magic</span>
@@ -67,11 +84,32 @@ export function HeroSection() {
               variant="outline" 
               size="lg" 
               className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative text-white"
+
+              <Link href="#document-types" className="flex items-center justify-center gap-2" tabIndex={0}>
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+                <span className="text-sm sm:text-base">Start Creating Magic</span>
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative focus:ring-4 focus:ring-blue-300 focus:outline-none shadow"
+
               style={{animation: 'gradient-shift 3s ease infinite'}}
+              aria-label="See How It Works"
             >
+
               <Link href="#how-it-works" className="flex items-center justify-center gap-2 text-white">
                 <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 <span className="text-sm sm:text-base text-white">See How It Works</span>
+
+              <Link href="#how-it-works" className="flex items-center justify-center gap-2" tabIndex={0}>
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" aria-hidden="true" />
+                <span className="text-sm sm:text-base">See How It Works</span>
+
               </Link>
             </Button>
           </div>
