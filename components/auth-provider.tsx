@@ -6,7 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
-  user: User | null;
+  user: (User & {
+    bio?: string;
+    privacy?: {
+      showAvatar?: boolean;
+      showBio?: boolean;
+      showActivity?: boolean;
+    };
+  }) | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
