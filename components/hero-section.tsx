@@ -4,19 +4,21 @@ import { Sparkles, ArrowRight, Zap, Star, Wand2 } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background py-16 sm:py-24 lg:py-32">
-      {/* Enhanced animated background elements */}
-      <div className="absolute inset-0 aurora-borealis opacity-20"></div>
-      <div className="absolute inset-0 mesh-gradient-alt opacity-10"></div>
-      
+    <div className="relative overflow-hidden py-16 sm:py-24 lg:py-32">
+      {/* Mesh gradient background */}
+      <div className="absolute inset-0 mesh-gradient opacity-20"></div>
+      {/* Floating orbs */}
+      <div className="floating-orb w-40 h-40 sm:w-64 sm:h-64 bolt-gradient opacity-15 top-20 -left-20 sm:-left-32"></div>
+      <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-20 -top-10 right-10 sm:right-20"></div>
+      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 bolt-gradient opacity-10 bottom-10 left-1/3"></div>
       {/* Grid pattern overlay */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
         }}
       />
-      
+      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center">
           {/* Supporting Tagline for clarity */}
@@ -27,14 +29,21 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced Animated Badge */}
+
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform dark:backdrop-blur dark:bg-black/80 dark:bg-opacity-80">
+            <div className="relative z-10 flex items-center gap-2">
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-text-glow" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
+              <span className="text-xs sm:text-sm font-medium bolt-gradient-text dark:ai-badge-gradient-text dark:text-white">AI-Powered Document Magic</span>
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
+
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-6 sm:mb-8 subtle-shimmer relative animate-fade-in-down will-change-transform" aria-label="AI-Powered Document Magic">
             <div className="relative z-10 flex items-center gap-2">
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 animate-text-glow" aria-hidden="true" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
               <span className="text-xs sm:text-sm font-medium bolt-gradient-text">AI-Powered Document Magic</span>
               <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" aria-hidden="true" style={{animation: 'color-dance 3s ease-in-out infinite'}} />
+
             </div>
           </div>
-          
           {/* Animated modern main heading */}
           <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional">
             Create professional documents with{" "}
@@ -45,7 +54,6 @@ export function HeroSection() {
               </div>
             </span>
           </h1>
-          
           {/* Animated Modern Professional Subtitle */}
           <p className="modern-body mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-muted-foreground max-w-xl sm:max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in-up delay-200 will-change-opacity">
             Transform your ideas into polished{" "}
@@ -55,7 +63,6 @@ export function HeroSection() {
             <span className="font-semibold hover:text-purple-600 transition-colors" style={{color: '#7c3aed'}}>letters</span>{" "}
             in seconds with our cutting-edge AI platform.
           </p>
-          
           {/* Animated CTA Buttons */}
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform">
             <Button
@@ -65,6 +72,19 @@ export function HeroSection() {
               style={{animation: 'gradient-shift 4s ease infinite'}}
               aria-label="Start Creating Magic"
             >
+
+              <Link href="#document-types" className="flex items-center justify-center gap-2 text-white">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                <span className="text-sm sm:text-base text-white">Start Creating Magic</span>
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+              </Link>
+            </Button>
+            <Button 
+              asChild 
+              variant="outline" 
+              size="lg" 
+              className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative text-white"
+
               <Link href="#document-types" className="flex items-center justify-center gap-2" tabIndex={0}>
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                 <span className="text-sm sm:text-base">Start Creating Magic</span>
@@ -77,16 +97,22 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               className="gradient-border px-6 sm:px-8 py-3 sm:py-4 rounded-full w-full sm:w-auto relative focus:ring-4 focus:ring-blue-300 focus:outline-none shadow"
+
               style={{animation: 'gradient-shift 3s ease infinite'}}
               aria-label="See How It Works"
             >
+
+              <Link href="#how-it-works" className="flex items-center justify-center gap-2 text-white">
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                <span className="text-sm sm:text-base text-white">See How It Works</span>
+
               <Link href="#how-it-works" className="flex items-center justify-center gap-2" tabIndex={0}>
                 <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" aria-hidden="true" />
                 <span className="text-sm sm:text-base">See How It Works</span>
+
               </Link>
             </Button>
           </div>
-          
           {/* Animated Professional Stats */}
           <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 px-4 sm:px-0">
             <div className="card-coral hover-glow-coral p-4 sm:p-6 rounded-2xl hover:scale-105 transition-all duration-300 sunset-glow animate-fade-in-up delay-400 will-change-transform">

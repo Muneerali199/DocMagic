@@ -4,12 +4,21 @@ import { Star, Quote } from "lucide-react";
 
 export function TestimonialsSection() {
   return (
-    <section className="relative overflow-hidden bg-background py-16 sm:py-24">
-      {/* Professional Background elements */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-05"></div>
-      <div className="absolute top-10 right-20 w-24 h-24 sunset-gradient rounded-full opacity-15 animate-float"></div>
-      <div className="absolute bottom-20 left-20 w-32 h-32 ocean-gradient rounded-full opacity-15 animate-float" style={{animationDelay: '12s'}}></div>
-      
+    <section className="relative overflow-hidden py-16 sm:py-24">
+      {/* Mesh gradient background */}
+      <div className="absolute inset-0 mesh-gradient opacity-20"></div>
+      {/* Floating orbs */}
+      <div className="floating-orb w-40 h-40 sm:w-64 sm:h-64 bolt-gradient opacity-15 top-20 -left-20 sm:-left-32"></div>
+      <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-20 -top-10 right-10 sm:right-20"></div>
+      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 bolt-gradient opacity-10 bottom-10 left-1/3"></div>
+      {/* Grid pattern overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
+        }}
+      />
+      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-2xl lg:text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full gradient-border mb-6 relative subtle-shimmer">
