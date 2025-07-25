@@ -83,7 +83,7 @@
     "framer-motion": "^12.23.6",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",
-    "jspdf": "^2.5.2",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.446.0",
     "mammoth": "^1.9.1",
     "next": "^15.4.0",
@@ -104,7 +104,6 @@
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.4.5",
     "vaul": "^0.9.9",
     "zod": "^3.25.76",
     "zustand": "^4.5.7"
@@ -112,10 +111,12 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/next": "^8.0.7",
+    "@types/node": "24.1.0",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19.1.8",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.8.3"
   }
 }

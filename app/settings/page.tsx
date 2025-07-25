@@ -8,11 +8,34 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Zap, Star, Crown, Shield, Settings, CreditCard, User as UserIcon, Mail, Calendar } from 'lucide-react';
+import { Sparkles, Zap, Star, Crown, Shield, Settings, CreditCard, User as UserIcon, Mail, Calendar, Lightbulb, FileText } from 'lucide-react';
+// app/settings/page.tsx
+// ... (inside SettingsPage component, before return)
+
+// Define some example badge data for mapping (replace with actual badge data from DB)
+// The keys here ('first-contribution', 'top-editor', etc.) should match what you store in 'badges_earned'
+const allPossibleBadges = {
+  'first-contribution': { name: 'First Contribution', icon: <Sparkles className="h-3 w-3 mr-1" />, colorClass: 'bg-blue-500' },
+  'top-editor': { name: 'Top Editor', icon: <Crown className="h-3 w-3 mr-1" />, colorClass: 'bg-yellow-500' },
+  'feature-suggester': { name: 'Feature Suggester', icon: <Lightbulb className="h-3 w-3 mr-1" />, colorClass: 'bg-purple-500' },
+  '100-docs-club': { name: '100 Docs Club', icon: <FileText className="h-3 w-3 mr-1" />, colorClass: 'bg-green-500' },
+  // Add more badge definitions here as you create badge earning logic
+};
+
+// Assuming 'user' object is populated from your useAuth/useSubscription hook
+// and 'badges_earned' is part of the user data fetched from Supabase
+// Make sure your Supabase query for user data in useSubscription/app/api/user/route.ts
+// selects the 'badges_earned' column. For example: .select('*, subscription:subscriptions(*), badges_earned')
+
+// ... (rest of your component logic)
+// Extend the User type to include badges_earned
+type UserWithBadges = ReturnType<typeof useAuth>['user'] & { badges_earned?: string[] };
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
-  const supabase = createClient;
+  const userWithBadges = user as UserWithBadges | null;
+  const userBadges = userWithBadges?.badges_earned || []; // Access badges_earned directly from user object
+  const supabase = createClient();
   const router = useRouter();
 
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
@@ -209,7 +232,7 @@ export default function SettingsPage() {
                       <>
                         <UserIcon className="h-5 w-5 text-muted-foreground" />
                         <span className="font-semibold text-lg">Free Plan</span>
-                        <Badge variant="outline">
+                        <Badge>
                           Basic
                         </Badge>
                       </>
@@ -322,7 +345,6 @@ export default function SettingsPage() {
         <div className="text-center mt-8">
           <Button
             onClick={() => router.push('/')}
-            variant="outline"
             className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
           >
             ← Back to Home
