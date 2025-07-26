@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import {
   Sparkles,
   Zap,
@@ -23,9 +23,9 @@ import {
   Loader2,
   MousePointer2,
   Fingerprint,
-} from "lucide-react";
+} from 'lucide-react';
 
-export default function Register() {
+export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -155,6 +155,7 @@ export default function Register() {
     password === confirmPassword &&
     password.length >= 6;
 
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
       {/* Enhanced background elements with parallax effect */}
@@ -190,11 +191,14 @@ export default function Register() {
           <div className="absolute top-4 right-4 group-hover:scale-125 transition-transform duration-300">
             <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse group-hover:animate-bounce" />
           </div>
+
           <div className="absolute bottom-4 left-4 group-hover:scale-125 transition-transform duration-300">
+            <Wand2 className="h-4 w-4 text-blue-500" />
             <Star
               className="h-4 w-4 text-blue-500 animate-spin group-hover:animate-pulse"
               style={{ animationDuration: "3s" }}
             />
+
           </div>
           <div className="absolute top-1/2 left-4 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500">
             <MousePointer2 className="h-3 w-3 text-purple-500 animate-bounce" />
@@ -230,6 +234,10 @@ export default function Register() {
                 Start creating professional documents with AI
               </p>
             </div>
+
+            
+            {/* Main registration form */}
+
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Enhanced Name field with advanced interactions */}

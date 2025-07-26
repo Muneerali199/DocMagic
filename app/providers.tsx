@@ -8,7 +8,7 @@ import { ReactNode, useState } from 'react';
 import { TemplateProvider } from '@/providers/template-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { ToastProvider } from '@/components/ui/use-toast';
-import { AuthProvider } from '@/components/auth-provider';
+import AuthProvider from '@/contexts/auth-context';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
