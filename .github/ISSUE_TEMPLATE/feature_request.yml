@@ -1,0 +1,48 @@
+name: "🚀 Feature Request"
+description: "Suggest a new feature or enhancement for the project."
+title: "[Feature]: "
+labels: [enhancement]
+assignees: []  # Optional: Add default maintainers
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ✨ Feature Request
+
+        Thank you for taking the time to suggest a new feature! Please fill out the form below to help us understand and evaluate your idea.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: "📝 Feature Description"
+      description: "Clearly describe the feature or enhancement you are proposing."
+      placeholder: "e.g., Add a dark mode toggle in the navbar for improved accessibility."
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-justification
+    attributes:
+      label: "💡 Why is this feature needed?"
+      description: "Explain why this feature would be beneficial or solve a problem for users."
+      placeholder: "Dark mode reduces eye strain in low-light environments and is a common user expectation."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: "📎 Additional Context"
+      description: "Include links, mockups, related issues, or screenshots that support your request."
+      placeholder: "See this feature in action: https://example.com/demo"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: "✅ Duplicate Check"
+      description: "Confirm you've searched to avoid submitting a duplicate request."
+      options:
+        - label: "I have searched existing issues to ensure this feature hasn’t already been requested."
+          required: true
