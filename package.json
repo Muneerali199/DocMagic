@@ -72,9 +72,12 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.52.0",
+ technical-improvements/about-page
+
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-query-devtools": "^5.83.0",
     "autoprefixer": "^10.4.19",
+ main
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -123,8 +126,12 @@
     "@types/node": "^20.11.28",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19.1.8",
+    technical-improvements/about-page
+    "autoprefixer": "^10.4.21",
+
     "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.19",
+ main
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17"
   }
