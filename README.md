@@ -1222,3 +1222,32 @@ We sincerely thank the amazing individuals who have contributed to DocMagic. You
   <p><strong>Designed by <a href="https://github.com/Xenonesis">Xenonesis</a></strong></p>
   <p>© 2025 DocMagic. All rights reserved.</p>
 </div>
+
+
+
+
+## 🏆 Contributor Recognition
+
+We celebrate our contributors! Every contribution gets:
+- 🎉 **Public recognition** in our README and releases
+- 🏅 **Contributor badge** on your GitHub profile
+- 📈 **Priority support** for your own issues
+- 🎁 **Exclusive swag** for significant contributions
+- 💼 **Portfolio showcase** opportunities
+
+---
+
+### ✨ New Contributor Spotlight!
+
+A warm welcome and huge shoutout to our newest community members who made their first impact this month. These individuals have recently joined our mission and are already making DocMagic even better!
+
+* **[Contributor Name 1](Link_to_Their_GitHub_Profile)** - (e.g., "Enhanced ATS Analyzer features")
+* **[Contributor Name 2](Link_to_Their_GitHub_Profile)** - (e.g., "Improved UI for Presentation Generator")
+* **[Contributor Name 3](Link_to_Their_GitHub_Profile)** - (e.g., "Suggested awesome new 'Smart Templates' feature")
+* *(Add more as new contributors emerge)*
+
+Want to see your name and contributions highlighted here? Check out our [CONTRIBUTING.md](./CONTRIBUTING.md) to learn how you can make a difference and join the DocMagic community!
+
+---
+
+For detailed guidelines on how to contribute, please refer to [CONTRIBUTING.md](./CONTRIBUTING.md).

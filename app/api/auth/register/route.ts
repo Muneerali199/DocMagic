@@ -1,92 +1,96 @@
-import { NextResponse } from 'next/server';
-import { createServer } from '@/lib/supabase/server';
+import { NextResponse } from "next/server";
+import { createRoute } from '@/lib/supabase/server';
 import { sendWelcomeEmail } from "@/lib/email";
+import { cookies } from 'next/headers';
 
-// This route handles user registration
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
+  console.log("API: /api/auth/register - Request received");
+
   try {
     const { name, email, password } = await request.json();
+    console.log("API: /api/auth/register - Parsed request body:", { name, email, password: '***' });
 
-    // Validate input
+    // Input validation
     if (!name || !email || !password) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      console.error("API: /api/auth/register - Missing required fields");
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const supabase = createServer();
+    const cookieStore = cookies(); // in case createRoute depends on it internally
+    const supabase = createRoute();
+    console.log("API: /api/auth/register - Supabase client created");
 
     // Check if user already exists
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error checking user:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Error checking user existence' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (user) {
-      return new Response(
-        JSON.stringify({ error: 'User already exists' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const { data: existingUser, error: existingUserError } = await supabase
+      .from('users')
+      .select()
+      .eq('email', email)
+      .single();
+
+    if (existingUserError && existingUserError.code !== 'PGRST116') {
+      console.error("API: /api/auth/register - Error checking existing user:", existingUserError);
+      throw new Error(`Error checking existing user: ${existingUserError.message || 'Unknown database error'}`);
     }
 
-    // Sign up with Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
+    if (existingUser) {
+      console.log("API: /api/auth/register - User already exists:", email);
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+    }
+
+    console.log("API: /api/auth/register - Calling supabase.auth.signUp");
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name,
-          email
+          total_documents_generated: 0,
+          total_features_suggested: 0,
+          badges_earned: [],
+          is_new_contributor: true,
+          last_activity_at: new Date().toISOString()
         }
       }
     });
 
-    if (error) {
-      console.error('Signup error:', error);
-      return new Response(
-        JSON.stringify({ error: error.message || 'Failed to create user' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (signUpError) {
+      console.error("API: /api/auth/register - Supabase signUp error:", signUpError);
+      throw new Error(`Supabase signup failed: ${signUpError.message || 'Unknown error'}`);
     }
 
     if (!data.user) {
-      return new Response(
-        JSON.stringify({ error: 'User creation failed' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      console.error("API: /api/auth/register - No user returned from signUp");
+      throw new Error("User creation failed: No user returned from Supabase");
+    }
+
+    console.log("API: /api/auth/register - User created:", data.user.id);
+
+    sendWelcomeEmail(data.user.email, name).catch((emailErr) => {
+      console.error("API: /api/auth/register - Failed to send welcome email:", emailErr);
+    });
+
+    return NextResponse.json({
+      id: data.user.id,
+      name,
+      email: data.user.email
+    });
+  } catch (error: any) {
+    if (error.message.includes("fetch failed") || error.cause?.message?.includes("fetch failed")) {
+      console.error("API: /api/auth/register - Network error:", error);
+      return NextResponse.json(
+        { error: "Failed to connect to authentication service. Please check server configuration." },
+        { status: 500 }
       );
     }
 
-    // Send welcome email (non-blocking)
-    try {
-      await sendWelcomeEmail(data.user.email || email, name);
-    } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
-      // Don't fail the request if email sending fails
-    }
-
-    return new Response(
-      JSON.stringify({
-        id: data.user.id,
-        name,
-        email: data.user.email,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error: any) {
-    console.error('Unexpected error in registration:', error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    console.error("API: /api/auth/register - Unexpected error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to create user" },
+      { status: 500 }
     );
   }
 }
-
-// Add route configuration
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';

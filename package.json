@@ -82,10 +82,12 @@
     "date-fns": "^3.6.0",
     "docx": "^8.5.0",
     "embla-carousel-react": "^8.3.0",
-    "esbuild": "^0.20.2",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "14.1.0",
-    "framer-motion": "^10.18.0",
+
+    "esbuild": "^0.25.8",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.4.0",
+    "framer-motion": "^12.23.6",
+
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.1",
@@ -110,7 +112,6 @@
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.4.5",
     "vaul": "^0.9.9",
     "zod": "^3.25.76",
     "zustand": "^4.5.7"
@@ -119,12 +120,15 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.12",
     "@types/next": "^8.0.7",
-    "@types/node": "^20.11.28",
+
+    "@types/node": "24.1.0",
+
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.8.3"
   }
 }
