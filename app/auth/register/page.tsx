@@ -322,7 +322,6 @@ export default function Register() {
                     placeholder="Enter your work email"
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Enter your email"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading}
@@ -384,7 +383,6 @@ export default function Register() {
                     placeholder="Enter a strong password (min. 6 characters)"
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Create a password (min. 6 characters)"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading}
@@ -488,7 +486,6 @@ export default function Register() {
                     placeholder="Confirm your new password"
                     onFocus={() => setFocusedField("confirmPassword")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Confirm your password"
                     required
                     className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${
                       confirmPassword && password !== confirmPassword

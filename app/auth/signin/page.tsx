@@ -188,7 +188,6 @@ export default function SignIn() {
                     placeholder="Enter your work email"
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Enter your email"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading}
