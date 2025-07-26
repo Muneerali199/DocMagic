@@ -85,7 +85,11 @@ export interface Database {
           user_id: string
           title: string
           type: 'resume' | 'presentation' | 'letter' | 'cv'
-          content: Json
+          content: Json & {
+            slides?: any[];
+            template?: string;
+            isPublic?: boolean;
+          }
           prompt: string
           created_at: string
           updated_at: string

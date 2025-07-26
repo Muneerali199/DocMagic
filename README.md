@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red?style=for-the-badge)](https://github.com/docmagic-ai/docmagic)
 [![Netlify Status](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://docmagic1.netlify.app)
-[![Version](https://img.shields.io/badge/Version-0.7.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
+[![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 [![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)](./CONTRIBUTING.md)
 
@@ -49,7 +49,8 @@
 
 ### 🤖 **AI-Powered Document Generation**
 - **🎯 Smart Resume Builder**: Create professional resumes with Gemini AI 2.0 Flash and 9-step guided workflow
-- **📊 Presentation Generator**: Generate complete slide decks with outlines and themes
+- **📊 Presentation Generator**: Generate complete slide decks with outlines, themes, and shareable public URLs
+- **🔗 Presentation Sharing**: Share presentations via public URLs with privacy controls and anonymous viewing
 - **📄 CV Creator**: Build comprehensive curriculum vitae with intelligent formatting
 - **✉️ Letter Composer**: Draft professional letters for any purpose
 - **🔍 ATS Resume Analyzer**: Advanced ATS compatibility scoring with detailed optimization feedback
@@ -71,7 +72,8 @@
 - **Context-Aware Creation**: AI understands industry standards and target audience requirements
 - **Multiple Document Types**: 
   - 📄 **Professional Resumes** with ATS optimization
-  - 🎯 **Stunning Presentations** with smart layouts and charts
+  - 🎯 **Stunning Presentations** with smart layouts, charts, and shareable public URLs
+  - 🔗 **Shareable Presentations** with privacy controls and anonymous viewing support
   - 📋 **Comprehensive CVs** for academic and research positions
   - ✉️ **Business Letters** with perfect tone and formatting
 
@@ -81,6 +83,8 @@
 - **Guided Resume Builder**: 9-step workflow with progress tracking and intelligent navigation
 - **Smart Editing**: Intuitive WYSIWYG editor with real-time preview and mobile-first design
 - **Enhanced Export Options**: Download as PDF, DOCX, or PPTX with improved formatting and ATS compatibility
+- **Presentation Sharing**: Generate shareable public URLs with one-click sharing and privacy controls
+- **Anonymous Viewing**: Public presentations viewable without authentication for seamless sharing
 - **Chart Integration**: Automatic data visualization for presentations using Recharts
 - **Mobile-Responsive Navigation**: Touch-optimized interface that works perfectly on all devices
 - **📄 Comprehensive About Page**: Detailed information about features, technology, security, and roadmap accessible at `/about`
@@ -334,35 +338,57 @@ Visit our comprehensive **About Page** at [https://docmagic1.netlify.app/about](
 - 🗺️ **Product Roadmap** - Exciting features coming in 2025-2026
 - 👥 **Community** - Join our open source community
 
-### 📋 **Prerequisites**
+## 🪟 DocMagic: Windows Local Development Setup
+ Make sure to install these before setting up the project:
 
-Before you begin, ensure you have the following installed:
+### Step 1: Install the prerequisite
+- [Git](https://git-scm.com/download/win) – for cloning the repository
+- [Node.js (LTS version)](https://nodejs.org/en/download/) – includes npm for package management
+- (Optional) [Docker Desktop](https://www.docker.com/products/docker-desktop) – for local database/testing (if needed)
+- (Recommended) [Visual Studio Code](https://code.visualstudio.com/) – code editor
 
-```bash
-Node.js >= 18.0.0       # JavaScript runtime
-npm >= 9.0.0            # Package manager
-Git                     # Version control
-```
+### Step 2: Clone the Repository
 
-### ⚡ **One-Click Setup**
+After installing the prerequisites, open your Command Prompt, PowerShell, or Windows Terminal and run the following commands to clone the DocMagic repository and navigate into the project folder:
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/docmagic.git
-cd docmagic
+    git clone https://github.com/Muneerali199/DocMagic.git
+    cd DocMagic
 
-# Install dependencies
-npm install
+This will download the project's source code to your local machine and prepare you to install dependencies in the next step.
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
+### Step 3: Install Project Dependencies
 
-# Run development server
-npm run dev
-```
+Once you have cloned the repository and navigated into the project folder, install the necessary packages by running one of the following commands in your terminal:
 
-🎉 **That's it!** Open [http://localhost:3000](http://localhost:3000) to see DocMagic in action.
+Using npm:
+
+    npm install 
+
+This command will download and install all the required dependencies for the DocMagic project.
+
+### Step 4: Configure Environment Variables
+
+After installing the project dependencies, you need to set up your environment variables for local development.
+
+1. Copy the example environment file to a new file named `.env.local` using this command in Command Prompt:
+
+       copy .env.example .env.local
+   *(If you're using PowerShell or WSL, you can use `cp .env.example .env.local` instead.)*
+
+2. Open the `.env.local` file in your code editor and add the required API keys, database URLs, or other credentials as needed for your setup.
+
+Make sure to save `.env.local`—this file allows your app to connect to external services and databases during development.
+### Step 5: Run the Development Server
+
+Now that your environment variables are configured, you can launch the project locally.
+
+Using npm:
+
+    npm run dev
+
+🎉 **That's it !**  Open [http://localhost:3000](http://localhost:3000) to see DocMagic in action.
+
+---
 
 ### 🔧 **Environment Configuration**
 
@@ -779,6 +805,108 @@ copies or substantial portions of the Software.
 
 See the [LICENSE](LICENSE) file for the complete license text.
 
+## **🔧 Troubleshooting**
+Encountering setup or runtime issues? Here are some common problems and how to fix them quickly:
+
+**🚫 1. Environment Variables Not Loaded**
+Symptoms: Blank pages, failed API calls, authentication not working.
+Fix:
+
+  - Make sure .env.local exists in the root directory.
+
+  - Confirm you’ve filled in all required variables (e.g. NEXT_PUBLIC_SUPABASE_URL, GEMINI_API_KEY, STRIPE_SECRET_KEY, etc.).
+
+  - Restart your dev server after updating .env.local.
+
+**🔐 2. Supabase Auth Not Working**
+Symptoms: Login/Signup not working, "invalid credentials" error.
+Fix:
+
+  - Ensure Supabase email/password auth is enabled in your project dashboard.
+
+  - Double-check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
+
+  - Check browser console for CORS or network errors.
+
+**🧠 3. Gemini AI API Errors**
+Symptoms: Resume/Letter/Presentation generation fails or gives 500 error.
+Fix:
+
+  - Ensure your GEMINI_API_KEY is correct and has usage quota.
+
+  - Check the Gemini model being used (gemini-2.0-flash).
+
+  - Review logs in lib/gemini.ts for response or validation errors.
+
+**💳 4. Stripe Integration Issues** 
+Symptoms: Subscription not created, payment failed, webhook not triggering.
+Fix:
+
+  - Verify all Stripe keys are added correctly in .env.local.
+
+  - Ensure your webhook endpoint /api/stripe/webhook is configured in the Stripe dashboard.
+
+  - Use Stripe CLI (stripe listen) for local testing.
+
+**📄 5. Document Generation Fails or Times Out**
+Symptoms: Resume/Presentation not rendering or returning empty content.
+Fix:
+
+  - Check if Gemini AI prompt structure is valid (non-empty fields).
+
+  - Ensure your system has internet access (required to call external APIs).
+
+  - Inspect console and network tab for failed API calls.
+
+**🧪 6. Tests Not Running or Failing Unexpectedly**
+Symptoms: npm run test crashes or gives missing module errors.
+Fix:
+
+  - Ensure all dependencies are installed via npm install.
+
+  - Try running npm run type-check to validate your types.
+
+  - If using Supabase locally, ensure it's running: npx supabase start.
+
+**🌐 7. "Failed to fetch" or 500 Errors in API Routes**
+Symptoms: API routes return 404 or 500 errors.
+Fix:
+
+  - Make sure you're using npm run dev to run the Next.js server (not just npm start).
+
+  - Ensure folder structure inside app/api/ is correct and follows Next.js App Router format.
+
+  - Check logs in the terminal for specific stack traces.
+
+**📦 8. Netlify/Vercel Deployment Errors**
+Symptoms: Build fails, blank screen after deployment.
+Fix:
+
+  - Confirm NEXT_PUBLIC_APP_URL and other env vars are set in Netlify/Vercel dashboard.
+
+  - Set build command as npm run build and publish directory to .next.
+
+  - Make sure next.config.js has output: "standalone" if using serverless deploys.
+
+**🐳 9. Docker Build Fails**
+Symptoms: Errors during npm ci or npm run build inside Docker container.
+Fix:
+
+  - Use the production image by copying only essential files before install.
+
+  - Ensure you are using Node 18+ in your Dockerfile.
+
+  - Clear Docker cache and rebuild:
+        docker system prune -a  
+        docker build --no-cache -t docmagic .
+    
+**Still Need Help?**
+Check GitHub Issues
+
+Ask in our Discord Community
+
+Contact us at support@docmagic.com
+
 ## 🌟 **Acknowledgments**
 
 - **[Next.js Team](https://nextjs.org/)** - For the amazing React framework
@@ -849,6 +977,152 @@ See the [LICENSE](LICENSE) file for the complete license text.
 | `/api/stripe/create-checkout` | POST | Create checkout session | - | Checkout URL |
 | `/api/stripe/create-portal` | POST | Create customer portal | - | Portal URL |
 | `/api/stripe/webhook` | POST | Handle Stripe webhooks | Stripe event | Success status |
+
+## 💳 Stripe Integration
+
+DocMagic uses Stripe for handling subscription payments. This section provides a comprehensive guide to setting up and managing the Stripe integration.
+
+### 🔑 Environment Variables
+
+Add the following environment variables to your `.env.local` file:
+
+```bash
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+STRIPE_PRICE_ID=your_stripe_price_id  # The ID of the price for your subscription plan
+NEXT_PUBLIC_APP_URL=http://localhost:3000  # Your application URL
+```
+
+### 🛠️ Setup Instructions
+
+1. **Create a Stripe Account**
+   - Sign up at [Stripe](https://dashboard.stripe.com/register)
+   - Retrieve your API keys from the Stripe Dashboard under Developers > API keys
+
+2. **Configure Products and Prices**
+   - Go to Products in the Stripe Dashboard
+   - Create a new product (e.g., "Pro Subscription")
+   - Add a price for the product (e.g., $9.99/month)
+   - Note down the Price ID (e.g., `price_abc123`)
+
+3. **Set Up Webhooks**
+   - Go to Developers > Webhooks in the Stripe Dashboard
+   - Add an endpoint URL: `https://your-domain.com/api/stripe/webhook`
+   - Add these events to listen for:
+     - `checkout.session.completed`
+     - `invoice.payment_succeeded`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+   - Retrieve the webhook signing secret
+
+4. **Update Environment Variables**
+   - Update `.env.local` with your Stripe keys and webhook secret
+   - Set `STRIPE_PRICE_ID` to your subscription price ID
+
+### 🧪 Testing the Integration
+
+#### 1. Test the Payment Demo
+
+1. Navigate to `/payment-demo` in your browser
+2. Use one of the test card numbers below
+3. Enter any future expiry date, any 3-digit CVC, and any postal code
+4. Submit the form to test the payment flow
+
+#### 2. Test Cards
+
+| Card Number | Description |
+|-------------|-------------|
+| `4242 4242 4242 4242` | Successful payment |
+| `4000 0025 0000 3155` | 3D Secure authentication required |
+| `4000 0000 0000 0002` | Payment failed |
+| `4000 0082 6000 3178` | Insufficient funds |
+
+#### 3. Testing Webhooks Locally
+
+To test webhooks during development:
+
+1. Install the Stripe CLI: https://stripe.com/docs/stripe-cli
+2. Log in to your Stripe account:
+   ```bash
+   stripe login
+   ```
+3. Forward webhooks to your local server:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+4. The CLI will provide a webhook signing secret. Add it to your `.env.local`:
+   ```bash
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+#### 4. Testing Different Scenarios
+
+- **Successful Payment**: Use card `4242 4242 4242 4242`
+- **3D Secure Flow**: Use card `4000 0025 0000 3155`
+- **Payment Failure**: Use card `4000 0000 0000 0002`
+- **Insufficient Funds**: Use card `4000 0082 6000 3178`
+
+2. **Test Webhooks Locally**
+   - Use the Stripe CLI to forward webhooks to your local server:
+     ```bash
+     stripe listen --forward-to localhost:3000/api/stripe/webhook
+     ```
+   - This will give you a webhook signing secret to use in your `.env.local`
+
+### 🔄 Webhook Events Handled
+
+- `checkout.session.completed`: Creates a new subscription in the database
+- `invoice.payment_succeeded`: Updates subscription details after successful payment
+- `customer.subscription.updated`: Updates subscription status if changed in Stripe
+- `customer.subscription.deleted`: Handles subscription cancellation
+
+### 🚀 Frontend Components
+
+The main subscription flow is handled by the `SubscriptionButton` component:
+
+```tsx
+<SubscriptionButton isPro={isPro} />
+```
+
+### 🔒 Security Considerations
+
+- Never expose Stripe secret keys in client-side code
+- Always verify webhook signatures
+- Use environment variables for sensitive data
+- Implement proper error handling and user feedback
+
+### 🛠️ Troubleshooting
+
+1. **Webhook Failures**
+   - Verify the webhook signing secret matches your Stripe dashboard
+   - Check server logs for detailed error messages
+   - Ensure your server's clock is synchronized (NTP)
+
+2. **Checkout Issues**
+   - Verify the Price ID exists in your Stripe account
+   - Check the browser console for JavaScript errors
+   - Ensure your Stripe API keys are in the correct mode (test/live)
+
+3. **Subscription Status**
+   - Check the `subscriptions` table in your database
+   - Verify the webhook events are being received and processed
+
+### 📚 Additional Resources
+
+- [Stripe Documentation](https://stripe.com/docs)
+- [Stripe Checkout](https://stripe.com/docs/payments/checkout)
+- [Stripe Webhooks](https://stripe.com/docs/webhooks)
+- [Stripe Testing](https://stripe.com/docs/testing)
+
+### 🎯 Best Practices
+
+1. Always use the latest version of the Stripe API
+2. Implement idempotency keys for critical operations
+3. Log all webhook events for debugging
+4. Set up monitoring for failed webhook deliveries
+5. Regularly test your integration with test cards
 
 ### User
 

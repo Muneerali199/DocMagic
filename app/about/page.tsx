@@ -36,6 +36,7 @@ const Section = ({ title, icon: Icon, items }: { title: string; icon: any; items
   </motion.div>
 );
 
+ docs/project-workflow-flowchart
 export default function AboutPage() {
   return (
     <main className="min-h-screen px-6 py-12 md:px-20 bg-gradient-to-br from-[#111827] to-[#1f2937] text-white">
@@ -68,3 +69,35 @@ export default function AboutPage() {
     </main>
   );
 }
+
+const communityLinks = [
+  {
+    name: "GitHub",
+    description: "Source code & issues",
+    href: "https://github.com/Muneerali199/DocMagic",
+    icon: <Github className="h-6 w-6 text-white" />,
+    gradientClass: "sunset-gradient"
+  },
+  {
+    name: "Discord",
+    description: "Community chat",
+    href: "https://discord/docmagic",
+    icon: <Users className="h-6 w-6 text-white" />,
+    gradientClass: "ocean-gradient"
+  },
+  {
+    name: "Documentation",
+    description: "Guides & tutorials",
+    href: "https://github.com/Muneerali199/DocMagic/blob/main/README.md",
+    icon: <BookOpen className="h-6 w-6 text-white" />,
+    gradientClass: "forest-gradient"
+  },
+  {
+    name: "Support",
+    description: "Get help & feedback",
+    href: " INFO@DOCMAGIC.COM",
+    icon: <Coffee className="h-6 w-6 text-white" />,
+    gradientClass: "cosmic-gradient"
+  }
+];
+main

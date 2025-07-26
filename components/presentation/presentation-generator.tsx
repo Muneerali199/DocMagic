@@ -11,7 +11,7 @@ import { PresentationPreview } from "@/components/presentation/presentation-prev
 import { PresentationTemplates } from "@/components/presentation/presentation-templates";
 import { SlideOutlinePreview } from "@/components/presentation/slide-outline-preview";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, Wand2, Sliders as Slides, Palette, Eye, ArrowRight, CheckCircle, Play, Brain, Zap, Star } from "lucide-react";
+import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, Wand2, Sliders as Slides, Palette, Eye, ArrowRight, CheckCircle, Play, Brain, Zap, Star, Share2, Copy, Globe, ExternalLink } from "lucide-react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import dynamic from 'next/dynamic';
@@ -33,6 +33,9 @@ export function PresentationGenerator() {
   const [pageCount, setPageCount] = useState(8);
   const [isExporting, setIsExporting] = useState(false);
   const [currentStep, setCurrentStep] = useState<GenerationStep>('input');
+  const [isSaving, setIsSaving] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string>('');
+  const [presentationId, setPresentationId] = useState<string>('');
   const { toast } = useToast();
 
   const MAX_FREE_PAGES = 8;
@@ -271,6 +274,77 @@ export function PresentationGenerator() {
     setSlideOutlines([]);
     setSlides([]);
     setPrompt("");
+    setShareUrl('');
+    setPresentationId('');
+  };
+
+  const saveAndSharePresentation = async (isPublic: boolean = true) => {
+    if (!slides.length) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/presentations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: prompt.slice(0, 100) || 'Untitled Presentation',
+          slides,
+          template: selectedTemplate,
+          prompt,
+          isPublic
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save presentation');
+      }
+
+      const data = await response.json();
+      setShareUrl(data.shareUrl);
+      setPresentationId(data.id);
+
+      if (isPublic) {
+        // Copy to clipboard
+        await navigator.clipboard.writeText(data.shareUrl);
+        toast({
+          title: "🎉 Presentation Shared!",
+          description: "Share link copied to clipboard. Anyone can now view your presentation!",
+        });
+      } else {
+        toast({
+          title: "💾 Presentation Saved!",
+          description: "Your presentation has been saved privately.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save presentation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied!",
+        description: "Share link has been copied to your clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the URL manually",
+        variant: "destructive",
+      });
+    }
   };
 
   const goToThemeSelection = () => {
@@ -594,6 +668,39 @@ export function PresentationGenerator() {
             </div>
           )}
 
+          {/* Share section */}
+          {shareUrl && (
+            <div className="glass-effect p-6 rounded-xl border border-green-400/20 bg-green-50/10">
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-effect mb-2">
+                  <Globe className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium">Presentation Shared</span>
+                </div>
+                <h3 className="text-lg font-semibold bolt-gradient-text">Your presentation is live!</h3>
+                <p className="text-sm text-muted-foreground">Anyone with this link can view your presentation</p>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg"
+                />
+                <Button onClick={copyShareLink} size="sm" variant="outline">
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  onClick={() => window.open(shareUrl, '_blank')} 
+                  size="sm"
+                  className="bolt-gradient text-white"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button
               onClick={resetToInput}
@@ -611,6 +718,23 @@ export function PresentationGenerator() {
               <Palette className="mr-2 h-4 w-4" />
               Change Style
             </Button>
+            
+            {/* Share button */}
+            {!shareUrl && (
+              <Button
+                onClick={() => saveAndSharePresentation(true)}
+                disabled={isSaving}
+                className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Share2 className="mr-2 h-4 w-4" />
+                )}
+                Share Presentation
+              </Button>
+            )}
+            
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={exportToPDF}
@@ -628,7 +752,8 @@ export function PresentationGenerator() {
               <Button
                 onClick={exportToPPTX}
                 disabled={isExporting}
-                className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+                variant="outline"
+                className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
               >
                 {isExporting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
