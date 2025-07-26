@@ -338,35 +338,57 @@ Visit our comprehensive **About Page** at [https://docmagic1.netlify.app/about](
 - 🗺️ **Product Roadmap** - Exciting features coming in 2025-2026
 - 👥 **Community** - Join our open source community
 
-### 📋 **Prerequisites**
+## 🪟 DocMagic: Windows Local Development Setup
+ Make sure to install these before setting up the project:
 
-Before you begin, ensure you have the following installed:
+### Step 1: Install the prerequisite
+- [Git](https://git-scm.com/download/win) – for cloning the repository
+- [Node.js (LTS version)](https://nodejs.org/en/download/) – includes npm for package management
+- (Optional) [Docker Desktop](https://www.docker.com/products/docker-desktop) – for local database/testing (if needed)
+- (Recommended) [Visual Studio Code](https://code.visualstudio.com/) – code editor
 
-```bash
-Node.js >= 18.0.0       # JavaScript runtime
-npm >= 9.0.0            # Package manager
-Git                     # Version control
-```
+### Step 2: Clone the Repository
 
-### ⚡ **One-Click Setup**
+After installing the prerequisites, open your Command Prompt, PowerShell, or Windows Terminal and run the following commands to clone the DocMagic repository and navigate into the project folder:
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/docmagic.git
-cd docmagic
+    git clone https://github.com/Muneerali199/DocMagic.git
+    cd DocMagic
 
-# Install dependencies
-npm install
+This will download the project's source code to your local machine and prepare you to install dependencies in the next step.
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
+### Step 3: Install Project Dependencies
 
-# Run development server
-npm run dev
-```
+Once you have cloned the repository and navigated into the project folder, install the necessary packages by running one of the following commands in your terminal:
 
-🎉 **That's it!** Open [http://localhost:3000](http://localhost:3000) to see DocMagic in action.
+Using npm:
+
+    npm install 
+
+This command will download and install all the required dependencies for the DocMagic project.
+
+### Step 4: Configure Environment Variables
+
+After installing the project dependencies, you need to set up your environment variables for local development.
+
+1. Copy the example environment file to a new file named `.env.local` using this command in Command Prompt:
+
+       copy .env.example .env.local
+   *(If you're using PowerShell or WSL, you can use `cp .env.example .env.local` instead.)*
+
+2. Open the `.env.local` file in your code editor and add the required API keys, database URLs, or other credentials as needed for your setup.
+
+Make sure to save `.env.local`—this file allows your app to connect to external services and databases during development.
+### Step 5: Run the Development Server
+
+Now that your environment variables are configured, you can launch the project locally.
+
+Using npm:
+
+    npm run dev
+
+🎉 **That's it !**  Open [http://localhost:3000](http://localhost:3000) to see DocMagic in action.
+
+---
 
 ### 🔧 **Environment Configuration**
 

@@ -1,0 +1,72 @@
+name: "🐞 Bug Report"
+description: "Report a reproducible bug or unexpected behavior in the project."
+title: "[Bug]: "
+labels: [bug]
+assignees: []  # Optional: Add GitHub usernames if you want to auto-assign
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report
+        
+        Thank you for taking the time to report an issue. Please complete the following form so we can help resolve it as quickly as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "🔍 Description"
+      description: "Provide a clear and concise summary of the issue you're facing."
+      placeholder: "e.g., The submit button does nothing when clicked."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: "🧪 Steps to Reproduce"
+      description: "List all steps someone can follow to reproduce the issue."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: "🎯 Expected vs. Actual Behavior"
+      description: "What did you expect to happen, and what actually happened?"
+      placeholder: |
+        - **Expected**: The form should submit and display a success message.
+        - **Actual**: Clicking the submit button does nothing.
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: "💻 Environment"
+      description: "Mention the environment where the issue occurred (OS, browser, Node.js version, etc.)"
+      placeholder: "e.g., Windows 11, Chrome 126, Node.js v18.17.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "🖼️ Screenshots / Logs"
+      description: "If applicable, attach screenshots or logs that help explain the issue."
+      placeholder: "Drag and drop screenshots here, or paste terminal/log output."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: "✅ Duplicate Check"
+      description: "Confirm you've searched the issue tracker to avoid duplicates."
+      options:
+        - label: "I have searched the existing issues and found no duplicates."
+          required: true
