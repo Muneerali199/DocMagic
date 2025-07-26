@@ -17,11 +17,12 @@ We're thrilled to have you here! Whether you're a seasoned developer or brand-ne
 8. How to Find and Claim Issues
 9. How to Submit a Pull Request (PR)
 10. Style and Coding Guidelines
-11. Reporting Issues or Suggesting Features
-12. Community and Help
-13. Licensing
-14. Code of Conduct
-15. Final Words
+11. Document Contribution Do’s and Don’ts
+12. Reporting Issues or Suggesting Features
+13. Community and Help
+14. Licensing
+15. Code of Conduct
+16. Final Words
 
 ---
 
@@ -215,6 +216,31 @@ Then go to GitHub → Open a Pull Request
 * ✅ Use Zod for validation
 * ✅ Format code with Prettier
 * ✅ Run `npm run lint` before committing
+
+
+
+---
+
+## Document Contribution Do’s and Don’ts
+
+### Do’s
+
+- **Follow DocMagic’s existing style and architecture:** Use TypeScript, Tailwind CSS for styling, Radix UI for components, and adhere to the project’s folder structure and coding patterns.
+- **Write clear, meaningful commit messages:** Use imperative mood and briefly explain why the change was made, especially if it improves AI prompts, UI animations, or backend logic.
+- **Make focused, atomic commits:** Each commit should represent a single logical change — whether a bug fix, new feature, or documentation update.
+- **Test your changes thoroughly:** Run linting (`npm run lint`), local tests, and verify the UI behaves correctly with the new AI-generated documents or animations.
+- **Keep documentation up-to-date:** If your change affects user-facing features, UI flow, or developer setup, update README, guides, or `CONTRIBUTING.md` accordingly.
+- **Respect and support the community:** Be polite and patient during discussions and code reviews. Your feedback helps everyone grow.
+- **Use descriptive pull request titles and descriptions:** Clearly summarize what your PR does and reference related issues (e.g., `Fixes #123`).
+
+### Don’ts
+
+- **Don’t submit large or mixed-scope PRs:** Break down big features or fixes into smaller, manageable pieces for easier review.
+- **Don’t ignore failing tests or linting errors:** Fix all issues before submitting your PR to maintain code quality.
+- **Don’t include unrelated changes:** Keep your PR focused on the issue you are addressing to avoid confusion.
+- **Don’t duplicate existing issues or features:** Search existing issues and PRs before creating new ones.
+- **Don’t commit sensitive information:** Never include API keys, environment variables, or passwords in your commits.
+- **Don’t forget to add or update tests:** Ensure new features or bug fixes are covered by appropriate tests to prevent regressions.
 
 
 
