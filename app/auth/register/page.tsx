@@ -192,7 +192,7 @@ export default function Register() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder="Enter your work email"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base"
                     disabled={isLoading}
@@ -213,7 +213,7 @@ export default function Register() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password (min. 6 characters)"
+                    placeholder="Enter a strong password (min. 6 characters)"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base"
                     disabled={isLoading}
@@ -242,7 +242,7 @@ export default function Register() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
+                    placeholder="Confirm your new password"
                     required
                     className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base ${
                       confirmPassword && password !== confirmPassword 
