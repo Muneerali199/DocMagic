@@ -956,6 +956,152 @@ Contact us at support@docmagic.com
 | `/api/stripe/create-portal` | POST | Create customer portal | - | Portal URL |
 | `/api/stripe/webhook` | POST | Handle Stripe webhooks | Stripe event | Success status |
 
+## 💳 Stripe Integration
+
+DocMagic uses Stripe for handling subscription payments. This section provides a comprehensive guide to setting up and managing the Stripe integration.
+
+### 🔑 Environment Variables
+
+Add the following environment variables to your `.env.local` file:
+
+```bash
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+STRIPE_PRICE_ID=your_stripe_price_id  # The ID of the price for your subscription plan
+NEXT_PUBLIC_APP_URL=http://localhost:3000  # Your application URL
+```
+
+### 🛠️ Setup Instructions
+
+1. **Create a Stripe Account**
+   - Sign up at [Stripe](https://dashboard.stripe.com/register)
+   - Retrieve your API keys from the Stripe Dashboard under Developers > API keys
+
+2. **Configure Products and Prices**
+   - Go to Products in the Stripe Dashboard
+   - Create a new product (e.g., "Pro Subscription")
+   - Add a price for the product (e.g., $9.99/month)
+   - Note down the Price ID (e.g., `price_abc123`)
+
+3. **Set Up Webhooks**
+   - Go to Developers > Webhooks in the Stripe Dashboard
+   - Add an endpoint URL: `https://your-domain.com/api/stripe/webhook`
+   - Add these events to listen for:
+     - `checkout.session.completed`
+     - `invoice.payment_succeeded`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+   - Retrieve the webhook signing secret
+
+4. **Update Environment Variables**
+   - Update `.env.local` with your Stripe keys and webhook secret
+   - Set `STRIPE_PRICE_ID` to your subscription price ID
+
+### 🧪 Testing the Integration
+
+#### 1. Test the Payment Demo
+
+1. Navigate to `/payment-demo` in your browser
+2. Use one of the test card numbers below
+3. Enter any future expiry date, any 3-digit CVC, and any postal code
+4. Submit the form to test the payment flow
+
+#### 2. Test Cards
+
+| Card Number | Description |
+|-------------|-------------|
+| `4242 4242 4242 4242` | Successful payment |
+| `4000 0025 0000 3155` | 3D Secure authentication required |
+| `4000 0000 0000 0002` | Payment failed |
+| `4000 0082 6000 3178` | Insufficient funds |
+
+#### 3. Testing Webhooks Locally
+
+To test webhooks during development:
+
+1. Install the Stripe CLI: https://stripe.com/docs/stripe-cli
+2. Log in to your Stripe account:
+   ```bash
+   stripe login
+   ```
+3. Forward webhooks to your local server:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+4. The CLI will provide a webhook signing secret. Add it to your `.env.local`:
+   ```bash
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+#### 4. Testing Different Scenarios
+
+- **Successful Payment**: Use card `4242 4242 4242 4242`
+- **3D Secure Flow**: Use card `4000 0025 0000 3155`
+- **Payment Failure**: Use card `4000 0000 0000 0002`
+- **Insufficient Funds**: Use card `4000 0082 6000 3178`
+
+2. **Test Webhooks Locally**
+   - Use the Stripe CLI to forward webhooks to your local server:
+     ```bash
+     stripe listen --forward-to localhost:3000/api/stripe/webhook
+     ```
+   - This will give you a webhook signing secret to use in your `.env.local`
+
+### 🔄 Webhook Events Handled
+
+- `checkout.session.completed`: Creates a new subscription in the database
+- `invoice.payment_succeeded`: Updates subscription details after successful payment
+- `customer.subscription.updated`: Updates subscription status if changed in Stripe
+- `customer.subscription.deleted`: Handles subscription cancellation
+
+### 🚀 Frontend Components
+
+The main subscription flow is handled by the `SubscriptionButton` component:
+
+```tsx
+<SubscriptionButton isPro={isPro} />
+```
+
+### 🔒 Security Considerations
+
+- Never expose Stripe secret keys in client-side code
+- Always verify webhook signatures
+- Use environment variables for sensitive data
+- Implement proper error handling and user feedback
+
+### 🛠️ Troubleshooting
+
+1. **Webhook Failures**
+   - Verify the webhook signing secret matches your Stripe dashboard
+   - Check server logs for detailed error messages
+   - Ensure your server's clock is synchronized (NTP)
+
+2. **Checkout Issues**
+   - Verify the Price ID exists in your Stripe account
+   - Check the browser console for JavaScript errors
+   - Ensure your Stripe API keys are in the correct mode (test/live)
+
+3. **Subscription Status**
+   - Check the `subscriptions` table in your database
+   - Verify the webhook events are being received and processed
+
+### 📚 Additional Resources
+
+- [Stripe Documentation](https://stripe.com/docs)
+- [Stripe Checkout](https://stripe.com/docs/payments/checkout)
+- [Stripe Webhooks](https://stripe.com/docs/webhooks)
+- [Stripe Testing](https://stripe.com/docs/testing)
+
+### 🎯 Best Practices
+
+1. Always use the latest version of the Stripe API
+2. Implement idempotency keys for critical operations
+3. Log all webhook events for debugging
+4. Set up monitoring for failed webhook deliveries
+5. Regularly test your integration with test cards
+
 ### User
 
 | Endpoint | Method | Description | Request Body | Response |
