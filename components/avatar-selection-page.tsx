@@ -47,7 +47,8 @@ export default function AvatarSelectionPage({
                 selected === id
                   ? "border-green-500 scale-105 shadow-lg"
                   : "border-transparent hover:border-green-300"
-              }`}
+              }`} 
+              // hello
             >
               <Image src={src} width={80} height={80} alt={id} className="rounded-full" />
             </button>
