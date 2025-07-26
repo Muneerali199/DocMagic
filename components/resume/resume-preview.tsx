@@ -286,10 +286,10 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
             </>
           ) : (
             <>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-800 dark:!shadow-none mb-2">
                 {resume.name || "Your Name"}
               </h1>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-2">
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-600 mt-2">
                 {resume.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="h-3 w-3" />
@@ -312,7 +312,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
               
               {/* Professional Links */}
               {(resume.linkedin || resume.github || resume.website || resume.portfolio) && (
-                <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-3">
+                <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-600 mt-3">
                   {resume.linkedin && (
                     <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
                       <Linkedin className="h-3 w-3" />
@@ -346,7 +346,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Summary Section */}
         {(editableResume.summary || resume.summary) && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 dark: border-b border-gray-200 pb-2 mb-3">
               Professional Summary
             </h2>
             {isEditing ? (
@@ -357,7 +357,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                 className="text-sm text-gray-700 leading-relaxed"
               />
             ) : (
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-sm text-gray-700 dark:text-gray-700 leading-relaxed">
                 {resume.summary}
               </p>
             )}
@@ -367,7 +367,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Experience Section */}
         {(editableResume.experience?.length || resume.experience?.length) ? (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Work Experience
             </h2>
             <div className="space-y-4">
@@ -403,10 +403,10 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                         </>
                       ) : (
                         <>
-                          <h3 className="font-medium text-gray-800 text-base">
+                          <h3 className="font-medium text-gray-800 dark:text-gray-800 text-base">
                             {exp.title || "Job Title"}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-600">
                             {exp.company || "Company Name"}
                             {exp.location && ` • ${exp.location}`}
                           </p>
@@ -423,7 +423,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                           className="text-sm text-gray-500"
                         />
                       ) : (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 dark:text-gray-500">
                           {exp.date || "Date Range"}
                         </span>
                       )}
@@ -439,7 +439,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                           }
                         />
                       ) : (
-                        <ul className="list-disc text-sm text-gray-700 pl-5 mt-2 space-y-1">
+                        <ul className="list-disc text-sm text-gray-700 dark:text-gray-700 pl-5 mt-2 space-y-1">
                           {exp.description.map((item, j) => (
                             <li key={j}>{item}</li>
                           ))}
@@ -456,7 +456,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Education Section */}
         {(editableResume.education?.length || resume.education?.length) ? (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Education
             </h2>
             <div className="space-y-3">
@@ -509,20 +509,20 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                       </>
                     ) : (
                       <>
-                        <h3 className="font-medium text-gray-800">
+                        <h3 className="font-medium text-gray-800 dark:text-gray-800">
                           {edu.degree || "Degree"}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-600">
                           {edu.institution || "Institution"}
                           {edu.location && ` • ${edu.location}`}
                         </p>
                         {edu.gpa && (
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-500">
                             GPA: {edu.gpa}
                           </p>
                         )}
                         {edu.honors && (
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-500">
                             {edu.honors}
                           </p>
                         )}
@@ -537,7 +537,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                         className="text-sm text-gray-500"
                       />
                     ) : (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-500">
                         {edu.date || "Year"}
                       </span>
                     )}
@@ -551,7 +551,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Skills Section */}
         {(editableResume.skills || resume.skills) && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Skills
             </h2>
             
@@ -560,7 +560,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                 {Object.entries(editableResume.skills || {}).map(([category, skillList]) => (
                   skillList && skillList.length > 0 ? (
                     <div key={category}>
-                      <h3 className="font-medium text-gray-700 capitalize text-sm mb-1">{category}</h3>
+                      <h3 className="font-medium text-gray-700 dark:text-gray-700 capitalize text-sm mb-1">{category}</h3>
                       <EditableList
                         items={skillList as string[]}
                         onChange={(newSkills) => updateField(["skills", category], newSkills)}
@@ -575,12 +575,12 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                 {Object.entries(resume.skills || {}).map(([category, skillList]) => (
                   skillList && (skillList as string[]).length > 0 ? (
                     <div key={category}>
-                      <h3 className="font-medium text-gray-700 capitalize text-sm mb-1">{category}</h3>
+                      <h3 className="font-medium text-gray-700 dark:text-gray-700 capitalize text-sm mb-1">{category}</h3>
                       <div className="flex flex-wrap gap-2">
                         {(skillList as string[]).map((skill, i) => (
                           <span
                             key={i}
-                            className="text-sm bg-gray-100 px-3 py-1 rounded-full text-gray-800 border"
+                            className="text-sm bg-gray-100 dark:bg-gray-100 px-3 py-1 rounded-full text-gray-800 dark:text-gray-800 border"
                           >
                             {skill}
                           </span>
@@ -597,7 +597,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Projects Section */}
         {(editableResume.projects?.length || resume.projects?.length) ? (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Projects
             </h2>
             {isEditing ? (
@@ -649,7 +649,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                 {resume.projects?.map((project, i) => (
                   <div key={i} className="border-l-2 border-gray-200 pl-4">
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-medium text-gray-800">
+                      <h3 className="font-medium text-gray-800 dark:text-gray-800">
                         {project.name || "Project Name"}
                       </h3>
                       {project.link && (
@@ -657,13 +657,13 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                           href={project.link} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs text-blue-600 dark:text-blue-600 hover:underline"
                         >
                           View Project
                         </a>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 dark:text-gray-700">
                       {project.description || "Project description"}
                     </p>
                     {project.technologies && project.technologies.length > 0 && (
@@ -672,7 +672,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                           <Badge 
                             key={j} 
                             variant="outline" 
-                            className="text-xs bg-gray-50 text-gray-600 border-gray-200"
+                            className="text-xs bg-gray-50 text-gray-600 dark:text-gray-600 border-gray-200"
                           >
                             {tech}
                           </Badge>
@@ -689,7 +689,7 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
         {/* Certifications Section */}
         {(editableResume.certifications?.length || resume.certifications?.length) ? (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Certifications
             </h2>
             {isEditing ? (
@@ -738,20 +738,20 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
                 {resume.certifications?.map((cert, i) => (
                   <div key={i} className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-800">
+                      <h3 className="font-medium text-gray-800 dark:text-gray-800">
                         {cert.name || "Certification Name"}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-600">
                         {cert.issuer || "Issuing Organization"}
                       </p>
                       {cert.credential && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
                           Credential ID: {cert.credential}
                         </p>
                       )}
                     </div>
                     <div className="text-right">
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-500">
                         {cert.date || "Issue Date"}
                       </span>
                     </div>

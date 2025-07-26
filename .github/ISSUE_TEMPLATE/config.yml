@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links: []
+issue_templates:
+  - name: 🐞 Bug Report
+    description: Report a reproducible bug or unexpected behavior.
+    file: bug_report.yml
+  - name: 📚 Documentation Improvement
+    description: Suggest improvements to existing documentation or report missing docs.
+    file: documentation_improvement.yml
+  - name: 🚀 Feature Request
+    description: Propose a new feature or enhancement for the project.
+    file: feature_request.yml
