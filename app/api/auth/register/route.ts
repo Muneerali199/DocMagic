@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServer } from '@/lib/supabase/server';
 import { sendWelcomeEmail } from "@/lib/email";
+import { isDevelopmentMode, mockUser, mockSession } from "@/lib/mock-auth";
 
 // This route handles user registration
 export async function POST(request: Request) {
@@ -15,7 +16,24 @@ export async function POST(request: Request) {
       );
     }
 
+ feature/analytics-complete-final
+    // In development mode, return mock success
+    if (isDevelopmentMode()) {
+      console.log('Development mode: Mock user registration for', email);
+      
+      // Simulate successful registration
+      return NextResponse.json({
+        message: "User registered successfully (development mode)",
+        user: mockUser,
+        session: mockSession
+      });
+    }
+
+    // Production mode: Use real Supabase
+    const supabase = await createRoute();
+
     const supabase = createServer();
+
 
     // Check if user already exists
     const { data: { user }, error: userError } = await supabase.auth.getUser();

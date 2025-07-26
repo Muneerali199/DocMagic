@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { File as FileIcon, FileText, Presentation as LayoutPresentation, Mail as MailIcon, Menu, LogOut, Sparkles, Zap, DollarSign, BarChart3 } from "lucide-react";
+
 import { useState } from "react";
 import {
   File as FileIcon,
@@ -14,6 +17,7 @@ import {
   Zap,
   DollarSign,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -355,6 +359,11 @@ const navItems = [
     href: "/templates",
     label: "Templates",
     icon: <FileText className="h-4 w-4" />
+  },
+  {
+    href: "/analytics",
+    label: "Analytics", 
+    icon: <BarChart3 className="h-4 w-4" />
   },
   {
     href: "/about",
