@@ -1,3 +1,18 @@
+
+import { Suspense } from 'react';
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { SignUpForm } from '@/components/auth/signup-form';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Sparkles, Shield, Wand2 } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Create an account',
+  description: 'Create a new account to get started',
+};
+
+export default function RegisterPage() {
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -155,6 +170,7 @@ export default function Register() {
     password === confirmPassword &&
     password.length >= 6;
 
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
       {/* Enhanced background elements with parallax effect */}
@@ -190,11 +206,16 @@ export default function Register() {
           <div className="absolute top-4 right-4 group-hover:scale-125 transition-transform duration-300">
             <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse group-hover:animate-bounce" />
           </div>
+
+          <div className="absolute bottom-4 left-4">
+            <Wand2 className="h-4 w-4 text-blue-500" />
+
           <div className="absolute bottom-4 left-4 group-hover:scale-125 transition-transform duration-300">
             <Star
               className="h-4 w-4 text-blue-500 animate-spin group-hover:animate-pulse"
               style={{ animationDuration: "3s" }}
             />
+
           </div>
           <div className="absolute top-1/2 left-4 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500">
             <MousePointer2 className="h-3 w-3 text-purple-500 animate-bounce" />
@@ -230,6 +251,36 @@ export default function Register() {
                 Start creating professional documents with AI
               </p>
             </div>
+
+            
+            <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-md" />}>
+              <SignUpForm />
+            </Suspense>
+            
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="font-medium text-primary hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              By signing up, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                Privacy Policy
+
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Enhanced Name field with advanced interactions */}
@@ -654,8 +705,10 @@ export default function Register() {
                 <ArrowRight className="h-3 w-3 rotate-180 group-hover:-translate-x-1 transition-transform duration-200" />
                 <span>Back to Home</span>
                 <Fingerprint className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
               </Link>
-            </div>
+              .
+            </p>
           </div>
         </div>
       </div>
