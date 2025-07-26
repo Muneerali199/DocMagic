@@ -2,7 +2,7 @@ import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, Book
 
 export function FeaturesSection() {
   return (
-    <div className="py-16 sm:py-20 lg:py-32 relative overflow-hidden section-header" id="how-it-works">
+    <div className="py-10 xs:py-14 sm:py-20 lg:py-32 relative overflow-hidden section-header" id="how-it-works">
       {/* Enhanced background elements with multiple gradients */}
       <div className="absolute inset-0 mesh-gradient opacity-20"></div>
       <div className="absolute top-20 right-10 w-24 h-24 sm:w-32 sm:h-32 sunset-gradient rounded-full opacity-15" style={{animation: 'float 6s ease-in-out infinite'}}></div>
@@ -10,7 +10,7 @@ export function FeaturesSection() {
       <div className="absolute top-1/3 left-1/4 w-20 h-20 sm:w-28 sm:h-28 forest-gradient rounded-full opacity-15" style={{animation: 'float 7s ease-in-out infinite', animationDelay: '4s'}}></div>
       <div className="absolute bottom-1/3 right-1/3 w-18 h-18 sm:w-24 sm:h-24 cosmic-gradient rounded-full opacity-18" style={{animation: 'float 9s ease-in-out infinite', animationDelay: '1s'}}></div>
       
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-7xl px-2 xs:px-3 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-2xl lg:text-center">
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-4 sm:mb-6 relative">
             <div className="relative z-10 flex items-center gap-2">
@@ -29,8 +29,8 @@ export function FeaturesSection() {
           </p>
         </div>
         
-        <div className="mx-auto mt-12 sm:mt-16 lg:mt-24 max-w-2xl sm:max-w-none">
-          <dl className="grid max-w-xl grid-cols-1 gap-8 sm:gap-x-8 sm:gap-y-16 lg:max-w-none lg:grid-cols-3 mx-auto">
+        <div className="mx-auto mt-10 xs:mt-12 sm:mt-16 lg:mt-24 max-w-2xl sm:max-w-none">
+          <dl className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-8 sm:gap-x-8 sm:gap-y-16 lg:max-w-none mx-auto">
             {features.map((feature, index) => {
               // Assign different color themes to features
               const themes = [
@@ -45,21 +45,21 @@ export function FeaturesSection() {
               const animationDelay = `delay-${(index + 1) * 100}`;
               
               return (
-                <div key={feature.name} className={`flex flex-col group px-4 sm:px-0 p-6 rounded-2xl transition-all duration-500 hover:scale-105 ${theme.cardClass} hover:${theme.glowClass} animate-slide-in-left ${animationDelay} will-change-transform`}>
+                <div key={feature.name} className={`flex flex-col group px-3 xs:px-4 sm:px-6 p-5 xs:p-8 rounded-2xl transition-all duration-500 hover:scale-105 ${theme.cardClass} hover:${theme.glowClass} animate-slide-in-left ${animationDelay} will-change-transform`}>
                   <dt className="flex items-center gap-x-3 text-base font-semibold leading-7">
-                    <div className={`h-10 w-10 sm:h-12 sm:w-12 flex-none rounded-xl ${theme.gradientClass} flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
+                    <div className={`h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12 flex-none rounded-xl ${theme.gradientClass} flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
                       {feature.icon}
                       <div className={`absolute inset-0 ${theme.gradientClass} rounded-xl opacity-0 group-hover:opacity-50 blur-md transition-opacity duration-300`}></div>
                     </div>
-                    <span className="group-hover:bolt-gradient-text transition-all duration-300 text-sm sm:text-base">
+                    <span className="group-hover:bolt-gradient-text transition-all duration-300 text-xs xs:text-sm sm:text-base">
                       {feature.name}
                     </span>
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-sm sm:text-base leading-6 sm:leading-7 text-muted-foreground">
+                  <dd className="mt-3 xs:mt-4 flex flex-auto flex-col text-xs xs:text-sm sm:text-base leading-6 sm:leading-7 text-muted-foreground">
                     <p className="flex-auto group-hover:text-foreground/80 transition-colors">
                       {feature.description}
                     </p>
-                    <div className="mt-4">
+                    <div className="mt-3 xs:mt-4">
                       <div className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium bolt-gradient-text">
                         <Star className="h-3 w-3 sm:h-4 sm:w-4" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
                         <span>Professional Quality</span>

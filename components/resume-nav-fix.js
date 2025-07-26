@@ -74,12 +74,31 @@ export default function ResumeNavFix() {
 
       /* Responsive adjustments */
       @media (max-width: 768px) {
-        .flex.items-center.gap-2.px-3.py-2.rounded-full.transition-all.whitespace-nowrap.cursor-pointer {
-          padding: 0.5rem;
+        .flex.items-center.justify-center.gap-2.mb-8.overflow-x-auto.pb-2 {
+          flex-wrap: nowrap;
+          gap: 0.5rem;
+          padding: 0.5rem 0.25rem;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
         }
-        
+        .flex.items-center.gap-2.px-3.py-2.rounded-full.transition-all.whitespace-nowrap.cursor-pointer {
+          padding: 0.5rem 0.75rem;
+          font-size: 0.95rem;
+          min-width: 110px;
+        }
         .text-sm.font-medium.hidden.sm\\:inline {
           display: none;
+        }
+      }
+      @media (max-width: 480px) {
+        .flex.items-center.justify-center.gap-2.mb-8.overflow-x-auto.pb-2 {
+          padding: 0.25rem 0.1rem;
+          border-radius: 0.4rem;
+        }
+        .flex.items-center.gap-2.px-3.py-2.rounded-full.transition-all.whitespace-nowrap.cursor-pointer {
+          padding: 0.4rem 0.5rem;
+          font-size: 0.9rem;
+          min-width: 90px;
         }
       }
     `;
