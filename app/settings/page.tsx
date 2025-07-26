@@ -155,6 +155,19 @@ export default function SettingsPage() {
                     <Mail className="h-3 w-3" />
                     {user?.email}
                   </p>
+                  {/* Bio field */}
+                  <div className="mt-2">
+                    <label htmlFor="bio" className="text-xs text-muted-foreground">Bio</label>
+                    <textarea
+                      id="bio"
+                      className="w-full mt-1 p-2 rounded bg-background border border-border text-sm"
+                      rows={2}
+                      placeholder="Tell us about yourself..."
+                      value={user?.bio || ''}
+                      onChange={() => {}}
+                      disabled
+                    />
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -178,6 +191,21 @@ export default function SettingsPage() {
                     <Star className="h-3 w-3 mr-1" />
                     Active
                   </Badge>
+                </div>
+                {/* Privacy Preferences */}
+                <div className="mt-4">
+                  <div className="font-semibold text-sm mb-2">Privacy Preferences</div>
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 text-xs">
+                      <input type="checkbox" checked={user?.privacy?.showAvatar ?? true} readOnly /> Show Avatar
+                    </label>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input type="checkbox" checked={user?.privacy?.showBio ?? true} readOnly /> Show Bio
+                    </label>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input type="checkbox" checked={user?.privacy?.showActivity ?? true} readOnly /> Show Recent Activity
+                    </label>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -286,6 +314,22 @@ export default function SettingsPage() {
                     </p>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Card */}
+          <Card className="glass-effect border-yellow-400/20 relative overflow-hidden lg:col-span-2">
+            <div className="absolute inset-0 shimmer opacity-20"></div>
+            <CardHeader className="relative z-10">
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 bolt-gradient-text" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div>No recent activity to display.</div>
               </div>
             </CardContent>
           </Card>

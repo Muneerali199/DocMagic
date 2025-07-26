@@ -1,34 +1,59 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SponsorBanner } from "@/components/sponsor-banner";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { DocumentCard } from "@/components/document-card";
+import LandingPage from "@/components/landing-page";
+import AvatarSelectionPage from "@/components/avatar-selection-page";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import {
   File as FileIcon,
   FileText,
   Presentation as LayoutPresentation,
   Mail,
-  Github,
-  Twitter,
-  Linkedin,
-  HelpCircle,
-  BookOpen,
-  Users,
-  Sparkles,
-  Heart,
   Zap,
-  Star,
+  Sparkles,
   ArrowDown,
+  Star,
   Wand2,
   Shield,
-  Globe,
+  Heart,
   Coffee,
+  Github,
+  Linkedin,
+  Twitter,
+  BookOpen,
+  HelpCircle,
+  Users,
+  Globe,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
 
 export default function Home() {
+  const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
+  const [started, setStarted] = useState<boolean>(false);
+
+  useEffect(() => {
+    // FOR TESTING ONLY: always reset avatar
+    localStorage.removeItem("user-avatar");
+    setHasAvatar(false);
+  }, []);
+
+  if (hasAvatar === null) return null;
+
+  if (!hasAvatar && !started) {
+    return <LandingPage onGetStarted={() => setStarted(true)} />;
+  }
+
+  if (!hasAvatar && started) {
+    return <AvatarSelectionPage onAvatarSet={() => setHasAvatar(true)} />;
+  }
+
+  // === Main Landing Page ===
   return (
     <div className="min-h-screen flex flex-col">
       <SponsorBanner />
@@ -232,8 +257,7 @@ export default function Home() {
 
         <FeaturesSection />
         <TestimonialsSection />
-        <ScrollToTop /> 
-        {/* added ScrollToTop component */}
+        <ScrollToTop />
       </main>
 
       {/* Professional Footer with tooltips */}
