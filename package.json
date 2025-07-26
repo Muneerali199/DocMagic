@@ -78,6 +78,7 @@
     "date-fns": "^3.6.0",
     "docx": "^8.5.0",
     "embla-carousel-react": "^8.3.0",
+    "esbuild": "^0.25.8",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.4.0",
     "framer-motion": "^12.23.6",
