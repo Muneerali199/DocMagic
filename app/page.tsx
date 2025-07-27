@@ -231,7 +231,7 @@ export default function Home() {
         </section>
 
         <FeaturesSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <ScrollToTop /> 
         {/* added ScrollToTop component */}
       </main>
