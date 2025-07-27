@@ -68,14 +68,10 @@
 
 ### 🎨 **Modern UI/UX Design**
 
-- **✨ Glass Morphism Interface**: Modern glass-effect components with subtle transparency and blur effects
-- **🌈 Gradient Magic**: Dynamic bolt gradients and shimmer effects throughout the interface
-- **🎭 Floating Animations**: Smooth floating orbs and animated background elements powered by Framer Motion
 - **📱 Responsive Excellence**: Mobile-first design optimized for all screen sizes
 - **🌙 Dark/Light Theme**: Seamless theme switching with next-themes
 - **♿ Accessibility First**: WCAG 2.1 AA compliant components
 - **🎯 Magical Professionalism**: Design philosophy combining cutting-edge visual effects with professional usability
-- **Micro-Interactions**: Hover effects, scale transitions, and pulse animations for enhanced user engagement
 
 ### 🤖 **AI-Powered Document Generation**
 
@@ -207,70 +203,6 @@ DocMagic features a cutting-edge design system built around glass morphism princ
 - Debounced search and form inputs
 - Optimistic UI updates for instant feedback
 
-## 📸 Platform Screenshots
-
-<div align="center">
-
-### 🏠 **Landing Page with Glass Morphism Design**
-
-<img src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600" alt="DocMagic Landing Page" width="90%"/>
-<p><em>Hero section with floating animations and gradient effects</em></p>
-
-### 📄 **AI Resume Generator Interface**
-
-<img src="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600" alt="Resume Generator" width="90%"/>
-<p><em>Intelligent resume builder with real-time ATS optimization</em></p>
-
-### 🎯 **Presentation Studio with Smart Layouts**
-
-<img src="https://images.pexels.com/photos/3184293/pexels-photo-3184293.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600" alt="Presentation Creator" width="90%"/>
-<p><em>Professional slide creator with automatic chart generation</em></p>
-
-## 🏗️ **Technical Architecture**
-
-### 🚀 **Frontend Stack**
-
-```typescript
-// Core Framework
-Next.js 15.4.0          // React framework with App Router
-React 18.3.1            // UI library with concurrent features
-TypeScript 5.8.3        // Type-safe development
-
-// Styling & UI
-Tailwind CSS 3.4.17     // Utility-first CSS framework
-Radix UI                // Accessible component primitives
-Framer Motion 12.23.6   // Animation library
-next-themes 0.4.6       // Theme management
-
-// Forms & Validation
-React Hook Form 7.60.0  // Performant forms
-Zod 3.25.76            // Schema validation
-```
-
-### 🔧 **Backend & Services**
-
-```typescript
-// Database & Auth
-Supabase                // PostgreSQL database + Auth
-@supabase/auth-helpers-nextjs 0.10.0
-@supabase/supabase-js 2.52.0
-
-// AI & Generation
-Google Gemini AI        // Document generation
-@google/generative-ai 0.3.1 // Official Gemini SDK
-
-// Payments
-Stripe 14.25.0          // Payment processing
-@stripe/stripe-js 3.5.0 // Client-side Stripe
-
-// Document Processing
-mammoth 1.9.1           // DOCX parsing
-pdf-parse 1.1.1         // PDF parsing
-docx 8.5.0              // DOCX generation
-jspdf 2.5.2             // PDF generation
-pptxgenjs 3.12.0        // PowerPoint generation
-```
-
 ### 📊 **Document Processing Pipeline**
 
 ```mermaid
@@ -283,83 +215,11 @@ graph LR
     F --> G[PDF/DOCX/PPTX]
 ```
 
-### 🔍 **ATS Analyzer System**
-
-<img src="https://images.pexels.com/photos/3184294/pexels-photo-3184294.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600" alt="ATS Analyzer" width="90%"/>
-<p><em>Real-time resume analysis with actionable insights</em></p>
-
-</div>
-
-## 📁 Project Structure
-
-```
-docmagic/
-├── app/                      # Next.js app directory
-│   ├── api/                  # API routes
-│   │   ├── analyze/          # Resume analysis endpoints
-│   │   ├── auth/             # Authentication endpoints
-│   │   ├── generate/         # Document generation endpoints
-│   │   ├── send-email/       # Email sending functionality
-│   │   ├── stripe/           # Stripe payment integration
-│   │   └── user/             # User data endpoints
-│   ├── auth/                 # Authentication pages
-│   ├── cv/                   # CV generator page
-│   ├── letter/               # Letter generator page
-│   ├── presentation/         # Presentation generator page
-│   ├── resume/               # Resume generator pages
-│   ├── settings/             # User settings page
-│   ├── globals.css           # Global styles
-│   ├── layout.tsx            # Root layout component
-│   └── page.tsx              # Home page
-├── components/               # React components
-│   ├── auth-provider.tsx     # Authentication context provider
-│   ├── document-card.tsx     # Document type card component
-│   ├── features-section.tsx  # Features showcase section
-│   ├── hero-section.tsx      # Landing page hero section
-│   ├── letter/               # Letter-specific components
-│   ├── presentation/         # Presentation-specific components
-│   ├── resume/               # Resume-specific components
-│   ├── site-header.tsx       # Navigation header
-│   ├── sponsor-banner.tsx    # Sponsor information banner
-│   ├── subscription-button.tsx # Subscription management
-│   ├── testimonials-section.tsx # User testimonials
-│   ├── theme-provider.tsx    # Dark/light theme provider
-│   ├── theme-toggle.tsx      # Theme toggle button
-│   └── ui/                   # UI components (shadcn/ui)
-├── hooks/                    # Custom React hooks
-│   ├── use-subscription.ts   # Subscription state management
-│   └── use-toast.ts          # Toast notifications
-├── lib/                      # Utility libraries
-│   ├── gemini.ts             # Google Gemini AI integration
-│   ├── parsers/              # Document parsing utilities
-│   ├── stripe.ts             # Stripe payment configuration
-│   ├── supabase/             # Supabase client configuration
-│   └── utils.ts              # General utility functions
-├── public/                   # Static assets
-├── supabase/                 # Supabase configuration
-│   └── migrations/           # Database migration files
-├── types/                    # TypeScript type definitions
-│   └── supabase.ts           # Supabase database types
-├── .env.local                # Environment variables (not in repo)
-├── .eslintrc.json            # ESLint configuration
-├── .gitignore                # Git ignore file
-├── CONTRIBUTING.md           # Contribution guidelines
-├── LICENSE                   # MIT license
-├── README.md                 # Project documentation
-├── middleware.ts             # Next.js middleware
-├── netlify.toml              # Netlify deployment configuration
-├── next.config.js            # Next.js configuration
-├── package.json              # Project dependencies
-├── postcss.config.js         # PostCSS configuration
-├── tailwind.config.ts        # Tailwind CSS configuration
-└── tsconfig.json             # TypeScript configuration
-```
-
 ## 🚀 **Quick Start Guide**
 
 ### 🌐 **Learn More**
 
-Visit our comprehensive **About Page** at [https://docmagic1.netlify.app/about](https://docmagic1.netlify.app/about) to explore:
+Visit our comprehensive **About Page** at [https://docmagic1.netlify.app/about](https://doc-magic-heob.vercel.app/about) to explore:
 
 - 🎯 **Mission & Vision** - Our commitment to democratizing document creation
 - ⚡ **Core Features** - AI-powered tools and capabilities
@@ -801,7 +661,7 @@ The application is deployed on Netlify. To deploy your own instance:
 #### 🐛 **Bug Reports & Fixes**
 
 - Report bugs using our [issue template](https://github.com/docmagic-ai/docmagic/issues/new?template=bug_report.md)
-- Fix existing bugs and earn contributor recognition
+- Fix existing bugs
 - Help improve stability and user experience
 
 #### ✨ **Feature Development**
@@ -842,8 +702,6 @@ We celebrate our contributors! Every contribution gets:
 - 📈 **Priority support** for your own issues
 - 🎁 **Exclusive swag** for significant contributions
 - 💼 **Portfolio showcase** opportunities
-
-For detailed guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## 📜 **Open Source License**
 
@@ -995,8 +853,7 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 ### 🆘 **Get Help**
 
-- 📚 **Documentation**: [docs.docmagic.com](https://docs.docmagic.com)
-- 💬 **Discord Community**: [Join our Discord](https://discord.gg/docmagic)
+- 💬 **Discord Community**: [Join our Discord]
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/docmagic/issues)
 - 💡 **Feature Requests**: [GitHub Discussions](https://github.com/yourusername/docmagic/discussions)
 
@@ -1009,7 +866,7 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 ### 🌐 **Social Media**
 
-- **Twitter**: [@DocMagicAI](https://twitter.com/DocMagicAI)
+- **Twitter**: [@DocMagicAI]
 - **LinkedIn**: [DocMagic Company](https://linkedin.com/company/docmagic)
 - **GitHub**: [DocMagic Organization](https://github.com/docmagic-ai)
 
@@ -1021,7 +878,7 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 [![Get Started](https://img.shields.io/badge/🚀_Get_Started-Create_Your_First_Document-667eea?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app)
 [![Star on GitHub](https://img.shields.io/badge/⭐_Star_on_GitHub-Support_the_Project-yellow?style=for-the-badge&logoColor=white)](https://github.com/yourusername/docmagic)
-[![Join Discord](https://img.shields.io/badge/💬_Join_Discord-Community_Chat-5865F2?style=for-the-badge&logoColor=white)](https://discord.gg/docmagic)
+[![Join Discord](https://img.shields.io/badge/💬_Join_Discord-Community_Chat-5865F2?style=for-the-badge&logoColor=white)]
 
 <br />
 
