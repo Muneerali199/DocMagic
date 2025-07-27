@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/components/auth-provider';
+import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Zap, Star, Crown, Shield, Settings, CreditCard, User as UserIcon, Mail, Calendar } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
-  const supabase = createClient;
+  const { user, isLoading: authLoading } = useAuth();
+  const supabase = createClient();
   const router = useRouter();
 
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
@@ -20,11 +20,11 @@ export default function SettingsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.replace('/auth/signin');
       return;
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
   // Fetch subscription status
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function SettingsPage() {
     setIsLoading(false);
   }
 
-  if (loading || isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
         {/* Background elements */}

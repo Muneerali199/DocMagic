@@ -17,8 +17,10 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useAuth } from "@/components/auth-provider";
+
+import { useAuth } from "@/contexts/auth-context";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
+
 import {
   Sheet,
   SheetContent,
@@ -354,7 +356,8 @@ const navItems = [
   {
     href: "/templates",
     label: "Templates",
-    icon: <FileText className="h-4 w-4" />
+    icon: <FileText className="h-4 w-4" />,
+    tooltip: "Browse our collection of document templates"
   },
   {
     href: "/about",
