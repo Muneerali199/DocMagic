@@ -14,7 +14,7 @@ export function useTrailingCursor({
 
   const mousePosition = useRef<CursorPosition>({ x: 0, y: 0 });
   const trailPosition = useRef<CursorPosition>({ x: 0, y: 0 });
-  const animationId = useRef<number>();
+  const animationId = useRef<number| null>(null);
 
   // Check if device is mobile/touch
   const checkMobile = useCallback(() => {
@@ -40,8 +40,11 @@ export function useTrailingCursor({
       setIsVisible(true);
       trailPosition.current = { x: e.clientX, y: e.clientY };
     }
+    if (!animationId.current) {
+      animationId.current = requestAnimationFrame(animate);
+    }
   }, [isVisible]);
-
+  
   const handleMouseLeave = useCallback(() => {
     setIsVisible(false);
   }, []);
@@ -102,12 +105,9 @@ export function useTrailingCursor({
     // Only continue animation if there's significant movement
     const deltaX = Math.abs(mousePosition.current.x - trailPosition.current.x);
     const deltaY = Math.abs(mousePosition.current.y - trailPosition.current.y);
-    
-    if (deltaX > 0.1 || deltaY > 0.1) {
-      animationId.current = requestAnimationFrame(animate);
-    }
-  }, [disabled, isMobile, trailSpeed]);
 
+      animationId.current = requestAnimationFrame(animate);
+    
   useEffect(() => {
     if (disabled || isMobile) return;
 
