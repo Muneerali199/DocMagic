@@ -17,8 +17,7 @@
 [![Netlify Status](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://docmagic1.netlify.app)
 [![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
-[![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)](./CONTRIBUTING.md)
-
+[![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)]
 <br />
 
 ![DocMagic Hero](screenshots/DocMagicHero.png)
@@ -35,11 +34,9 @@
 
 <br />
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_DocMagic-667eea?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app)
-[![About Page](https://img.shields.io/badge/📖_About_Page-Learn_More-9333EA?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app/about)
-[![Fork on GitHub](https://img.shields.io/badge/🍴_Fork-on_GitHub-black?style=for-the-badge&logo=github&logoColor=white)](https://github.com/docmagic-ai/docmagic/fork)
-[![Documentation](https://img.shields.io/badge/📚_Documentation-Read_Docs-4ECDC4?style=for-the-badge&logoColor=white)](./CONTRIBUTING.md)
-[![API Reference](https://img.shields.io/badge/🔗_API_Reference-Explore_API-FF6B6B?style=for-the-badge&logoColor=white)](./API.md)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit_DocMagic-667eea?style=for-the-badge&logoColor=white)](https://doc-magic-heob.vercel.app/)
+[![About Page](https://img.shields.io/badge/📖_About_Page-Learn_More-9333EA?style=for-the-badge&logoColor=white)](https://doc-magic-heob.vercel.app/about)
+[![Fork on GitHub](https://img.shields.io/badge/🍴_Fork-on_GitHub-black?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Muneerali199/DocMagic/fork)
 
 </div>
 
