@@ -368,3 +368,89 @@ export function TemplateCardSkeleton() {
 }
 
 export { Skeleton };
+
+// Diagram Generator Skeleton
+export function DiagramGeneratorSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Tabs Skeleton */}
+      <div className="flex justify-center mb-6">
+        <div className="glass-effect border border-yellow-400/20 p-1 rounded-lg flex gap-2">
+          <Skeleton className="h-12 w-32 rounded-lg" />
+          <Skeleton className="h-12 w-32 rounded-lg" />
+          <Skeleton className="h-12 w-28 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Left Panel - Editor */}
+        <div className="space-y-6">
+          <div className="text-center space-y-4">
+            <Skeleton className="h-8 w-64 mx-auto" />
+            <Skeleton className="h-5 w-80 mx-auto" />
+          </div>
+
+          {/* Template Buttons */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+              ))}
+            </div>
+          </div>
+
+          {/* Code Editor */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-28 rounded-lg" />
+          </div>
+        </div>
+
+        {/* Right Panel - Preview */}
+        <div className="space-y-4">
+          <div className="text-center space-y-2">
+            <Skeleton className="h-6 w-24 mx-auto" />
+            <Skeleton className="h-8 w-32 mx-auto" />
+          </div>
+          
+          {/* Diagram Preview */}
+          <div className="glass-effect border border-yellow-400/20 rounded-xl p-8">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48 mx-auto" />
+              <div className="flex justify-center gap-4">
+                <Skeleton className="h-16 w-16 rounded" />
+                <div className="flex flex-col justify-center">
+                  <Skeleton className="h-2 w-8 mb-2" />
+                  <Skeleton className="h-2 w-8" />
+                </div>
+                <Skeleton className="h-16 w-16 rounded" />
+              </div>
+              <div className="flex justify-center gap-2">
+                <Skeleton className="h-12 w-12 rounded" />
+                <Skeleton className="h-12 w-12 rounded" />
+                <Skeleton className="h-12 w-12 rounded" />
+              </div>
+            </div>
+          </div>
+
+          {/* Export Options */}
+          <div className="glass-effect p-4 rounded-xl space-y-3">
+            <Skeleton className="h-5 w-32" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-20 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

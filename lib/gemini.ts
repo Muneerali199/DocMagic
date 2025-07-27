@@ -957,3 +957,86 @@ export async function generateATSScore({
     throw new Error(`Failed to analyze resume: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
+
+// ENHANCED DIAGRAM GENERATOR WITH MERMAID SYNTAX
+export async function generateDiagram({ 
+  prompt, 
+  diagramType = 'flowchart' 
+}: { 
+  prompt: string; 
+  diagramType?: string;
+}) {
+  try {
+    await validateApiConnection();
+    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
+    
+    const systemPrompt = `Generate a professional ${diagramType} diagram using Mermaid syntax based on: "${prompt}".
+
+    DIAGRAM TYPE: ${diagramType}
+    USER REQUEST: ${prompt}
+
+    Return as JSON with this structure:
+    {
+      "type": "${diagramType}",
+      "title": "Descriptive title for the diagram",
+      "description": "Brief explanation of what the diagram shows",
+      "code": "Valid Mermaid syntax code",
+      "suggestions": [
+        "Improvement suggestion 1",
+        "Enhancement suggestion 2"
+      ]
+    }
+
+    MERMAID SYNTAX GUIDELINES:
+    
+    For FLOWCHART:
+    - Use "flowchart TD" or "flowchart LR" for direction
+    - Nodes: A[Rectangle], B{Diamond}, C((Circle)), D>Flag]
+    - Connections: A --> B, A -.-> B, A ==> B
+    - Labels: A -->|Yes| B
+    
+    For SEQUENCE DIAGRAM:
+    - Use "sequenceDiagram"
+    - Participants: participant A as Alice
+    - Messages: A->>B: Message, A-->>B: Response
+    - Activations: activate A, deactivate A
+    
+    For CLASS DIAGRAM:
+    - Use "classDiagram"
+    - Classes: class Animal { +String name +makeSound() }
+    - Relationships: Animal <|-- Dog, Animal --> Duck
+    
+    For ER DIAGRAM:
+    - Use "erDiagram"
+    - Entities: CUSTOMER ||--o{ ORDER : places
+    - Relationships: ||--||, }|..|{, ||--o{
+    
+    For GIT GRAPH:
+    - Use "gitGraph"
+    - Commands: commit, branch, checkout, merge
+    
+    REQUIREMENTS:
+    1. Generate syntactically correct Mermaid code
+    2. Make the diagram relevant to the user's request
+    3. Use professional naming conventions
+    4. Include appropriate detail level
+    5. Ensure the diagram is visually clear and logical
+    6. Add meaningful labels and descriptions
+    
+    EXAMPLE PATTERNS:
+    - Business Process: Start → Input → Process → Decision → Output → End
+    - System Architecture: Frontend → API → Services → Database
+    - User Flow: Landing → Registration → Onboarding → Dashboard
+    - Data Flow: Source → Transform → Validate → Store → Display
+    
+    Create a diagram that clearly communicates the concept described in the prompt.`;
+
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const jsonText = extractJsonFromMarkdown(response.text());
+    return JSON.parse(jsonText);
+  } catch (error) {
+    console.error("Error generating diagram:", error);
+    throw new Error(`Failed to generate diagram: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}

@@ -593,6 +593,18 @@ Content-Type: application/json
 }
 ```
 
+#### Generate Diagram
+
+```typescript
+POST /api/generate/diagram
+Content-Type: application/json
+
+{
+  "prompt": "User authentication flow with OAuth",
+  "diagramType": "flowchart"
+}
+```
+
 #### ATS Resume Analysis
 
 ```typescript

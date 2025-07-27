@@ -29,7 +29,8 @@ import {
   Download,
   Brain,
   Wand2,
-  ArrowRight
+  ArrowRight,
+  Workflow
 } from "lucide-react";
 
 export default function AboutPage() {

@@ -13,8 +13,6 @@ import {
   Sparkles,
   Zap,
   DollarSign,
-  Quote,
-  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -346,6 +344,12 @@ const navItems = [
     label: "Presentation",
     icon: <LayoutPresentation className="h-4 w-4" />,
     tooltip: "Generate stunning slide presentations instantly",
+  },
+  {
+    href: "/diagram",
+    label: "Diagram",
+    icon: <Workflow className="h-4 w-4" />,
+    tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
   },
   {
     href: "/letter",

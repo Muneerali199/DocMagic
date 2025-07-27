@@ -143,7 +143,7 @@ export default function Home() {
             </div>
 
             {/* Enhanced document cards grid with tooltips */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 max-w-7xl mx-auto">
               <div className="animate-bounce-in delay-100 will-change-transform">
                 <TooltipWithShortcut content="Create professional resumes optimized for ATS systems">
                   <DocumentCard

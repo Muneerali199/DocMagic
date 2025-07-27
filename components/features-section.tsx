@@ -1,4 +1,4 @@
-import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2 } from "lucide-react";
+import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2, Workflow } from "lucide-react";
 
 export function FeaturesSection() {
   return (
@@ -112,5 +112,11 @@ const features = [
     description:
       'Download your finished documents in multiple formats (PDF, PPTX, DOCX) for easy sharing, printing, and professional presentation.',
     icon: <Download className="h-5 w-5 sm:h-6 sm:w-6" />,
+  },
+  {
+    name: 'Visual Diagrams',
+    description:
+      'Create professional flowcharts, system architectures, and process diagrams using Mermaid syntax with live preview and export capabilities.',
+    icon: <Workflow className="h-5 w-5 sm:h-6 sm:w-6" />,
   },
 ];

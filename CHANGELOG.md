@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-01-15
+
+### Added
+- **Visual Diagram Creator** - Create professional flowcharts, system architectures, and process diagrams
+- **Mermaid Syntax Support** - Full support for Mermaid diagram syntax with live preview
+- **Diagram Export Capabilities** - Export diagrams as high-quality SVG and PNG files
+- **Professional Diagram Templates** - Pre-built templates for common diagram types
+- **Live Diagram Preview** - Real-time rendering of Mermaid code with error handling
+- **Diagram Sharing** - Share diagrams with copy-to-clipboard and social sharing
+- **Multi-Category Templates** - Organized templates by Process, Architecture, Development, Database, UX, and Planning
+- **AI Diagram Generation** - Generate diagrams from natural language descriptions
+
+### Enhanced
+- **Navigation System** - Added diagram creation to main navigation and document types
+- **Document Type Support** - Extended database schema to support diagram documents
+- **Feature Showcase** - Updated landing page and about page to highlight diagram capabilities
+- **Export System** - Unified export system supporting multiple formats across all document types
+- **Template System** - Enhanced template categorization and filtering
+
+### Technical Improvements
+- **Mermaid Integration** - Added Mermaid.js library with optimized configuration
+- **Image Export** - Integrated html-to-image for high-quality diagram exports
+- **Database Schema** - Extended documents table to support diagram type
+- **API Endpoints** - New diagram generation endpoint with AI integration
+- **Type Safety** - Updated TypeScript definitions for diagram support
+- **Performance** - Optimized diagram rendering with debounced updates
+
+### Developer Experience
+- **Component Architecture** - Modular diagram components with clear separation of concerns
+- **Error Handling** - Comprehensive error handling for diagram syntax validation
+- **Loading States** - Professional loading and skeleton states for better UX
+- **Code Organization** - Well-structured diagram-related components and utilities
+
+### User Experience
+- **Intuitive Interface** - Tab-based interface for code editing, templates, and preview
+- **Template Gallery** - Comprehensive collection of professional diagram templates
+- **Live Feedback** - Real-time diagram rendering with syntax error reporting
+- **Export Options** - Multiple export formats with one-click download
+- **Responsive Design** - Mobile-optimized diagram creation and viewing
+
+### Files Added
+- `app/diagram/page.tsx` - Main diagram creation page
+- `components/diagram/diagram-generator.tsx` - Core diagram creation component
+- `components/diagram/diagram-preview.tsx` - Live Mermaid diagram renderer
+- `components/diagram/diagram-templates.tsx` - Professional template gallery
+- `app/api/generate/diagram/route.ts` - AI diagram generation endpoint
+- `supabase/migrations/20250115000000_add_diagram_support.sql` - Database schema update
+
+### Files Modified
+- `components/site-header.tsx` - Added diagram navigation link
+- `app/page.tsx` - Added diagram card to document types section
+- `components/features-section.tsx` - Added visual diagrams feature
+- `app/about/page.tsx` - Updated feature showcase with diagram creator
+- `lib/gemini.ts` - Added AI diagram generation function
+- `types/supabase.ts` - Extended document types to include diagrams
+- `README.md` - Updated documentation with diagram features
+- `components/ui/skeleton.tsx` - Added diagram generator skeleton component
+
 ## [0.8.0] - 2025-01-15
 
 ### Added
