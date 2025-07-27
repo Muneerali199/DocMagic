@@ -1,9 +1,10 @@
+'use client';
 import { Button } from "@/components/ui/button";
 import { StatCounter } from "./ui/stat-counter";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Zap, Star, Wand2 } from "lucide-react";
-
+import {TypedEffect} from '@/components/ui/typewriter';
 export function HeroSection() {
   return (
     <div className="relative overflow-hidden bg-background py-10 xs:py-14 sm:py-24 lg:py-32">
@@ -55,20 +56,50 @@ export function HeroSection() {
               />
             </div>
           </div>
+<h1
+  className="modern-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-7xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional text-balance"
+>
+  Create professional
+  <br />
+  <span
+    className="inline-flex items-center flex-wrap md:flex-nowrap leading-tight gap-x-2"
+    style={{ minHeight: "1.2em" }}
+  >
+    {/* Typed word container with stable layout */}
+    <span
+      className="typed-text bolt-gradient-text bg-clip-text text-transparent font-bold inline-block"
+      style={{
+        display: "inline-block",
+        minWidth: "4ch", // prevents layout jump
+        maxWidth: "12ch",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      <TypedEffect />
+    </span>
+with
+    {/* Truly fixed label */}
+    <span
+      className="text-inherit font-semibold whitespace-nowrap bolt-gradient-text"
+      style={{
+        flexShrink: 0,      // prevents resizing
+        whiteSpace: "nowrap",
+        transform: "translateX(0)", // prevents subtle shifts
+      }}
+    >
+      AI Agent </span>
+        {/* Bounce wand locked to label */}
+    <span className="relative z-10">
+      <Wand2
+        className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-yellow-500 animate-bounce"
+        aria-hidden="true"
+      />
+   </span>
+  </span>
+</h1>
 
-          {/* Animated modern main heading */}
-          <h1 className="modern-display text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-7xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional">
-            Create professional documents with{" "}
-            <span className="bolt-gradient-text relative inline-block">
-              AI Magic
-              <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2">
-                <Wand2
-                  className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-yellow-500 animate-bounce"
-                  aria-hidden="true"
-                />
-              </div>
-            </span>
-          </h1>
 
           {/* Animated Modern Professional Subtitle */}
           <p className="modern-body mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-muted-foreground max-w-xl sm:max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in-up delay-200 will-change-opacity">

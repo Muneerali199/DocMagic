@@ -1467,6 +1467,25 @@ img {
   }
 }
 
+
+.typed-text {
+  @apply text-2xl sm:text-4xl md:text-5xl lg:text-7xl leading-tight tracking-tight;
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(-0.5ch);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.4s ease-out forwards;
+}
+
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
   .floating-orb,
