@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { CursorPosition, CursorHookOptions } from "@/types/cursor";
+type Position = { x: number; y: number };
+
+interface CursorHookOptions {
+  trailSpeed?: number;
+  disabled?: boolean;
+  hoverScale?: number;
+}
 
 export function useTrailingCursor({
   trailSpeed = 0.15,
