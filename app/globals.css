@@ -1387,7 +1387,7 @@ img {
 .dark h6 {
   color: hsl(var(--foreground));
   opacity: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  /* text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); */
 }
 
 .dark p,
@@ -1405,7 +1405,7 @@ img {
 }
 
 .text-shadow-professional {
-  text-.shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .dark .text-shadow-professional {
@@ -1465,6 +1465,25 @@ img {
   .shimmer::before {
     animation-duration: 3s;
   }
+}
+
+
+.typed-text {
+  @apply text-2xl sm:text-4xl md:text-5xl lg:text-7xl leading-tight tracking-tight;
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(-0.5ch);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.4s ease-out forwards;
 }
 
 /* Accessibility improvements */
