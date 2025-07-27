@@ -1,269 +1,597 @@
-# 🌟 Contributing to DocMagic
+# 🪄 Contributing to DocMagic
 
-Welcome to **DocMagic – Your AI-powered Document Creation Companion!**
-We're thrilled to have you here! Whether you're a seasoned developer or brand-new to open source, this guide will walk you through contributing with clarity and confidence. 🧙‍♂️✨
+<div align="center">
 
----
+**Welcome to DocMagic - Where AI Meets Document Creation Magic!** ✨
 
-## 📚 Table of Contents
+![DocMagic Contributors](https://img.shields.io/github/contributors/Muneerali199/DocMagic?style=for-the-badge&color=6366f1)
+![GitHub Issues](https://img.shields.io/github/issues/Muneerali199/DocMagic?style=for-the-badge&color=10b981)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)
 
-1. About DocMagic
-2. GirlScript Summer of Code 2025 (GSSoC)
-3. Ways to Contribute
-4. How to Contribute
-5. Project Architecture
-6. Prerequisites
-7. Getting Started Locally
-8. How to Find and Claim Issues
-9. How to Submit a Pull Request (PR)
-10. Style and Coding Guidelines
-11. Reporting Issues or Suggesting Features
-12. Community and Help
-13. Licensing
-14. Code of Conduct
-15. Final Words
+</div>
+
+Whether you're a seasoned developer, a design enthusiast, a documentation wizard, or someone taking their first steps into open source - **we want you here!** This guide will help you make meaningful contributions to DocMagic with confidence and joy. 🚀
+
+> 💡 **New to open source?** Perfect! DocMagic is designed to be contributor-friendly. We provide mentorship, detailed feedback, and celebrate every contribution - no matter how small!
 
 ---
 
-## About DocMagic
+## 🎯 Table of Contents
 
-**DocMagic** is an open-source platform that allows users to generate professional documents like resumes, CVs, business letters, and slide presentations using advanced AI (Google Gemini), styled with Tailwind CSS and animated with Framer Motion.
-
-> "Describe what you want, and let AI build it for you."
-
-* 🌍 Used in 50+ countries
-* 🧑‍💼 50,000+ documents generated
-* 💖 Open source and community driven
-
-
+- [🌟 About DocMagic](#-about-docmagic)
+- [🌟 GirlScript Summer of Code 2025 (GSSoC)](#-girlscript-summer-of-code-2025-gssoc)
+- [🚀 Quick Start Guide](#-quick-start-guide)
+- [🔍 Finding Your First Issue](#-finding-your-first-issue)
+- [🤝 Ways to Contribute](#-ways-to-contribute)
+- [⚙️ Development Setup](#️-development-setup)
+- [🌿 Git Workflow & Best Practices](#-git-workflow--best-practices)
+- [📝 Coding Standards](#-coding-standards)
+- [📋 Pull Request Process](#-pull-request-process)
+- [🐛 Reporting Issues](#-reporting-issues)
+- [📚 Resources & Support](#-resources--support)
 
 ---
 
-## GirlScript Summer of Code 2025 (GSSoC)
+## 🌟 About DocMagic
 
-DocMagic is proudly participating in **GirlScript Summer of Code 2025** 🎉
+**DocMagic** is a cutting-edge, open-source AI-powered document creation platform that transforms how professionals create stunning documents. Built with modern technologies and community-first principles, we're revolutionizing document generation for the world.
+
+### 🛠️ **Tech Stack**
+
+- **Frontend**: Next.js 15 + React 18 + TypeScript
+- **Styling**: Tailwind CSS + Framer Motion
+- **Backend**: Supabase (PostgreSQL + Auth)
+- **AI**: Google Gemini AI
+- **Payments**: Stripe
+- **Deployment**: Netlify/Vercel
+
+**🌐 Live Demo**: [https://doc-magic-heob.vercel.app/](https://doc-magic-heob.vercel.app/)
+
+---
+
+## 🌟 GirlScript Summer of Code 2025 (GSSoC)
+
+**DocMagic is proudly participating in GirlScript Summer of Code 2025** 🎉
 
 If you're a GSSoC contributor:
 
-* Look for `GSSoC 2025`, `good first issue`, and `documentation` labels in [issues](https://github.com/Muneerali199/DocMagic/issues)
-* Ask to be assigned before starting work
-* Mention GSSoC in your PR description
+- **Look for labels**: Search for issues labeled `GSSoC 2025`, `good first issue`, and `documentation` in [issues](https://github.com/Muneerali199/DocMagic/issues)
+- **Ask to be assigned**: Always request assignment before starting work on any issue
+- **Mention GSSoC**: Include "GSSoC" in your PR description to help us track contributions
+- **We're excited to mentor and grow with you!** 🚀
 
-We're excited to mentor and grow with you!
-
-
----
-
-## Ways to Contribute
-
-You can contribute in multiple ways:
-
-| Type             | Description                                 |
-| ---------------- | ------------------------------------------- |
-| 💻 Code          | Features, bug fixes, animations             |
-| 📄 Documentation | Improve README, guides, setup docs          |
-| 🎨 Design        | UI/UX, accessibility, responsiveness        |
-| 🧠 AI            | Prompt engineering, generation improvements |
-| 🧪 Testing       | Write unit tests, manual QA                 |
-
-
+> 💡 **GSSoC Contributors**: We provide dedicated mentorship, detailed code reviews, and celebrate every contribution. This is your opportunity to learn, grow, and make a real impact on an open-source project used by thousands!
 
 ---
 
-## How to Contribute
+## 🚀 Quick Start Guide
 
-Here’s a step-by-step breakdown for new contributors:
+Ready to contribute? Here's the fastest way to get started:
 
-1. **Fork** the repository to your own GitHub account.
-2. **Clone** the forked repository:
+### 1️⃣ **Fork & Clone**
 
 ```bash
-git clone https://github.com/<your-username>/DocMagic.git
+# Fork the repository on GitHub first, then:
+git clone https://github.com/YOUR_USERNAME/DocMagic.git
+cd DocMagic
 ```
 
-3. **Set up the project locally** 
-4. **Find an issue** to work on from the [Issues tab](https://github.com/Muneerali199/DocMagic/issues).
-5. **Ask to be assigned** by commenting on the issue:
-
-   > "I'd like to work on this issue. Please assign it to me. 😊"
-6. **Create a new branch** for your work:
+### 2️⃣ **Install Dependencies**
 
 ```bash
-git checkout -b gssoc/feature-name
+npm install
 ```
 
-7. **Make your changes**, ensuring they follow our coding guidelines.
-8. **Test locally**, run `npm run lint`.
-9. **Commit and push** your changes:
+### 3️⃣ **Set Up Environment**
+
+DocMagic requires several API keys for full functionality. Follow these steps:
+
+#### **Create Environment File**
+
+Create a new file named `.env.local` in your project root directory (same level as `package.json`)
+
+#### **Add Required Environment Variables**
+
+Copy the following into your `.env.local` file and replace the placeholder values:
 
 ```bash
+# App Configuration
+NEXT_PUBLIC_APP_NAME=DocMagic
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Supabase (Database & Auth) - Required
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Google Gemini AI - Required for AI features
+GEMINI_API_KEY=your_gemini_api_key
+
+# Stripe (Payments) - Optional for development
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key
+STRIPE_SECRET_KEY=sk_test_your_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+STRIPE_PRICE_ID=price_your_price_id
+NEXT_PUBLIC_ENABLE_STRIPE=false
+
+# Pexels API (Images) - Optional
+PEXELS_API_KEY=your_pexels_api_key
+```
+
+#### **Getting API Keys**
+
+**Supabase Setup** (Required):
+1. Go to [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to Settings → API
+4. Copy your Project URL and anon public key
+
+**Google Gemini AI** (Required):
+1. Visit [Google AI Studio](https://ai.google.dev/)
+2. Create an API key
+3. Copy the key to your `.env.local`
+
+**Stripe** (Optional - for payment testing):
+1. Create account at [stripe.com](https://stripe.com)
+2. Get test keys from Dashboard → Developers → API keys
+
+**Need Help?** 🤝 Contact our mentors and Project Admins:
+- Comment on your assigned issue or PR
+- Reach out on Discord: [DocMagic Community Server]
+- Connect on LinkedIn: [Project Admin Profiles]
+- We're here to help you succeed!
+
+### 4️⃣ **Start Development Server**
+
+```bash
+npm run dev
+```
+
+### 5️⃣ **Visit Your Local DocMagic**
+
+Open [http://localhost:3000](http://localhost:3000) - you should see DocMagic running locally! 🎉
+
+---
+
+## 🔍 Finding Your First Issue
+
+New to the project? We've got you covered! Here's how to find the perfect first contribution:
+
+### 🎯 **Issue Labels Guide**
+
+| Label              | Description                 | Perfect For              |
+| ------------------ | --------------------------- | ------------------------ |
+| `good first issue` | Beginner-friendly tasks     | First-time contributors  |
+| `documentation`    | Documentation improvements  | Writers, beginners       |
+| `bug`              | Bug fixes needed            | Developers of all levels |
+| `enhancement`      | New feature requests        | Experienced developers   |
+| `help wanted`      | Community assistance needed | Anyone eager to help     |
+| `ui/ux`            | Design improvements         | Designers, frontend devs |
+| `ai`               | AI-related improvements     | AI/ML enthusiasts        |
+
+### 🔍 **How to Find Issues**
+
+1. **Visit our Issues page**: [GitHub Issues](https://github.com/Muneerali199/DocMagic/issues)
+2. **Filter by labels**: Click on `good first issue` for beginner-friendly tasks
+3. **Read the issue description** carefully
+4. **Ask questions** if anything is unclear
+5. **Comment to claim**: "I'd like to work on this. Please assign it to me."
+
+### 💡 **What Makes a Good First Issue?**
+
+- Clear problem description with acceptance criteria
+- Good learning opportunity
+- Doesn't require deep codebase knowledge
+
+### 🤝 **Getting Assigned**
+
+- **One issue at a time** for new contributors
+- **Wait for assignment** before starting work
+- **Ask questions** - we're here to help!
+- **Be patient** - maintainers will respond within 24-48 hours
+- **Need guidance?** Contact mentors and Project Admins via Discord, LinkedIn, or comment on the issue
+
+---
+
+## 🤝 Ways to Contribute
+
+We believe every contribution matters! Here's how you can help make DocMagic even more magical:
+
+| 🎨 **Contribution Type**    | 📝 **Description**                                 | 🎯 **Perfect For**           |
+| --------------------------- | -------------------------------------------------- | ---------------------------- |
+| **💻 Code Features**        | Build new AI features, UI components, workflows    | Frontend/Backend developers  |
+| **🐛 Bug Fixes**            | Fix issues, improve performance, enhance stability | Developers of all levels     |
+| **📚 Documentation**        | Improve guides, API docs, tutorials, README        | Technical writers, beginners |
+| **🎨 Design & UX**          | Enhance UI/UX, accessibility, responsive design    | Designers, UX enthusiasts    |
+| **🧠 AI Improvements**      | Optimize prompts, enhance AI responses, training   | AI/ML enthusiasts            |
+| **🧪 Testing**              | Write tests, manual QA, performance testing        | QA engineers, developers     |
+| **🌍 Internationalization** | Translate UI, localize content                     | Multilingual community       |
+| **📖 Tutorials & Content**  | Create guides, video tutorials, blog posts         | Content creators, educators  |
+
+> **🌟 First-time contributor?** Look for issues labeled `good first issue` - they're specifically designed to help you get started!
+
+---
+
+## ⚙️ Development Setup
+
+### 📋 **Prerequisites**
+
+Before diving in, ensure you have:
+
+- **Node.js**: Version 18+ ([Download here](https://nodejs.org/))
+- **npm**: Usually comes with Node.js
+- **Git**: For version control ([Download here](https://git-scm.com/))
+- **Code Editor**: VS Code recommended with these extensions:
+  - ES7+ React/Redux/React-Native snippets
+  - Tailwind CSS IntelliSense
+  - TypeScript and JavaScript Language Features
+  - Prettier - Code formatter
+
+### 📝 **Development Commands**
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Run linting
+npm run lint
+
+# Build for production (to test)
+npm run build
+```
+
+**Having Issues?** 💬 Don't hesitate to reach out:
+- Comment on your issue or PR for specific help
+- Join the GSSoC Discord community for real-time support
+- Connect with mentors on LinkedIn
+- We believe in supporting every contributor!
+
+---
+
+## 🌿 Git Workflow & Best Practices
+
+We use a simple but effective Git workflow that keeps our codebase clean and organized.
+
+### 🌳 **Branch Naming Convention**
+
+```bash
+# Feature branches
+feature/your-feature-name
+feature/ai-prompt-optimization
+
+# Bug fix branches
+fix/issue-description
+fix/resume-export-error
+
+# Documentation branches
+docs/update-contributing-guide
+
+# Chore/maintenance branches
+chore/dependency-updates
+```
+
+### 🔄 **Contribution Workflow**
+
+#### **Step 1: Sync Your Fork**
+
+```bash
+# Add upstream remote (do this once)
+git remote add upstream https://github.com/Muneerali199/DocMagic.git
+
+# Sync your fork before starting work
+git checkout main
+git pull upstream main
+git push origin main
+```
+
+#### **Step 2: Create Feature Branch**
+
+```bash
+# Create and switch to new branch
+git checkout -b feature/your-amazing-feature
+```
+
+#### **Step 3: Commit Your Changes**
+
+```bash
+# Stage your changes
 git add .
-git commit -m "feat: add feature for GSSoC 2025"
-git push origin gssoc/feature-name
+
+# Commit with descriptive message
+git commit -m "feat: add dark mode toggle to navigation"
+
+# Push to your fork
+git push origin feature/your-amazing-feature
 ```
 
-10. **Open a Pull Request (PR)** on GitHub:
+#### **Step 4: Create Pull Request**
 
-    * Link the issue in the PR (e.g., `Fixes #issue_number`)
-    * Describe your changes clearly
-    * Add screenshots or gifs if UI-related
+1. Go to your fork on GitHub
+2. Click "Compare & pull request"
+3. Fill out the PR template
+4. Link related issues
+5. Submit for review!
 
-That's it! 🎉 Wait for a maintainer to review your PR.
+### 📝 **Commit Message Format**
 
-
-
----
-
-## Project Architecture
-
-| Layer      | Tools                       |
-| ---------- | --------------------------- |
-| Frontend   | Next.js 15, React 18        |
-| Styling    | Tailwind CSS, Framer Motion |
-| State Mgmt | Zustand, React Hook Form    |
-| Backend    | Supabase (PostgreSQL, Auth) |
-| AI         | Google Gemini AI            |
-| Payments   | Stripe                      |
-
-
-
----
-
-## Prerequisites
-
-Before you start:
-
-* ✅ Git + GitHub account
-* ✅ Node.js v18+
-* ✅ npm or yarn
-* ✅ Code editor (VS Code recommended)
-
-
-
----
-
-## Getting Started Locally
+We use conventional commits for clarity:
 
 ```bash
-# 1. Fork the repo
-# 2. Clone your fork
-$ git clone https://github.com/<your-username>/DocMagic.git
-$ cd DocMagic
-
-# 3. Install dependencies
-$ npm install
-
-# 4. Set up env vars
-$ cp .env.example .env.local
-# Add keys for Supabase, Stripe, Gemini
-
-# 5. Run project
-$ npm run dev
+# Types: feat, fix, docs, style, refactor, test, chore
+feat: add new AI prompt optimization
+fix: resolve mobile navigation issue
+docs: update installation instructions
+style: improve button hover animations
+refactor: optimize database queries
+test: add unit tests for resume generator
+chore: update dependencies
 ```
 
-Visit <http://localhost:3000> to preview the app.
-
-
-
 ---
 
-## How to Find and Claim Issues
+## 📝 Coding Standards
 
-1. Go to the [Issues tab](https://github.com/Muneerali199/DocMagic/issues)
-2. Filter by labels like `good first issue`, `GSSoC 2025`, `bug`
-3. Comment: "I'd like to work on this. Please assign it to me."
-4. Wait for confirmation before starting
+Our coding standards ensure consistency, readability, and maintainability across the entire codebase.
 
+### 🎯 **TypeScript Guidelines**
 
+- **Always use TypeScript** - No plain JavaScript files
+- **Strict typing** - Avoid `any` type whenever possible
+- **Interface over Type** - Prefer interfaces for object shapes
 
----
+```typescript
+// ✅ Good
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+}
 
-## How to Submit a Pull Request (PR)
+// ❌ Avoid
+const user: any = { ... }
+```
 
-Once your issue is assigned:
+### 🎨 **Styling Guidelines**
+
+- **Tailwind CSS only** - No custom CSS unless absolutely necessary
+- **Mobile-first approach** - Start with mobile styles, scale up
+- **Consistent spacing** - Use Tailwind's spacing scale
+
+```tsx
+// ✅ Good
+<button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors">
+  Click me
+</button>
+
+// ❌ Avoid inline styles
+<button style={{ backgroundColor: '#007bff', padding: '8px 16px' }}>
+  Click me
+</button>
+```
+
+### 🧩 **Component Guidelines**
+
+- **Use Radix UI** for complex components
+- **Implement accessibility** - ARIA labels, keyboard navigation
+- **Props interfaces** for all components
+
+```tsx
+// ✅ Good component structure
+interface ButtonProps {
+  variant?: "primary" | "secondary";
+  children: React.ReactNode;
+  onClick?: () => void;
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  variant = "primary",
+  children,
+  onClick,
+}) => {
+  return (
+    <button className={cn(buttonVariants({ variant }))} onClick={onClick}>
+      {children}
+    </button>
+  );
+};
+```
+
+### ✅ **Code Quality Checks**
+
+Before submitting any PR, ensure:
 
 ```bash
-# Create a new branch
-$ git checkout -b gssoc/feature-name
+# Linting passes
+npm run lint
 
-# Make your changes
+# TypeScript compilation succeeds
+npm run build
 
-# Stage and commit
-$ git add .
-$ git commit -m "feat: add feature X for GSSoC 2025"
-
-# Push to GitHub
-$ git push origin gssoc/feature-name
+# Tests pass (when implemented)
+npm run test
 ```
 
-Then go to GitHub → Open a Pull Request
+---
 
-* Base: `main`
-* Compare: your branch
-* Title: `feat: Add X [GSSoC 2025]`
-* Description: Link issue, explain work, add screenshots if UI-related
+## 📋 Pull Request Process
 
+Creating a great pull request is an art! Here's how to make yours shine:
 
+### 🎯 **Before You Start**
+
+- Issue is assigned to you
+- You understand the requirements
+- Your branch is up to date with main
+
+### 📝 **PR Creation Checklist**
+
+#### **1. Code Quality**
+
+- Code follows our style guidelines
+- TypeScript compilation succeeds
+- ESLint passes without errors
+- No console.log statements in production code
+
+#### **2. Testing**
+
+- Manual testing completed
+- All existing functionality still works
+- New features work as expected
+- Mobile responsiveness verified (if UI changes)
+
+#### **3. Documentation**
+
+- Code is self-documenting with clear variable names
+- Complex logic includes comments
+- README updated (if needed)
+
+### 🚀 **Creating the Perfect PR**
+
+#### **PR Title Format**
+
+```
+type(scope): brief description
+
+Examples:
+feat(ai): add prompt optimization for better resume generation
+fix(ui): resolve mobile navigation menu overflow
+docs(setup): update environment configuration guide
+```
+
+#### **PR Description Template**
+
+```markdown
+## 🎯 What does this PR do?
+
+Brief description of the changes made.
+
+## 🔗 Related Issue
+
+Fixes #123
+Closes #456
+
+## 🧪 How to test
+
+1. Go to [specific page/component]
+2. Click on [specific element]
+3. Verify that [expected behavior]
+
+## 📷 Screenshots/GIFs
+
+[Add screenshots for UI changes]
+
+## ✅ Checklist
+
+- Code follows style guidelines
+- Self-review completed
+- Manual testing done
+- Documentation updated (if needed)
+
+## 💭 Additional Notes
+
+Any additional context or considerations.
+```
+
+### 🔄 **Review Process**
+
+1. **Automated Checks**: Our CI will run linting, type checking, and tests
+2. **Code Review**: Maintainers will review your code and provide feedback
+3. **Iterate**: Make requested changes and push updates
+4. **Approval**: Once approved, your PR will be merged!
+
+**⏱️ Review Times**: We aim to review PRs within 24-48 hours. Complex changes may take longer.
+
+**Need Help During Review?** 🤝
+- Reply to review comments for clarification
+- Reach out to mentors on Discord or LinkedIn
+- Comment on your PR if you're stuck
+- We're committed to helping you succeed!
 
 ---
 
-## Style and Coding Guidelines
+## 🐛 Reporting Issues
 
-* ✅ Use TypeScript, not JavaScript
-* ✅ Use Tailwind for all styles
-* ✅ Use Radix UI and accessible components
-* ✅ Use Zod for validation
-* ✅ Format code with Prettier
-* ✅ Run `npm run lint` before committing
+Found a bug or have a feature request? We'd love to hear from you!
 
+### 🐞 **Bug Reports**
 
+When reporting bugs, please include:
 
----
+1. **Clear title** describing the issue
+2. **Steps to reproduce** the problem
+3. **Expected behavior** vs actual behavior
+4. **Screenshots/videos** if applicable
+5. **Environment details**:
+   - Browser/version
+   - Operating system
+   - Device type (mobile/desktop)
 
-## Reporting Issues or Suggesting Features
+### 💡 **Feature Requests**
 
-To report bugs or suggest features:
+For new features, please describe:
 
-1. Go to the [Issues tab](https://github.com/Muneerali199/DocMagic/issues)
-2. Click "New Issue"
-3. Choose Bug Report or Feature Request template
-4. Provide details, steps to reproduce, screenshots (if needed)
+1. **The problem** you're trying to solve
+2. **Proposed solution** or feature description
+3. **Use cases** and benefits
+4. **Mockups or examples** if applicable
 
+### 🔍 **Before Submitting**
 
-
----
-
-## Community and Help
-
-We love community support 💬
-
-* 🐦 Twitter: [@DocMagicAI](https://x.com/DocMagicAI)
-* 📧 Email: [hello@docmagic.ai](mailto:hello@docmagic.com)
-
----
-
-## Licensing
-
-DocMagic is released under the **MIT License**. You’re free to use, modify, and share it with proper credit.
-
-
+- Search existing issues to avoid duplicates
+- Be respectful and constructive
+- Provide as much detail as possible
+- **Need help writing a good issue?** Feel free to ask mentors and Project Admins for guidance via Discord, LinkedIn, or in the issue comments
 
 ---
 
-## Code of Conduct
+### 🤝 **Community Guidelines**
 
-We follow the #Contributor Covenant Code of Conduct. Please:
+We're committed to providing a welcoming and inclusive environment for everyone. Please:
 
-* Be respectful
-* Avoid discriminatory language
-* Help make the community inclusive and supportive
-
+- Be respectful and kind to all community members
+- Use inclusive language and be mindful of cultural differences
+- Provide constructive feedback and be open to receiving it
+- Help newcomers feel welcome and supported
+- Focus on collaboration over competition
 
 ---
 
-## Final Words
+## 📚 Resources & Support
 
-Thank you for your interest in contributing to **DocMagic** ✨
-Together, let’s make document creation magical, inclusive, and open for all 💖
+### 🔗 **Useful Links**
 
-> "Your first PR may be small, but it matters. Welcome to open source!"
+- **Live Demo**: [https://doc-magic-heob.vercel.app/](https://doc-magic-heob.vercel.app/)
+- **About Page**: [https://doc-magic-heob.vercel.app/about](https://doc-magic-heob.vercel.app/about)
+- **GitHub Repository**: [https://github.com/Muneerali199/DocMagic](https://github.com/Muneerali199/DocMagic)
+
+### 🛠️ **Development Resources**
+
+- **Next.js Docs**: [nextjs.org/docs](https://nextjs.org/docs)
+- **React Docs**: [react.dev](https://react.dev/)
+- **TypeScript Docs**: [typescriptlang.org](https://www.typescriptlang.org/)
+- **Tailwind CSS**: [tailwindcss.com](https://tailwindcss.com/)
+- **Supabase Docs**: [supabase.com/docs](https://supabase.com/docs)
+
+---
+
+## 📜 Code of Conduct
+
+This project and everyone participating in it is governed by our [Code of Conduct](./Code_of_Conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+
+## 📄 License
+
+By contributing to DocMagic, you agree that your contributions will be licensed under the [MIT License](./LICENSE).
+
+---
+
+<div align="center">
+
+**Thank you for being part of the DocMagic community!** ✨
+
+_Together, we're making document creation magical for everyone._
+
+</div>
