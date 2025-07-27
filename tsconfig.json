@@ -11,12 +11,9 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-
-    "moduleResolution": "node",
-
+    "module": "Node16",
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node16",
 
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -44,8 +41,7 @@
       ]
     },
     "typeRoots": [
-      "./node_modules/@types",
-      "./types"
+      "./node_modules/@types"
     ],
     "types": [
       "node",
