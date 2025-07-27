@@ -13,11 +13,9 @@
 [![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animations-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red?style=for-the-badge)](https://github.com/docmagic-ai/docmagic)
-[![Netlify Status](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://docmagic1.netlify.app)
-[![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen?style=for-the-badge)](https://github.com/docmagic-ai/docmagic/releases)
+[![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen?style=for-the-badge)](https://github.com/Muneerali199/DocMagic/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
-[![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)]
+[![Contributors](https://img.shields.io/badge/Contributors-Welcome-orange?style=for-the-badge)]()
 <br />
 
 ![DocMagic Hero](screenshots/DocMagicHero.png)
@@ -853,7 +851,6 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 ### 🆘 **Get Help**
 
-- 💬 **Discord Community**: [Join our Discord]
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/docmagic/issues)
 - 💡 **Feature Requests**: [GitHub Discussions](https://github.com/yourusername/docmagic/discussions)
 
@@ -866,9 +863,7 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 ### 🌐 **Social Media**
 
-- **Twitter**: [@DocMagicAI]
 - **LinkedIn**: [DocMagic Company](https://linkedin.com/company/docmagic)
-- **GitHub**: [DocMagic Organization](https://github.com/docmagic-ai)
 
 ---
 
@@ -876,9 +871,8 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 
 ### 🚀 **Ready to Create Magic?**
 
-[![Get Started](https://img.shields.io/badge/🚀_Get_Started-Create_Your_First_Document-667eea?style=for-the-badge&logoColor=white)](https://docmagic1.netlify.app)
+[![Get Started](https://img.shields.io/badge/🚀_Get_Started-Create_Your_First_Document-667eea?style=for-the-badge&logoColor=white)](https://doc-magic-heob.vercel.app/)
 [![Star on GitHub](https://img.shields.io/badge/⭐_Star_on_GitHub-Support_the_Project-yellow?style=for-the-badge&logoColor=white)](https://github.com/yourusername/docmagic)
-[![Join Discord](https://img.shields.io/badge/💬_Join_Discord-Community_Chat-5865F2?style=for-the-badge&logoColor=white)]
 
 <br />
 
@@ -887,8 +881,6 @@ Got questions? Check out our comprehensive [FAQ](./FAQ.md) for answers to common
 _Transforming ideas into professional documents, one AI generation at a time._
 
 <br />
-
-![Footer Image](https://via.placeholder.com/600x100/667eea/ffffff?text=✨+DocMagic+-+AI+Document+Creation+Platform+✨)
 
 </div>
 
