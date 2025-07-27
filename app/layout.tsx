@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { Inter, Poppins } from "next/font/google";
 import { Providers } from "./providers";
 import { CursorProvider } from "@/components/cursor-provider";
+import { SmoothScrollWrapper } from '@/components/SmoothScrollWrapper';
+import { SmoothScrollWrapper } from '@/components/SmoothScrollWrapper';
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({ 
@@ -24,6 +26,7 @@ export default function RootLayout({
             {children}
           </CursorProvider>
         </Providers>
+         <SmoothScrollWrapper>{children}</SmoothScrollWrapper>
       </body>
     </html>
   );
