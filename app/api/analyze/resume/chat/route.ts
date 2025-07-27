@@ -59,10 +59,10 @@ export async function POST(req: Request) {
         parts: [{ text: "I understand. I'll help you improve your resume. What specific changes would you like to make?" }],
       },
       ...(conversationHistory || []).map((msg: any) => ({
-        role: msg.role,
+        role: msg.role === 'assistant' ? 'model' : msg.role, // Convert 'assistant' to 'model'
         parts: [{ text: msg.content }],
       })),
-    ];
+    ].filter(msg => ['user', 'model', 'function'].includes(msg.role)); // Filter out any invalid roles
 
     // Start a chat session
     const chat = model.startChat({
