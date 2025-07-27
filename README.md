@@ -1144,15 +1144,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-## 🌟 Top Contributors
+🌟 Top Contributors
 
 We sincerely thank the amazing individuals who have contributed to DocMagic. Your time, effort, and ideas make this project better every day.
 
 <!-- You can use GitHub's built-in contributors image -->
 
 [![Contributors](https://contrib.rocks/image?repo=Muneerali199/DocMagic)](https://github.com/Muneerali199/DocMagic/graphs/contributors)
-
-> Want to contribute? Check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide and submit your first PR!
 
   <p>Built with ❤️ by the DocMagic Team</p>
   <p><strong>Designed by <a href="https://github.com/Xenonesis">Xenonesis</a></strong></p>
