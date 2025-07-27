@@ -14,50 +14,47 @@ export function useTrailingCursor({
 
   const mousePosition = useRef<CursorPosition>({ x: 0, y: 0 });
   const trailPosition = useRef<CursorPosition>({ x: 0, y: 0 });
-  const animationId = useRef<number| null>(null);
+  const animationId = useRef<number | null>(null);
 
-  // Check if device is mobile/touch
+  // Mobile detection
   const checkMobile = useCallback(() => {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const isSmallScreen = window.innerWidth < 768;
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-    
-    setIsMobile(isTouchDevice || isSmallScreen || isMobileUA);
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const isSmall = window.innerWidth < 768;
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobileUA = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+    setIsMobile(isTouch || isSmall || isMobileUA);
   }, []);
 
   useEffect(() => {
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, [checkMobile]);
 
-  // Mouse move handler
+  // Mouse movement
   const handleMouseMove = useCallback((e: MouseEvent) => {
     mousePosition.current = { x: e.clientX, y: e.clientY };
-    
+
     if (!isVisible) {
       setIsVisible(true);
       trailPosition.current = { x: e.clientX, y: e.clientY };
     }
+
     if (!animationId.current) {
       animationId.current = requestAnimationFrame(animate);
     }
   }, [isVisible]);
-  
+
   const handleMouseLeave = useCallback(() => {
     setIsVisible(false);
   }, []);
 
   // Hover detection
+  const interactiveSelectors =
+    'a, button, input, textarea, select, [role="button"], [tabindex], .cursor-pointer, [data-interactive]';
+
   const handleMouseOver = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
-    const interactiveSelectors = [
-      'a', 'button', 'input', 'textarea', 'select',
-      '[role="button"]', '[tabindex]', '.cursor-pointer',
-      '[data-interactive]'
-    ].join(', ');
-    
     if (target.matches(interactiveSelectors) || target.closest(interactiveSelectors)) {
       setIsHovering(true);
     }
@@ -65,57 +62,48 @@ export function useTrailingCursor({
 
   const handleMouseOut = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
-    const interactiveSelectors = [
-      'a', 'button', 'input', 'textarea', 'select',
-      '[role="button"]', '[tabindex]', '.cursor-pointer',
-      '[data-interactive]'
-    ].join(', ');
-    
     if (target.matches(interactiveSelectors) || target.closest(interactiveSelectors)) {
       setIsHovering(false);
     }
   }, []);
 
-  // Setup event listeners
+  // Event listeners
   useEffect(() => {
     if (disabled || isMobile) return;
 
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
-    document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('mouseover', handleMouseOver);
-    document.addEventListener('mouseout', handleMouseOut);
+    document.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseover", handleMouseOver);
+    document.addEventListener("mouseout", handleMouseOut);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      document.removeEventListener('mouseover', handleMouseOver);
-      document.removeEventListener('mouseout', handleMouseOut);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseover", handleMouseOver);
+      document.removeEventListener("mouseout", handleMouseOut);
     };
   }, [disabled, isMobile, handleMouseMove, handleMouseLeave, handleMouseOver, handleMouseOut]);
 
-  // Animation loop with performance optimizations
+  // Animation loop
   const animate = useCallback(() => {
     if (disabled || isMobile) return;
 
-    // Use easing for smooth trailing effect
     const easing = trailSpeed;
     trailPosition.current.x += (mousePosition.current.x - trailPosition.current.x) * easing;
     trailPosition.current.y += (mousePosition.current.y - trailPosition.current.y) * easing;
 
-    // Only continue animation if there's significant movement
-    const deltaX = Math.abs(mousePosition.current.x - trailPosition.current.x);
-    const deltaY = Math.abs(mousePosition.current.y - trailPosition.current.y);
+    animationId.current = requestAnimationFrame(animate); // smoother loop
+  }, [disabled, isMobile, trailSpeed]);
 
-      animationId.current = requestAnimationFrame(animate);
-    
   useEffect(() => {
     if (disabled || isMobile) return;
 
-    animate();
+    animationId.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationId.current) {
         cancelAnimationFrame(animationId.current);
+        animationId.current = null;
       }
     };
   }, [animate, disabled, isMobile]);
