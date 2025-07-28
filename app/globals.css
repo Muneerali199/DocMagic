@@ -1422,7 +1422,7 @@ img {
     #f472b6 100%
   );
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: rgb(255, 250, 250);
   background-clip: text;
   background-size: 200% 200%;
   animation: gradient-shift 4s ease infinite;
