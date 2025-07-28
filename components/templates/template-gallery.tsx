@@ -84,7 +84,7 @@ export function TemplateGallery({
     if (onSelectTemplate) {
       onSelectTemplate(template);
     } else {
-      router.push(`/documents/new?templateId=${template.id}`);
+      router.push(`/templates/${template.id}/use`);
     }
   };
   
@@ -147,7 +147,7 @@ export function TemplateGallery({
           <TemplatePreview
             key={template.id}
             template={template}
-            onUseTemplate={() => handleUseTemplate(template)}
+            onUseTemplate={(template) => handleUseTemplate(template)}
             onEdit={() => router.push(`/templates/${template.id}/edit`)}
             className="h-full"
           />

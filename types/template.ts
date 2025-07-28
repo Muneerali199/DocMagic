@@ -14,6 +14,8 @@ export interface TemplateFormValues {
   title: string;
   description?: string;
   type: 'resume' | 'presentation' | 'letter' | 'cv';
-  content: Record<string, any>;
+  content?: Record<string, any>;
   isPublic: boolean;
+  useAI?: boolean;
+  aiPrompt?: string;
 }

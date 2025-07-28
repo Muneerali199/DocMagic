@@ -1,39 +1,52 @@
 import { createRoute } from '@/lib/supabase/server';
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
   const limit = searchParams.get('limit');
   const includePublic = searchParams.get('includePublic') === 'true';
-  
   const supabase = createRoute();
-  
   try {
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-        status: 401,
+      // If no user is authenticated, return public templates only
+      let query = supabase
+        .from('templates')
+        .select('*')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+      // Add type filter if provided
+      if (type) {
+        query = query.eq('type', type);
+      }
+      // Add limit if provided
+      if (limit) {
+        query = query.limit(Number(limit));
+      }
+      const { data: templates, error: templatesError } = await query;
+      if (templatesError) {
+        console.log('Database error:', templatesError.message);
+        return new Response(JSON.stringify([]), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return new Response(JSON.stringify(templates || []), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
     // Base query for user's templates
     let query = supabase
       .from('templates')
       .select('*')
       .eq('user_id', user.id);
-
     // Add type filter if provided
     if (type) {
       query = query.eq('type', type);
     }
-
     // Add limit if provided
     if (limit) {
       query = query.limit(Number(limit));
     }
-
     // Include public templates if requested
     if (includePublic) {
       const { data: publicTemplates } = await supabase
@@ -41,22 +54,22 @@ export async function GET(request: Request) {
         .select('*')
         .eq('is_public', true)
         .neq('user_id', user.id);
-
       const { data: userTemplates, error: templatesError } = await query;
-      
       if (templatesError) throw templatesError;
-
       // Combine user's templates with public templates
       const allTemplates = [...(userTemplates || []), ...(publicTemplates || [])];
       return new Response(JSON.stringify(allTemplates), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
     // Just return user's templates
     const { data: templates, error: templatesError } = await query;
-    if (templatesError) throw templatesError;
-
+    if (templatesError) {
+      console.log('Database error:', templatesError.message);
+      return new Response(JSON.stringify([]), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
     return new Response(JSON.stringify(templates || []), {
       headers: { 'Content-Type': 'application/json' }
     });
@@ -68,34 +81,44 @@ export async function GET(request: Request) {
     );
   }
 }
-
 export async function POST(request: Request) {
   const supabase = createRoute();
-  
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
     const body = await request.json();
     const { title, description, type, content, isPublic } = body;
 
     // Validate required fields
     if (!title || !type) {
       return new Response(
-        JSON.stringify({ error: 'Title and type are required' }), 
+        JSON.stringify({ error: 'Title and type are required' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
+    // Validate type
+    const validTypes = ['resume', 'presentation', 'letter', 'cv'];
+    if (!validTypes.includes(type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid template type' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Generate a unique ID for the template
+    const templateId = crypto.randomUUID();
+
     const { data: template, error } = await supabase
       .from('templates')
       .insert([
-        { 
+        {
+          id: templateId,
           user_id: user.id,
           title,
           description: description || null,
@@ -107,15 +130,13 @@ export async function POST(request: Request) {
       ])
       .select()
       .single();
-
     if (error) {
       console.error('Error creating template:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to create template' }), 
+        JSON.stringify({ error: 'Failed to create template', details: error.message }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
     return new Response(JSON.stringify(template), {
       status: 201,
       headers: { 'Content-Type': 'application/json' }

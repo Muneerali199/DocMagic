@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0] - 2025-07-28
+### Changed
+- Updated version to 2.0.0 in package.json
+
 All notable changes to DocMagic will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

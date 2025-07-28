@@ -1,16 +1,16 @@
 "use client";
 
+import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, forwardRef } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-export const ThemeToggle = forwardRef<HTMLButtonElement>((props, ref) => {
-  const { theme, setTheme } = useTheme();
+export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
+  const { setTheme, theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -24,17 +24,21 @@ export const ThemeToggle = forwardRef<HTMLButtonElement>((props, ref) => {
     );
   }
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+  const handleToggle = () => {
+    console.log("Theme toggle clicked!", { resolvedTheme });
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
   };
 
   return (
-    <Button 
+    <Button
       ref={ref}
-      variant="outline" 
-      size="icon" 
-      className="rounded-full" 
-      onClick={toggleTheme}
+      variant="outline"
+      size="icon"
+      className="rounded-full cursor-pointer relative z-10"
+      onClick={handleToggle}
+      aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+      style={{ pointerEvents: 'auto' }}
       {...props}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Template } from "@/types/templates";
 import { getTemplateTypeIcon, getTemplatePreview } from "@/lib/templates";
@@ -9,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { useUser } from "@/hooks/use-user";
+import { Eye } from "lucide-react";
+import { TemplatePreviewModal } from "./template-preview-modal";
 
 export interface TemplatePreviewProps {
   template: Template;
@@ -16,6 +19,7 @@ export interface TemplatePreviewProps {
   onDelete?: (id: string) => void;
   onShare?: (template: Template) => void;
   onTogglePublic?: (template: Template) => void;
+  onUseTemplate?: (template: Template) => void;
   className?: string;
   isOwner?: boolean;
 }
@@ -26,14 +30,20 @@ export function TemplatePreview({
   onDelete,
   onShare,
   onTogglePublic,
+  onUseTemplate,
   className = "",
   isOwner = false,
 }: TemplatePreviewProps) {
   const router = useRouter();
   const { user } = useUser();
-  
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
   const handleUseTemplate = () => {
-    router.push(`/documents/new?templateId=${template.id}`);
+    if (onUseTemplate) {
+      onUseTemplate(template);
+    } else {
+      router.push(`/templates/${template.id}/use`);
+    }
   };
 
   return (
@@ -89,17 +99,25 @@ export function TemplatePreview({
       </CardContent>
       <div className="p-4 border-t flex justify-between items-center">
         <div className="space-x-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreviewModal(true)}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Preview
+          </Button>
+          <Button
+            variant="default"
             size="sm"
             onClick={handleUseTemplate}
           >
             Use Template
           </Button>
           {isOwner && onEdit && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onEdit(template)}
             >
               Edit
@@ -137,6 +155,13 @@ export function TemplatePreview({
           )}
         </div>
       </div>
+
+      <TemplatePreviewModal
+        template={template}
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        onUseTemplate={onUseTemplate}
+      />
     </Card>
   );
 }

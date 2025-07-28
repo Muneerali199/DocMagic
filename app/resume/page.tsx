@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
 import { ATSAnalyzer } from "@/components/resume/ats-analyzer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, FileText, Zap, Star, Wand2, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ResumeGeneratorSkeleton } from "@/components/ui/skeleton";
@@ -116,25 +117,29 @@ export default function ResumePage() {
             </div>
 
             <TabsContent value="generator" className="pt-6">
-              <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-yellow-400/20 relative overflow-hidden">
-                <div className="absolute inset-0 shimmer opacity-20"></div>
-                <div className="relative z-10">
-                  {isLoading ? (
-                    <ResumeGeneratorSkeleton />
-                  ) : (
-                    <ResumeGenerator />
-                  )}
+              <CreateDocumentGuard>
+                <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-yellow-400/20 relative overflow-hidden">
+                  <div className="absolute inset-0 shimmer opacity-20"></div>
+                  <div className="relative z-10">
+                    {isLoading ? (
+                      <ResumeGeneratorSkeleton />
+                    ) : (
+                      <ResumeGenerator />
+                    )}
+                  </div>
                 </div>
-              </div>
+              </CreateDocumentGuard>
             </TabsContent>
 
             <TabsContent value="analyzer" className="pt-6">
-              <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-yellow-400/20 relative overflow-hidden">
-                <div className="absolute inset-0 shimmer opacity-20"></div>
-                <div className="relative z-10">
-                  <ATSAnalyzer />
+              <CreateDocumentGuard>
+                <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-yellow-400/20 relative overflow-hidden">
+                  <div className="absolute inset-0 shimmer opacity-20"></div>
+                  <div className="relative z-10">
+                    <ATSAnalyzer />
+                  </div>
                 </div>
-              </div>
+              </CreateDocumentGuard>
             </TabsContent>
           </Tabs>
 
