@@ -36,12 +36,16 @@
     "start": "next start",
     "lint": "next lint",
     "setup-db": "node scripts/setup-database.js",
-    "security-check": "npm audit"
+    "security-audit": "node scripts/security-audit.js",
+    "security-check": "npm audit && npm run security-audit",
+    "test-pwa": "./scripts/test-pwa.sh",
+    "build-pwa": "npm run build && npm start"
   },
   "dependencies": {
     "@google/generative-ai": "^0.3.1",
     "@hookform/resolvers": "^3.10.0",
     "@netlify/plugin-nextjs": "^4.41.3",
+    "@phazr/custom-cursor": "^0.1.2",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -95,7 +99,8 @@
     "lucide-react": "^0.446.0",
     "mammoth": "^1.9.1",
     "mermaid": "^11.9.0",
-    "next": "^14.1.0",
+    "next": "^14.2.30",
+    "next-pwa": "^5.6.0",
     "next-themes": "^0.4.6",
     "nodemailer": "^6.10.1",
     "officeparser": "^5.2.0",

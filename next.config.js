@@ -1,3 +1,69 @@
+const withPWA = require('next-pwa')({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development',
+    runtimeCaching: [
+        {
+            urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
+            handler: 'CacheFirst',
+            options: {
+                cacheName: 'static-resources',
+                expiration: {
+                    maxEntries: 64,
+                    maxAgeSeconds: 24 * 60 * 60 * 30 // 30 days
+                }
+            }
+        },
+        {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
+                }
+            }
+        },
+        {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+                cacheName: 'gstatic-fonts-cache',
+                expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 365 // 365 days
+                }
+            }
+        },
+        {
+            urlPattern: /\/api\/.*$/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'apis-cache',
+                expiration: {
+                    maxEntries: 16,
+                    maxAgeSeconds: 24 * 60 * 60 // 24 hours
+                },
+                networkTimeoutSeconds: 10
+            }
+        },
+        {
+            urlPattern: /.*/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'others-cache',
+                expiration: {
+                    maxEntries: 32,
+                    maxAgeSeconds: 24 * 60 * 60 // 24 hours
+                },
+                networkTimeoutSeconds: 10
+            }
+        }
+    ]
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Disable React Strict Mode to prevent double-rendering in development
@@ -76,4 +142,4 @@ const nextConfig = {
     },
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);

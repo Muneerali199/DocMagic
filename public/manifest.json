@@ -1,0 +1,106 @@
+{
+  "name": "DocMagic - AI Document Creation Platform",
+  "short_name": "DocMagic",
+  "description": "Create beautiful resumes, presentations, CVs and letters with AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "utilities", "business"],
+  "screenshots": [
+    {
+      "src": "/screenshots/DocMagicHero.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "DocMagic main interface"
+    },
+    {
+      "src": "/screenshots/Resume.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Resume creation interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Resume",
+      "short_name": "Resume",
+      "description": "Create a new resume",
+      "url": "/resume",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Create Presentation",
+      "short_name": "Presentation",
+      "description": "Create a new presentation",
+      "url": "/presentation",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Create CV",
+      "short_name": "CV",
+      "description": "Create a new CV",
+      "url": "/cv",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Create Letter",
+      "short_name": "Letter",
+      "description": "Create a new letter",
+      "url": "/letter",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ]
+}
