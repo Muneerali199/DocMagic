@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { TemplateList } from "@/components/templates/template-list";
 import { Template } from "@/types/templates";
 import { useToast } from "@/hooks/use-toast";
@@ -21,22 +21,22 @@ export default function TemplatesPage() {
         setIsLoading(true);
 
         // Use the API route which has fallback to mock data
-        const response = await fetch('/api/templates');
+        const response = await fetch("/api/templates");
 
         if (!response.ok) {
-          throw new Error('Failed to fetch templates');
+          throw new Error("Failed to fetch templates");
         }
 
         const allTemplates = await response.json();
         setTemplates(allTemplates);
         setError(null);
       } catch (error) {
-        console.error('Error fetching templates:', error);
-        setError('Failed to load templates. Please try again.');
+        console.error("Error fetching templates:", error);
+        setError("Failed to load templates. Please try again.");
         toast({
-          title: 'Error',
-          description: 'Failed to load templates. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to load templates. Please try again.",
+          variant: "destructive",
         });
       } finally {
         setIsLoading(false);
@@ -69,7 +69,9 @@ export default function TemplatesPage() {
             <div className="flex justify-center items-center h-64">
               <div className="glass-effect p-8 rounded-2xl">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-                <p className="text-muted-foreground mt-4 text-center">Loading templates...</p>
+                <p className="text-muted-foreground mt-4 text-center">
+                  Loading templates...
+                </p>
               </div>
             </div>
           </div>
@@ -87,7 +89,7 @@ export default function TemplatesPage() {
         <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18"></div>
 
         <SiteHeader />
-        <main className="flex-1 relative z-10">
+        <main className="flex-1 relative z-10 mx-auto">
           <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <div className="glass-effect p-8 rounded-2xl max-w-md mx-auto">
@@ -118,10 +120,10 @@ export default function TemplatesPage() {
       />
 
       <SiteHeader />
-      <main className="flex-1 relative z-10">
-        <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 relative z-10 mx-auto">
+        <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8 mx-auto">
           {/* Enhanced Header */}
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12 mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer">
               <BookOpen className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">Template Library</span>
@@ -216,7 +218,8 @@ export default function TemplatesPage() {
                   <Star className="h-5 w-5 text-blue-500 animate-pulse" />
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Start with a template or build your own from scratch with AI assistance
+                  Start with a template or build your own from scratch with AI
+                  assistance
                 </p>
                 <div className="flex flex-wrap justify-center gap-3">
                   <div className="glass-effect px-4 py-2 rounded-full text-xs hover:scale-105 transition-transform duration-300">
