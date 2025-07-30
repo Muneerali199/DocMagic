@@ -33,17 +33,17 @@ export default function ResumePage() {
       />
 
       <SiteHeader />
-      <main className="flex-1 relative z-10">
-        <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 relative z-10 items-center justify-center">
+        <div className="flex flex-col container py-8 sm:py-12 px-4 sm:px-6 lg:px-8 mx-auto text-center">
           {/* Enhanced Header */}
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-8 sm:mb-12 items-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer">
               <FileText className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">Resume Tools</span>
               <Sparkles className="h-4 w-4 text-blue-500" />
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
+            <h1 className="justify-center items-center text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
               Create & Optimize Your{" "}
               <span className="bolt-gradient-text relative inline-block">
                 Professional Resume

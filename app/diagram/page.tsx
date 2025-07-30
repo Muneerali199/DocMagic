@@ -31,7 +31,7 @@ export default function DiagramPage() {
       />
 
       <SiteHeader />
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 mx-auto">
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           {/* Enhanced Header */}
           <div className="text-center mb-8 sm:mb-12">
@@ -53,10 +53,7 @@ export default function DiagramPage() {
 
             <p className="text-base sm:text-lg lg:text-xl leading-7 sm:leading-8 text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-0">
               Design{" "}
-              <span className="font-semibold text-yellow-600">
-                flowcharts
-              </span>
-              ,{" "}
+              <span className="font-semibold text-yellow-600">flowcharts</span>,{" "}
               <span className="font-semibold text-blue-600">
                 system architectures
               </span>
@@ -116,11 +113,7 @@ export default function DiagramPage() {
             </div>
 
             <div className="relative z-10">
-              {isLoading ? (
-                <DiagramGeneratorSkeleton />
-              ) : (
-                <DiagramGenerator />
-              )}
+              {isLoading ? <DiagramGeneratorSkeleton /> : <DiagramGenerator />}
             </div>
           </div>
 
@@ -137,7 +130,8 @@ export default function DiagramPage() {
                   <Star className="h-5 w-5 text-blue-500 animate-pulse" />
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Create professional diagrams that communicate complex concepts clearly
+                  Create professional diagrams that communicate complex concepts
+                  clearly
                 </p>
                 <div className="flex flex-wrap justify-center gap-3">
                   <div className="glass-effect px-4 py-2 rounded-full text-xs hover:scale-105 transition-transform duration-300">
