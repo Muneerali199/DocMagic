@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { DialogClose } from "@radix-ui/react-dialog";
 
 interface ResumeTemplatesProps {
   selectedTemplate: string;
@@ -1802,12 +1803,12 @@ export function ResumeTemplates({
                   <Edit className="h-4 w-4" />
                   Use Template
                 </Button>
-                <button 
+                {/* <button 
                   onClick={() => setPreviewTemplate(null)}
                   className="rounded-full p-2 hover:bg-gray-100 ml-2"
                 >
                   <X className="h-5 w-5" />
-                </button>
+                </button> */}
               </div>
             </div>
           </DialogHeader>
