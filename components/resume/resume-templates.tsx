@@ -1803,12 +1803,6 @@ export function ResumeTemplates({
                   <Edit className="h-4 w-4" />
                   Use Template
                 </Button>
-                {/* <button 
-                  onClick={() => setPreviewTemplate(null)}
-                  className="rounded-full p-2 hover:bg-gray-100 ml-2"
-                >
-                  <X className="h-5 w-5" />
-                </button> */}
               </div>
             </div>
           </DialogHeader>
