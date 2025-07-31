@@ -14,7 +14,6 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { DialogClose } from "@radix-ui/react-dialog";
 
 interface ResumeTemplatesProps {
   selectedTemplate: string;
