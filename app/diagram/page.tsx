@@ -31,7 +31,7 @@ export default function DiagramPage() {
       />
 
       <SiteHeader />
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 flex items-center justify-center">
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           {/* Enhanced Header */}
           <div className="text-center mb-8 sm:mb-12">
@@ -41,7 +41,7 @@ export default function DiagramPage() {
               <Share2 className="h-4 w-4 text-blue-500" />
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight ">
               Create Visual{" "}
               <span className="bolt-gradient-text relative inline-block">
                 Diagrams & Flowcharts

@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Get API key with fallback for build time
-const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 // Initialize with lazy loading to avoid build-time errors
 let genAI: GoogleGenerativeAI | null = null;

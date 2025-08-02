@@ -1,13 +1,51 @@
 # Changelog
 
+## [2.0.0] - 2025-07-28
+### Changed
+- Updated version to 2.0.0 in package.json
+
 All notable changes to DocMagic will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2025-07-27
 
-## [0.9.0] - 2025-01-15
+### 🎉 **Major Release - DocMagic 1.0.0** 🎉
+We're thrilled to announce the official 1.0.0 release of DocMagic! This marks a significant milestone in our open-source AI-powered document creation platform.
+
+### Summary
+This major release completes our transition from beta to a fully-featured, production-ready document creation platform. DocMagic 1.0.0 represents months of development, community feedback, and continuous improvement.
+
+### Key Achievements
+- **Feature Complete**: All planned document types and features are now implemented
+- **Production Ready**: Comprehensive testing, security, and performance optimizations
+- **Community Driven**: Built by and for the open-source community
+- **Enterprise Ready**: Scalable architecture with enterprise-grade reliability
+
+### Complete Feature Set
+- **Resume Builder** - AI-powered resume creation with ATS optimization
+- **CV Generator** - Professional curriculum vitae creation
+- **Letter Writer** - Business and personal letter generation
+- **Presentation Maker** - PowerPoint presentation creation with templates
+- **Diagram Creator** - Visual diagram and flowchart generation
+- **Template System** - Rich template library across all document types
+- **Sharing Capabilities** - Public URL sharing for presentations and documents
+- **Mobile Responsive** - Full mobile support across all features
+
+### Technical Excellence
+- **Modern Architecture** - Next.js 14+ with TypeScript and modern tooling
+- **Security First** - OWASP compliance, authentication, and data protection
+- **Performance Optimized** - Fast loading, responsive design, and smooth animations
+- **Developer Friendly** - Clean code, comprehensive documentation, and extensible architecture
+
+### Migration from 0.9.0 to 1.0.0
+- No breaking changes
+- Seamless upgrade path
+- All existing documents and templates remain compatible
+- Enhanced stability and performance
+
+## [0.9.0] - 2025-07-27
 
 ### Added
 - **Visual Diagram Creator** - Create professional flowcharts, system architectures, and process diagrams

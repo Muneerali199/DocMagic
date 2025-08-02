@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { getActivityDescription } from "@/lib/auth-utils";
 import {
   Sparkles,
   Zap,
@@ -32,13 +33,27 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string>("/");
+  const [activity, setActivity] = useState<string>("");
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
 
-  // Animation mount effect
+  // Animation mount effect and URL parameter handling
   useEffect(() => {
     setMounted(true);
+
+    // Get redirect parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectParam = urlParams.get('redirectTo');
+    const activityParam = urlParams.get('activity');
+
+    if (redirectParam) {
+      setRedirectTo(decodeURIComponent(redirectParam));
+    }
+    if (activityParam) {
+      setActivity(decodeURIComponent(activityParam));
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,13 +71,14 @@ export default function SignIn() {
       }
 
       if (data.user) {
+        const activityDescription = activity ? ` You can now ${activity.replace('_', ' ')}.` : '';
         toast({
           title: "Welcome back! ✨",
-          description: "You've successfully signed in to DocMagic",
+          description: `You've successfully signed in to DocMagic.${activityDescription}`,
         });
 
-        // Redirect to home page
-        router.push("/");
+        // Redirect to the intended page or home
+        router.push(redirectTo);
         router.refresh();
       }
     } catch (error: any) {
@@ -135,7 +151,7 @@ export default function SignIn() {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 badge-bg group hover:scale-105 transition-all duration-300 cursor-pointer">
                 <Zap className="h-4 w-4 text-yellow-500 group-hover:animate-pulse transition-transform duration-300" />
                 <span className="text-sm font-medium bolt-gradient-text">
-                  Welcome Back
+                  {activity ? `Sign in to ${getActivityDescription(activity)}` : "Welcome Back"}
                 </span>
                 <Wand2 className="h-4 w-4 text-blue-500 group-hover:animate-spin transition-transform duration-300" />
               </div>
@@ -148,7 +164,10 @@ export default function SignIn() {
                 </span>
               </h1>
               <p className="modern-body text-muted-foreground text-sm sm:text-base animate-fade-in-up delay-100">
-                Continue creating magical documents with AI
+                {activity
+                  ? `Continue to ${getActivityDescription(activity)} with AI assistance`
+                  : "Continue creating magical documents with AI"
+                }
               </p>
             </div>
 

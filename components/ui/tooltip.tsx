@@ -44,10 +44,15 @@ export function TooltipWithShortcut({
 }: TooltipWithShortcutProps) {
   if (disabled) return <>{children}</>;
 
+  // Check if children is a valid React element that can accept refs
+  const isValidChild = React.isValidElement(children);
+
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger asChild={isValidChild}>
+          {isValidChild ? children : <span>{children}</span>}
+        </TooltipTrigger>
         <TooltipContent side={side}>
           <div className="flex items-center gap-2">
             <span>{content}</span>

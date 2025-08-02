@@ -16,6 +16,9 @@ interface DeleteDialogProps {
   description?: string;
   trigger?: React.ReactNode;
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  isDeleting?: boolean;
 }
 
 export function DeleteDialog({
@@ -24,8 +27,15 @@ export function DeleteDialog({
   description = 'This action cannot be undone.',
   trigger,
   children,
+  open: controlledOpen,
+  onOpenChange,
+  isDeleting = false,
 }: DeleteDialogProps) {
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  // Use controlled or uncontrolled state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const handleConfirm = () => {
     onConfirm();
@@ -42,11 +52,11 @@ export function DeleteDialog({
         </DialogHeader>
         {children}
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleConfirm}>
-            Delete
+          <Button variant="destructive" onClick={handleConfirm} disabled={isDeleting}>
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogFooter>
       </DialogContent>

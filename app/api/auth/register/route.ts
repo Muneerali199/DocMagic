@@ -1,54 +1,53 @@
 import { NextResponse } from 'next/server';
-import { createServer } from '@/lib/supabase/server';
+import { createRoute } from '@/lib/supabase/server';
 import { sendWelcomeEmail } from "@/lib/email";
+import { validateAndSanitize, registrationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 
 // This route handles user registration
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const rawBody = await request.json();
 
-    // Validate input
-    if (!name || !email || !password) {
+    // Validate and sanitize input
+    const { name, email, password } = validateAndSanitize(registrationSchema, rawBody);
+
+    // Additional security checks
+    if (detectSqlInjection(name) || detectSqlInjection(email)) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Invalid input detected' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabase = createServer();
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name);
+    const sanitizedEmail = sanitizeInput(email);
 
-    // Check if user already exists
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error checking user:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Error checking user existence' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (user) {
-      return new Response(
-        JSON.stringify({ error: 'User already exists' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const supabase = createRoute();
 
-    // Sign up with Supabase Auth
+    // Sign up with Supabase Auth (no email confirmation required)
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: sanitizedEmail,
       password,
       options: {
         data: {
-          name,
-          email
+          name: sanitizedName,
+          email: sanitizedEmail
         }
       }
     });
 
     if (error) {
       console.error('Signup error:', error);
+
+      // Handle specific error cases
+      if (error.message.includes('already registered')) {
+        return new Response(
+          JSON.stringify({ error: 'An account with this email already exists' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ error: error.message || 'Failed to create user' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -70,11 +69,15 @@ export async function POST(request: Request) {
       // Don't fail the request if email sending fails
     }
 
+    // Return success message
     return new Response(
       JSON.stringify({
-        id: data.user.id,
-        name,
-        email: data.user.email,
+        message: 'Registration successful! You can now sign in.',
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: sanitizedName
+        }
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

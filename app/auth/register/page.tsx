@@ -97,10 +97,11 @@ export default function Register() {
 
       toast({
         title: "Account created successfully! ✨",
-        description: "Welcome to DocMagic! You're now signed in.",
+        description: result.message || "You can now sign in with your credentials.",
       });
-      router.push("/");
-      router.refresh();
+
+      // Redirect to sign-in page
+      router.push("/auth/signin");
     } catch (error: any) {
       // Enhanced error handling for Supabase registration
       let userMessage = "Failed to create account. Please try again.";

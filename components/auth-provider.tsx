@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.error('Error getting session:', error);
         }
+
+        // Set user from session
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error in getInitialSession:', error);
@@ -44,16 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
         // Handle different auth events
         if (event === 'SIGNED_IN') {
-          console.log('User signed in successfully');
           router.refresh();
         } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
           router.push('/');
           router.refresh();
         }

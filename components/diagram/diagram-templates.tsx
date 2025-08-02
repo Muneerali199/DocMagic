@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,8 @@ import {
   FileText,
   Sparkles,
   Copy,
-  Eye
+  Eye,
+  Check
 } from "lucide-react";
 
 interface DiagramTemplate {
@@ -336,7 +338,7 @@ export function DiagramTemplates({ onSelectTemplate }: DiagramTemplatesProps) {
             <ul className="space-y-1 text-muted-foreground">
               <li>• <code>flowchart TD</code> - Top-down flowchart</li>
               <li>• <code>A[Rectangle]</code> - Rectangle node</li>
-              <li>• <code>B{Diamond}</code> - Decision node</li>
+              <li>• <code>B{"{Diamond}"}</code> - Decision node</li>
               <li>• <code>A --> B</code> - Arrow connection</li>
             </ul>
           </div>

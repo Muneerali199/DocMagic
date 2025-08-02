@@ -17,6 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { PWAInstallButton } from "@/components/pwa-install-button";
+import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import {
@@ -39,7 +41,7 @@ import { useRouter } from "next/navigation";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -53,9 +55,10 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full nav-professional px-2 xs:px-3 sm:px-6 lg:px-10">
-      <div className="container flex h-14 sm:h-16 items-center justify-between px-0">
-        <div className="flex items-center gap-2 xs:gap-3 sm:gap-6 md:gap-10 min-w-0">
+    <header className="sticky top-0 z-50 w-full nav-professional">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 sm:h-16 items-center justify-between">
+          <div className="flex items-center gap-4 lg:gap-8">
           {/* Logo with tooltip for desktop only */}
           <TooltipWithShortcut
             content="Return to homepage"
@@ -167,6 +170,15 @@ export function SiteHeader() {
                     <div className="space-y-1 mt-3">
                       <SheetClose asChild>
                         <Link
+                          href="/profile"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-accent/50 hover:text-accent-foreground transition-colors w-full"
+                        >
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          Profile
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
                           href="/settings"
                           className="flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-accent/50 hover:text-accent-foreground transition-colors w-full"
                         >
@@ -211,13 +223,13 @@ export function SiteHeader() {
           </Sheet>
 
           {/* Desktop Navigation with Tooltips */}
-          <nav className="hidden md:flex items-center gap-2 xs:gap-3 lg:gap-6 min-w-0">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
             {navItems.map((item) => (
               <TooltipWithShortcut key={item.href} content={item.tooltip}>
                 <Link
                   href={item.href}
                   className={cn(
-                    "text-xs xs:text-sm font-medium transition-all duration-300 hover:bolt-gradient-text hover:scale-105 flex items-center gap-1 truncate max-w-[70px] xs:max-w-none relative group",
+                    "text-sm lg:text-base font-medium transition-all duration-300 hover:bolt-gradient-text hover:scale-105 flex items-center gap-2 relative group whitespace-nowrap",
                     pathname === item.href
                       ? "bolt-gradient-text"
                       : "text-muted-foreground"
@@ -231,9 +243,9 @@ export function SiteHeader() {
                   >
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span className="hidden lg:inline">{item.label}</span>
                   {pathname === item.href && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-yellow-500"></div>
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-0.5 rounded-full bg-yellow-500"></div>
                   )}
                 </Link>
               </TooltipWithShortcut>
@@ -241,18 +253,23 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        {/* Right Side Actions */}
-        <div className="flex items-center gap-1 xs:gap-2">
-          {/* Theme Toggle with Tooltip */}
-          <TooltipWithShortcut content="Switch between light and dark theme">
-            <ThemeToggle />
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-3">
+          {/* PWA Install Button */}
+          <TooltipWithShortcut content="Install DocMagic as an app on your device">
+            <PWAInstallButton variant="ghost" size="sm" showText={false} />
           </TooltipWithShortcut>
 
+          {/* Theme Toggle - Simple version for testing */}
+          <SimpleThemeToggle />
+
           {/* Desktop User Menu */}
-          {user ? (
+          {loading ? (
+            <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse hidden md:flex"></div>
+          ) : user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <TooltipWithShortcut content="View account settings and profile">
+              <TooltipWithShortcut content="View account settings and profile">
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     className="relative h-8 w-8 rounded-full hidden md:flex"
@@ -271,8 +288,8 @@ export function SiteHeader() {
                       </AvatarFallback>
                     </Avatar>
                   </Button>
-                </TooltipWithShortcut>
-              </DropdownMenuTrigger>
+                </DropdownMenuTrigger>
+              </TooltipWithShortcut>
               <DropdownMenuContent
                 align="end"
                 className="w-56 bg-background/95 backdrop-blur-xl border-border/50"
@@ -298,6 +315,12 @@ export function SiteHeader() {
                   </div>
                 </div>
                 <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
                   <Link href="/settings" className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4" />
                     Settings
@@ -315,17 +338,15 @@ export function SiteHeader() {
           ) : (
             /* Desktop Sign In Button */
             <TooltipWithShortcut content="Sign in to save and manage your documents">
-              <Button
-                asChild
-                className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-xs xs:text-sm px-2 xs:px-3 sm:px-4 h-8 sm:h-9 hidden md:flex"
-              >
-                <Link href="/auth/signin" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Sign In</span>
-                </Link>
-              </Button>
+              <Link href="/auth/signin">
+                <Button className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
+                  <Zap className="h-4 w-4" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
             </TooltipWithShortcut>
           )}
+          </div>
         </div>
       </div>
     </header>
@@ -346,10 +367,10 @@ const navItems = [
     tooltip: "Generate stunning slide presentations instantly",
   },
   {
-    href: "/diagram",
-    label: "Diagram",
-    icon: <Workflow className="h-4 w-4" />,
-    tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
+    href: "/cv",
+    label: "CV",
+    icon: <FileText className="h-4 w-4" />,
+    tooltip: "Build comprehensive curriculum vitae for academic positions",
   },
   {
     href: "/letter",
@@ -358,15 +379,16 @@ const navItems = [
     tooltip: "Write professional letters and cover letters",
   },
   {
-    href: "/templates",
-    label: "Templates",
-    icon: <FileText className="h-4 w-4" />
+    href: "/diagram",
+    label: "Diagram",
+    icon: <Workflow className="h-4 w-4" />,
+    tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
   },
   {
-    href: "/about",
-    label: "About",
-    icon: <Sparkles className="h-4 w-4" />,
-    tooltip: "Learn more about DocMagic and our features",
+    href: "/templates",
+    label: "Templates",
+    icon: <FileText className="h-4 w-4" />,
+    tooltip: "Browse and manage document templates",
   },
   {
     href: "/pricing",

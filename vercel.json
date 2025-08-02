@@ -1,5 +1,5 @@
 {
     "env": {
-        "NEXT_PUBLIC_APP_URL": "https://your-vercel-url.vercel.app"
+        "NEXT_PUBLIC_APP_URL": "https://.vercel.app"
     }
 }

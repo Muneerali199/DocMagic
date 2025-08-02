@@ -1,75 +1,87 @@
-import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2, Workflow } from "lucide-react";
+import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2, Workflow, Brain, Palette, Shield } from "lucide-react";
 
 export function FeaturesSection() {
   return (
-    <div className="py-10 xs:py-14 sm:py-20 lg:py-32 relative overflow-hidden section-header" id="how-it-works">
-      {/* Enhanced background elements with multiple gradients */}
-      <div className="absolute inset-0 mesh-gradient opacity-20"></div>
-      <div className="absolute top-20 right-10 w-24 h-24 sm:w-32 sm:h-32 sunset-gradient rounded-full opacity-15" style={{animation: 'float 6s ease-in-out infinite'}}></div>
-      <div className="absolute bottom-20 left-10 w-16 h-16 sm:w-24 sm:h-24 ocean-gradient rounded-full opacity-20" style={{animation: 'float 8s ease-in-out infinite', animationDelay: '2s'}}></div>
-      <div className="absolute top-1/3 left-1/4 w-20 h-20 sm:w-28 sm:h-28 forest-gradient rounded-full opacity-15" style={{animation: 'float 7s ease-in-out infinite', animationDelay: '4s'}}></div>
-      <div className="absolute bottom-1/3 right-1/3 w-18 h-18 sm:w-24 sm:h-24 cosmic-gradient rounded-full opacity-18" style={{animation: 'float 9s ease-in-out infinite', animationDelay: '1s'}}></div>
-      
+    <div className="py-20 sm:py-28 lg:py-36 relative overflow-hidden section-header" id="how-it-works">
+      {/* Enhanced background elements */}
+      <div className="absolute inset-0 mesh-gradient opacity-25"></div>
+      <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
+      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 ocean-gradient opacity-20 bottom-20 -left-24"></div>
+      <div className="floating-orb w-56 h-56 sm:w-80 sm:h-80 forest-gradient opacity-15 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+
       <div className="mx-auto max-w-7xl px-2 xs:px-3 sm:px-6 lg:px-8 relative z-10">
-        <div className="mx-auto max-w-2xl lg:text-center">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full gradient-border mb-4 sm:mb-6 relative">
-            <div className="relative z-10 flex items-center gap-2">
-              <Wand2 className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
-              <span className="text-xs sm:text-sm font-medium bolt-gradient-text">How It Works</span>
-            </div>
+        <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-blue-200/30">
+            <Brain className="h-5 w-5 text-blue-600" />
+            <span className="text-base font-semibold bolt-gradient-text">Powered by Advanced AI</span>
+            <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
           </div>
-          
-          <h2 className="modern-title text-2xl sm:text-3xl lg:text-5xl mb-4 sm:mb-6">
-            Transform text into{" "}
-            <span className="bolt-gradient-text">professional documents</span>
+
+          <h2 className="modern-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-tight">
+            <span className="block mb-2">How DocMagic</span>
+            <span className="bolt-gradient-text">Works Its Magic</span>
           </h2>
-          
-          <p className="modern-body text-base sm:text-lg text-muted-foreground px-4 sm:px-0">
-            Simply describe what you need, and our AI will generate a polished document tailored to your specifications in seconds. It's like having a professional writer and designer at your fingertips.
+
+          <p className="modern-body text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Experience the future of document creation. Our AI understands context, follows best practices, and delivers professional results that exceed expectations.
           </p>
         </div>
-        
-        <div className="mx-auto mt-10 xs:mt-12 sm:mt-16 lg:mt-24 max-w-2xl sm:max-w-none">
-          <dl className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-8 sm:gap-x-8 sm:gap-y-16 lg:max-w-none mx-auto">
-            {features.map((feature, index) => {
-              // Assign different color themes to features
-              const themes = [
-                { cardClass: 'card-coral hover-coral', gradientClass: 'sunset-gradient', glowClass: 'sunset-glow' },
-                { cardClass: 'card-sky hover-sky', gradientClass: 'ocean-gradient', glowClass: 'ocean-glow' },
-                { cardClass: 'card-mint hover-mint', gradientClass: 'forest-gradient', glowClass: 'bolt-glow' },
-                { cardClass: 'card-lavender hover-lavender', gradientClass: 'cosmic-gradient', glowClass: 'sunset-glow' },
-                { cardClass: 'card-coral hover-coral', gradientClass: 'bolt-gradient', glowClass: 'ocean-glow' },
-                { cardClass: 'card-sky hover-sky', gradientClass: 'sunset-gradient', glowClass: 'bolt-glow' }
-              ];
-              const theme = themes[index % themes.length];
-              const animationDelay = `delay-${(index + 1) * 100}`;
-              
-              return (
-                <div key={feature.name} className={`flex flex-col group px-3 xs:px-4 sm:px-6 p-5 xs:p-8 rounded-2xl transition-all duration-500 hover:scale-105 ${theme.cardClass} hover:${theme.glowClass} animate-slide-in-left ${animationDelay} will-change-transform`}>
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7">
-                    <div className={`h-9 w-9 xs:h-10 xs:w-10 sm:h-12 sm:w-12 flex-none rounded-xl ${theme.gradientClass} flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
-                      {feature.icon}
-                      <div className={`absolute inset-0 ${theme.gradientClass} rounded-xl opacity-0 group-hover:opacity-50 blur-md transition-opacity duration-300`}></div>
-                    </div>
-                    <span className="group-hover:bolt-gradient-text transition-all duration-300 text-xs xs:text-sm sm:text-base">
-                      {feature.name}
+
+        {/* Enhanced features grid with better organization */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+          {features.map((feature, index) => {
+            const themes = [
+              { cardClass: 'card-coral hover-coral', gradientClass: 'sunset-gradient', glowClass: 'sunset-glow', borderClass: 'border-amber-200/30' },
+              { cardClass: 'card-sky hover-sky', gradientClass: 'ocean-gradient', glowClass: 'ocean-glow', borderClass: 'border-blue-200/30' },
+              { cardClass: 'card-mint hover-mint', gradientClass: 'forest-gradient', glowClass: 'bolt-glow', borderClass: 'border-emerald-200/30' },
+              { cardClass: 'card-lavender hover-lavender', gradientClass: 'cosmic-gradient', glowClass: 'sunset-glow', borderClass: 'border-purple-200/30' },
+              { cardClass: 'card-coral hover-coral', gradientClass: 'bolt-gradient', glowClass: 'ocean-glow', borderClass: 'border-indigo-200/30' },
+              { cardClass: 'card-sky hover-sky', gradientClass: 'sunset-gradient', glowClass: 'bolt-glow', borderClass: 'border-pink-200/30' }
+            ];
+            const theme = themes[index % themes.length];
+            const animationDelay = `delay-${(index + 1) * 100}`;
+
+            return (
+              <div key={feature.name} className={`group relative animate-slide-in-left ${animationDelay} will-change-transform`}>
+                {/* Enhanced background glow */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${theme.gradientClass.includes('sunset') ? 'from-amber-400/10 to-orange-400/10' : theme.gradientClass.includes('ocean') ? 'from-blue-400/10 to-cyan-400/10' : theme.gradientClass.includes('forest') ? 'from-emerald-400/10 to-teal-400/10' : 'from-purple-400/10 to-pink-400/10'} rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300`}></div>
+
+                <div className={`relative professional-card p-8 rounded-3xl hover:scale-105 transition-all duration-500 ${theme.cardClass} hover:${theme.glowClass} border ${theme.borderClass}`}>
+                  {/* Enhanced icon container */}
+                  <div className={`w-16 h-16 mb-6 ${theme.gradientClass} rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
+                    {feature.icon}
+                    <div className={`absolute inset-0 ${theme.gradientClass} rounded-2xl opacity-0 group-hover:opacity-50 blur-lg transition-opacity duration-300`}></div>
+                  </div>
+
+                  {/* Enhanced content */}
+                  <h3 className="text-xl font-bold mb-4 group-hover:bolt-gradient-text transition-all duration-300">
+                    {feature.name}
+                  </h3>
+
+                  <p className="text-muted-foreground leading-relaxed mb-6 group-hover:text-foreground/80 transition-colors">
+                    {feature.description}
+                  </p>
+
+                  {/* Enhanced feature badge */}
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-current/20">
+                    <Star className="h-4 w-4 text-yellow-500 animate-pulse" />
+                    <span className="text-sm font-medium bolt-gradient-text">
+                      {feature.badge}
                     </span>
-                  </dt>
-                  <dd className="mt-3 xs:mt-4 flex flex-auto flex-col text-xs xs:text-sm sm:text-base leading-6 sm:leading-7 text-muted-foreground">
-                    <p className="flex-auto group-hover:text-foreground/80 transition-colors">
-                      {feature.description}
-                    </p>
-                    <div className="mt-3 xs:mt-4">
-                      <div className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium bolt-gradient-text">
-                        <Star className="h-3 w-3 sm:h-4 sm:w-4" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
-                        <span>Professional Quality</span>
-                      </div>
-                    </div>
-                  </dd>
+                  </div>
                 </div>
-              );
-            })}
-          </dl>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Enhanced bottom section */}
+        <div className="text-center mt-16 sm:mt-20">
+          <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full glass-effect border border-green-200/30 hover:scale-105 transition-transform duration-300">
+            <Shield className="h-5 w-5 text-green-600" />
+            <span className="text-base font-semibold text-green-700">Enterprise-grade security & reliability</span>
+            <CheckCircle className="h-5 w-5 text-green-600" />
+          </div>
         </div>
       </div>
     </div>
@@ -78,45 +90,45 @@ export function FeaturesSection() {
 
 const features = [
   {
-    name: 'AI Text to Document',
+    name: 'AI-Powered Generation',
     description:
-      'Describe what you need in plain language, and our advanced AI will generate a complete, professional document based on your input with intelligent formatting and content.',
-    icon: <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />,
+      'Describe what you need in plain language, and our advanced AI will generate a complete, professional document with intelligent formatting and contextual content that matches your requirements perfectly.',
+    icon: <Sparkles className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Instant Results'
   },
   {
-    name: 'Beautiful Templates',
+    name: 'Professional Templates',
     description:
-      'Choose from a variety of professionally designed templates for resumes, presentations, CVs, and letters. Each template is optimized for modern standards.',
-    icon: <LayoutPresentationIcon className="h-5 w-5 sm:h-6 sm:w-6" />,
+      'Choose from our curated collection of professionally designed templates for resumes, presentations, CVs, and letters. Each template follows industry best practices and modern design standards.',
+    icon: <LayoutPresentationIcon className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Industry Standard'
   },
   {
-    name: 'Smart Content Generation',
+    name: 'Smart Content Engine',
     description:
-      'Our AI helps you generate compelling content tailored to your specific needs, industry standards, and target audience with contextual intelligence.',
-    icon: <Zap className="h-5 w-5 sm:h-6 sm:w-6" />,
+      'Our AI understands context, industry requirements, and target audiences to generate compelling content that resonates with your specific goals and professional needs.',
+    icon: <Brain className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Context Aware'
   },
   {
-    name: 'Intuitive Editing',
+    name: 'Intuitive Editor',
     description:
-      'Edit, customize, and fine-tune your generated documents with our intuitive editor interface. Real-time preview and instant formatting.',
-    icon: <PenTool className="h-5 w-5 sm:h-6 sm:w-6" />,
+      'Fine-tune your documents with our powerful yet simple editor. Real-time preview, instant formatting, and intelligent suggestions make editing effortless and efficient.',
+    icon: <PenTool className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Real-time Preview'
   },
   {
     name: 'Team Collaboration',
     description:
-      'Share your documents with teammates or collaborators to get feedback and make improvements together. Built-in commenting and version control.',
-    icon: <Users className="h-5 w-5 sm:h-6 sm:w-6" />,
+      'Share documents with teammates for feedback and collaborative editing. Built-in commenting, version control, and real-time collaboration features streamline teamwork.',
+    icon: <Users className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Team Ready'
   },
   {
     name: 'Multi-Format Export',
     description:
-      'Download your finished documents in multiple formats (PDF, PPTX, DOCX) for easy sharing, printing, and professional presentation.',
-    icon: <Download className="h-5 w-5 sm:h-6 sm:w-6" />,
-  },
-  {
-    name: 'Visual Diagrams',
-    description:
-      'Create professional flowcharts, system architectures, and process diagrams using Mermaid syntax with live preview and export capabilities.',
-    icon: <Workflow className="h-5 w-5 sm:h-6 sm:w-6" />,
-  },
+      'Export your documents in multiple professional formats including PDF, PPTX, DOCX, and more. Perfect formatting preserved across all platforms and devices.',
+    icon: <Download className="h-6 w-6 sm:h-7 sm:w-7" />,
+    badge: 'Universal Compatibility'
+  }
 ];

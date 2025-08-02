@@ -53,6 +53,12 @@ export function DocumentCard({
           gradientClass: 'cosmic-gradient',
           glowClass: 'sunset-glow'
         };
+      case 'diagram':
+        return {
+          cardClass: 'card-sky hover-sky',
+          gradientClass: 'bolt-gradient',
+          glowClass: 'bolt-glow'
+        };
       default:
         return {
           cardClass: 'glass-effect',
@@ -112,14 +118,14 @@ export function DocumentCard({
       </CardHeader>
       
       <CardContent className="relative z-10 p-4 sm:p-6 pt-0">
-        <div className="h-24 sm:h-32 rounded-lg bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center transition-all duration-500 border border-border/50 relative overflow-hidden group-hover:border-2" style={{animation: 'rainbow-border 6s linear infinite'}}>
+        <div className="h-20 sm:h-24 rounded-lg bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center transition-all duration-500 border border-border/50 relative overflow-hidden group-hover:border-2">
           {/* Dynamic background based on card theme */}
           <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500", theme.gradientClass)}></div>
           {/* Preview content with enhanced effects */}
           <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors relative z-10">
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-yellow-500 transition-colors" style={{animation: 'sparkle 2s ease-in-out infinite'}} />
-            <span className="font-medium text-sm sm:text-base">AI Preview</span>
-            <Star className="h-4 w-4 sm:h-5 sm:w-5 group-hover:text-blue-500 transition-colors" style={{animation: 'color-dance 4s ease-in-out infinite'}} />
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 group-hover:text-yellow-500 transition-colors animate-pulse" />
+            <span className="font-medium text-xs sm:text-sm">AI Powered</span>
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 group-hover:text-blue-500 transition-colors animate-pulse" style={{animationDelay: '0.5s'}} />
           </div>
         </div>
       </CardContent>

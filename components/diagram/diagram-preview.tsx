@@ -77,6 +77,22 @@ export function DiagramPreview({ code, fullScreen = false }: DiagramPreviewProps
       try {
         const mermaid = (await import('mermaid')).default;
         
+        // Basic validation to check if code looks like Mermaid syntax
+        const trimmedCode = code.trim();
+        const validDiagramTypes = [
+          'flowchart', 'graph', 'sequenceDiagram', 'classDiagram', 
+          'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie',
+          'gitGraph', 'mindmap', 'timeline', 'quadrantChart'
+        ];
+        
+        const hasValidDiagramType = validDiagramTypes.some(type => 
+          trimmedCode.toLowerCase().startsWith(type.toLowerCase())
+        );
+        
+        if (!hasValidDiagramType) {
+          throw new Error('Please start your diagram with a valid Mermaid diagram type (e.g., flowchart, sequenceDiagram, classDiagram, etc.)');
+        }
+        
         if (containerRef.current) {
           // Clear previous content
           containerRef.current.innerHTML = '';
@@ -101,7 +117,19 @@ export function DiagramPreview({ code, fullScreen = false }: DiagramPreviewProps
         }
       } catch (err) {
         console.error('Mermaid rendering error:', err);
-        setError('Invalid diagram syntax. Please check your Mermaid code.');
+        let errorMessage = 'Invalid diagram syntax. Please check your Mermaid code.';
+        
+        if (err instanceof Error) {
+          if (err.message.includes('No diagram type detected')) {
+            errorMessage = 'No valid diagram type detected. Please start with a diagram type like "flowchart TD", "sequenceDiagram", "classDiagram", etc.';
+          } else if (err.message.includes('Please start your diagram')) {
+            errorMessage = err.message;
+          } else if (err.message.includes('Parse error')) {
+            errorMessage = 'Syntax error in your diagram code. Please check for missing brackets, quotes, or invalid characters.';
+          }
+        }
+        
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }

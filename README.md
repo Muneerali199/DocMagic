@@ -93,6 +93,7 @@
 
 ### 🛠️ **Professional Tools & Features**
 
+- **Progressive Web App (PWA)**: Install DocMagic as a native app on any device with offline support and enhanced performance
 - **Advanced ATS Analyzer**: Comprehensive resume scanning with detailed scoring and optimization suggestions
 - **Professional Template Library**: Curated collection of ATS-optimized, modern templates with glass morphism design
 - **Guided Resume Builder**: 9-step workflow with progress tracking and intelligent navigation
@@ -826,6 +827,11 @@ The application is deployed on Netlify. To deploy your own instance:
 - Design new templates and themes
 - Improve accessibility features
 
+#### 🕒 Dependency Updates & Testing
+- Help maintain dependencies by testing pull requests created by [Dependabot](https://docs.github.com/en/code-security/dependabot)
+- Validate automated updates using the [GitHub Actions](https://github.com/docmagic-ai/docmagic/actions/workflows/dependency_check.yml) workflow to ensure build stability.
+- Report any issues with updates or suggest improvements to the automation process.
+
 ### 🚀 **Getting Started as a Contributor**
 
 1. **Fork the repository** on GitHub
@@ -847,6 +853,12 @@ We celebrate our contributors! Every contribution gets:
 - 💼 **Portfolio showcase** opportunities
 
 For detailed guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+### 👥 Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=Swara595/DocMagic)](https://github.com/Swara595/DocMagic/graphs/contributors)
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## 📜 **Open Source License**
 
