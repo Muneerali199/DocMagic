@@ -1,8 +1,31 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Star, Quote, Heart, Users, Trophy } from "lucide-react";
+import { useState, useEffect } from "react";
+  import {FaCircleChevronRight } from "react-icons/fa6";
 
 export function TestimonialsSection() {
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+    
+    const nextSlide = () => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+    };
+
+    const prevSlide = () => {
+        setCurrentIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length);
+    };
+    const autoSlide = true; // Set to true to enable auto sliding
+    const autoSlideInterval = 5000; // Interval in milliseconds for auto sliding
+
+    useEffect(() => {
+        if (autoSlide) {
+            const slideInterval = setInterval(nextSlide, autoSlideInterval);
+            return () => clearInterval(slideInterval);
+        }
+    }, [currentIndex, autoSlide, autoSlideInterval]);
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 py-20 sm:py-28 lg:py-36">
       {/* Enhanced background elements */}
@@ -46,9 +69,9 @@ export function TestimonialsSection() {
         </div>
 
         {/* Enhanced testimonials grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+        <div className="overflow-hidden relative h-96 flex justify-items-center">
           {testimonials.slice(0, 6).map((testimonial, i) => (
-            <div key={i} className="group relative animate-fade-in-up" style={{animationDelay: `${i * 100}ms`}}>
+            <div key={i} className={`group h-full w-full absolute flex items-center justify-center  animate-fade-in-up transition-all ease-out duration-790 transform ${i === currentIndex ? 'translate-x-0' : 'translate-x-full'}`} style={{animationDelay: `${i * 100}ms`}}>
               {/* Enhanced background glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
 
@@ -100,6 +123,30 @@ export function TestimonialsSection() {
             </div>
           ))}
         </div>
+
+        <button
+                className="absolute bottom-[4%]  left-1/3 cursor-pointer  transform -translate-y-1/2 p-2"
+                onClick={prevSlide}
+            >
+                <FaCircleChevronRight className='opacity-48 h-10 w-10 rotate-180 hover:scale-115  '/>
+                
+                {/* Previous */}
+            </button>
+            <button
+                className="absolute top-[90%] right-1/3 cursor-pointer transform -translate-y-1/2 p-2"
+                onClick={nextSlide}
+            >
+                <FaCircleChevronRight className='opacity-48 h-10 w-10 hover:scale-115  '/>
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center cursor-pointer ">
+                {testimonials.map((_, i) => (
+                    <div
+                        key={i}
+                        className={`w-2 h-2 mr-0.5 rounded-full transition-all mx-1  ${i === currentIndex ? 'bg-gray-600 scale-150' : 'bg-gray-200'}`}
+                        onClick={() => setCurrentIndex(i)}
+                    />
+                ))}
+            </div>
 
         {/* Enhanced bottom CTA */}
         <div className="text-center mt-16 sm:mt-20">
