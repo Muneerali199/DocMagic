@@ -70,16 +70,6 @@ export default function Home() {
                   <div className="w-12 h-12 cosmic-gradient rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                     <BookOpen className="h-6 w-6 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-center">Templates</span>
-                </Link>
-              </TooltipWithShortcut>
-              <TooltipWithShortcut content="View pricing plans and options">
-                <Link
-                  href="/pricing"
-                  className="group flex flex-col items-center p-4 rounded-xl glass-effect border border-green-200/30 hover:scale-105 transition-all duration-300"
-                >
-                  <div className="w-12 h-12 forest-gradient rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Star className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center">Pricing</span>
                 </Link>

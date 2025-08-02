@@ -13,8 +13,6 @@ import {
   Sparkles,
   Zap,
   DollarSign,
-  Workflow,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -397,5 +395,11 @@ const navItems = [
     label: "Pricing",
     icon: <DollarSign className="h-4 w-4" />,
     tooltip: "View pricing plans and upgrade options",
+  },
+  {
+    href: "/testimonials",
+    label: "Testimonials",
+    icon: <MessageSquare className="h-4 w-4" />,
+    tooltip: "See what professionals are saying about DocMagic",
   },
 ];
