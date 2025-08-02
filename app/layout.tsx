@@ -4,10 +4,11 @@ import type { ReactNode } from "react";
 import Footer from "@/components/ui/Footer";
 import { Inter, Poppins } from "next/font/google";
 import { Providers } from "./providers";
-import { CursorProvider } from "@phazr/custom-cursor";
+  // Final Resolved Imports
+import { CursorProvider } from "@phazr/custom-cursor"; // ✅ assuming this is your preferred version
+import { SmoothScrollWrapper } from '@/components/SmoothScrollWrapper';
 import { PWABanner } from "@/components/pwa-banner";
 import type { Metadata } from "next";
-
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
   subsets: ["latin"],
@@ -63,6 +64,7 @@ export default function RootLayout({
             <Footer />
           </CursorProvider>
         </Providers>
+         <SmoothScrollWrapper>{children}</SmoothScrollWrapper>
       </body>
     </html>
   );
