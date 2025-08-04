@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, X, Download, Edit, Palette, Sparkles, Star, Zap, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Github, Linkedin, Globe, Mail, Phone, MapPin, User } from "lucide-react";
 import { useState } from "react";
@@ -238,19 +237,19 @@ export function ResumeTemplates({
   };
 
   const renderProfessionalTemplate = () => (
-    <div className={cn("p-8 h-full", "bg-white")} id="resume-preview">
+    <div className={cn("p-8 h-full", "bg-white")} id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-800">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-800 " style={{ color: '#1f2937' }}>
               {sampleResumeData.name}
             </h1>
-            <p className="text-lg text-gray-600 mt-1">{sampleResumeData.title}</p>
+            <p className="text-lg text-gray-600 mt-1" style={{ color: '#4b5563' }}>{sampleResumeData.title}</p>
           </div>
           <div className="text-right space-y-1">
-            <p className="text-sm">{sampleResumeData.contact.email}</p>
-            <p className="text-sm">{sampleResumeData.contact.phone}</p>
-            <p className="text-sm">{sampleResumeData.contact.location}</p>
+            <p className="text-sm" style={{ color: '#6b7280' }}>{sampleResumeData.contact.email}</p>
+            <p className="text-sm" style={{ color: '#6b7280' }}>{sampleResumeData.contact.phone}</p>
+            <p className="text-sm" style={{ color: '#6b7280' }}>{sampleResumeData.contact.location}</p>
           </div>
         </div>
 
@@ -259,27 +258,27 @@ export function ResumeTemplates({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-3 space-y-8">
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Professional Summary
               </h2>
-              <p className="text-gray-700">{sampleResumeData.summary}</p>
+              <p className="text-gray-700" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Work Experience
               </h2>
               <div className="space-y-6">
                 {sampleResumeData.experience.map((exp, i) => (
                   <div key={i}>
                     <div className="flex justify-between">
-                      <h3 className="font-semibold text-gray-900">{exp.role}</h3>
-                      <p className="text-sm text-gray-500">{exp.period}</p>
+                      <h3 className="font-semibold text-gray-900" style={{ color: '#111827' }}>{exp.role}</h3>
+                      <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{exp.period}</p>
                     </div>
-                    <p className="text-gray-600 italic mb-2">{exp.company}</p>
+                    <p className="text-gray-600 italic mb-2" style={{ color: '#4b5563' }}>{exp.company}</p>
                     <ul className="list-disc pl-5 space-y-1 text-gray-700">
                       {exp.details.map((detail, j) => (
-                        <li key={j}>{detail}</li>
+                        <li key={j} style={{ color: '#374151' }}>{detail}</li>
                       ))}
                     </ul>
                   </div>
@@ -290,7 +289,7 @@ export function ResumeTemplates({
 
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Skills
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -304,6 +303,10 @@ export function ResumeTemplates({
                           ? "px-3 py-1 rounded-full text-sm bg-gradient-to-r from-gray-700 to-gray-900 text-white"
                           : "px-3 py-1 rounded-full text-sm bg-white border text-gray-700"
                     }
+                    style={{ 
+                      color: i % 3 === 0 ? '#1f2937' : i % 3 === 1 ? '#ffffff' : '#374151',
+                      backgroundColor: i % 3 === 0 ? '#f3f4f6' : i % 3 === 2 ? '#ffffff' : undefined
+                    }}
                   >
                     {skill}
                   </span>
@@ -312,36 +315,36 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Education
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i}>
-                    <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                    <p className="text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.year}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-gray-600" style={{ color: '#4b5563' }}>{edu.institution}</p>
+                    <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Key Projects
               </h2>
               <div className="space-y-3">
                 {sampleResumeData.projects.map((project, i) => (
                   <div key={i}>
-                    <h3 className="font-medium text-gray-900">{project.name}</h3>
-                    <p className="text-sm text-gray-600">{project.description}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{project.name}</h3>
+                    <p className="text-sm text-gray-600" style={{ color: '#4b5563' }}>{project.description}</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800">
+              <h2 className="text-xl font-bold mb-4 pb-2 border-b border-gray-200 text-gray-800" style={{ color: '#1f2937' }}>
                 Professional Links
               </h2>
               <div className="space-y-2">
@@ -351,7 +354,7 @@ export function ResumeTemplates({
                     {key === 'github' && <Github className="h-4 w-4 text-gray-800" />}
                     {key === 'website' && <Globe className="h-4 w-4 text-green-600" />}
                     {key === 'portfolio' && <Briefcase className="h-4 w-4 text-purple-600" />}
-                    <a href={`https://${value}`} className="text-sm text-gray-700 hover:underline">{value}</a>
+                    <a href={`https://${value}`} className="text-sm text-gray-700 hover:underline" style={{ color: '#374151' }}>{value}</a>
                   </div>
                 ))}
               </div>
@@ -363,46 +366,46 @@ export function ResumeTemplates({
   );
 
   const renderModernTemplate = () => (
-    <div className="p-8 h-full bg-white" id="resume-preview">
+    <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
         <div className="p-6 rounded-lg mb-8 bg-gradient-to-r from-blue-500 to-blue-700">
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            {sampleResumeData.name}
+          <h1 className="text-3xl font-bold text-white tracking-tight" style={{ color: '#ffffff' }}>
+            {sampleResumeData.name} hello world Modern
           </h1>
-          <p className="text-white/90 mt-1">{sampleResumeData.title}</p>
+          <p className="text-white/90 mt-1" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{sampleResumeData.title}</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm">
           <div className="flex items-center">
             <Mail className="h-4 w-4 mr-2 text-blue-500" />
-            <span>{sampleResumeData.contact.email}</span>
+            <span style={{ color: '#111827' }}>{sampleResumeData.contact.email}</span>
           </div>
           <div className="flex items-center">
             <Phone className="h-4 w-4 mr-2 text-blue-500" />
-            <span>{sampleResumeData.contact.phone}</span>
+            <span style={{ color: '#111827' }}>{sampleResumeData.contact.phone}</span>
           </div>
           <div className="flex items-center">
             <MapPin className="h-4 w-4 mr-2 text-blue-500" />
-            <span>{sampleResumeData.contact.location}</span>
+            <span style={{ color: '#111827' }}>{sampleResumeData.contact.location}</span>
           </div>
           <div className="flex items-center">
             <Globe className="h-4 w-4 mr-2 text-blue-500" />
-            <span>{sampleResumeData.contact.portfolio}</span>
+            <span style={{ color: '#111827' }}>{sampleResumeData.contact.portfolio}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 About Me
               </h2>
-              <p className="text-gray-700">{sampleResumeData.summary}</p>
+              <p className="text-gray-700" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 Experience
               </h2>
@@ -410,13 +413,13 @@ export function ResumeTemplates({
                 {sampleResumeData.experience.map((exp, i) => (
                   <div key={i} className="border-l-4 pl-4 border-blue-500">
                     <div className="flex justify-between">
-                      <h3 className="font-semibold text-gray-900">{exp.role}</h3>
-                      <p className="text-sm text-gray-500">{exp.period}</p>
+                      <h3 className="font-semibold text-gray-900" style={{ color: '#111827' }}>{exp.role}</h3>
+                      <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{exp.period}</p>
                     </div>
-                    <p className="text-gray-600 font-medium mb-2">{exp.company}</p>
+                    <p className="text-gray-600 font-medium mb-2" style={{ color: '#4b5563' }}>{exp.company}</p>
                     <ul className="list-[square] pl-5 space-y-1.5 text-gray-700">
                       {exp.details.map((detail, j) => (
-                        <li key={j}>{detail}</li>
+                        <li key={j} style={{ color: '#374151' }}>{detail}</li>
                       ))}
                     </ul>
                   </div>
@@ -427,7 +430,7 @@ export function ResumeTemplates({
 
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 Skills
               </h2>
@@ -435,45 +438,45 @@ export function ResumeTemplates({
                 {sampleResumeData.skills.map((skill, i) => (
                   <div key={i} className="flex items-center">
                     <div className="w-3 h-3 rounded-full mr-2 bg-gradient-to-r from-blue-500 to-blue-700"></div>
-                    <span className="text-gray-700">{skill}</span>
+                    <span className="text-gray-700" style={{ color: '#374151' }}>{skill}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 Education
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i} className="border-l-4 pl-4 border-blue-500">
-                    <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                    <p className="text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.year}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-gray-600" style={{ color: '#4b5563' }}>{edu.institution}</p>
+                    <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 Projects
               </h2>
               <div className="space-y-3">
                 {sampleResumeData.projects.map((project, i) => (
                   <div key={i}>
-                    <h3 className="font-medium text-gray-900">{project.name}</h3>
-                    <p className="text-sm text-gray-600">{project.description}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{project.name}</h3>
+                    <p className="text-sm text-gray-600" style={{ color: '#4b5563' }}>{project.description}</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
+              <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800" style={{ color: '#1e40af' }}>
                 <span className="w-8 h-1 mr-3 inline-block bg-gradient-to-r from-blue-500 to-blue-700"></span>
                 Connect
               </h2>
@@ -484,7 +487,7 @@ export function ResumeTemplates({
                     {key === 'github' && <Github className="h-4 w-4 text-gray-800" />}
                     {key === 'website' && <Globe className="h-4 w-4 text-green-600" />}
                     {key === 'portfolio' && <Briefcase className="h-4 w-4 text-purple-600" />}
-                    <a href={`https://${value}`} className="text-sm text-blue-600 hover:underline">{value}</a>
+                    <a href={`https://${value}`} className="text-sm text-blue-600 hover:underline" style={{ color: '#2563eb' }}>{value}</a>
                   </div>
                 ))}
               </div>
@@ -496,34 +499,34 @@ export function ResumeTemplates({
   );
 
   const renderCreativeTemplate = () => (
-    <div className="p-8 h-full bg-white" id="resume-preview">
+    <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8 mb-10">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold tracking-tight mb-2 text-purple-800">
+            <h1 className="text-4xl font-bold tracking-tight mb-2 text-purple-800" style={{ color: '#7e22ce' }}>
               {sampleResumeData.name}
             </h1>
-            <div className="text-2xl font-medium mb-4 text-purple-800">
+            <div className="text-2xl font-medium mb-4 text-purple-800" style={{ color: '#7e22ce' }}>
               {sampleResumeData.title}
             </div>
-            <p className="text-gray-700">{sampleResumeData.summary}</p>
+            <p className="text-gray-700" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
           </div>
           <div className="space-y-2">
             <div className="flex items-center">
               <Mail className="h-5 w-5 mr-2 text-purple-600" />
-              <span>{sampleResumeData.contact.email}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.email}</span>
             </div>
             <div className="flex items-center">
               <Phone className="h-5 w-5 mr-2 text-purple-600" />
-              <span>{sampleResumeData.contact.phone}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.phone}</span>
             </div>
             <div className="flex items-center">
               <MapPin className="h-5 w-5 mr-2 text-purple-600" />
-              <span>{sampleResumeData.contact.location}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.location}</span>
             </div>
             <div className="flex items-center">
               <Globe className="h-5 w-5 mr-2 text-purple-600" />
-              <span>{sampleResumeData.contact.portfolio}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.portfolio}</span>
             </div>
           </div>
         </div>
@@ -533,7 +536,7 @@ export function ResumeTemplates({
             <div className="w-full border-t-2 border-dashed border-purple-100"></div>
           </div>
           <div className="relative flex justify-center">
-            <span className="px-4 bg-white text-lg font-medium text-purple-800">
+            <span className="px-4 bg-white text-lg font-medium text-purple-800" style={{ color: '#7e22ce', backgroundColor: '#ffffff' }}>
               Professional Journey
             </span>
           </div>
@@ -542,7 +545,7 @@ export function ResumeTemplates({
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2 space-y-8">
             <div>
-              <h2 className="text-2xl font-bold mb-4 text-purple-800">
+              <h2 className="text-2xl font-bold mb-4 text-purple-800" style={{ color: '#7e22ce' }}>
                 Expertise
               </h2>
               <div className="space-y-3">
@@ -550,7 +553,7 @@ export function ResumeTemplates({
                   <div key={i}>
                     <div className="flex items-center mb-1">
                       <div className="w-3 h-3 rounded-full mr-2 bg-gradient-to-r from-purple-500 to-purple-700"></div>
-                      <span className="font-medium text-gray-900">{skill}</span>
+                      <span className="font-medium text-gray-900" style={{ color: '#111827' }}>{skill}</span>
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-1.5">
                       <div 
@@ -564,22 +567,22 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-4 text-purple-800">
+              <h2 className="text-2xl font-bold mb-4 text-purple-800" style={{ color: '#7e22ce' }}>
                 Education
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i} className="pl-4 border-l-4 border-purple-500">
-                    <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                    <p className="text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.year}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-gray-600" style={{ color: '#4b5563' }}>{edu.institution}</p>
+                    <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h2 className="text-2xl font-bold mb-4 text-purple-800">
+              <h2 className="text-2xl font-bold mb-4 text-purple-800" style={{ color: '#7e22ce' }}>
                 Connect
               </h2>
               <div className="space-y-2">
@@ -589,7 +592,7 @@ export function ResumeTemplates({
                     {key === 'github' && <Github className="h-5 w-5 text-purple-600" />}
                     {key === 'website' && <Globe className="h-5 w-5 text-purple-600" />}
                     {key === 'portfolio' && <Briefcase className="h-5 w-5 text-purple-600" />}
-                    <a href={`https://${value}`} className="text-sm text-purple-600 hover:underline">{value}</a>
+                    <a href={`https://${value}`} className="text-sm text-purple-600 hover:underline" style={{ color: '#9333ea' }}>{value}</a>
                   </div>
                 ))}
               </div>
@@ -598,7 +601,7 @@ export function ResumeTemplates({
 
           <div className="md:col-span-3 space-y-8">
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-purple-800">
+              <h2 className="text-2xl font-bold mb-6 text-purple-800" style={{ color: '#7e22ce' }}>
                 Work Experience
               </h2>
               <div className="space-y-8">
@@ -608,15 +611,15 @@ export function ResumeTemplates({
                     <div className="absolute left-[15px] h-full w-0.5 bg-purple-300"></div>
                     <div>
                       <div className="flex justify-between">
-                        <h3 className="text-xl font-semibold text-gray-900">{exp.role}</h3>
-                        <p className="text-sm text-gray-500">{exp.period}</p>
+                        <h3 className="text-xl font-semibold text-gray-900" style={{ color: '#111827' }}>{exp.role}</h3>
+                        <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{exp.period}</p>
                       </div>
-                      <p className="text-lg font-medium mb-3 text-purple-800">
+                      <p className="text-lg font-medium mb-3 text-purple-800" style={{ color: '#7e22ce' }}>
                         {exp.company}
                       </p>
                       <ul className="list-disc pl-5 space-y-2 text-gray-700">
                         {exp.details.map((detail, j) => (
-                          <li key={j}>{detail}</li>
+                          <li key={j} style={{ color: '#374151' }}>{detail}</li>
                         ))}
                       </ul>
                     </div>
@@ -626,7 +629,7 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-purple-800">
+              <h2 className="text-2xl font-bold mb-6 text-purple-800" style={{ color: '#7e22ce' }}>
                 Notable Projects
               </h2>
               <div className="grid grid-cols-1 gap-4">
@@ -634,9 +637,10 @@ export function ResumeTemplates({
                   <div 
                     key={i} 
                     className="p-4 rounded-lg border border-purple-100 bg-white"
+                    style={{ backgroundColor: '#ffffff' }}
                   >
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                    <p className="text-gray-600">{project.description}</p>
+                    <h3 className="font-semibold text-gray-900" style={{ color: '#111827' }}>{project.name}</h3>
+                    <p className="text-gray-600" style={{ color: '#4b5563' }}>{project.description}</p>
                   </div>
                 ))}
               </div>
@@ -648,13 +652,13 @@ export function ResumeTemplates({
   );
 
   const renderMinimalistTemplate = () => (
-    <div className="p-8 h-full bg-white" id="resume-preview">
+    <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-3xl mx-auto">
         <div className="mb-10">
-          <h1 className="text-3xl font-light tracking-wide text-gray-900">
+          <h1 className="text-3xl font-light tracking-wide text-gray-900" style={{ color: '#111827' }}>
             {sampleResumeData.name}
           </h1>
-          <p className="text-gray-500 mt-1">{sampleResumeData.title}</p>
+          <p className="text-gray-500 mt-1" style={{ color: '#6b7280' }}>{sampleResumeData.title}</p>
         </div>
 
         <div className="h-px w-full my-8 bg-gradient-to-r from-gray-400 to-gray-600" />
@@ -663,47 +667,47 @@ export function ResumeTemplates({
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center">
               <Mail className="h-4 w-4 mr-1 text-gray-400" />
-              <span>{sampleResumeData.contact.email}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.email}</span>
             </div>
-            <span>•</span>
+            <span style={{ color: '#111827' }}>•</span>
             <div className="flex items-center">
               <Phone className="h-4 w-4 mr-1 text-gray-400" />
-              <span>{sampleResumeData.contact.phone}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.phone}</span>
             </div>
-            <span>•</span>
+            <span style={{ color: '#111827' }}>•</span>
             <div className="flex items-center">
               <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-              <span>{sampleResumeData.contact.location}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.location}</span>
             </div>
-            <span>•</span>
+            <span style={{ color: '#111827' }}>•</span>
             <div className="flex items-center">
               <Globe className="h-4 w-4 mr-1 text-gray-400" />
-              <span>{sampleResumeData.contact.portfolio}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.portfolio}</span>
             </div>
           </div>
 
           <div>
-            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700">
+            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700" style={{ color: '#374151' }}>
               PROFILE
             </h2>
-            <p className="text-gray-700 leading-relaxed">{sampleResumeData.summary}</p>
+            <p className="text-gray-700 leading-relaxed" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
           </div>
 
           <div>
-            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700">
+            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700" style={{ color: '#374151' }}>
               EXPERIENCE
             </h2>
             <div className="space-y-6">
               {sampleResumeData.experience.map((exp, i) => (
                 <div key={i}>
                   <div className="flex justify-between">
-                    <h3 className="font-normal text-gray-900">{exp.role}</h3>
-                    <p className="text-sm text-gray-500">{exp.period}</p>
+                    <h3 className="font-normal text-gray-900" style={{ color: '#111827' }}>{exp.role}</h3>
+                    <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{exp.period}</p>
                   </div>
-                  <p className="text-gray-600 mb-2">{exp.company}</p>
+                  <p className="text-gray-600 mb-2" style={{ color: '#4b5563' }}>{exp.company}</p>
                   <div className="space-y-1 text-gray-700">
                     {exp.details.map((detail, j) => (
-                      <p key={j}>• {detail}</p>
+                      <p key={j} style={{ color: '#374151' }}>• {detail}</p>
                     ))}
                   </div>
                 </div>
@@ -713,22 +717,22 @@ export function ResumeTemplates({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700">
+              <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700" style={{ color: '#374151' }}>
                 EDUCATION
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i}>
-                    <h3 className="text-gray-900">{edu.degree}</h3>
-                    <p className="text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.year}</p>
+                    <h3 className="text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-gray-600" style={{ color: '#4b5563' }}>{edu.institution}</p>
+                    <p className="text-sm text-gray-500" style={{ color: '#6b7280' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700">
+              <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700" style={{ color: '#374151' }}>
                 SKILLS
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -736,6 +740,7 @@ export function ResumeTemplates({
                   <span 
                     key={i}
                     className="px-2 py-1 text-sm text-gray-700"
+                    style={{ color: '#374151' }}
                   >
                     {skill}
                   </span>
@@ -745,7 +750,7 @@ export function ResumeTemplates({
           </div>
           
           <div>
-            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700">
+            <h2 className="text-lg font-normal mb-3 tracking-wider text-gray-700" style={{ color: '#374151' }}>
               LINKS
             </h2>
             <div className="flex flex-wrap gap-4">
@@ -755,7 +760,7 @@ export function ResumeTemplates({
                   {key === 'github' && <Github className="h-4 w-4 text-gray-500" />}
                   {key === 'website' && <Globe className="h-4 w-4 text-gray-500" />}
                   {key === 'portfolio' && <Briefcase className="h-4 w-4 text-gray-500" />}
-                  <a href={`https://${value}`} className="text-sm text-gray-700 hover:underline">{value}</a>
+                  <a href={`https://${value}`} className="text-sm text-gray-700 hover:underline" style={{ color: '#374151' }}>{value}</a>
                 </div>
               ))}
             </div>
@@ -766,30 +771,30 @@ export function ResumeTemplates({
   );
 
   const renderExecutiveTemplate = () => (
-    <div className="p-8 h-full bg-white" id="resume-preview">
+    <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
         <div className="border-b-4 border-amber-700 pb-6 mb-8">
-          <h1 className="text-4xl font-bold text-amber-900">
+          <h1 className="text-4xl font-bold text-amber-900" style={{ color: '#92400e' }}>
             {sampleResumeData.name}
           </h1>
-          <p className="text-xl text-amber-800 mt-2 font-medium">{sampleResumeData.title}</p>
+          <p className="text-xl text-amber-800 mt-2 font-medium" style={{ color: '#d97706' }}>{sampleResumeData.title}</p>
           
           <div className="flex flex-wrap gap-6 mt-4 text-sm">
             <div className="flex items-center">
               <Mail className="h-4 w-4 mr-2 text-amber-700" />
-              <span>{sampleResumeData.contact.email}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.email}</span>
             </div>
             <div className="flex items-center">
               <Phone className="h-4 w-4 mr-2 text-amber-700" />
-              <span>{sampleResumeData.contact.phone}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.phone}</span>
             </div>
             <div className="flex items-center">
               <MapPin className="h-4 w-4 mr-2 text-amber-700" />
-              <span>{sampleResumeData.contact.location}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.location}</span>
             </div>
             <div className="flex items-center">
               <Globe className="h-4 w-4 mr-2 text-amber-700" />
-              <span>{sampleResumeData.contact.portfolio}</span>
+              <span style={{ color: '#111827' }}>{sampleResumeData.contact.portfolio}</span>
             </div>
           </div>
         </div>
@@ -797,27 +802,27 @@ export function ResumeTemplates({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="md:col-span-2 space-y-8">
             <div>
-              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Executive Summary
               </h2>
-              <p className="text-gray-700 leading-relaxed">{sampleResumeData.summary}</p>
+              <p className="text-gray-700 leading-relaxed" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Leadership Experience
               </h2>
               <div className="space-y-6">
                 {sampleResumeData.experience.map((exp, i) => (
                   <div key={i}>
                     <div className="flex justify-between items-baseline">
-                      <h3 className="font-bold text-gray-900 text-lg">{exp.role}</h3>
-                      <p className="text-amber-800 font-medium">{exp.period}</p>
+                      <h3 className="font-bold text-gray-900 text-lg" style={{ color: '#111827' }}>{exp.role}</h3>
+                      <p className="text-amber-800 font-medium" style={{ color: '#d97706' }}>{exp.period}</p>
                     </div>
-                    <p className="text-amber-900 font-semibold mb-2">{exp.company}</p>
+                    <p className="text-amber-900 font-semibold mb-2" style={{ color: '#92400e' }}>{exp.company}</p>
                     <ul className="list-disc pl-5 space-y-2 text-gray-700">
                       {exp.details.map((detail, j) => (
-                        <li key={j}>{detail}</li>
+                        <li key={j} style={{ color: '#374151' }}>{detail}</li>
                       ))}
                     </ul>
                   </div>
@@ -826,14 +831,14 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+              <h2 className="text-2xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Key Projects & Initiatives
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.projects.map((project, i) => (
                   <div key={i} className="border-l-4 border-amber-300 pl-4">
-                    <h3 className="font-bold text-gray-900">{project.name}</h3>
-                    <p className="text-gray-700">{project.description}</p>
+                    <h3 className="font-bold text-gray-900" style={{ color: '#111827' }}>{project.name}</h3>
+                    <p className="text-gray-700" style={{ color: '#374151' }}>{project.description}</p>
                   </div>
                 ))}
               </div>
@@ -841,37 +846,37 @@ export function ResumeTemplates({
           </div>
 
           <div className="space-y-8">
-            <div className="bg-amber-50 p-5 rounded-lg border border-amber-200">
-              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+            <div className="bg-amber-50 p-5 rounded-lg border border-amber-200" style={{ backgroundColor: '#fffbeb' }}>
+              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Core Competencies
               </h2>
               <div className="space-y-2">
                 {sampleResumeData.skills.map((skill, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-amber-700"></div>
-                    <span className="text-gray-800">{skill}</span>
+                    <span className="text-gray-800" style={{ color: '#1f2937' }}>{skill}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Education
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i}>
-                    <h3 className="font-bold text-gray-900">{edu.degree}</h3>
-                    <p className="text-gray-700">{edu.institution}</p>
-                    <p className="text-amber-800">{edu.year}</p>
+                    <h3 className="font-bold text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-gray-700" style={{ color: '#374151' }}>{edu.institution}</p>
+                    <p className="text-amber-800" style={{ color: '#d97706' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2">
+              <h2 className="text-xl font-bold text-amber-900 mb-4 border-b-2 border-amber-200 pb-2" style={{ color: '#92400e' }}>
                 Professional Network
               </h2>
               <div className="space-y-3">
@@ -881,7 +886,7 @@ export function ResumeTemplates({
                     {key === 'github' && <Github className="h-4 w-4 text-amber-700" />}
                     {key === 'website' && <Globe className="h-4 w-4 text-amber-700" />}
                     {key === 'portfolio' && <Briefcase className="h-4 w-4 text-amber-700" />}
-                    <a href={`https://${value}`} className="text-gray-800 hover:text-amber-800 hover:underline">{value}</a>
+                    <a href={`https://${value}`} className="text-gray-800 hover:text-amber-800 hover:underline" style={{ color: '#1f2937' }}>{value}</a>
                   </div>
                 ))}
               </div>
@@ -893,39 +898,39 @@ export function ResumeTemplates({
   );
 
   const renderTechnicalTemplate = () => (
-    <div className="p-8 h-full bg-white" id="resume-preview">
+    <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start mb-8 pb-6 border-b-2 border-emerald-200">
           <div>
-            <h1 className="text-3xl font-bold text-emerald-900">
+            <h1 className="text-3xl font-bold text-emerald-900" style={{ color: '#047857' }}>
               {sampleResumeData.name}
             </h1>
-            <p className="text-lg text-emerald-700 mt-1">{sampleResumeData.title}</p>
+            <p className="text-lg text-emerald-700 mt-1" style={{ color: '#10b981' }}>{sampleResumeData.title}</p>
           </div>
           <div className="mt-4 md:mt-0 space-y-1 text-right">
             <div className="flex items-center justify-end gap-2">
               <Mail className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm">{sampleResumeData.contact.email}</span>
+              <span className="text-sm" style={{ color: '#111827' }}>{sampleResumeData.contact.email}</span>
             </div>
             <div className="flex items-center justify-end gap-2">
               <Phone className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm">{sampleResumeData.contact.phone}</span>
+              <span className="text-sm" style={{ color: '#111827' }}>{sampleResumeData.contact.phone}</span>
             </div>
             <div className="flex items-center justify-end gap-2">
               <MapPin className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm">{sampleResumeData.contact.location}</span>
+              <span className="text-sm" style={{ color: '#111827' }}>{sampleResumeData.contact.location}</span>
             </div>
             <div className="flex items-center justify-end gap-2">
               <Globe className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm">{sampleResumeData.contact.portfolio}</span>
+              <span className="text-sm" style={{ color: '#111827' }}>{sampleResumeData.contact.portfolio}</span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-6">
-            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100" style={{ backgroundColor: '#ecfdf5' }}>
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <Code className="h-5 w-5 mr-2" />
                 Technical Skills
               </h2>
@@ -933,8 +938,8 @@ export function ResumeTemplates({
                 {sampleResumeData.skills.map((skill, i) => (
                   <div key={i}>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700">{skill}</span>
-                      <span className="text-xs text-emerald-700">{90 - (i * 5)}%</span>
+                      <span className="text-sm font-medium text-gray-700" style={{ color: '#374151' }}>{skill}</span>
+                      <span className="text-xs text-emerald-700" style={{ color: '#10b981' }}>{90 - (i * 5)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
@@ -948,23 +953,23 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <GraduationCap className="h-5 w-5 mr-2" />
                 Education
               </h2>
               <div className="space-y-4">
                 {sampleResumeData.education.map((edu, i) => (
                   <div key={i} className="border-l-2 border-emerald-300 pl-3">
-                    <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                    <p className="text-sm text-gray-600">{edu.institution}</p>
-                    <p className="text-xs text-emerald-700">{edu.year}</p>
+                    <h3 className="font-medium text-gray-900" style={{ color: '#111827' }}>{edu.degree}</h3>
+                    <p className="text-sm text-gray-600" style={{ color: '#4b5563' }}>{edu.institution}</p>
+                    <p className="text-xs text-emerald-700" style={{ color: '#10b981' }}>{edu.year}</p>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <LinkIcon className="h-5 w-5 mr-2" />
                 Online Profiles
               </h2>
@@ -975,7 +980,7 @@ export function ResumeTemplates({
                     {key === 'github' && <Github className="h-4 w-4 text-emerald-700" />}
                     {key === 'website' && <Globe className="h-4 w-4 text-emerald-700" />}
                     {key === 'portfolio' && <Briefcase className="h-4 w-4 text-emerald-700" />}
-                    <a href={`https://${value}`} className="text-sm text-emerald-700 hover:underline">{value}</a>
+                    <a href={`https://${value}`} className="text-sm text-emerald-700 hover:underline" style={{ color: '#10b981' }}>{value}</a>
                   </div>
                 ))}
               </div>
@@ -984,31 +989,31 @@ export function ResumeTemplates({
 
           <div className="md:col-span-2 space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <User className="h-5 w-5 mr-2" />
                 Professional Summary
               </h2>
-              <div className="bg-white p-3 rounded-lg border border-emerald-100">
-                <p className="text-gray-700">{sampleResumeData.summary}</p>
+              <div className="bg-white p-3 rounded-lg border border-emerald-100" style={{ backgroundColor: '#ffffff' }}>
+                <p className="text-gray-700" style={{ color: '#374151' }}>{sampleResumeData.summary}</p>
               </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <Briefcase className="h-5 w-5 mr-2" />
                 Work Experience
               </h2>
               <div className="space-y-5">
                 {sampleResumeData.experience.map((exp, i) => (
-                  <div key={i} className="bg-white p-4 rounded-lg border border-emerald-100">
+                  <div key={i} className="bg-white p-4 rounded-lg border border-emerald-100" style={{ backgroundColor: '#ffffff' }}>
                     <div className="flex justify-between">
-                      <h3 className="font-semibold text-gray-900">{exp.role}</h3>
-                      <p className="text-xs text-emerald-700 font-medium">{exp.period}</p>
+                      <h3 className="font-semibold text-gray-900" style={{ color: '#111827' }}>{exp.role}</h3>
+                      <p className="text-xs text-emerald-700 font-medium" style={{ color: '#10b981' }}>{exp.period}</p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{exp.company}</p>
+                    <p className="text-sm text-gray-600 mb-2" style={{ color: '#4b5563' }}>{exp.company}</p>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
                       {exp.details.map((detail, j) => (
-                        <li key={j}>{detail}</li>
+                        <li key={j} style={{ color: '#374151' }}>{detail}</li>
                       ))}
                     </ul>
                   </div>
@@ -1017,21 +1022,21 @@ export function ResumeTemplates({
             </div>
 
             <div>
-              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center">
+              <h2 className="text-lg font-bold text-emerald-800 mb-3 flex items-center" style={{ color: '#065f46' }}>
                 <Zap className="h-5 w-5 mr-2" />
                 Technical Projects
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {sampleResumeData.projects.map((project, i) => (
-                  <div key={i} className="bg-white p-4 rounded-lg border border-emerald-100">
-                    <h3 className="font-semibold text-gray-900 flex items-center">
+                  <div key={i} className="bg-white p-4 rounded-lg border border-emerald-100" style={{ backgroundColor: '#ffffff' }}>
+                    <h3 className="font-semibold text-gray-900 flex items-center" style={{ color: '#111827' }}>
                       <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
                       {project.name}
                     </h3>
-                    <p className="text-sm text-gray-700 mt-1">{project.description}</p>
+                    <p className="text-sm text-gray-700 mt-1" style={{ color: '#374151' }}>{project.description}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {['React', 'Node.js', 'TypeScript'].map((tech, j) => (
-                        <span key={j} className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full">
+                        <span key={j} className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}>
                           {tech}
                         </span>
                       ))}
@@ -1299,7 +1304,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, heading: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="Inter">Inter (Sans-serif)</option>
                   <option value="Merriweather">Merriweather (Serif)</option>
@@ -1318,7 +1323,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, body: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="Inter">Inter (Sans-serif)</option>
                   <option value="Merriweather">Merriweather (Serif)</option>
@@ -1337,7 +1342,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, size: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="small">Small</option>
                   <option value="medium">Medium</option>
@@ -1383,7 +1388,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, headerStyle: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="classic">Classic (Name and contact info)</option>
                   <option value="modern">Modern (With colored background)</option>
@@ -1402,7 +1407,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, sectionStyle: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="bordered">Bordered (With underlines)</option>
                   <option value="gradient">Gradient (With color accents)</option>
@@ -1421,7 +1426,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, columns: e.target.value }
                   })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="one">Single Column</option>
                   <option value="two">Two Columns</option>
@@ -1462,7 +1467,7 @@ export function ResumeTemplates({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <FileText className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="summary-toggle">Professional Summary</Label>
                 </div>
                 <Switch 
@@ -1477,7 +1482,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <Briefcase className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="experience-toggle">Work Experience</Label>
                 </div>
                 <Switch 
@@ -1492,7 +1497,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <GraduationCap className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="education-toggle">Education</Label>
                 </div>
                 <Switch 
@@ -1507,7 +1512,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Code className="h-4 w-4 text-muted-foreground" />
+                  <Code className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="skills-toggle">Skills</Label>
                 </div>
                 <Switch 
@@ -1522,7 +1527,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-muted-foreground" />
+                  <Zap className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="projects-toggle">Projects</Label>
                 </div>
                 <Switch 
@@ -1537,7 +1542,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-muted-foreground" />
+                  <Award className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="certifications-toggle">Certifications</Label>
                 </div>
                 <Switch 
@@ -1552,7 +1557,7 @@ export function ResumeTemplates({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                  <LinkIcon className="h-4 w-4 text-gray-500" />
                   <Label htmlFor="links-toggle">Professional Links</Label>
                 </div>
                 <Switch 
@@ -1615,119 +1620,130 @@ export function ResumeTemplates({
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tight">Resume Templates</h2>
-        <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
+        <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
           Select a template that best represents your professional style. 
           Click any template to preview and customize your resume.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => (
-          <div
-            key={template.id}
-            className={cn(
-              "relative cursor-pointer transition-all duration-200 hover:z-10",
-              selectedTemplate === template.id 
-                ? "scale-[1.02] ring-2 ring-primary ring-offset-2 rounded-lg z-10" 
-                : "hover:scale-[1.01]"
-            )}
-            onClick={() => setPreviewTemplate(template.id)}
-          >
-            {selectedTemplate === template.id && (
-              <div className="absolute -top-2 -right-2 z-10 bg-background rounded-full p-1 shadow-lg">
-                <CheckCircle2 className="h-6 w-6 text-primary fill-primary/20" />
-              </div>
-            )}
-            
-            {template.isPremium && (
-              <div className="absolute -top-2 -left-2 z-10 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-1 shadow-lg">
-                <Star className="h-5 w-5 text-white" />
-              </div>
-            )}
-            
-            <Card className="overflow-hidden h-full border-0 shadow-sm group">
-              <div className={cn(
-                "h-48 relative overflow-hidden transition-all",
-                template.preview
-              )}>
-                <div className="absolute inset-0 flex flex-col p-4">
+      {/* FORCE LIGHT MODE CONTAINER - COMPLETELY ISOLATED FROM THEME */}
+      <div className="bg-white text-gray-900 min-h-screen" style={{ colorScheme: 'light' }}>
+        <div className={cn(
+    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4",
+    "bg-white dark:bg-gray-900"
+  )}>
+          {templates.map((template) => (
+            <div
+              key={template.id}
+              className={cn(
+                "relative cursor-pointer transition-all duration-200 hover:z-10 bg-white",
+                selectedTemplate === template.id 
+                  ? "scale-[1.02] ring-2 ring-blue-500 ring-offset-2 rounded-lg z-10" 
+                  : "hover:scale-[1.01]"
+              )}
+              onClick={() => setPreviewTemplate(template.id)}
+              style={{ backgroundColor: '#ffffff', color: '#111827' }}
+            >
+              {selectedTemplate === template.id && (
+                <div className="absolute -top-2 -right-2 z-10 bg-white rounded-full p-1 shadow-lg border border-gray-200">
+                  <CheckCircle2 className="h-6 w-6 text-blue-600 fill-blue-100" />
+                </div>
+              )}
+              
+              {template.isPremium && (
+                <div className="absolute -top-2 -left-2 z-10 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full p-1 shadow-lg">
+                  <Star className="h-5 w-5 text-white" />
+                </div>
+              )}
+              
+              {/* REPLACE Card WITH PLAIN DIV TO AVOID THEME INHERITANCE */}
+              <div className="overflow-hidden h-full border border-gray-200 shadow-sm group rounded-lg bg-white">
+                {/* Template Preview - FORCE WHITE BACKGROUND */}
+                <div className="h-48 relative overflow-hidden transition-all bg-white" style={{ backgroundColor: '#ffffff' }}>
                   <div className={cn(
-                    "h-7 w-32 rounded-sm mb-3 bg-gradient-to-r",
-                    template.accentColor
-                  )} />
-                  
-                  <div className="flex gap-3 mb-4">
-                    <div className="h-2 w-20 bg-gray-300 rounded-full" />
-                    <div className="h-2 w-16 bg-gray-300 rounded-full" />
-                  </div>
-                  
-                  <div className="mb-2">
+                    "absolute inset-0 flex flex-col p-4 bg-white",
+                    template.preview
+                  )}>
                     <div className={cn(
-                      "h-4 w-24 mb-1 rounded-sm bg-gradient-to-r opacity-90",
+                      "h-7 w-32 rounded-sm mb-3 bg-gradient-to-r",
                       template.accentColor
                     )} />
-                    <div className="h-2 w-full bg-gray-200 rounded-full mb-1" />
-                    <div className="h-2 w-4/5 bg-gray-200 rounded-full" />
+                    
+                    <div className="flex gap-3 mb-4">
+                      <div className="h-2 w-20 bg-gray-300 rounded-full" />
+                      <div className="h-2 w-16 bg-gray-300 rounded-full" />
+                    </div>
+                    
+                    <div className="mb-2">
+                      <div className={cn(
+                        "h-4 w-24 mb-1 rounded-sm bg-gradient-to-r opacity-90",
+                        template.accentColor
+                      )} />
+                      <div className="h-2 w-full bg-gray-200 rounded-full mb-1" />
+                      <div className="h-2 w-4/5 bg-gray-200 rounded-full" />
+                    </div>
+                    
+                    <div className="mt-3">
+                      <div className={cn(
+                        "h-4 w-28 mb-1 rounded-sm bg-gradient-to-r opacity-90",
+                        template.accentColor
+                      )} />
+                      <div className="flex gap-2 flex-wrap">
+                        {[6, 8, 5].map((w, i) => (
+                          <div 
+                            key={i}
+                            className={cn(
+                              "h-6 rounded-md px-2",
+                              i % 2 === 0 
+                                ? "bg-gray-200" 
+                                : `bg-gradient-to-r ${template.accentColor} opacity-80`
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="mt-3">
-                    <div className={cn(
-                      "h-4 w-28 mb-1 rounded-sm bg-gradient-to-r opacity-90",
-                      template.accentColor
-                    )} />
-                    <div className="flex gap-2 flex-wrap">
-                      {[6, 8, 5].map((w, i) => (
-                        <div 
-                          key={i}
-                          className={cn(
-                            "h-6 rounded-md px-2",
-                            i % 2 === 0 
-                              ? "bg-gray-200" 
-                              : `bg-gradient-to-r ${template.accentColor} opacity-80`
-                          )}
-                        />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all" />
+                </div>
+                
+                {/* Card Content - FORCE WHITE BACKGROUND */}
+                <div className="p-4 bg-white" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-lg text-gray-900" style={{ color: '#111827' }}>
+                      {template.name}
+                    </h3>
+                    {template.isPremium && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 text-xs font-medium border border-amber-200">
+                        <Star className="h-3 w-3" />
+                        Premium
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3" style={{ color: '#6b7280' }}>
+                    {template.description}
+                  </p>
+                  
+                  {/* Features */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {template.features.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700"
+                          style={{ backgroundColor: '#f3f4f6', color: '#374151' }}
+                        >
+                          {feature}
+                        </span>
                       ))}
                     </div>
                   </div>
                 </div>
-                
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all" />
               </div>
-              
-              <CardContent className="p-4 bg-background">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className={cn("font-semibold text-lg", template.textColor)}>
-                    {template.name}
-                  </h3>
-                  {template.isPremium && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 text-xs font-medium">
-                      <Star className="h-3 w-3" />
-                      Premium
-                    </div>
-                  )}
-                </div>
-                
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  {template.description}
-                </p>
-                
-                {/* Features */}
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    {template.features.map((feature, index) => (
-                      <span
-                        key={index}
-                        className="text-xs px-2 py-1 rounded-full bg-muted/50 text-muted-foreground"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
       
       {/* Template Features */}
@@ -1760,10 +1776,10 @@ export function ResumeTemplates({
         open={!!previewTemplate && !isCustomizing} 
         onOpenChange={(open) => !open && setPreviewTemplate(null)}
       >
-        <DialogContent className="max-w-6xl p-0 overflow-hidden h-[90vh]">
-          <DialogHeader className="p-6 pb-0">
+        <DialogContent className="max-w-6xl p-0 overflow-hidden h-[90vh] bg-white">
+          <DialogHeader className="p-6 pb-0 bg-white border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {templates.find(t => t.id === previewTemplate)?.name} Template
               </h2>
               <div className="flex items-center gap-2">
@@ -1802,12 +1818,19 @@ export function ResumeTemplates({
                   <Edit className="h-4 w-4" />
                   Use Template
                 </Button>
+                <button 
+                  onClick={() => setPreviewTemplate(null)}
+                  className="rounded-full p-2 hover:bg-gray-200 ml-2 bg-white border border-gray-300"
+                >
+                  <X className="h-5 w-5 text-gray-600" />
+                </button>
+
               </div>
             </div>
           </DialogHeader>
-          <div className="h-full overflow-y-auto p-6">
+          <div className="h-full overflow-y-auto p-6 bg-gray-50">
             {previewTemplate && (
-              <div className="h-full shadow-lg border rounded-lg overflow-hidden">
+              <div className="h-full shadow-lg border border-gray-200 rounded-lg overflow-hidden bg-white">
                 {renderFullPreview(previewTemplate)}
               </div>
             )}
@@ -1820,8 +1843,8 @@ export function ResumeTemplates({
         open={isCustomizing} 
         onOpenChange={(open) => !open && setIsCustomizing(false)}
       >
-        <DialogContent className="max-w-6xl p-6 overflow-hidden h-[90vh]">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+        <DialogContent className="max-w-6xl p-6 overflow-hidden h-[90vh] bg-white">
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-gray-900">
             <Palette className="h-5 w-5 text-primary" />
             Customize Template
           </DialogTitle>
@@ -1829,14 +1852,16 @@ export function ResumeTemplates({
             Personalize your resume template with custom colors, fonts, and layout options.
           </DialogDescription>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-120px)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-120px)] overflow-hidden bg-white">
             <div className="overflow-y-auto pr-4">
               {renderCustomizationPanel()}
             </div>
             
-            <div className="border rounded-lg overflow-hidden shadow-md h-full">
-              <div className="h-full overflow-y-auto">
-                {customTemplate && renderFullPreview(customTemplate.id)}
+            <div className="border border-gray-200 rounded-lg overflow-hidden shadow-md h-full bg-white">
+              <div className="h-full overflow-y-auto bg-gray-50">
+                <div className="bg-white m-2 rounded shadow-sm">
+                  {customTemplate && renderFullPreview(customTemplate.id)}
+                </div>
               </div>
             </div>
           </div>

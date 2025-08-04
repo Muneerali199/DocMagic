@@ -153,29 +153,31 @@ export function HeroSection() {
                 />
               </Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="glass-effect border-2 border-blue-300/50 hover:border-blue-400/70 px-8 sm:px-10 py-4 sm:py-5 rounded-full w-full sm:w-auto relative focus:ring-4 focus:ring-blue-300 focus:outline-none shadow-lg text-base sm:text-lg font-semibold hover:bg-blue-50/50 transition-all duration-300 group"
-              aria-label="Watch Demo"
-            >
-              <Link
-                href="#how-it-works"
-                className="flex items-center justify-center gap-3"
-                tabIndex={0}
-              >
-                <Star
-                  className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500 group-hover:animate-pulse"
-                  aria-hidden="true"
-                />
-                <span className="bolt-gradient-text font-bold">
-                  Watch Demo
-                </span>
-              </Link>
-            </Button>
-          </div>
-
+            {/*Enhanced watch demo button*/}
+              <Button
+             asChild
+             variant="outline"
+             size="lg"
+            className="px-8 sm:px-10 py-4 sm:py-5 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-lg text-base sm:text-lg font-semibold transition-all duration-500 ease-in-out group
+             bg-gradient-to-r from-red-600 to-black text-white
+             hover:from-red-700 hover:to-neutral-900
+             hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:z-20"
+            aria-label="Watch Demo"
+>
+            <Link
+            href="#how-it-works"
+            className="flex items-center justify-center gap-3"
+            tabIndex={0}
+          >
+    <Star
+  
+  className="text-yellow-500 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-700 ease-in-out hover:fill group-hover:rotate-[240deg]"
+  aria-hidden="true"
+/>
+      <span className="text-white">Watch Demo</span>
+       </Link>
+      </Button>
+       </div>
           {/* Social Proof Banner */}
           <div className="mt-8 sm:mt-10 animate-fade-in-up delay-350">
             <p className="text-sm text-muted-foreground mb-4">

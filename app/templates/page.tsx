@@ -48,7 +48,7 @@ export default function TemplatesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <div className="min-h-screen flex flex-col relative overflow-hidden ">
         {/* Background elements */}
         <div className="absolute inset-0 mesh-gradient opacity-20"></div>
         <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-15 top-20 -left-24"></div>
@@ -64,7 +64,7 @@ export default function TemplatesPage() {
         />
 
         <SiteHeader />
-        <main className="flex-1 relative z-10">
+        <main className="flex-1 relative z-10 ">
           <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="flex justify-center items-center h-64">
               <div className="glass-effect p-8 rounded-2xl">
@@ -87,7 +87,7 @@ export default function TemplatesPage() {
         <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18"></div>
 
         <SiteHeader />
-        <main className="flex-1 relative z-10">
+        <main className="flex-1 relative z-10 ">
           <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <div className="glass-effect p-8 rounded-2xl max-w-md mx-auto">
@@ -118,7 +118,7 @@ export default function TemplatesPage() {
       />
 
       <SiteHeader />
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 flex items-center justify-center">
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           {/* Enhanced Header */}
           <div className="text-center mb-8 sm:mb-12">

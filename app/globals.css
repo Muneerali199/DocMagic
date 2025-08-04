@@ -104,22 +104,91 @@
     );
   }
 
-  .bolt-gradient-text {
-    background: linear-gradient(
-      135deg,
-      #2563eb 0%,
-      #1d4ed8 25%,
-      #1e40af 50%,
-      #1e3a8a 75%,
-      #312e81 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% 200%;
-    animation: gradient-shift 6s ease infinite;
-  }
+.bolt-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #2563eb 0%,
+    #ff0000 25%,
+    #1e40af 50%,
+    #1e3a8a 75%,
+    #312e81 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+  transition: background-position 0.5s ease;
+}
 
+.group:hover .bolt-gradient-text {
+  background-position: right center;
+}
+
+/* Additional Gradient Text Classes */
+.sunset-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #f59e0b 0%,
+    #d97706 25%,
+    #b45309 50%,
+    #92400e 75%,
+    #78350f 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.forest-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #059669 0%,
+    #047857 25%,
+    #065f46 50%,
+    #064e3b 75%,
+    #022c22 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.ocean-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #0891b2 0%,
+    #0e7490 25%,
+    #155e75 50%,
+    #164e63 75%,
+    #083344 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.cosmic-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #7c3aed 0%,
+    #6d28d9 25%,
+    #5b21b6 50%,
+    #4c1d95 75%,
+    #312e81 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
   /* Professional Secondary Gradients */
   .sunset-gradient {
     background: linear-gradient(
@@ -1056,6 +1125,7 @@
       inset 0 0 20px 0 rgba(255, 255, 255, 0.2);
   }
 }
+
 
 @keyframes button-hover-wave {
   0% {

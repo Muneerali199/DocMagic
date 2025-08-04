@@ -105,3 +105,17 @@ FOR INSERT WITH CHECK (
 - Social media links section
 - Profile completion percentage
 - Export profile data functionality
+
+
+<div align="center">
+
+📄 [Docs](https://github.com/Muneerali199/DocMagic/tree/main/docs) • 
+🐛 [Issues](https://github.com/Muneerali199/DocMagic/issues) • 
+🤝 [Contributions](https://github.com/Muneerali199/DocMagic/graphs/contributors) • 
+💬 [Community](https://github.com/Muneerali199/DocMagic/discussions)
+
+<p>© 2025 DocMagic. All rights reserved.</p>
+
+ Licensed under the [MIT License](https://github.com/Muneerali199/DocMagic/blob/main/LICENSE)
+ 
+</div>

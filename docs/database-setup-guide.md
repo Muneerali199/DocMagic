@@ -129,3 +129,17 @@ Once you run these scripts, refresh your profile page and you should see:
 - Real statistics (0 initially, which is correct)
 - Working profile picture upload
 - No more 404 errors in the console
+
+<div align="center">
+
+📄 [Docs](https://github.com/Muneerali199/DocMagic/tree/main/docs) • 
+🐛 [Issues](https://github.com/Muneerali199/DocMagic/issues) • 
+🤝 [Contributions](https://github.com/Muneerali199/DocMagic/graphs/contributors) • 
+💬 [Community](https://github.com/Muneerali199/DocMagic/discussions)
+
+<p>© 2025 DocMagic. All rights reserved.</p>
+
+ Licensed under the [MIT License](https://github.com/Muneerali199/DocMagic/blob/main/LICENSE)
+ 
+</div>
+

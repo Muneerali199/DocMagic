@@ -1,5 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+
+import Footer from "@/components/ui/Footer";
 import { Inter, Poppins } from "next/font/google";
 import { Providers } from "./providers";
 import { CursorProvider } from "@phazr/custom-cursor";
@@ -58,6 +60,7 @@ export default function RootLayout({
           <CursorProvider>
             {children}
             <PWABanner />
+            <Footer />
           </CursorProvider>
         </Providers>
       </body>

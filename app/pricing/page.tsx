@@ -98,7 +98,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden content-center">
         {/* Animated background elements matching landing page */}
           <div className="absolute inset-0 mesh-gradient opacity-20"></div>
           
@@ -115,7 +115,7 @@ export default function PricingPage() {
             }}
           />
       <SiteHeader />
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 flex items-center justify-center">
         {/* Pricing Section with matching background elements */}
         <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
             
@@ -130,6 +130,7 @@ export default function PricingPage() {
               </div>
               
               {/* Modern heading matching landing page typography */}
+              
               <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center mb-6 sm:mb-8">
                 Choose Your{" "}
                 <span className="bolt-gradient-text relative inline-block">
@@ -139,6 +140,7 @@ export default function PricingPage() {
                   </div>
                 </span>
               </h1>
+          
               
               {/* Modern subtitle matching landing page style */}
               <p className="modern-body text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-0">
@@ -149,6 +151,7 @@ export default function PricingPage() {
               </p>
               
               {/* Stats bar matching landing page */}
+              
               <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-4 sm:gap-8">
                 <div className="glass-effect px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:scale-105 transition-transform duration-300">
                   <span className="bolt-gradient-text font-bold text-sm sm:text-base">3</span>
@@ -164,6 +167,7 @@ export default function PricingPage() {
                 </div>
               </div>
             </div>
+           
 
             {/* Enhanced Pricing Cards with animations */}
             <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-7xl mx-auto">
