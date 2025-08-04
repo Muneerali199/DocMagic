@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Share2, Trash2, Edit2, Star, Users, Eye } from "lucide-react";
+import { MoreVertical, Share2, Trash2, Edit2, Star, Users, Eye, Lock } from "lucide-react";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -215,8 +215,8 @@ export function TemplateCard({
                     className="flex-1 sm:flex-none text-xs sm:text-sm"
                   >
                     <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="hidden xs:inline">Preview</span>
-                    <span className="xs:hidden">View</span>
+                    <span className="hidden sm:inline">Preview</span>
+                    <span className="sm:hidden">View</span>
                   </Button>
                   <AuthButton
                     activity="edit_template"
@@ -227,8 +227,8 @@ export function TemplateCard({
                     authPromptTitle="Sign in to use templates"
                     authPromptDescription="Use this template to create your document."
                   >
-                    <span className="hidden xs:inline">Use Template</span>
-                    <span className="xs:hidden">Use</span>
+                    <span className="hidden sm:inline">Use Template</span>
+                    <span className="sm:hidden">Use</span>
                   </AuthButton>
                 </div>
                 <div className="flex justify-between sm:justify-end items-center">
@@ -488,30 +488,30 @@ export function TemplateCard({
           )}
         </CardContent>
 
-        <CardFooter className="pt-4 p-3 sm:p-6">
-          <div className="flex flex-col gap-2 w-full">
-            <div className="flex gap-2 w-full">
+        <CardFooter className="pt-2 p-3 sm:p-6 flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2 w-full">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPreviewModal(true)}
-                className="flex-1 text-xs sm:text-sm"
+                className="flex-1 text-xs flex items-center justify-center p-1"
               >
                 <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden xs:inline">Preview</span>
-                <span className="xs:hidden">View</span>
+                <span className="hidden sm:inline">Preview</span>
+                <span className="sm:hidden">View</span>
               </Button>
               <AuthButton
                 activity="edit_template"
                 onAuthenticatedClick={() => router.push(`/templates/${id}/use`)}
                 variant="default"
                 size="sm"
-                className="flex-1 text-xs sm:text-sm"
+                className="flex-1 text-xs flex items-center justify-center p-1"
                 authPromptTitle="Sign in to use templates"
                 authPromptDescription="Use this template to create your document."
+                showAuthIcon={true}
               >
-                <span className="hidden xs:inline">Use Template</span>
-                <span className="xs:hidden">Use</span>
+                <span className="hidden sm:inline">Use Template</span>
+                <span className="sm:hidden">Use</span>
               </AuthButton>
             </div>
             {isOwner && onTogglePublic && (
@@ -520,12 +520,11 @@ export function TemplateCard({
                 size="sm"
                 onClick={handleTogglePublic}
                 disabled={isToggling}
-                className="w-full text-xs sm:text-sm"
+                className="w-full text-xs sm:text-sm flex items-center justify-center"
               >
                 {isToggling ? 'Updating...' : (isPublic ? 'Make Private' : 'Make Public')}
               </Button>
             )}
-          </div>
         </CardFooter>
       </Card>
 
