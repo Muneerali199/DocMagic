@@ -61,7 +61,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
   });
 
   const [professionalSummary, setProfessionalSummary] = useState("");
-  
+
   const [workExperience, setWorkExperience] = useState([{
     title: "",
     company: "",
@@ -108,6 +108,9 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
     website: "",
     portfolio: ""
   });
+
+  // Email validation function
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const steps: { id: ResumeStep; title: string; icon: any; description: string }[] = [
     { id: 'personal', title: 'Personal Info', icon: User, description: 'Basic contact information' },
@@ -214,7 +217,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
       }
 
       const resume = await response.json();
-      
+
       if (onResumeGenerated) {
         onResumeGenerated(resume);
       }
@@ -304,7 +307,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{stepGuidance.description}</p>
-          
+
           {stepGuidance.tips && (
             <div>
               <h4 className="font-medium text-sm mb-2 flex items-center gap-1">
@@ -358,7 +361,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
             className="glass-effect"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="email" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
@@ -369,11 +372,20 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
             type="email"
             value={personalInfo.email}
             onChange={(e) => setPersonalInfo(prev => ({ ...prev, email: e.target.value }))}
+            onBlur={(e) => {
+              if (e.target.value && !isValidEmail(e.target.value)) {
+                toast({
+                  title: "Invalid Email",
+                  description: "Please enter a valid email address.",
+                  variant: "destructive",
+                });
+              }
+            }}
             placeholder="john@example.com"
-            className="glass-effect"
+            className={cn("glass-effect", !isValidEmail(personalInfo.email) && personalInfo.email && "border-red-500")}
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="phone" className="flex items-center gap-2">
             <Phone className="h-4 w-4" />
@@ -387,7 +399,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
             className="glass-effect"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="location" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
@@ -551,7 +563,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           </CardContent>
         </Card>
       ))}
-      
+
       <Button
         onClick={() => addArrayItem(setWorkExperience, {
           title: "", company: "", location: "", startDate: "", endDate: "", current: false, description: ""
@@ -644,7 +656,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           </CardContent>
         </Card>
       ))}
-      
+
       <Button
         onClick={() => addArrayItem(setEducation, {
           degree: "", institution: "", location: "", graduationDate: "", gpa: "", honors: ""
@@ -693,7 +705,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 {skillList.map((skill, index) => (
                   <Badge
@@ -776,7 +788,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           </CardContent>
         </Card>
       ))}
-      
+
       <Button
         onClick={() => addArrayItem(setProjects, {
           name: "", description: "", technologies: [], link: ""
@@ -851,7 +863,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           </CardContent>
         </Card>
       ))}
-      
+
       <Button
         onClick={() => addArrayItem(setCertifications, {
           name: "", issuer: "", date: "", credential: ""
@@ -880,7 +892,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           className="glass-effect"
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="github" className="flex items-center gap-2">
           <Github className="h-4 w-4 text-gray-800" />
@@ -894,7 +906,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           className="glass-effect"
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="website" className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-green-600" />
@@ -908,7 +920,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           className="glass-effect"
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="portfolio" className="flex items-center gap-2">
           <Briefcase className="h-4 w-4 text-purple-600" />
@@ -945,7 +957,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 </p>
               </div>
             </div>
-            
+
             {jobDescription && (
               <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <FileText className="h-5 w-5 text-blue-600" />
@@ -977,7 +989,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 <p className="text-xs text-muted-foreground">{personalInfo.name}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <FileText className="h-4 w-4 text-blue-500" />
               <div>
@@ -987,7 +999,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <Briefcase className="h-4 w-4 text-blue-500" />
               <div>
@@ -995,7 +1007,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 <p className="text-xs text-muted-foreground">{workExperience.length} entries</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <GraduationCap className="h-4 w-4 text-blue-500" />
               <div>
@@ -1003,7 +1015,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 <p className="text-xs text-muted-foreground">{education.length} entries</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <Code className="h-4 w-4 text-blue-500" />
               <div>
@@ -1013,7 +1025,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <Zap className="h-4 w-4 text-blue-500" />
               <div>
@@ -1021,7 +1033,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 <p className="text-xs text-muted-foreground">{projects.length} entries</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <Award className="h-4 w-4 text-blue-500" />
               <div>
@@ -1029,7 +1041,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 <p className="text-xs text-muted-foreground">{certifications.length} entries</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 glass-effect rounded-lg">
               <LinkIcon className="h-4 w-4 text-blue-500" />
               <div>
@@ -1100,7 +1112,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
   const isStepValid = () => {
     switch (currentStep) {
       case 'personal':
-        return personalInfo.name && personalInfo.email && personalInfo.phone && personalInfo.location && targetRole;
+        return personalInfo.name && personalInfo.email && isValidEmail(personalInfo.email) && personalInfo.phone && personalInfo.location && targetRole;
       case 'summary':
         return professionalSummary.length > 0;
       case 'experience':
@@ -1125,11 +1137,11 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
   return (
     <div className="space-y-6">
       {renderStepIndicator()}
-      
+
       {renderGuidancePanel()}
-      
+
       {renderCurrentStep()}
-      
+
       <div className="flex justify-between mt-8">
         <Button
           onClick={prevStep}
@@ -1140,7 +1152,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
           <ArrowLeft className="h-4 w-4 mr-2" />
           Previous
         </Button>
-        
+
         {currentStep === 'review' ? (
           <Button
             onClick={generateResume}
@@ -1160,7 +1172,7 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
                 </>
               )}
             </div>
-            
+
             {!isGenerating && (
               <div className="absolute inset-0 shimmer opacity-30"></div>
             )}

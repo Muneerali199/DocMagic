@@ -194,7 +194,7 @@ export default function SignIn() {
                     }`}
                   />
                   Email Address
-                  {email && email.includes("@") && (
+                  {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
                     <Check className="h-3 w-3 text-green-500 animate-scale-in" />
                   )}
                 </Label>
@@ -208,27 +208,47 @@ export default function SignIn() {
                     onBlur={() => setFocusedField(null)}
                     placeholder="Enter your email"
                     required
-                    className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
+                    className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${
+                      email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                        ? "border-red-400/60 focus:border-red-400/80 hover:border-red-400/70"
+                        : "border-yellow-400/30 focus:border-yellow-400/60 hover:border-yellow-400/50"
+                    }`}
                     disabled={isLoading}
                   />
                   <div
                     className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
                       focusedField === "email"
-                        ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        ? email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                          ? "border-red-400/40 shadow-lg shadow-red-400/20"
+                          : "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                        ? "border-red-400/20"
                         : "border-yellow-400/20"
                     }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${
-                      email && email.includes("@")
-                        ? "w-full"
+                    className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${
+                      email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                        ? "w-full bg-gradient-to-r from-green-400 to-blue-500"
+                        : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                        ? "w-full bg-gradient-to-r from-red-400 to-orange-500"
                         : email
-                        ? "w-1/2"
+                        ? "w-1/2 bg-gradient-to-r from-yellow-400 to-blue-500"
                         : "w-0"
                     }`}
                   ></div>
                 </div>
+                
+                {/* Email validation feedback */}
+                {email && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                  <div className="animate-fade-in-up">
+                    <p className="text-xs text-red-500 flex items-center gap-1 animate-bounce">
+                      <Mail className="h-3 w-3" />
+                      Please enter a valid email address
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Enhanced password field with better UX */}
@@ -318,7 +338,7 @@ export default function SignIn() {
               >
                 <Button
                   type="submit"
-                  disabled={isLoading || !email.trim() || !password.trim()}
+                  disabled={isLoading || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password.trim()}
                   className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   aria-label="Sign in to your account"
                 >
