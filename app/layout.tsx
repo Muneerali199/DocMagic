@@ -4,9 +4,10 @@ import type { ReactNode } from "react";
 import Footer from "@/components/ui/Footer";
 import { Inter, Poppins } from "next/font/google";
 import { Providers } from "./providers";
-import { CursorProvider } from "@phazr/custom-cursor";
+//import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import type { Metadata } from "next";
+import CustomCursor from "@/components/CustomCursor";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -56,14 +57,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
-        <Providers>
-          <CursorProvider>
-            {children}
-            <PWABanner />
-            <Footer />
-          </CursorProvider>
-        </Providers>
-      </body>
+  <Providers>
+    <CustomCursor /> 
+    {children}
+    <PWABanner />
+    <Footer />
+  </Providers>
+</body>
     </html>
   );
 }
