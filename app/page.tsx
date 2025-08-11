@@ -31,7 +31,7 @@ import {
   Trophy,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
-
+//improved ui home page
 export default function Home() {
   return (
     <div
