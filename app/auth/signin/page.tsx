@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getActivityDescription } from "@/lib/auth-utils";
+import { getActivityDescription, useAuthRouteProtection } from "@/lib/auth-utils";
 import {
   Sparkles,
   Zap,
@@ -25,6 +25,7 @@ import {
   Fingerprint,
   Shield,
 } from "lucide-react";
+import AuthLoader from "@/components/auth/AuthLoader";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -38,6 +39,7 @@ export default function SignIn() {
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
+  const { shouldRedirect, loading } = useAuthRouteProtection();
 
   // Animation mount effect and URL parameter handling
   useEffect(() => {
@@ -93,6 +95,11 @@ export default function SignIn() {
     }
   };
 
+  if (loading || shouldRedirect) {
+    return <AuthLoader shouldRedirect={shouldRedirect} />;
+  }
+
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
       {/* Enhanced background elements with parallax effect */}
@@ -112,9 +119,8 @@ export default function SignIn() {
       />
 
       <div
-        className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
+        className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
       >
         {/* Enhanced card with advanced glass effect */}
         <div className="glass-effect p-6 sm:p-8 rounded-2xl shadow-2xl border border-yellow-400/20 relative overflow-hidden group hover:border-yellow-400/40 transition-all duration-500 hover:shadow-3xl backdrop-blur-xl">
@@ -141,11 +147,10 @@ export default function SignIn() {
           <div className="relative z-10">
             {/* Enhanced header with advanced animations */}
             <div
-              className={`text-center mb-6 sm:mb-8 transition-all duration-700 delay-200 ${
-                mounted
+              className={`text-center mb-6 sm:mb-8 transition-all duration-700 delay-200 ${mounted
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-4"
-              }`}
+                }`}
             >
               {/* Professional badge with hover effects */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 badge-bg group hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -174,24 +179,21 @@ export default function SignIn() {
             <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
               {/* Enhanced email field with advanced interactions */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-300 ${
-                  mounted
+                className={`space-y-2 transition-all duration-500 delay-300 ${mounted
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4"
-                }`}
+                  }`}
               >
                 <Label
                   htmlFor="email"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
-                    focusedField === "email" ? "text-yellow-600 scale-105" : ""
-                  }`}
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "email" ? "text-yellow-600 scale-105" : ""
+                    }`}
                 >
                   <Mail
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
-                      focusedField === "email"
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "email"
                         ? "text-yellow-500 animate-pulse"
                         : ""
-                    }`}
+                      }`}
                   />
                   Email Address
                   {email && email.includes("@") && (
@@ -212,47 +214,42 @@ export default function SignIn() {
                     disabled={isLoading}
                   />
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
-                      focusedField === "email"
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "email"
                         ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
                         : "border-yellow-400/20"
-                    }`}
+                      }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${
-                      email && email.includes("@")
+                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${email && email.includes("@")
                         ? "w-full"
                         : email
-                        ? "w-1/2"
-                        : "w-0"
-                    }`}
+                          ? "w-1/2"
+                          : "w-0"
+                      }`}
                   ></div>
                 </div>
               </div>
 
               {/* Enhanced password field with better UX */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-400 ${
-                  mounted
+                className={`space-y-2 transition-all duration-500 delay-400 ${mounted
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4"
-                }`}
+                  }`}
               >
                 <Label
                   htmlFor="password"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
-                    focusedField === "password"
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "password"
                       ? "text-yellow-600 scale-105"
                       : ""
-                  }`}
+                    }`}
                 >
                   <Lock
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
-                      focusedField === "password"
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "password"
                         ? "text-yellow-500 animate-pulse"
                         : ""
-                    }`}
+                      }`}
                   />
                   Password
                   {password && password.length >= 6 && (
@@ -289,32 +286,29 @@ export default function SignIn() {
                     )}
                   </button>
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
-                      focusedField === "password"
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "password"
                         ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
                         : "border-yellow-400/20"
-                    }`}
+                      }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${
-                      password && password.length >= 6
+                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${password && password.length >= 6
                         ? "w-full"
                         : password
-                        ? "w-1/2"
-                        : "w-0"
-                    }`}
+                          ? "w-1/2"
+                          : "w-0"
+                      }`}
                   ></div>
                 </div>
               </div>
 
               {/* Enhanced submit button with advanced animations */}
               <div
-                className={`transition-all duration-500 delay-500 ${
-                  mounted
+                className={`transition-all duration-500 delay-500 ${mounted
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4"
-                }`}
+                  }`}
               >
                 <Button
                   type="submit"
@@ -369,11 +363,10 @@ export default function SignIn() {
 
             {/* Enhanced footer with advanced styling */}
             <div
-              className={`mt-6 sm:mt-8 text-center transition-all duration-500 delay-600 ${
-                mounted
+              className={`mt-6 sm:mt-8 text-center transition-all duration-500 delay-600 ${mounted
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-4"
-              }`}
+                }`}
             >
               <div className="glass-effect p-4 rounded-xl border border-yellow-400/10 hover:border-yellow-400/20 transition-all duration-300 group hover:scale-105">
                 <p className="professional-text text-sm text-muted-foreground mb-3">
@@ -396,11 +389,10 @@ export default function SignIn() {
 
             {/* Enhanced navigation link */}
             <div
-              className={`mt-4 text-center transition-all duration-500 delay-700 ${
-                mounted
+              className={`mt-4 text-center transition-all duration-500 delay-700 ${mounted
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-4"
-              }`}
+                }`}
             >
               <Link
                 href="/"
