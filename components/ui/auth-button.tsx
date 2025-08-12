@@ -72,7 +72,7 @@ export function AuthButton({
       {...props}
     >
       {!isAuthenticated && showAuthIcon && (
-        <Lock className="h-4 w-4 mr-2" />
+        <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
       )}
       {isAuthenticated && showAuthIcon && variant === "default" && (
         <Sparkles className="h-4 w-4 mr-2" />
