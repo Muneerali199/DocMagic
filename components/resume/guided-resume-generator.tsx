@@ -658,8 +658,8 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
     </div>
   );
 
+  const [newSkill, setNewSkill] = useState({ technical: "", programming: "", tools: "", soft: "" });
   const renderSkillsStep = () => {
-    const [newSkill, setNewSkill] = useState({ technical: "", programming: "", tools: "", soft: "" });
 
     return (
       <div className="space-y-6">
