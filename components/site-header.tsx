@@ -65,8 +65,8 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+    <header className="nav-professional sticky top-0 z-50 w-full border-b border-border/40 bg-gray-900 dark:bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-gray-100/90">
+      <div className="nav-professional container flex h-16 items-center justify-between px-4">
         {/* Logo and Mobile Menu */}
         <div className="flex items-center gap-4">
           <Link
@@ -177,7 +177,7 @@ export function SiteHeader() {
           </Sheet>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation - Hidden on mobile */}
         <nav
           className="hidden md:flex items-center gap-1"
           aria-label="Primary navigation"

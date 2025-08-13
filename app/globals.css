@@ -707,29 +707,82 @@
   }
 
   /* Professional Navigation */
-  .nav-professional {
-    background: hsl(var(--background) / 0.95);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
+/* Light mode navbar */
+.nav-professional {
+  background: rgba(20, 20, 20, 0.85); /* deep dark glass effect */
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: #fff !important; /* force white text */
+}
 
-  .dark .nav-professional {
-    background: hsl(var(--background) / 0.95);
-    border-bottom: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-  }
+.nav-professional a,
+.nav-professional span,
+.nav-professional button {
+  color: #fff !important;
+}
+
+.nav-professional a:hover {
+  color: #00b4d8 !important; /* optional modern hover color */
+}
+
+
+/* Dark mode navbar */
+.dark .nav-professional {
+  background: rgba(20, 20, 20, 0.85); /* Dark gray with transparency */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: white;
+}
 
   /* Professional Footer */
+.footer-professional {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--background)) 60%,
+    hsl(var(--background) / 0.95) 100%
+  );
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  box-shadow: 0 -2px 8px hsl(var(--border) / 0.1);
+  
+  padding: 3rem 1rem 2rem; /* more breathing room on sides for mobile */
+  
+  color: hsl(var(--foreground));
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.footer-professional a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.footer-professional a:hover {
+  color: hsl(var(--primary) / 0.9);
+  text-shadow: 0 0 4px hsl(var(--primary) / 0.3);
+}
+
+.footer-professional .footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.footer-professional .footer-bottom {
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+@media (min-width: 768px) {
   .footer-professional {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--background)) 100%
-    );
-    border-top: 1px solid hsl(var(--border));
     padding: 3rem 0 2rem;
   }
+}
 
   .dark .footer-professional {
     background: linear-gradient(
