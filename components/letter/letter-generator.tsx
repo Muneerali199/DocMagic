@@ -38,7 +38,10 @@ export function LetterGenerator() {
   const [emailContent, setEmailContent] = useState("");
   const [fromEmail, setFromEmail] = useState("");
   const { toast } = useToast();
-  
+
+  // Email validation function
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const generateLetter = async () => {
     if (!prompt.trim()) {
       toast({
@@ -59,7 +62,7 @@ export function LetterGenerator() {
     }
 
     setIsGenerating(true);
-    
+
     try {
       const response = await fetch('/api/generate/letter', {
         method: 'POST',
@@ -81,7 +84,7 @@ export function LetterGenerator() {
       }
 
       const data = await response.json();
-      
+
       // Ensure the letter object has the expected structure
       const formattedLetter = {
         from: {
@@ -100,9 +103,9 @@ export function LetterGenerator() {
         subject: data.subject || "Re: " + prompt.substring(0, 30) + "...",
         content: data.content || "Letter content not available."
       };
-      
+
       setLetterData(formattedLetter);
-      
+
       toast({
         title: "Letter generated! ✨",
         description: "Your professional letter is ready to preview and download",
@@ -121,9 +124,9 @@ export function LetterGenerator() {
 
   const copyToClipboard = async () => {
     if (!letterData) return;
-    
+
     setIsCopying(true);
-    
+
     try {
       const letterText = `
 ${letterData.from.name || ''}
@@ -138,9 +141,9 @@ Subject: ${letterData.subject || ''}
 
 ${letterData.content || ''}
       `.trim();
-      
+
       await navigator.clipboard.writeText(letterText);
-      
+
       toast({
         title: "Copied to clipboard!",
         description: "Letter content has been copied to your clipboard",
@@ -158,38 +161,38 @@ ${letterData.content || ''}
 
   const exportToPDF = async () => {
     if (!letterData) return;
-    
+
     setIsExporting(true);
-    
+
     try {
       const element = document.getElementById('letter-preview');
       if (!element) throw new Error('Letter preview element not found');
-      
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
-      
+
       // A4 dimensions in mm: 210 x 297
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      
+
       // Calculate ratio to fit the image within the PDF
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      
+
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 0;
-      
+
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`${letterType}-letter.pdf`);
-      
+
       toast({
         title: "Letter exported!",
         description: "Your letter has been downloaded as a PDF.",
@@ -208,20 +211,30 @@ ${letterData.content || ''}
 
   const openSendEmailDialog = () => {
     if (!letterData) return;
-    
+
     // Pre-fill the email form
     setEmailTo(letterData.to.name ? `${letterData.to.name} <${letterData.to.email || ''}>` : '');
     setEmailSubject(letterData.subject || `${letterType.charAt(0).toUpperCase() + letterType.slice(1)} Letter`);
     setEmailContent('');
-    
+
     setShowEmailDialog(true);
   };
 
   const sendEmail = async () => {
     if (!letterData || !emailTo) return;
-    
+
+    // Validate email before sending
+    if (!isValidEmail(emailTo)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid recipient email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSending(true);
-    
+
     try {
       const response = await fetch('/api/send-email', {
         method: 'POST',
@@ -244,15 +257,15 @@ ${letterData.content || ''}
       }
 
       const data = await response.json();
-      
+
       toast({
         title: "Email sent successfully! ✨",
         description: "Your letter has been emailed to the recipient",
       });
-      
+
       // Close the dialog
       setShowEmailDialog(false);
-      
+
       // If there's a preview URL (for test emails), show it
       if (data.previewUrl) {
         window.open(data.previewUrl, '_blank');
@@ -310,7 +323,7 @@ ${letterData.content || ''}
                 </SelectContent>
               </Select>
             </div>
-            
+
             {/* From/To Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -327,7 +340,7 @@ ${letterData.content || ''}
                   disabled={isGenerating}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="toName" className="text-sm font-medium flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
@@ -343,7 +356,7 @@ ${letterData.content || ''}
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="fromAddress" className="text-sm font-medium flex items-center gap-2">
@@ -359,7 +372,7 @@ ${letterData.content || ''}
                   disabled={isGenerating}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="toAddress" className="text-sm font-medium flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -394,7 +407,7 @@ ${letterData.content || ''}
                 Only needed if you plan to send the letter via email
               </p>
             </div>
-            
+
             {/* Prompt */}
             <div className="space-y-2">
               <Label htmlFor="prompt" className="text-sm font-medium flex items-center gap-2">
@@ -410,7 +423,7 @@ ${letterData.content || ''}
                 disabled={isGenerating}
               />
             </div>
-            
+
             {/* Generate Button */}
             <Button 
               onClick={generateLetter} 
@@ -431,13 +444,13 @@ ${letterData.content || ''}
                   </>
                 )}
               </div>
-              
+
               {!isGenerating && (
                 <div className="absolute inset-0 shimmer opacity-30"></div>
               )}
             </Button>
           </div>
-          
+
           {/* Download Options */}
           {letterData && (
             <div className="glass-effect p-4 rounded-xl border border-yellow-400/20">
@@ -541,20 +554,33 @@ ${letterData.content || ''}
               Fill in the details to send your letter directly to the recipient.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="emailTo" className="text-sm font-medium">
-                Recipient Email
+              <Label htmlFor="emailTo" className="text-sm font-medium flex items-center gap-2">
+                To Email Address
+                {emailTo && isValidEmail(emailTo) && (
+                  <span className="text-green-500 text-xs">✓</span>
+                )}
               </Label>
               <Input
                 id="emailTo"
+                type="email"
                 placeholder="recipient@example.com"
                 value={emailTo}
                 onChange={(e) => setEmailTo(e.target.value)}
+                className={`${
+                  emailTo && !isValidEmail(emailTo) && emailTo.length > 0
+                    ? "border-red-400 focus:border-red-500"
+                    : ""
+                }`}
+                required
               />
+              {emailTo && emailTo.length > 0 && !isValidEmail(emailTo) && (
+                <p className="text-xs text-red-500">Please enter a valid email address</p>
+              )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="emailSubject" className="text-sm font-medium">
                 Subject
@@ -566,7 +592,7 @@ ${letterData.content || ''}
                 onChange={(e) => setEmailSubject(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="emailContent" className="text-sm font-medium">
                 Additional Message (Optional)
@@ -580,7 +606,7 @@ ${letterData.content || ''}
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
               Cancel
