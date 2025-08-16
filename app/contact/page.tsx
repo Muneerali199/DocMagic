@@ -37,6 +37,9 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Email validation function
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -49,6 +52,12 @@ export default function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    
+    // Validate email before submission
+    if (!isValidEmail(formData.email)) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simulate form submission
@@ -223,6 +232,9 @@ export default function ContactForm() {
                     <label htmlFor="email" className="flex items-center gap-2 text-sm sm:text-base font-medium text-foreground">
                       <Mail className="h-4 w-4 text-green-500" />
                       Email Address
+                      {formData.email && isValidEmail(formData.email) && (
+                        <span className="text-green-500 text-xs">✓</span>
+                      )}
                     </label>
                     <input
                       type="email"
@@ -231,9 +243,19 @@ export default function ContactForm() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 sm:py-4 rounded-xl glass-effect border border-border/50 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 text-sm sm:text-base placeholder:text-muted-foreground/60"
+                      className={`w-full px-4 py-3 sm:py-4 rounded-xl glass-effect border transition-all duration-300 text-sm sm:text-base placeholder:text-muted-foreground/60 ${
+                        formData.email && !isValidEmail(formData.email) && formData.email.length > 0
+                          ? "border-red-500/50 focus:border-red-500/70 focus:ring-2 focus:ring-red-500/20"
+                          : "border-border/50 focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20"
+                      }`}
                       placeholder="your.email@example.com"
                     />
+                    {formData.email && formData.email.length > 0 && !isValidEmail(formData.email) && (
+                      <p className="text-xs text-red-500 flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        Please enter a valid email address
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone Field */}
