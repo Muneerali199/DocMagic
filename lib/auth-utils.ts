@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 // Pages that can be browsed without authentication
@@ -22,6 +22,11 @@ export const PROTECTED_PAGES = [
   '/profile',
   '/settings',
   '/payment-demo',
+];
+
+export const AUTH_ROUTES = [
+  '/auth/signin',
+  '/auth/register',
 ];
 
 // Activities that require authentication (used for component-level protection)
@@ -111,5 +116,39 @@ export function getActivityDescription(activity: string): string {
   
   return descriptions[activity] || "perform this action";
 }
-
+export function isAuthRoute(pathname: string): boolean {
+  return AUTH_ROUTES.some(route => pathname.startsWith(route));
+}
 // Component wrapper for protected activities (removed for now due to build issues)
+export function useAuthRouteProtection() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && user && isAuthRoute(pathname)) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectTo = urlParams.get('redirectTo') || '/';
+      const safeRedirectTo = redirectTo.startsWith('/') && !redirectTo.includes('..') 
+        ? redirectTo 
+        : '/';
+      
+      toast({
+        title: "Already Authenticated",
+        description: "You are already signed in. Redirecting...",
+      });
+      
+      // Small delay to show the toast
+      setTimeout(() => {
+        router.replace(safeRedirectTo);
+      }, 1000);
+    }
+  }, [user, loading, pathname, router, toast]);
+
+  return {
+    user,
+    loading,
+    shouldRedirect: !loading && !!user && isAuthRoute(pathname)
+  };
+}
