@@ -365,7 +365,6 @@ export function ResumeTemplates({
     </div>
   );
 
-
   const renderModernTemplate = () => (
     <div className="p-8 h-full bg-white" id="resume-preview" style={{ backgroundColor: '#ffffff', color: '#111827' }}>
       <div className="max-w-4xl mx-auto">
@@ -1161,9 +1160,9 @@ export function ResumeTemplates({
     if (!customTemplate) return null;
     
     return (
-      <div className="space-y-6 dark:bg-background/80">
+      <div className="space-y-6">
         <Tabs defaultValue="colors">
-          <TabsList className="w-full ">
+          <TabsList className="w-full">
             <TabsTrigger value="colors" className="flex-1">
               <Palette className="h-4 w-4 mr-2" />
               Colors
@@ -1305,7 +1304,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, heading: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="Inter">Inter (Sans-serif)</option>
                   <option value="Merriweather">Merriweather (Serif)</option>
@@ -1324,7 +1323,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, body: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="Inter">Inter (Sans-serif)</option>
                   <option value="Merriweather">Merriweather (Serif)</option>
@@ -1343,7 +1342,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     fonts: { ...customTemplate.fonts, size: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="small">Small</option>
                   <option value="medium">Medium</option>
@@ -1389,7 +1388,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, headerStyle: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="classic">Classic (Name and contact info)</option>
                   <option value="modern">Modern (With colored background)</option>
@@ -1408,7 +1407,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, sectionStyle: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="bordered">Bordered (With underlines)</option>
                   <option value="gradient">Gradient (With color accents)</option>
@@ -1427,7 +1426,7 @@ export function ResumeTemplates({
                     ...customTemplate,
                     layout: { ...customTemplate.layout, columns: e.target.value }
                   })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2"
                 >
                   <option value="one">Single Column</option>
                   <option value="two">Two Columns</option>
@@ -1463,7 +1462,7 @@ export function ResumeTemplates({
             </div>
           </TabsContent>
           
-          <TabsContent value="sections" className="space-y-4 pt-4 dark:bg-background/80">
+          <TabsContent value="sections" className="space-y-4 pt-4">
             <h3 className="text-lg font-medium">Section Visibility</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -1843,7 +1842,7 @@ export function ResumeTemplates({
         open={isCustomizing} 
         onOpenChange={(open) => !open && setIsCustomizing(false)}
       >
-        <DialogContent className="max-w-6xl p-6 overflow-hidden h-[90vh] bg-white dark:bg-background/80">
+        <DialogContent className="max-w-6xl p-6 overflow-hidden h-[90vh] bg-white">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-gray-900">
             <Palette className="h-5 w-5 text-primary" />
             Customize Template
@@ -1852,8 +1851,8 @@ export function ResumeTemplates({
             Personalize your resume template with custom colors, fonts, and layout options.
           </DialogDescription>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-120px)] overflow-hidden">
-            <div className="overflow-y-auto pr-4 dark:bg-background">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-120px)] overflow-hidden bg-white">
+            <div className="overflow-y-auto pr-4">
               {renderCustomizationPanel()}
             </div>
             
