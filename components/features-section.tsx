@@ -1,86 +1,120 @@
-import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2, Workflow, Brain, Palette, Shield } from "lucide-react";
+import { CheckCircle, FileText, Presentation as LayoutPresentation, BookOpen, Users, PenTool, Download, Sparkles, Zap, Star, Wand2, Workflow, Brain, Palette, Shield } from "lucide-react";
+import React from 'react';
 
 export function FeaturesSection() {
   return (
-    <div className="py-20 sm:py-28 lg:py-36 relative overflow-hidden section-header" id="how-it-works">
-      {/* Enhanced background elements */}
-      <div className="absolute inset-0 mesh-gradient opacity-25"></div>
-      <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
-      <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 ocean-gradient opacity-20 bottom-20 -left-24"></div>
-      <div className="floating-orb w-56 h-56 sm:w-80 sm:h-80 forest-gradient opacity-15 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+    <div className="py-20 sm:py-28 lg:py-36 relative overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-100/50 via-white to-gray-100/20 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+      {/* Modern animated grid background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 [background:radial-gradient(circle_800px_at_100px_200px,#3b82f640,transparent)] dark:[background:radial-gradient(circle_800px_at_100px_200px,#3b82f620,transparent)]"></div>
+        <div className="absolute inset-0 [background:radial-gradient(circle_800px_at_80%_80%,#ec489940,transparent)] dark:[background:radial-gradient(circle_800px_at_80%_80%,#ec489920,transparent)]"></div>
+        <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]"></div>
+      </div>
 
-      <div className="mx-auto max-w-7xl px-2 xs:px-3 sm:px-6 lg:px-8 relative z-10">
+      {/* Floating orb elements */}
+      <div className="absolute top-20 -right-32 w-96 h-96 rounded-full bg-gradient-to-r from-amber-200/40 to-pink-300/40 blur-3xl opacity-30 dark:opacity-20 animate-float"></div>
+      <div className="absolute bottom-20 -left-24 w-72 h-72 rounded-full bg-gradient-to-r from-blue-200/40 to-cyan-300/40 blur-3xl opacity-30 dark:opacity-20 animate-float-delay"></div>
+      <div className="absolute top-1/2 left-1/2 w-80 h-80 rounded-full bg-gradient-to-r from-emerald-200/40 to-teal-300/40 blur-3xl opacity-30 dark:opacity-20 transform -translate-x-1/2 -translate-y-1/2 animate-float-slow"></div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-blue-200/30">
-            <Brain className="h-5 w-5 text-blue-600" />
-            <span className="text-base font-semibold bolt-gradient-text">Powered by Advanced AI</span>
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+            <Brain className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <span className="text-base font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300">
+              Powered by Advanced AI
+            </span>
             <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
           </div>
 
-          <h2 className="modern-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-tight">
-            <span className="block mb-2">How DocMagic</span>
-            <span className="bolt-gradient-text">Works Its Magic</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-8 mb-6">
+            <span className="block text-gray-900 dark:text-white">How DocMagic</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300">
+              Works Its Magic
+            </span>
           </h2>
 
-          <p className="modern-body text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Experience the future of document creation. Our AI understands context, follows best practices, and delivers professional results that exceed expectations.
           </p>
         </div>
 
-        {/* Enhanced features grid with better organization */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {features.map((feature, index) => {
             const themes = [
-              { cardClass: 'card-coral hover-coral', gradientClass: 'sunset-gradient', glowClass: 'sunset-glow', borderClass: 'border-amber-200/30' },
-              { cardClass: 'card-sky hover-sky', gradientClass: 'ocean-gradient', glowClass: 'ocean-glow', borderClass: 'border-blue-200/30' },
-              { cardClass: 'card-mint hover-mint', gradientClass: 'forest-gradient', glowClass: 'bolt-glow', borderClass: 'border-emerald-200/30' },
-              { cardClass: 'card-lavender hover-lavender', gradientClass: 'cosmic-gradient', glowClass: 'sunset-glow', borderClass: 'border-purple-200/30' },
-              { cardClass: 'card-coral hover-coral', gradientClass: 'bolt-gradient', glowClass: 'ocean-glow', borderClass: 'border-indigo-200/30' },
-              { cardClass: 'card-sky hover-sky', gradientClass: 'sunset-gradient', glowClass: 'bolt-glow', borderClass: 'border-pink-200/30' }
+              { 
+                cardClass: 'hover:shadow-amber-100/50 dark:hover:shadow-amber-900/20',
+                gradientClass: 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20',
+                iconClass: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
+                borderClass: 'border-amber-200/50 dark:border-amber-800/30'
+              },
+              { 
+                cardClass: 'hover:shadow-blue-100/50 dark:hover:shadow-blue-900/20',
+                gradientClass: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20',
+                iconClass: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400',
+                borderClass: 'border-blue-200/50 dark:border-blue-800/30'
+              },
+              { 
+                cardClass: 'hover:shadow-emerald-100/50 dark:hover:shadow-emerald-900/20',
+                gradientClass: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20',
+                iconClass: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
+                borderClass: 'border-emerald-200/50 dark:border-emerald-800/30'
+              },
+              { 
+                cardClass: 'hover:shadow-purple-100/50 dark:hover:shadow-purple-900/20',
+                gradientClass: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20',
+                iconClass: 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400',
+                borderClass: 'border-purple-200/50 dark:border-purple-800/30'
+              },
+              { 
+                cardClass: 'hover:shadow-indigo-100/50 dark:hover:shadow-indigo-900/20',
+                gradientClass: 'bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/20',
+                iconClass: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400',
+                borderClass: 'border-indigo-200/50 dark:border-indigo-800/30'
+              },
+              { 
+                cardClass: 'hover:shadow-pink-100/50 dark:hover:shadow-pink-900/20',
+                gradientClass: 'bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/20',
+                iconClass: 'bg-pink-100 text-pink-600 dark:bg-pink-900/40 dark:text-pink-400',
+                borderClass: 'border-pink-200/50 dark:border-pink-800/30'
+              }
             ];
             const theme = themes[index % themes.length];
-            const animationDelay = `delay-${(index + 1) * 100}`;
 
             return (
-              <div key={feature.name} className={`group relative animate-slide-in-left ${animationDelay} will-change-transform`}>
-                {/* Enhanced background glow */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${theme.gradientClass.includes('sunset') ? 'from-amber-400/10 to-orange-400/10' : theme.gradientClass.includes('ocean') ? 'from-blue-400/10 to-cyan-400/10' : theme.gradientClass.includes('forest') ? 'from-emerald-400/10 to-teal-400/10' : 'from-purple-400/10 to-pink-400/10'} rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300`}></div>
+              <div 
+                key={feature.name} 
+                className={`group relative rounded-3xl p-8 ${theme.gradientClass} border ${theme.borderClass} transition-all duration-300 hover:shadow-xl hover:-translate-y-2 ${theme.cardClass}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl ${theme.iconClass} flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110`}>
+                  {React.cloneElement(feature.icon, { className: "h-6 w-6" })}
+                </div>
 
-                <div className={`relative professional-card p-8 rounded-3xl hover:scale-105 transition-all duration-500 ${theme.cardClass} hover:${theme.glowClass} border ${theme.borderClass}`}>
-                  {/* Enhanced icon container */}
-                  <div className={`w-16 h-16 mb-6 ${theme.gradientClass} rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
-                    {feature.icon}
-                    <div className={`absolute inset-0 ${theme.gradientClass} rounded-2xl opacity-0 group-hover:opacity-50 blur-lg transition-opacity duration-300`}></div>
-                  </div>
+                <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                  {feature.name}
+                </h3>
 
-                  {/* Enhanced content */}
-                  <h3 className="text-xl font-bold mb-4 group-hover:bolt-gradient-text transition-all duration-300">
-                    {feature.name}
-                  </h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  {feature.description}
+                </p>
 
-                  <p className="text-muted-foreground leading-relaxed mb-6 group-hover:text-foreground/80 transition-colors">
-                    {feature.description}
-                  </p>
-
-                  {/* Enhanced feature badge */}
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-current/20">
-                    <Star className="h-4 w-4 text-yellow-500 animate-pulse" />
-                    <span className="text-sm font-medium bolt-gradient-text">
-                      {feature.badge}
-                    </span>
-                  </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm bg-white/70 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50">
+                  <Star className="h-4 w-4 text-yellow-500 animate-pulse" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    {feature.badge}
+                  </span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Enhanced bottom section */}
         <div className="text-center mt-16 sm:mt-20">
-          <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full glass-effect border border-green-200/30 hover:scale-105 transition-transform duration-300">
-            <Shield className="h-5 w-5 text-green-600" />
-            <span className="text-base font-semibold text-green-700">Enterprise-grade security & reliability</span>
-            <CheckCircle className="h-5 w-5 text-green-600" />
+          <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-emerald-200/50 dark:border-emerald-800/30 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+            <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-base font-semibold text-emerald-700 dark:text-emerald-300">
+              Enterprise-grade security & reliability
+            </span>
+            <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
         </div>
       </div>
@@ -91,44 +125,38 @@ export function FeaturesSection() {
 const features = [
   {
     name: 'AI-Powered Generation',
-    description:
-      'Describe what you need in plain language, and our advanced AI will generate a complete, professional document with intelligent formatting and contextual content that matches your requirements perfectly.',
-    icon: <Sparkles className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Describe what you need in plain language, and our advanced AI will generate a complete, professional document with intelligent formatting and contextual content that matches your requirements perfectly.',
+    icon: <Sparkles />,
     badge: 'Instant Results'
   },
   {
     name: 'Professional Templates',
-    description:
-      'Choose from our curated collection of professionally designed templates for resumes, presentations, CVs, and letters. Each template follows industry best practices and modern design standards.',
-    icon: <LayoutPresentationIcon className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Choose from our curated collection of professionally designed templates for resumes, presentations, CVs, and letters. Each template follows industry best practices and modern design standards.',
+    icon: <LayoutPresentation />,
     badge: 'Industry Standard'
   },
   {
     name: 'Smart Content Engine',
-    description:
-      'Our AI understands context, industry requirements, and target audiences to generate compelling content that resonates with your specific goals and professional needs.',
-    icon: <Brain className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Our AI understands context, industry requirements, and target audiences to generate compelling content that resonates with your specific goals and professional needs.',
+    icon: <Brain />,
     badge: 'Context Aware'
   },
   {
     name: 'Intuitive Editor',
-    description:
-      'Fine-tune your documents with our powerful yet simple editor. Real-time preview, instant formatting, and intelligent suggestions make editing effortless and efficient.',
-    icon: <PenTool className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Fine-tune your documents with our powerful yet simple editor. Real-time preview, instant formatting, and intelligent suggestions make editing effortless and efficient.',
+    icon: <PenTool />,
     badge: 'Real-time Preview'
   },
   {
     name: 'Team Collaboration',
-    description:
-      'Share documents with teammates for feedback and collaborative editing. Built-in commenting, version control, and real-time collaboration features streamline teamwork.',
-    icon: <Users className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Share documents with teammates for feedback and collaborative editing. Built-in commenting, version control, and real-time collaboration features streamline teamwork.',
+    icon: <Users />,
     badge: 'Team Ready'
   },
   {
     name: 'Multi-Format Export',
-    description:
-      'Export your documents in multiple professional formats including PDF, PPTX, DOCX, and more. Perfect formatting preserved across all platforms and devices.',
-    icon: <Download className="h-6 w-6 sm:h-7 sm:w-7" />,
+    description: 'Export your documents in multiple professional formats including PDF, PPTX, DOCX, and more. Perfect formatting preserved across all platforms and devices.',
+    icon: <Download />,
     badge: 'Universal Compatibility'
   }
 ];
