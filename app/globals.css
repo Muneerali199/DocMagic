@@ -68,6 +68,33 @@
   color: hsl(var(--foreground));
 }
 
+@keyframes float-slow {
+  0%, 100% { transform: translate(-50%, -25%) scale(1); }
+  50% { transform: translate(-50%, -30%) scale(1.02); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
 .hero-section {
   background-color: hsl(var(--background)); /* Uses light or dark background */
   color: hsl(var(--foreground)); /* Uses light or dark foreground */
