@@ -303,9 +303,6 @@ export function ResumeGenerator() {
                   >
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     Email
-                    {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-                      <span className="text-green-500 text-xs">✓</span>
-                    )}
                   </Label>
                   <Input
                     id="email"
@@ -313,11 +310,7 @@ export function ResumeGenerator() {
                     placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${
-                      email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
-                        ? "border-red-400/60 focus:border-red-400/80"
-                        : "border-yellow-400/30 focus:border-yellow-400/60"
-                    }`}
+                    className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 w-full text-base px-3 py-2"
                     disabled={isGenerating}
                   />
                 </div>
