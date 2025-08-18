@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import type { Metadata } from "next";
+import { SupabaseProvider } from "@/components/supabase-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -57,11 +58,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
         <Providers>
-          <CursorProvider>
-            {children}
-            <PWABanner />
-            <Footer />
-          </CursorProvider>
+          <SupabaseProvider>
+            <CursorProvider>
+              {children}
+              <PWABanner />
+              <Footer />
+            </CursorProvider>
+          </SupabaseProvider>
         </Providers>
       </body>
     </html>
