@@ -41,6 +41,7 @@ export function TestimonialsSection() {
             <span className="text-base font-semibold bolt-gradient-text">Customer Love</span>
             <Star className="h-5 w-5 text-amber-500 fill-current" />
           </div>
+          </div>
 
           <h2 className="modern-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-tight">
             <span className="block mb-2">Trusted by</span>
@@ -50,6 +51,8 @@ export function TestimonialsSection() {
           <p className="modern-body text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Join thousands of satisfied users who have transformed their document creation process with DocMagic's AI-powered platform.
           </p>
+          <p className="mt-4 text-sm text-muted-foreground/80">
+            See what our users are saying about their experience with DocMagic.</p>
 
           {/* Social proof stats */}
           <div className="flex flex-wrap justify-center gap-6 mt-8">
@@ -69,92 +72,68 @@ export function TestimonialsSection() {
         </div>
 
         {/* Enhanced testimonials grid */}
-        <div className="overflow-hidden relative h-96 flex justify-items-center">
-          {testimonials.slice(0, 6).map((testimonial, i) => (
-            <div key={i} className={`group h-full w-full absolute flex items-center justify-center  animate-fade-in-up transition-all ease-out duration-790 transform ${i === currentIndex ? 'translate-x-0' : 'translate-x-full'}`} style={{animationDelay: `${i * 100}ms`}}>
-              {/* Enhanced background glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-
-              <Card className="relative professional-card glass-effect group h-full flex flex-col rounded-3xl border border-blue-200/30 hover:scale-105 transition-all duration-300">
-                <CardHeader className="pb-4 p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Avatar className="ring-2 ring-blue-400/30 h-14 w-14 group-hover:ring-blue-400/50 transition-all duration-300">
-                        <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                        <AvatarFallback className="bolt-gradient text-white font-bold text-lg">
-                          {testimonial.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Verified badge */}
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-lg group-hover:bolt-gradient-text transition-colors">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground font-medium">{testimonial.title}</p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">{testimonial.company}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="relative flex-1 p-6 pt-0">
-                  <Quote className="absolute -top-2 -left-2 h-10 w-10 text-blue-400/20" />
-                  <p className="relative z-10 text-base leading-relaxed text-muted-foreground group-hover:text-foreground/80 transition-colors">
-                    "{testimonial.content}"
-                  </p>
-                </CardContent>
-
-                <CardFooter className="pt-4 p-6">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex space-x-1">
-                      {Array(5).fill(0).map((_, starIndex) => (
-                        <Star key={starIndex} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <div className="text-xs text-muted-foreground font-medium">
-                      Verified User
-                    </div>
-                  </div>
-                </CardFooter>
-              </Card>
-            </div>
-          ))}
-        </div>
-
-        <button
-                className="absolute bottom-[4%]  left-1/3 cursor-pointer  transform -translate-y-1/2 p-2"
-                onClick={prevSlide}
-            >
-                <FaCircleChevronRight className='opacity-48 h-10 w-10 rotate-180 hover:scale-115  '/>
-                
-                {/* Previous */}
-            </button>
-            <button
-                className="absolute top-[90%] right-1/3 cursor-pointer transform -translate-y-1/2 p-2"
-                onClick={nextSlide}
-            >
-                <FaCircleChevronRight className='opacity-48 h-10 w-10 hover:scale-115  '/>
-            </button>
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center cursor-pointer ">
-                {testimonials.map((_, i) => (
-                    <div
-                        key={i}
-                        className={`w-2 h-2 mr-0.5 rounded-full transition-all mx-1  ${i === currentIndex ? 'bg-gray-600 scale-150' : 'bg-gray-200'}`}
-                        onClick={() => setCurrentIndex(i)}
-                    />
+              <div className="relative flex flex-col items-center justify-center min-h-[340px] w-full max-w-4xl mx-auto mt-20">
+        <Card className="w-full max-w-sm sm:max-w-md lg:max-w-xl glass-effect rounded-2xl border border-blue-200/30">
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold shadow">
+          <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Rating: </span>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400 ml-0.5"/>
                 ))}
-            </div>
 
-        {/* Enhanced bottom CTA */}
-        <div className="text-center mt-16 sm:mt-20">
-          <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full glass-effect border border-purple-200/30 hover:scale-105 transition-transform duration-300">
-            <Heart className="h-5 w-5 text-pink-600" />
-            <span className="text-base font-semibold text-purple-700">Join our happy community</span>
-            <Star className="h-5 w-5 text-amber-500 fill-current" />
-          </div>
+                </div>
+        <CardHeader>
+            <div className="flex items-center space-x-4 p-4">
+              <div className="relative flex-shrink-0 w-16">
+                <Avatar className="ring-2 ring-blue-400/30 h-16 w-16">
+                  <AvatarImage src={testimonials[currentIndex].avatar} alt={testimonials[currentIndex].name} />
+                  <AvatarFallback className="bolt-gradient text-white font-bold text-lg">
+                    {testimonials[currentIndex].name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-lg">{testimonials[currentIndex].name}</p>
+                <p className="text-sm text-muted-foreground font-medium">{testimonials[currentIndex].title}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{testimonials[currentIndex].company}</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0 relative flex-1">
+            <Quote className="absolute -top-2 -left-2 h-10 w-10 text-blue-400/20" />
+            <p className="relative z-10 text-base leading-relaxed text-muted-foreground">
+              "{testimonials[currentIndex].content}"
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Slider Controls */}
+        <button
+          className="absolute left-20 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow transition"
+          onClick={prevSlide}
+          aria-label="Previous testimonial"
+        >
+          <FaCircleChevronRight className="h-6 w-6 text-gray-500 rotate-180" />
+        </button>
+        <button
+          className="absolute right-20 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow transition"
+          onClick={nextSlide}
+          aria-label="Next testimonial"
+        >
+          <FaCircleChevronRight className="h-6 w-6 text-gray-500" />
+        </button>
+
+        {/* Dots */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center cursor-pointer">
+          {testimonials.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 mr-0.5 rounded-full transition-all mx-1 ${i === currentIndex ? 'bg-gray-600 scale-150' : 'bg-gray-200'}`}
+              onClick={() => setCurrentIndex(i)}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -177,7 +156,7 @@ const testimonials = [
     avatar: "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=600"
   },
   {
-    name: "Aarav Patel",
+    name: "Aaravi Patel",
     title: "Data Scientist",
     company: "Analytics Pro",
     content: "The presentation generator is incredible. It transforms complex data into clear, visually appealing slides that make my findings accessible to any audience.",
