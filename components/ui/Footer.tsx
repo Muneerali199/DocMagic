@@ -3,7 +3,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#fdf3ed] dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-6 mt-10 text-center">
+    <footer className=" footer-professional bg-[#fdf3ed] dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-6 mt-10 text-center">
       <div className="max-w-4xl mx-auto px-4 text-sm font-medium text-gray-800 dark:text-gray-200 space-y-3">
 
         {/* Top row: Navigation Links + Social Icons */}
