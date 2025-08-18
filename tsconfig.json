@@ -45,11 +45,10 @@
       "./types"
     ],
     "types": [
-      "node",
-      "jest",
-      "jest-dom",
-      "next"
-    ],
+    "node",
+    "jest",
+    "next"
+    ], 
     "plugins": [
       {
         "name": "next"
