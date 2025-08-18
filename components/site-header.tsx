@@ -60,10 +60,10 @@ export function SiteHeader() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 sm:h-16 items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-8">
-          {/* /* Logo with tooltip for desktop only */ }
-          {/* /* TooltipWithShortcut */ }
+          {/* Logo with tooltip for desktop only */ }
+          {/* TooltipWithShortcut 
             content="Return to homepage"
-            disabled={typeof window !== "undefined" && window.innerWidth < 768}
+            disabled={typeof window !== "undefined" && window.innerWidth < 1536}*/}
           
             <Link
               href="/"
@@ -109,8 +109,8 @@ export function SiteHeader() {
               </SheetHeader>
 
               <div className="mt-6 space-y-6">
-                {/* Navigation Items */}
-                {/* <nav className="space-y-1">
+                 Navigation Items 
+                <nav className="space-y-1">
                   {navItems.map((item) => (
                     <SheetClose asChild key={item.href}>
                       <Link
@@ -143,9 +143,8 @@ export function SiteHeader() {
                     </SheetClose>
                   ))}
                 </nav>
-
-                {/* User Section in Mobile */}
-                {/* {user && (
+                User Section in Mobile
+                {user && (
                   <div className="pt-4 border-t border-border/20">
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/20">
                       <Avatar className="h-10 w-10 ring-2 ring-yellow-400/30">
@@ -198,10 +197,10 @@ export function SiteHeader() {
                       </Button>
                     </div>
                   </div>
-                )} */}
+                )} 
 
-                {/* Sign In Button for Mobile */}
-                {/* {!user && (
+                Sign In Button for Mobile 
+                {!user && (
                   <div className="pt-4 border-t border-border/20">
                     <SheetClose asChild>
                       <Button
@@ -221,9 +220,9 @@ export function SiteHeader() {
                 )}
               </div>
             </SheetContent>
-          </Sheet>  */}
+          </Sheet> 
 
-          /* Desktop Navigation with Tooltips */
+           Desktop Navigation with Tooltips */}
           <nav className="hidden 2xl:flex items-center gap-4 lg:gap-6 xl:gap-8">
             {navItems.map((item) => (
               <TooltipWithShortcut key={item.href} content={item.tooltip}>
@@ -254,7 +253,7 @@ export function SiteHeader() {
           </nav>
         </div>
       
-          {/* Right Side Actions */}
+          {/* Right Side Actionsx */}
           <div className="flex items-center gap-x-6">
             
          
