@@ -4,61 +4,116 @@
 
 @layer base {
   :root {
-    /* Light mode with F3E9DC base */
-    --background: 30 56% 91%; /* #F3E9DC */
-    --foreground: 210 11% 15%; /* Professional dark text */
-    --card: 30 56% 96%; /* Slightly lighter than background */
-    --card-foreground: 210 11% 15%;
-    --popover: 30 56% 96%;
-    --popover-foreground: 210 11% 15%;
-    --primary: 210 11% 15%; /* Professional dark */
-    --primary-foreground: 30 56% 91%;
-    --secondary: 30 56% 85%; /* Muted cream */
-    --secondary-foreground: 210 11% 15%;
-    --muted: 30 56% 85%;
-    --muted-foreground: 210 8% 45%;
-    --accent: 30 56% 80%; /* Soft accent */
-    --accent-foreground: 210 11% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 30 56% 91%;
-    --border: 30 40% 80%; /* Subtle borders */
-    --input: 30 40% 80%;
-    --ring: 210 11% 15%;
-    --chart-1: 210 70% 50%; /* Professional blues */
-    --chart-2: 195 60% 45%; /* Teals */
-    --chart-3: 160 50% 40%; /* Greens */
-    --chart-4: 45 70% 55%; /* Golds */
-    --chart-5: 25 60% 50%; /* Oranges */
+    /* Light mode – Vibrant Professional Blue Theme */
+    --background: 210 40% 96%; /* Soft light blue background */
+    --foreground: 220 20% 20%; /* Dark navy text */
+    --card: 210 40% 100%; /* White cards */
+    --card-foreground: 220 20% 20%;
+    --popover: 210 40% 100%;
+    --popover-foreground: 220 20% 20%;
+    --primary: 220 80% 45%; /* Vibrant royal blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 50% 90%; /* Pale cyan */
+    --secondary-foreground: 220 20% 20%;
+    --muted: 210 40% 88%; /* Light blue-gray */
+    --muted-foreground: 220 15% 35%;
+    --accent: 200 65% 80%; /* Sky blue accent */
+    --accent-foreground: 220 20% 20%;
+    --destructive: 0 75% 55%; /* Bright red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 30% 85%; /* Subtle blue border */
+    --input: 210 30% 85%;
+    --ring: 220 80% 45%;
+    --chart-1: 220 80% 45%; /* Blues */
+    --chart-2: 200 70% 50%; /* Teals */
+    --chart-3: 160 60% 40%; /* Greens */
+    --chart-4: 40 80% 55%;  /* Golds */
+    --chart-5: 15 70% 50%;  /* Oranges */
     --radius: 0.5rem;
   }
-  .dark {
-    /* Ultra Dark mode with 131010 base - Maximum Visibility */
-    --background: 0 0% 7%; /* #131010 */
-    --foreground: 0 0% 100%; /* Pure white text for maximum contrast */
-    --card: 0 0% 12%; /* Lighter card background */
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%; /* Pure white primary */
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 18%; /* Much lighter secondary */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 18%; /* Lighter muted background */
-    --muted-foreground: 0 0% 90%; /* Very bright muted text */
-    --accent: 0 0% 25%; /* Lighter accent */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 85% 70%; /* Bright destructive */
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 30%; /* Much lighter borders */
-    --input: 0 0% 25%; /* Lighter input backgrounds */
-    --ring: 0 0% 100%;
-    --chart-1: 210 95% 80%; /* Ultra bright blues */
-    --chart-2: 195 85% 75%; /* Ultra bright teals */
-    --chart-3: 160 75% 70%; /* Ultra bright greens */
-    --chart-4: 45 95% 85%; /* Ultra bright golds */
-    --chart-5: 25 85% 80%; /* Ultra bright oranges */
-  }
+  body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}.dark {
+  /* Dark mode – Deep Navy with Bright Accents */
+  --background: 220 30% 6%; /* Darker navy */
+  --foreground: 10 0% 98%; /* Almost white text */
+  --card: 220 30% 12%; /* Slightly darker card */
+  --card-foreground: 220 20% 90%; /* Fixed HSL value */
+  --popover: 220 30% 12%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 200 80% 55%; /* Bright sky blue */
+  --primary-foreground: 220 30% 10%;
+  --secondary: 220 20% 18%; /* Slightly darker secondary */
+  --secondary-foreground: 0 0% 98%;
+  --muted: 220 20% 16%;
+  --muted-foreground: 0 0% 85%;
+  --accent: 200 80% 50%; /* Vibrant cyan */
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 80% 60%; /* Bright red */
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 20% 20%;
+  --input: 220 20% 20%;
+  --ring: 200 80% 55%;
+  --chart-1: 200 80% 55%;
+  --chart-2: 180 70% 50%;
+  --chart-3: 150 65% 45%;
+  --chart-4: 40 85% 60%;
+  --chart-5: 20 80% 55%;
 }
+
+.dark body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(-50%, -25%) scale(1); }
+  50% { transform: translate(-50%, -30%) scale(1.02); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+.hero-section {
+  background-color: hsl(var(--background)); /* Uses light or dark background */
+  color: hsl(var(--foreground)); /* Uses light or dark foreground */
+}
+
+.dark .hero-section {
+  background-color: hsl(var(--background)); /* solid dark from CSS variables */
+  color: hsl(var(--foreground));
+}
+
+.dark .hero-section h1,
+.dark .hero-section p,
+.dark .hero-section span,
+.dark .hero-section a {
+  color: hsl(var(--foreground)); /* consistent light text */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+}
+
 
 @layer base {
   * {
@@ -257,6 +312,7 @@
   }
 
   .dark .glass-effect {
+    color: hsl(0, 0%, 98%);
     background: rgba(19, 16, 16, 0.9); /* Updated for #131010 */
     backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.2); /* Brighter border for contrast */
@@ -678,29 +734,82 @@
   }
 
   /* Professional Navigation */
-  .nav-professional {
-    background: hsl(var(--background) / 0.95);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
+/* Light mode navbar */
+.nav-professional {
+  background: rgba(20, 20, 20, 0.85); /* deep dark glass effect */
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: #fff !important; /* force white text */
+}
 
-  .dark .nav-professional {
-    background: hsl(var(--background) / 0.95);
-    border-bottom: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-  }
+.nav-professional a,
+.nav-professional span,
+.nav-professional button {
+  color: #fff !important;
+}
+
+.nav-professional a:hover {
+  color: #00b4d8 !important; /* optional modern hover color */
+}
+
+
+/* Dark mode navbar */
+.dark .nav-professional {
+  background: rgba(20, 20, 20, 0.85); /* Dark gray with transparency */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: white;
+}
 
   /* Professional Footer */
+.footer-professional {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--background)) 60%,
+    hsl(var(--background) / 0.95) 100%
+  );
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  box-shadow: 0 -2px 8px hsl(var(--border) / 0.1);
+  
+  padding: 3rem 1rem 2rem; /* more breathing room on sides for mobile */
+  
+  color: hsl(var(--foreground));
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.footer-professional a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.footer-professional a:hover {
+  color: hsl(var(--primary) / 0.9);
+  text-shadow: 0 0 4px hsl(var(--primary) / 0.3);
+}
+
+.footer-professional .footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.footer-professional .footer-bottom {
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+@media (min-width: 768px) {
   .footer-professional {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--background)) 100%
-    );
-    border-top: 1px solid hsl(var(--border));
     padding: 3rem 0 2rem;
   }
+}
 
   .dark .footer-professional {
     background: linear-gradient(
