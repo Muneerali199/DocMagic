@@ -79,7 +79,7 @@ export function DocumentCard({
         className
       )}
     >
-      {/* Animated gradient border effect */}
+     
       <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500 rounded-lg", theme.gradientClass)} style={{animation: 'gradient-shift 3s ease infinite'}}></div>
       
       {/* Enhanced shimmer effect */}
