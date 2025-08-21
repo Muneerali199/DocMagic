@@ -7,6 +7,7 @@ interface StatCounterProps {
   duration?: number;
   prefix?: string;
   suffix?: string;
+  animate?: boolean; // New prop to control animation
 }
 
 export function StatCounter({
@@ -14,10 +15,16 @@ export function StatCounter({
   duration = 2000,
   prefix = "",
   suffix = "",
+  animate = true, // Default to true for animation
 }: StatCounterProps) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
+    if (!animate) {
+      setCount(target);
+      return;
+    }
+
     if (target <= 0) return;
 
     const totalFrames = Math.floor(duration / 50);
@@ -36,7 +43,7 @@ export function StatCounter({
     }, 50);
 
     return () => clearInterval(timer);
-  }, [target, duration]);
+  }, [target, duration, animate]);
 
   return (
     <span

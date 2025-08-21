@@ -135,7 +135,7 @@ export function HeroSection() {
             </div>
             <div className="p-6 sm:p-8 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-amber-900/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <div className="text-3xl sm:text-4xl font-bold text-amber-700 dark:text-amber-300 mb-2">
-                <StatCounter target={5} suffix="★" />
+                <StatCounter target={5} suffix="★" animate={false} />
               </div>
               <div className="text-sm sm:text-base text-amber-800/90 dark:text-amber-300 group-hover:text-amber-900/80 dark:group-hover:text-amber-200 transition-colors">
                 User Rating
