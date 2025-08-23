@@ -15,12 +15,13 @@ import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import dynamic from 'next/dynamic';
+import { useAutosave } from "@/hooks/useAutosave";
 
 // Dynamically import pptxgen with no SSR to avoid build issues
-const PptxGenJS = dynamic(() => import('pptxgenjs'), { 
-  ssr: false,
-  loading: () => <p>Loading PowerPoint generator...</p>
-});
+// const PptxGenJS = dynamic(() => import('pptxgenjs'), { 
+//   ssr: false,
+//   loading: () => <p>Loading PowerPoint generator...</p>
+// });
 
 type GenerationStep = 'input' | 'outline' | 'theme' | 'generated';
 
@@ -42,6 +43,28 @@ export function PresentationGenerator() {
   const MAX_PRO_PAGES = 100;
   const isPro = false; // This would be connected to your auth/subscription system
 
+  useAutosave(
+    "autosave-presentation",
+    {
+      prompt,
+      slides,
+      slideOutlines,
+      selectedTemplate,
+      pageCount,
+      currentStep,
+    },
+    async (restored) => {
+      if (!restored) return;
+
+      if (restored.prompt) setPrompt(restored.prompt);
+      if (restored.slides) setSlides(restored.slides);
+      if (restored.slideOutlines) setSlideOutlines(restored.slideOutlines);
+      if (restored.selectedTemplate) setSelectedTemplate(restored.selectedTemplate);
+      if (restored.pageCount) setPageCount(restored.pageCount);
+      if (restored.currentStep) setCurrentStep(restored.currentStep);
+    }
+  );
+  
   const generateSlideOutlines = async () => {
     if (!prompt.trim()) {
       toast({

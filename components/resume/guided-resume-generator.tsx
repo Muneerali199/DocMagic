@@ -37,6 +37,7 @@ import {
   Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAutosave } from "@/hooks/useAutosave";
 
 type ResumeStep = 'personal' | 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'links' | 'review';
 
@@ -166,6 +167,37 @@ export function GuidedResumeGenerator({ onResumeGenerated }: GuidedResumeGenerat
       default: return null;
     }
   };
+
+  useAutosave(
+  "autosave-resume",
+  {
+    personalInfo,
+    professionalSummary,
+    workExperience,
+    education,
+    skills,
+    projects,
+    certifications,
+    links,
+    currentStep,
+    targetRole,
+    jobDescription
+  },
+  (restored) => {
+    if (!restored) return;
+    if (restored.personalInfo) setPersonalInfo(restored.personalInfo);
+    if (restored.professionalSummary) setProfessionalSummary(restored.professionalSummary);
+    if (restored.workExperience) setWorkExperience(restored.workExperience);
+    if (restored.education) setEducation(restored.education);
+    if (restored.skills) setSkills(restored.skills);
+    if (restored.projects) setProjects(restored.projects);
+    if (restored.certifications) setCertifications(restored.certifications);
+    if (restored.links) setLinks(restored.links);
+    if (restored.currentStep) setCurrentStep(restored.currentStep);
+    if (restored.targetRole) setTargetRole(restored.targetRole);
+    if (restored.jobDescription) setJobDescription(restored.jobDescription);
+  }
+);
 
   const nextStep = () => {
     if (currentStepIndex < steps.length - 1) {
