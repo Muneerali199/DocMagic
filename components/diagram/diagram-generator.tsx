@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import { useAutosave } from "@/hooks/useAutosave";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,14 +36,12 @@ const DIAGRAM_EXAMPLES = {
     B -->|No| D[Debug]
     D --> B
     C --> E[End]`,
-  
   sequence: `sequenceDiagram
     participant A as Alice
     participant B as Bob
     A->>B: Hello Bob, how are you?
     B-->>A: Great!
     A-)B: See you later!`,
-  
   classDiagram: `classDiagram
     class Animal {
         +String name
@@ -54,7 +53,6 @@ const DIAGRAM_EXAMPLES = {
         +bark()
     }
     Animal <|-- Dog`,
-  
   gitGraph: `gitGraph
     commit
     branch develop
@@ -64,12 +62,10 @@ const DIAGRAM_EXAMPLES = {
     checkout main
     merge develop
     commit`,
-  
   erDiagram: `erDiagram
     CUSTOMER ||--o{ ORDER : places
     ORDER ||--|{ LINE-ITEM : contains
     CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`,
-  
   journey: `journey
     title My working day
     section Go to work
@@ -82,8 +78,22 @@ const DIAGRAM_EXAMPLES = {
 };
 
 export function DiagramGenerator() {
+  // Autosave state for diagram
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [selectedTemplate, setSelectedTemplate] = useState("flowchart");
+
+  // Use autosave for diagram code and template
+  useAutosave(
+    "diagram-generator",
+    { diagramCode, selectedTemplate },
+    (restored) => {
+      if (restored) {
+        if (restored.diagramCode) setDiagramCode(restored.diagramCode);
+        if (restored.selectedTemplate) setSelectedTemplate(restored.selectedTemplate);
+      }
+    }
+  );
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -98,7 +108,6 @@ export function DiagramGenerator() {
 
   const generateDiagramFromPrompt = async () => {
     setIsGenerating(true);
-    
     try {
       // Simulate AI generation - in real implementation, this would call your AI API
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -207,7 +216,6 @@ export function DiagramGenerator() {
         text: 'Check out this diagram I created with DocMagic!',
         url: window.location.href
       };
-      
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
@@ -227,16 +235,20 @@ export function DiagramGenerator() {
   };
 
   return (
-    <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-center mb-6">
-          <TabsList className="glass-effect border border-yellow-400/20 p-1 h-auto">
+    <div className="container mx-auto py-10">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="rounded-xl border border-yellow-400/20"
+      >
+        <div className="px-4 py-3 bg-white rounded-t-xl border-b border-yellow-400/20">
+          <TabsList>
             <TabsTrigger
               value="editor"
               className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2"
             >
               <Code className="h-4 w-4" />
-              Code Editor
+              Editor
             </TabsTrigger>
             <TabsTrigger
               value="templates"

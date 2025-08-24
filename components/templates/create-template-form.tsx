@@ -4,15 +4,27 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { TemplateForm } from './template-form';
 import { useState } from 'react';
-
-import { formSchema } from './template-form';
 import { TemplateFormValues } from '@/types/template';
+import { useAutosave } from '@/hooks/useAutosave';
 
 export function CreateTemplateForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formValues, setFormValues] = useState<TemplateFormValues>({
+    title: "",
+    description: "",
+    type: "resume", 
+    isPublic: false 
+  });
 
+  // ✅ Use autosave
+  useAutosave<TemplateFormValues>(
+    "create-template-form", 
+    formValues, 
+    (saved) => setFormValues(saved)
+  );
+  
   const handleSubmit = async (values: TemplateFormValues) => {
     try {
       setIsSubmitting(true);
@@ -34,7 +46,7 @@ export function CreateTemplateForm() {
         title: 'Success',
         description: 'Template created successfully!',
       });
-      
+      localStorage.removeItem("create-template-form");
       router.push('/templates');
     } catch (error) {
       console.error('Error creating template:', error);
@@ -56,8 +68,10 @@ export function CreateTemplateForm() {
           Fill in the details below to create a new template
         </p>
       </div>
-      
-      <TemplateForm 
+
+      <TemplateForm
+        values={formValues}
+        onChange={setFormValues}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         submitButtonText={isSubmitting ? 'Creating...' : 'Create Template'}

@@ -19,6 +19,7 @@ import { Loader2, Sparkles, Mail as MailIcon, Download, User, MapPin, FileText, 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useAutosave } from "@/hooks/useAutosave";
 
 export function LetterGenerator() {
   const [prompt, setPrompt] = useState("");
@@ -39,6 +40,20 @@ export function LetterGenerator() {
   const [fromEmail, setFromEmail] = useState("");
   const { toast } = useToast();
   
+   useAutosave(
+  "autosave-letter",
+  { prompt, fromName, fromAddress, toName, toAddress, letterType, fromEmail },
+  (restored) => {
+    if (restored.prompt) setPrompt(restored.prompt);
+    if (restored.fromName) setFromName(restored.fromName);
+    if (restored.fromAddress) setFromAddress(restored.fromAddress);
+    if (restored.toName) setToName(restored.toName);
+    if (restored.toAddress) setToAddress(restored.toAddress);
+    if (restored.letterType) setLetterType(restored.letterType);
+    if (restored.fromEmail) setFromEmail(restored.fromEmail);
+  }
+);
+
   const generateLetter = async () => {
     if (!prompt.trim()) {
       toast({

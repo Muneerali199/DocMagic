@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { TooltipWithShortcut } from "../ui/tooltip";
+import { useAutosave } from "@/hooks/useAutosave";
 
 export function ResumeGenerator() {
   const [prompt, setPrompt] = useState("");
@@ -40,6 +41,17 @@ export function ResumeGenerator() {
   const { toast } = useToast();
   const { isPro } = useSubscription();
 
+  useAutosave(
+    "autosave-resume-generator",
+    { prompt, name, email, selectedTemplate },
+    (restored) => {
+      if (restored.prompt) setPrompt(restored.prompt);
+      if (restored.name) setName(restored.name);
+      if (restored.email) setEmail(restored.email);
+      if (restored.selectedTemplate) setSelectedTemplate(restored.selectedTemplate);
+    }
+  );
+  
   const generateResume = async () => {
     if (!prompt.trim()) {
       toast({

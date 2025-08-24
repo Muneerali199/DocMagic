@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,32 +16,97 @@ import {
   XCircle,
   Sparkles,
 } from "lucide-react";
+import { useAutosave } from "@/hooks/useAutosave";
 
 export function ATSAnalyzer() {
   const [file, setFile] = useState<File | null>(null);
+   const [fileBase64, setFileBase64] = useState<string | undefined>(undefined);
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
   const { toast } = useToast();
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "text/plain": [".txt"],
+  const fileToBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+    });
+
+  // ✅ Handle drop: convert file + set state at the same time
+  const onDrop = (acceptedFiles: File[]) => {
+    const uploadedFile = acceptedFiles[0];
+    if (!uploadedFile) return;
+
+    fileToBase64(uploadedFile)
+      .then((base64) => {
+        setFile(uploadedFile);
+        setFileBase64(base64); // ready immediately for autosave
+      })
+      .catch(console.error);
+  };
+  
+   // ✅ Autosave job description + file metadata + base64
+  useAutosave(
+    "autosave-ats",
+    {
+      jobDescription,
+      fileName: file?.name,
+      fileType: file?.type,
+      fileBase64,
     },
-    maxFiles: 1,
-    onDrop: (acceptedFiles) => {
-      setFile(acceptedFiles[0]);
-    },
-    onDropRejected: () => {
-      toast({
-        title: "Invalid file",
-        description: "Please upload a .txt, .pdf, .doc, or .docx file",
-        variant: "destructive",
-      });
-    },
+    (restored) => {
+      if (!restored) return;
+
+      if (typeof restored.jobDescription === "string") {
+        setJobDescription(restored.jobDescription);
+      }
+
+      if (restored.fileBase64 && restored.fileName) {
+  try {
+    const byteString = atob(restored.fileBase64.split(",")[1]); // strip `data:...;base64,`
+    const mimeString = restored.fileBase64.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+
+    const blob = new Blob([ab], { type: mimeString });
+    const restoredFile = new File([blob], restored.fileName, { type: restored.fileType || mimeString });
+
+    setFile(restoredFile);
+    setFileBase64(restored.fileBase64);
+  } catch (err) {
+    console.error("Failed to restore file from autosave", err);
+    setFile(null);
+    setFileBase64(undefined);
+  }
+} else {
+  setFile(null);
+  setFileBase64(undefined);
+}
+    }
+  );
+  
+ const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  accept: {
+    "application/pdf": [".pdf"],
+    "application/msword": [".doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    "text/plain": [".txt"],
+  },
+  maxFiles: 1,
+  onDrop, 
+  onDropRejected: () => {
+    toast({
+      title: "Invalid file",
+      description: "Please upload a .txt, .pdf, .doc, or .docx file",
+      variant: "destructive",
+    });
+  },
   });
 
   const analyzeResume = async () => {
