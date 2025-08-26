@@ -1,35 +1,30 @@
 # 🪄 DocMagic - AI Document Creation Platform
 
-## 📦 DocMagic
+<table align="center">
+    <thead align="center">
+        <tr>
+            <td><b>🌟 Stars</b></td>
+            <td><b>🍴 Forks</b></td>
+            <td><b>🐛 Issues</b></td>
+            <td><b>🔔 Open PRs</b></td>
+            <td><b>🔕 Closed PRs</b></td>
+            <td><b>🛠️ Languages</b></td>
+            <td><b>👥 Contributors</b></td>
+        </tr>
+     </thead>
+    <tbody>
+         <tr>
+            <td><img alt="Stars" src="https://img.shields.io/github/stars/Muneerali199/DocMagic.svg?style=flat)](https://github.com/Muneerali199/DocMagic/stars"/></td>
+            <td><img alt="Forks" src="https://img.shields.io/github/forks/Muneerali199/DocMagic.svg?style=flat"/></td>
+            <td><img alt="Issues" src="https://img.shields.io/github/issues/Muneerali199/DocMagic.svg?style=flat)](https://github.com/Muneerali199/DocMagic/issues"/></td>
+            <td><img alt="Open PRs" src="https://img.shields.io/github/issues-pr/Muneerali199/DocMagic?style=flat&logo=github"/></td>
+            <td><img alt="Closed PRs" src="https://img.shields.io/github/issues-pr-closed/Muneerali199/DocMagic?style=flat&color=critical&logo=github"/></td>
+            <td><img alt="Languages Count" src="https://img.shields.io/github/languages/count/Muneerali199/DocMagic?style=flat&color=green&logo=github"></td>
+            <td><img alt="Contributors Count" src="https://img.shields.io/github/contributors/Muneerali199/DocMagic?style=flat&color=blue&logo=github"/></td>
+        </tr>
+    </tbody>
+</table>
 
-<h2>📦 DocMagic</h2>
-
-<p>
-  <a href="https://github.com/Muneerali199/DocMagic/actions/workflows/ci.yml" title="Build Status">
-    🔧 Build Status
-  </a><br/>
-  <a href="https://github.com/Muneerali199/DocMagic/actions">
-    <img src="https://github.com/Muneerali199/DocMagic/actions/workflows/ci.yml/badge.svg" alt="Build Status Badge">
-  </a>
-</p>
-
-<p>
-  <a href="https://github.com/Muneerali199/DocMagic/blob/main/LICENSE" title="License Information">
-    📜 License
-  </a><br/>
-  <a href="https://github.com/Muneerali199/DocMagic/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Muneerali199/DocMagic" alt="License Badge">
-  </a>
-</p>
-
-<p>
-  <a href="https://libraries.io/github/Muneerali199/DocMagic" title="Dependency Status">
-    📦 Dependencies
-  </a><br/>
-  <a href="https://libraries.io/github/Muneerali199/DocMagic">
-    <img src="https://img.shields.io/librariesio/github/Muneerali199/DocMagic" alt="Dependencies Badge">
-  </a>
-</p>
 ## 📦 Overview
 DocMagic is a TypeScript-based documentation utility built with Next.js and Tailwind CSS. It helps teams manage, preview, and share docs with ease.
 
@@ -40,7 +35,7 @@ DocMagic is a TypeScript-based documentation utility built with Next.js and Tail
 - Type-safe architecture with clear folder separation
 
 ## 🛠️ Getting Started
-```bash
+
 git clone https://github.com/Muneerali199/DocMagic.git
 cd DocMagic
 npm install
@@ -502,16 +497,16 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 1. **Create Supabase Project**:
 
    ```bash
-   # Visit https://supabase.com/dashboard
-   # Create new project
-   # Copy your project URL and anon key
+    Visit https://supabase.com/dashboard
+    Create new project
+    Copy your project URL and anon key
    ```
 
 2. **Run Migrations**:
 
    ```sql
-   -- The migrations are in /supabase/migrations/
-   -- They will be automatically applied when you set up Supabase
+   The migrations are in /supabase/migrations/
+   They will be automatically applied when you set up Supabase
    ```
 
 3. **Set up Authentication**:
@@ -916,21 +911,8 @@ Made with [contrib.rocks](https://contrib.rocks).
 - ✅ **Contribute** back to the community
 - ✅ **Fork** and create your own variants
 
-```
-MIT License
 
-Copyright (c) 2025 DocMagic Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
+## License
 
 See the [LICENSE](LICENSE) file for the complete license text.
 
@@ -1353,9 +1335,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Recharts](https://recharts.org/) for data visualization
 - [Netlify](https://www.netlify.com/) for hosting
 
----
+
 
 <div align="center">
+
 ## 🌟 Top Contributors
 
 We sincerely thank the amazing individuals who have contributed to DocMagic. Your time, effort, and ideas make this project better every day.
@@ -1370,10 +1353,3 @@ We sincerely thank the amazing individuals who have contributed to DocMagic. You
   <p><strong>Designed by <a href="https://github.com/Xenonesis">Xenonesis</a></strong></p>
   <p>© 2025 DocMagic. All rights reserved.</p>
  </div>
-
-
-
-
-
-
-
