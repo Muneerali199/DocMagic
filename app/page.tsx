@@ -44,15 +44,15 @@ export default function Home() {
       <main className="flex-1">
         <HeroSection />
 
-        /* Enhanced AI-Powered Features Showcase */
+        {/* Enhanced AI-Powered Features Showcase  */}
         <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
-          /* Enhanced Background Elements - Matching other sections */
+          {/* Enhanced Background Elements - Matching other sections */ }
           <div className="absolute inset-0 overflow-hidden">
             <div className="mesh-gradient opacity-40"></div>
             <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
             <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-gradient-to-r from-amber-400/8 to-orange-400/8 rounded-full blur-2xl animate-pulse delay-500"></div>
-
+</div>
 
         {/* Features Section */}
         <section className="py-20 sm:py-24 lg:py-28 relative">
@@ -197,7 +197,8 @@ export default function Home() {
         <FeaturesSection />
         <TestimonialsSection />
         <ScrollToTop />
-      </main>
+      </section></main>
     </div>
+
   );
 }
