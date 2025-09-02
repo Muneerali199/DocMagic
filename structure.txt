@@ -1,0 +1,385 @@
+.
+├── API.md
+├── app
+│   ├── about
+│   │   └── page.tsx
+│   ├── api
+│   │   ├── ai
+│   │   │   └── generate-template
+│   │   │       └── route.ts
+│   │   ├── analyze
+│   │   │   └── resume
+│   │   │       └── route.ts
+│   │   ├── auth
+│   │   │   └── register
+│   │   │       └── route.ts
+│   │   ├── generate
+│   │   │   ├── diagram
+│   │   │   │   └── route.ts
+│   │   │   ├── guided-resume
+│   │   │   │   └── route.ts
+│   │   │   ├── letter
+│   │   │   │   └── route.ts
+│   │   │   ├── presentation
+│   │   │   │   └── route.ts
+│   │   │   ├── presentation-full
+│   │   │   │   └── route.ts
+│   │   │   ├── presentation-outline
+│   │   │   │   └── route.ts
+│   │   │   ├── resume
+│   │   │   │   └── route.ts
+│   │   │   └── resume-guidance
+│   │   │       └── route.ts
+│   │   ├── presentations
+│   │   │   ├── [id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── send-email
+│   │   │   └── route.ts
+│   │   ├── stripe
+│   │   │   ├── check-subscription
+│   │   │   │   └── route.ts
+│   │   │   ├── create-checkout
+│   │   │   │   └── route.ts
+│   │   │   ├── create-payment-intent
+│   │   │   │   └── route.ts
+│   │   │   ├── create-portal
+│   │   │   │   └── route.ts
+│   │   │   └── webhook
+│   │   │       └── route.ts
+│   │   ├── templates
+│   │   │   ├── [id]
+│   │   │   │   ├── preview
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── route.new.ts
+│   │   │   │   ├── route.ts
+│   │   │   │   └── shares
+│   │   │   │       ├── route.ts
+│   │   │   │       └── [shareId]
+│   │   │   │           └── route.ts
+│   │   │   └── route.ts
+│   │   └── user
+│   │       └── route.ts
+│   ├── auth
+│   │   ├── register
+│   │   │   └── page.tsx
+│   │   └── signin
+│   │       └── page.tsx
+│   ├── contact
+│   │   └── page.tsx
+│   ├── cv
+│   │   └── page.tsx
+│   ├── diagram
+│   │   └── page.tsx
+│   ├── documentation
+│   │   └── page.tsx
+│   ├── error.tsx
+│   ├── global-error.tsx
+│   ├── globals.css
+│   ├── head.tsx
+│   ├── layout.tsx
+│   ├── letter
+│   │   └── page.tsx
+│   ├── not-found.tsx
+│   ├── page.tsx
+│   ├── presentation
+│   │   ├── page.tsx
+│   │   └── view
+│   │       └── [id]
+│   │           └── page.tsx
+│   ├── pricing
+│   │   └── page.tsx
+│   ├── profile
+│   │   └── page.tsx
+│   ├── providers.tsx
+│   ├── resume
+│   │   ├── ats
+│   │   │   └── page.tsx
+│   │   ├── page.tsx
+│   │   └── resume-nav-fix.js
+│   ├── settings
+│   │   ├── layout.tsx
+│   │   ├── page-backup.tsx
+│   │   └── page.tsx
+│   └── templates
+│       ├── [id]
+│       │   ├── edit
+│       │   │   ├── layout.tsx
+│       │   │   ├── metadata.ts
+│       │   │   └── page.tsx
+│       │   └── use
+│       │       └── page.tsx
+│       ├── new
+│       │   └── page.tsx
+│       └── page.tsx
+├── Architecture.md
+├── AUTHENTICATION_FLOW.md
+├── build-status.md
+├── CHANGELOG.md
+├── Code_of_Conduct.md
+├── components
+│   ├── auth-provider.tsx
+│   ├── ClientRedirects.tsx
+│   ├── CustomCursor.tsx
+│   ├── delete-dialog.tsx
+│   ├── diagram
+│   │   ├── diagram-generator.tsx
+│   │   ├── diagram-preview.tsx
+│   │   └── diagram-templates.tsx
+│   ├── document-card.tsx
+│   ├── features-section.tsx
+│   ├── hero-section.tsx
+│   ├── letter
+│   │   ├── letter-generator.tsx
+│   │   └── letter-preview.tsx
+│   ├── payment
+│   │   ├── payment-form.tsx
+│   │   └── stripe-provider.tsx
+│   ├── presentation
+│   │   ├── presentation-generator.tsx
+│   │   ├── presentation-preview.tsx
+│   │   ├── presentation-templates.tsx
+│   │   ├── presentation-viewer.tsx
+│   │   └── slide-outline-preview.tsx
+│   ├── pwa-banner.tsx
+│   ├── pwa-install-button.tsx
+│   ├── resume
+│   │   ├── ats-analyzer.tsx
+│   │   ├── guided-resume-generator.tsx
+│   │   ├── resume-editor.tsx
+│   │   ├── resume-generator.tsx
+│   │   ├── resume-nav-fix.tsx
+│   │   ├── resume-navigation.css
+│   │   ├── resume-navigation.tsx
+│   │   ├── resume-preview.tsx
+│   │   └── resume-templates.tsx
+│   ├── resume-nav-fix.css
+│   ├── resume-nav-fix.js
+│   ├── scroll-to-top.tsx
+│   ├── simple-theme-toggle.tsx
+│   ├── site-header.tsx
+│   ├── sponsor-banner.tsx
+│   ├── subscription-button.tsx
+│   ├── templates
+│   │   ├── create-template-form.tsx
+│   │   ├── share-template-dialog.tsx
+│   │   ├── template-card.tsx
+│   │   ├── template-content-editor.tsx
+│   │   ├── template-form.tsx
+│   │   ├── template-gallery.tsx
+│   │   ├── template-list.tsx
+│   │   ├── template-preview-modal.tsx
+│   │   ├── template-preview.tsx
+│   │   ├── template-selector.tsx
+│   │   └── template-sharing-settings.tsx
+│   ├── Testimonials.jsx
+│   ├── testimonials-section.tsx
+│   ├── __tests__
+│   │   └── example.test.tsx
+│   ├── theme-provider.tsx
+│   ├── theme-toggle.tsx
+│   └── ui
+│       ├── accordion.tsx
+│       ├── alert-dialog.tsx
+│       ├── alert.tsx
+│       ├── aspect-ratio.tsx
+│       ├── auth-button.tsx
+│       ├── auth-guard.tsx
+│       ├── avatar.tsx
+│       ├── badge.tsx
+│       ├── breadcrumb.tsx
+│       ├── button.tsx
+│       ├── calendar.tsx
+│       ├── card.tsx
+│       ├── carousel.tsx
+│       ├── chart.tsx
+│       ├── checkbox.tsx
+│       ├── collapsible.tsx
+│       ├── command.tsx
+│       ├── context-menu.tsx
+│       ├── dialog.tsx
+│       ├── drawer.tsx
+│       ├── dropdown-menu.tsx
+│       ├── Footer.tsx
+│       ├── form.tsx
+│       ├── hover-card.tsx
+│       ├── input-otp.tsx
+│       ├── input.tsx
+│       ├── interactive.tsx
+│       ├── label.tsx
+│       ├── menubar.tsx
+│       ├── navigation-menu.tsx
+│       ├── pagination.tsx
+│       ├── popover.tsx
+│       ├── progress.tsx
+│       ├── radio-group.tsx
+│       ├── resizable.tsx
+│       ├── scroll-area.tsx
+│       ├── select.tsx
+│       ├── separator.tsx
+│       ├── sheet.tsx
+│       ├── skeleton.tsx
+│       ├── slider.tsx
+│       ├── sonner.tsx
+│       ├── stat-counter.tsx
+│       ├── switch.tsx
+│       ├── table.tsx
+│       ├── tabs.tsx
+│       ├── textarea.tsx
+│       ├── toaster.tsx
+│       ├── toast-hook.tsx
+│       ├── toast.tsx
+│       ├── toggle-group.tsx
+│       ├── toggle.tsx
+│       ├── tooltip.tsx
+│       ├── typewriter.tsx
+│       └── use-toast.tsx
+├── components.json
+├── context
+│   └── template-editor-context.tsx
+├── CONTRIBUTING.md
+├── CURSOR_IMPLEMENTATION.md
+├── DATABASE_FIX.md
+├── docs
+│   ├── database-setup-guide.md
+│   └── profile-enhancements.md
+├── Enable_shareable_public_URL_for_created_PowerPoint_presentations_73.md
+├── FAQ.md
+├── hooks
+│   ├── useAutosave.ts
+│   ├── use-is-mounted.ts
+│   ├── use-pwa-install.ts
+│   ├── use-subscription.ts
+│   ├── use-template-sharing.ts
+│   ├── use-templates.ts
+│   ├── use-toast.ts
+│   ├── use-trailing-cursor.ts
+│   ├── use-usage-stats.ts
+│   └── use-user.ts
+├── jest.config.mjs
+├── jest.setup.ts
+├── lib
+│   ├── auth-utils.ts
+│   ├── config.ts
+│   ├── email.ts
+│   ├── gemini.ts
+│   ├── parsers
+│   │   ├── doc-parcer.ts
+│   │   ├── docx-parser.ts
+│   │   ├── pdf-parser.ts
+│   │   └── types.d.ts
+│   ├── security.ts
+│   ├── stripe.ts
+│   ├── supabase
+│   │   ├── client.ts
+│   │   └── server.ts
+│   ├── supabase.ts
+│   ├── templates.ts
+│   ├── utils.ts
+│   └── validation.ts
+├── LICENSE
+├── MAC_LINUX_SETUP_GUIDE.md
+├── middleware.ts
+├── netlify.toml
+├── next.config.js
+├── package.json
+├── package-lock.json
+├── postcss.config.cjs
+├── providers
+│   ├── query-provider.tsx
+│   └── template-provider.tsx
+├── public
+│   ├── 404.html
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   ├── apple-touch-icon.png
+│   ├── browserconfig.xml
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   ├── favicon.ico
+│   ├── magic-hat.svg
+│   ├── manifest.json
+│   ├── offline.html
+│   ├── resume-nav-fix.js
+│   ├── sw.js
+│   └── workbox-f52fd911.js
+├── PWA_IMPLEMENTATION.md
+├── README.md
+├── screenshots
+│   ├── AtsAnalysis.png
+│   ├── ATS.png
+│   ├── CVgenerator.png
+│   ├── DocMagicHero.png
+│   ├── Letter.png
+│   ├── Presentation.png
+│   ├── Progress.png
+│   ├── Resume.png
+│   └── ResumeTemp.png
+├── scripts
+│   ├── create-documents-table.sql
+│   ├── create-table.js
+│   ├── create-templates-table.sql
+│   ├── fix-policies.sql
+│   ├── reset-database.sql
+│   ├── run-sql-setup.js
+│   ├── setup-database.js
+│   ├── setup-storage-bucket.sql
+│   ├── setup-storage.sql
+│   ├── simple-setup.js
+│   ├── supabase-setup.sql
+│   └── test-pwa.sh
+├── SECURITY.md
+├── SECURITY_SETUP.md
+├── SETUP_WINDOWS.md
+├── structure.txt
+├── supabase
+│   └── migrations
+│       ├── 20250628163807_curly_boat.sql
+│       ├── 20250628163813_black_canyon.sql
+│       ├── 20250628163818_ancient_flame.sql
+│       ├── 20250628163825_add_public_presentation_access.sql
+│       ├── 20250725130000_add_template_tables.sql
+│       └── 20250727102329_lingering_wind.sql
+├── tailwind.config.ts
+├── templates
+│   ├── cv
+│   │   ├── academic-cv.md
+│   │   ├── Marketing_Manager_cv.md
+│   │   ├── Marketing_Specialist_cv.md
+│   │   └── Medical_Professional_cv.md
+│   ├── index.ts
+│   ├── letter
+│   │   ├── Letter of Recommendation.md
+│   │   ├── Letter Of Resignation.md
+│   │   ├── professional-cover-letter.md
+│   │   └── Professional_newletter.md
+│   ├── presentation
+│   │   ├── Business_case_study.md
+│   │   ├── startup-pitch-deck.md
+│   │   └── Work_summary.md
+│   ├── README.md
+│   ├── resume
+│   │   ├── Full stack devoloper_resume.md
+│   │   ├── Sales_Representative_resume.md
+│   │   └── software-engineer-resume.md
+│   └── validation.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── types
+│   ├── app.types.ts
+│   ├── cursor.ts
+│   ├── global.d.ts
+│   ├── hooks.d.ts
+│   ├── index.d.ts
+│   ├── index.ts
+│   ├── next.d.ts
+│   ├── next-headers.d.ts
+│   ├── next-server.d.ts
+│   ├── supabase-auth-helpers.d.ts
+│   ├── supabase.ts
+│   ├── supabase.updated.ts
+│   ├── templates.ts
+│   └── template.ts
+└── vercel.json
+
+82 directories, 301 files
