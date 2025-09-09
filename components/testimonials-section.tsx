@@ -36,7 +36,7 @@ export function TestimonialsSection() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-pink-200/30 hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-pink-200/30">
             <Heart className="h-5 w-5 text-pink-600" />
             <span className="text-base font-semibold bolt-gradient-text">Customer Love</span>
             <Star className="h-5 w-5 text-amber-500 fill-current" />
@@ -53,17 +53,17 @@ export function TestimonialsSection() {
 
           {/* Social proof stats */}
           <div className="flex flex-wrap justify-center gap-6 mt-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/50 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-default">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-amber-200/30">
               <Star className="h-4 w-4 text-amber-500 fill-current" />
-              <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">4.9/5 Rating</span>
+              <span className="text-sm font-semibold text-amber-700">4.9/5 Rating</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/50 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-default">
-            <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">10K+ Users</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-700">10K+ Users</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/50 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-default">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-green-200/30">
               <Trophy className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-700 dark:text-green-300">Industry Leader</span>
+              <span className="text-sm font-semibold text-green-700">Industry Leader</span>
             </div>
           </div>
         </div>
