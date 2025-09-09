@@ -117,7 +117,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-simple-typewriter": "^5.0.1",
     "recharts": "^2.15.4",
-    "sonner": "^1.7.4",
+    "sonner": "^2.0.7",
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
