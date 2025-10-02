@@ -31,8 +31,14 @@ import {
   Trophy,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import ResumeGenerator from "@/components/resume/resume-generator";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+
   return (
     <div id="top" className="min-h-screen flex flex-col">
       <SponsorBanner />
