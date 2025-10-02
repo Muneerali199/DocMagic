@@ -5,9 +5,36 @@ const nextConfig = {
   reactStrictMode: false,
   images: {
     unoptimized: true,
-    domains: ['bxiieunzrcdbxqadapcl.supabase.co'],
+    domains: [
+      'bxiieunzrcdbxqadapcl.supabase.co',
+      'images.unsplash.com',
+      'images.pexels.com',
+      'cdn.pixabay.com'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.pixabay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
   },
   trailingSlash: false,
+  // Optimize for production
+  swcMinify: true,
+  compress: true,
+  poweredByHeader: false,
   async headers() {
     return [
       {
