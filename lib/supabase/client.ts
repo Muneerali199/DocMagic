@@ -25,13 +25,15 @@ export const createClient = () => {
     });
   }
 
-  // For client-side, use singleton
+  // For client-side, use singleton with proper storage key to prevent multiple instances
   if (!supabaseInstance) {
     supabaseInstance = createClientOriginal<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        storageKey: 'docmagic-auth',
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       }
     });
   }
