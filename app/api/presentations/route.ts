@@ -1,12 +1,35 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-import { NextResponse } from 'next/server';
-import { createRoute } from '@/lib/supabase/server';
+const { NextResponse } = require('next/server');
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRoute();
+    // Get the Authorization token from the request headers
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Missing or invalid authorization header' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+
+    // Create Supabase client with the token
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
     const body = await request.json();
     const { title, slides, template, prompt, isPublic = false } = body;
 
@@ -14,6 +37,7 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
