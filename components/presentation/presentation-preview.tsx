@@ -3,8 +3,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Quote, Maximize2, Minimize2, Play, Pause, RotateCcw, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote, Maximize2, Minimize2, Play, Pause, RotateCcw, Image as ImageIcon, Edit3 } from "lucide-react";
+import Image from "next/image";
 import { useTheme } from "next-themes";
+import { PostGenerationImageEditor } from "./post-generation-image-editor";
 import {
   BarChart,
   Bar,
@@ -28,15 +30,51 @@ import {
 interface PresentationPreviewProps {
   slides: any[];
   template: string;
+  onSlidesUpdate?: (updatedSlides: any[]) => void;
+  allowImageEditing?: boolean;
 }
 
-export function PresentationPreview({ slides, template }: PresentationPreviewProps) {
+export function PresentationPreview({ 
+  slides, 
+  template,
+  onSlidesUpdate,
+  allowImageEditing = true 
+}: PresentationPreviewProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [autoPlayInterval, setAutoPlayInterval] = useState<NodeJS.Timeout | null>(null);
   const [imageLoadErrors, setImageLoadErrors] = useState<{[key: number]: boolean}>({});
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [editingSlideIndex, setEditingSlideIndex] = useState<number>(0);
   const { theme } = useTheme();
+
+  const handleEditImage = (slideIndex: number) => {
+    setEditingSlideIndex(slideIndex);
+    setIsImageEditorOpen(true);
+  };
+
+  const handleImageUpdate = (slideIndex: number, imageUrl: string) => {
+    if (!onSlidesUpdate) return;
+    
+    const updatedSlides = [...slides];
+    updatedSlides[slideIndex] = {
+      ...updatedSlides[slideIndex],
+      image: imageUrl
+    };
+    onSlidesUpdate(updatedSlides);
+  };
+
+  const handleImageRemove = (slideIndex: number) => {
+    if (!onSlidesUpdate) return;
+    
+    const updatedSlides = [...slides];
+    updatedSlides[slideIndex] = {
+      ...updatedSlides[slideIndex],
+      image: undefined
+    };
+    onSlidesUpdate(updatedSlides);
+  };
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
@@ -306,57 +344,109 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
   };
 
   const getTemplateStyles = (template: string) => {
-    const styles = {
+    // Determine if the template is originally dark-themed
+    const isDarkTemplate = ['tech-modern', 'elegant-dark'].includes(template);
+    const isLightThemeMode = theme !== 'dark';
+    
+    // Define base styles for each template
+    const baseStyles = {
       'modern-business': {
-        background: 'bg-gradient-to-br from-blue-50 to-white',
-        text: 'text-blue-900',
-        accent: 'text-blue-600',
-        border: 'border-blue-200',
-        cardBg: 'bg-white/80 backdrop-blur-sm',
-        shadow: 'shadow-blue-100'
+        lightBg: 'bg-gradient-to-br from-blue-50 to-white',
+        darkBg: 'bg-gradient-to-br from-blue-950 to-slate-900',
+        lightText: 'text-blue-900',
+        darkText: 'text-blue-100',
+        lightAccent: 'text-blue-600',
+        darkAccent: 'text-blue-400',
+        lightBorder: 'border-blue-200',
+        darkBorder: 'border-blue-700',
+        lightCardBg: 'bg-white/80 backdrop-blur-sm',
+        darkCardBg: 'bg-slate-800/80 backdrop-blur-sm',
+        lightShadow: 'shadow-blue-100',
+        darkShadow: 'shadow-blue-900/50'
       },
       'creative-gradient': {
-        background: 'bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50',
-        text: 'text-purple-900',
-        accent: 'text-purple-600',
-        border: 'border-purple-200',
-        cardBg: 'bg-white/90 backdrop-blur-sm',
-        shadow: 'shadow-purple-100'
+        lightBg: 'bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50',
+        darkBg: 'bg-gradient-to-br from-purple-950 via-pink-950 to-orange-950',
+        lightText: 'text-purple-900',
+        darkText: 'text-purple-100',
+        lightAccent: 'text-purple-600',
+        darkAccent: 'text-purple-400',
+        lightBorder: 'border-purple-200',
+        darkBorder: 'border-purple-700',
+        lightCardBg: 'bg-white/90 backdrop-blur-sm',
+        darkCardBg: 'bg-slate-800/90 backdrop-blur-sm',
+        lightShadow: 'shadow-purple-100',
+        darkShadow: 'shadow-purple-900/50'
       },
       'minimalist-pro': {
-        background: 'bg-gradient-to-br from-gray-50 to-white',
-        text: 'text-gray-800',
-        accent: 'text-gray-600',
-        border: 'border-gray-200',
-        cardBg: 'bg-white/95 backdrop-blur-sm',
-        shadow: 'shadow-gray-100'
+        lightBg: 'bg-gradient-to-br from-gray-50 to-white',
+        darkBg: 'bg-gradient-to-br from-gray-900 to-slate-900',
+        lightText: 'text-gray-800',
+        darkText: 'text-gray-100',
+        lightAccent: 'text-gray-600',
+        darkAccent: 'text-gray-400',
+        lightBorder: 'border-gray-200',
+        darkBorder: 'border-gray-700',
+        lightCardBg: 'bg-white/95 backdrop-blur-sm',
+        darkCardBg: 'bg-slate-800/95 backdrop-blur-sm',
+        lightShadow: 'shadow-gray-100',
+        darkShadow: 'shadow-gray-900/50'
       },
       'tech-modern': {
-        background: 'bg-gradient-to-br from-slate-900 to-gray-900',
-        text: 'text-white',
-        accent: 'text-cyan-400',
-        border: 'border-cyan-400',
-        cardBg: 'bg-slate-800/80 backdrop-blur-sm',
-        shadow: 'shadow-cyan-500/20'
+        lightBg: 'bg-gradient-to-br from-slate-100 to-cyan-50',
+        darkBg: 'bg-gradient-to-br from-slate-900 to-gray-900',
+        lightText: 'text-slate-900',
+        darkText: 'text-white',
+        lightAccent: 'text-cyan-600',
+        darkAccent: 'text-cyan-400',
+        lightBorder: 'border-cyan-300',
+        darkBorder: 'border-cyan-600',
+        lightCardBg: 'bg-white/80 backdrop-blur-sm',
+        darkCardBg: 'bg-slate-800/80 backdrop-blur-sm',
+        lightShadow: 'shadow-cyan-100',
+        darkShadow: 'shadow-cyan-500/20'
       },
       'elegant-dark': {
-        background: 'bg-gradient-to-br from-gray-900 to-black',
-        text: 'text-white',
-        accent: 'text-yellow-400',
-        border: 'border-yellow-400',
-        cardBg: 'bg-gray-800/80 backdrop-blur-sm',
-        shadow: 'shadow-yellow-500/20'
+        lightBg: 'bg-gradient-to-br from-amber-50 to-yellow-50',
+        darkBg: 'bg-gradient-to-br from-gray-900 to-black',
+        lightText: 'text-gray-900',
+        darkText: 'text-white',
+        lightAccent: 'text-yellow-600',
+        darkAccent: 'text-yellow-400',
+        lightBorder: 'border-yellow-300',
+        darkBorder: 'border-yellow-600',
+        lightCardBg: 'bg-white/80 backdrop-blur-sm',
+        darkCardBg: 'bg-gray-800/80 backdrop-blur-sm',
+        lightShadow: 'shadow-yellow-100',
+        darkShadow: 'shadow-yellow-500/20'
       },
       'startup-pitch': {
-        background: 'bg-gradient-to-br from-green-50 to-emerald-50',
-        text: 'text-green-900',
-        accent: 'text-green-600',
-        border: 'border-green-200',
-        cardBg: 'bg-white/90 backdrop-blur-sm',
-        shadow: 'shadow-green-100'
+        lightBg: 'bg-gradient-to-br from-green-50 to-emerald-50',
+        darkBg: 'bg-gradient-to-br from-green-950 to-emerald-950',
+        lightText: 'text-green-900',
+        darkText: 'text-green-100',
+        lightAccent: 'text-green-600',
+        darkAccent: 'text-green-400',
+        lightBorder: 'border-green-200',
+        darkBorder: 'border-green-700',
+        lightCardBg: 'bg-white/90 backdrop-blur-sm',
+        darkCardBg: 'bg-slate-800/90 backdrop-blur-sm',
+        lightShadow: 'shadow-green-100',
+        darkShadow: 'shadow-green-900/50'
       }
     };
-    return styles[template as keyof typeof styles] || styles['modern-business'];
+    
+    const style = baseStyles[template as keyof typeof baseStyles] || baseStyles['modern-business'];
+    
+    // Return theme-adaptive styles
+    return {
+      background: isLightThemeMode ? style.lightBg : style.darkBg,
+      text: isLightThemeMode ? style.lightText : style.darkText,
+      accent: isLightThemeMode ? style.lightAccent : style.darkAccent,
+      border: isLightThemeMode ? style.lightBorder : style.darkBorder,
+      cardBg: isLightThemeMode ? style.lightCardBg : style.darkCardBg,
+      shadow: isLightThemeMode ? style.lightShadow : style.darkShadow
+    };
   };
 
   const renderSlideContent = (slide: any, slideIndex: number) => {
@@ -383,8 +473,19 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
               backgroundPosition: slide.imagePosition || "center",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60"></div>
-            <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 sm:p-12 text-center text-white">
+            {/* Adaptive overlay - darker for images to ensure text readability */}
+            <div className={cn(
+              "absolute inset-0",
+              backgroundImage 
+                ? "bg-gradient-to-br from-black/60 via-black/40 to-black/60" 
+                : theme === 'dark' 
+                  ? "bg-gradient-to-br from-gray-900/50 via-gray-800/30 to-gray-900/50" 
+                  : "bg-gradient-to-br from-white/30 via-white/10 to-white/30"
+            )}></div>
+            <div className={cn(
+              "relative z-10 h-full flex flex-col items-center justify-center p-8 sm:p-12 text-center",
+              backgroundImage ? "text-white" : "" // Use white text on images, otherwise use template text color
+            )}>
               <div className="max-w-4xl mx-auto">
                 <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
                   {slide.title}
@@ -394,28 +495,54 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
                     {slide.content}
                   </p>
                 )}
-                <div className="w-24 h-1 bg-white/80 mx-auto"></div>
+                <div className={cn(
+                  "w-24 h-1 mx-auto",
+                  backgroundImage ? "bg-white/80" : templateStyles.accent.replace('text-', 'bg-')
+                )}></div>
               </div>
             </div>
+            {/* Edit Image Button */}
+            {allowImageEditing && !isFullscreen && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => handleEditImage(slideIndex)}
+                className="absolute top-4 right-4 z-20 opacity-0 hover:opacity-100 transition-opacity"
+              >
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit Image
+              </Button>
+            )}
+            
             {slide.image && imageLoadErrors[slideIndex] && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <ImageIcon className="h-16 w-16 text-gray-400" />
+              <div className={cn(
+                "absolute inset-0 flex items-center justify-center",
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+              )}>
+                <ImageIcon className={cn("h-16 w-16", theme === 'dark' ? 'text-gray-600' : 'text-gray-400')} />
               </div>
             )}
-            <img 
-              src={slide.image} 
-              alt={slide.imageAlt || slide.title}
-              className="hidden"
-              onError={() => handleImageError(slideIndex)}
-            />
+            {slide.image && (
+              <div className="hidden">
+                {/* Hidden image for preloading and error detection */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={slide.image} 
+                  alt="preload"
+                  onError={() => handleImageError(slideIndex)}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            )}
           </div>
         );
 
       case "split":
         return (
           <div className={baseClasses}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full p-8 sm:p-12">
-              <div className="flex flex-col justify-center space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 h-full p-8 sm:p-12">
+              {/* Left Content - 60% */}
+              <div className="lg:col-span-3 flex flex-col justify-center space-y-6">
                 <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight", templateStyles.accent)}>
                   {slide.title}
                 </h2>
@@ -425,31 +552,57 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
                   </p>
                 )}
                 {slide.bullets && (
-                  <ul className="space-y-4 text-lg">
+                  <ul className="space-y-4 text-base sm:text-lg">
                     {slide.bullets.map((bullet: string, i: number) => (
-                      <li key={i} className="flex items-start gap-4">
-                        <div className={cn("w-3 h-3 rounded-full mt-2 flex-shrink-0", templateStyles.accent.replace('text-', 'bg-'))}></div>
-                        <span>{bullet}</span>
+                      <li key={i} className="flex items-start gap-3">
+                        <div className={cn("w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0", templateStyles.accent.replace('text-', 'bg-'))}></div>
+                        <span className="leading-relaxed">{bullet}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
-              <div className="flex items-center justify-center">
+              
+              {/* Right Image - 40% (Matches Export) */}
+              <div className="lg:col-span-2 flex items-center justify-center relative group">
                 {slide.image && !imageLoadErrors[slideIndex] ? (
-                  <div className={cn("rounded-2xl overflow-hidden", templateStyles.shadow, "shadow-2xl")}>
+                  <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
                     <img 
                       src={slide.image} 
                       alt={slide.imageAlt || slide.title}
-                      className="max-w-full h-auto object-cover"
-                      style={{ maxHeight: '500px' }}
+                      className="w-full h-auto object-cover"
+                      style={{ maxHeight: '450px' }}
                       onError={() => handleImageError(slideIndex)}
                     />
+                    {/* Edit Image Button */}
+                    {allowImageEditing && !isFullscreen && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleEditImage(slideIndex)}
+                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
                   </div>
                 ) : (
-                  <div className={cn("w-full h-80 rounded-2xl flex items-center justify-center", templateStyles.border, "border-2 border-dashed", templateStyles.cardBg)}>
+                  <button
+                    onClick={() => allowImageEditing && !isFullscreen && handleEditImage(slideIndex)}
+                    className={cn(
+                      "w-full h-96 rounded-2xl flex flex-col items-center justify-center gap-4",
+                      templateStyles.border,
+                      "border-2 border-dashed",
+                      templateStyles.cardBg,
+                      allowImageEditing && !isFullscreen && "hover:border-yellow-400 cursor-pointer transition-all"
+                    )}
+                  >
                     <ImageIcon className="h-16 w-16 text-gray-400" />
-                  </div>
+                    {allowImageEditing && !isFullscreen && (
+                      <span className="text-sm text-muted-foreground">Click to add image</span>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
@@ -459,29 +612,90 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
       case "chart":
         return (
           <div className={cn(baseClasses, "p-8 sm:p-12")}>
-            <div className="h-full flex flex-col">
-              <div className="text-center mb-8">
-                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold mb-4", templateStyles.accent)}>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 h-full">
+              {/* Left Content - Takes 60% */}
+              <div className="lg:col-span-3 flex flex-col justify-center space-y-6">
+                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight", templateStyles.accent)}>
                   {slide.title}
                 </h2>
                 {slide.content && (
-                  <p className="text-lg sm:text-xl opacity-80 max-w-3xl mx-auto">
+                  <p className="text-lg sm:text-xl leading-relaxed opacity-90">
                     {slide.content}
                   </p>
                 )}
+                {slide.bullets && Array.isArray(slide.bullets) && (
+                  <ul className="space-y-4 text-base sm:text-lg">
+                    {slide.bullets.map((bullet: string, i: number) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <div className={cn("w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0", templateStyles.accent.replace('text-', 'bg-'))}></div>
+                        <span className="leading-relaxed">{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                
+                {/* Chart Info Badge - Show this matches exported format */}
+                {slide.charts && (
+                  <div className={cn(
+                    "mt-6 p-4 rounded-xl border-2",
+                    templateStyles.border,
+                    templateStyles.cardBg
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", templateStyles.accent.replace('text-', 'bg-'))}>
+                        <span className="text-white text-lg font-bold">📊</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{slide.charts.title || 'Data Visualization'}</p>
+                        <p className="text-xs opacity-70">
+                          {slide.charts.type?.charAt(0).toUpperCase() + slide.charts.type?.slice(1) || 'Bar'} Chart • {slide.charts.data?.length || 0} data points
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 flex items-center justify-center">
-                {slide.charts ? (
-                  <div className={cn("w-full max-w-4xl p-6 rounded-2xl", templateStyles.cardBg, templateStyles.shadow, "shadow-xl")}>
-                    {slide.charts.title && (
-                      <h3 className="text-xl font-semibold text-center mb-6">{slide.charts.title}</h3>
+              
+              {/* Right Image - Takes 40% (Matches Export) */}
+              <div className="lg:col-span-2 flex items-center justify-center relative group">
+                {slide.image && !imageLoadErrors[slideIndex] ? (
+                  <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
+                    <img 
+                      src={slide.image} 
+                      alt={slide.imageAlt || slide.title}
+                      className="w-full h-auto object-cover"
+                      style={{ maxHeight: '450px' }}
+                      onError={() => handleImageError(slideIndex)}
+                    />
+                    {/* Edit Image Button */}
+                    {allowImageEditing && !isFullscreen && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleEditImage(slideIndex)}
+                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
                     )}
-                    {renderChart(slide.charts)}
                   </div>
                 ) : (
-                  <div className={cn("w-full h-80 rounded-2xl flex items-center justify-center", templateStyles.border, "border-2 border-dashed", templateStyles.cardBg)}>
-                    <span className="text-muted-foreground text-lg">Chart Visualization</span>
-                  </div>
+                  <button
+                    onClick={() => allowImageEditing && !isFullscreen && handleEditImage(slideIndex)}
+                    className={cn(
+                      "w-full h-96 rounded-2xl flex flex-col items-center justify-center gap-4",
+                      templateStyles.border,
+                      "border-2 border-dashed",
+                      templateStyles.cardBg,
+                      allowImageEditing && !isFullscreen && "hover:border-yellow-400 cursor-pointer transition-all"
+                    )}
+                  >
+                    <ImageIcon className="h-16 w-16 text-gray-400" />
+                    {allowImageEditing && !isFullscreen && (
+                      <span className="text-sm text-muted-foreground">Click to add image</span>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
@@ -491,42 +705,75 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
       case "list":
         return (
           <div className={cn(baseClasses, "p-8 sm:p-12")}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
-              <div className="lg:col-span-2 flex flex-col justify-center">
-                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold mb-8 leading-tight", templateStyles.accent)}>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 h-full">
+              {/* Left Content - 60% */}
+              <div className="lg:col-span-3 flex flex-col justify-center space-y-6">
+                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight", templateStyles.accent)}>
                   {slide.title}
                 </h2>
                 {slide.content && (
-                  <p className="text-lg sm:text-xl mb-8 leading-relaxed opacity-90">
+                  <p className="text-lg sm:text-xl leading-relaxed opacity-90 mb-4">
                     {slide.content}
                   </p>
                 )}
                 {slide.bullets && (
-                  <ul className="space-y-6 text-lg sm:text-xl">
+                  <ul className="space-y-4 text-base sm:text-lg">
                     {slide.bullets.map((bullet: string, i: number) => (
-                      <li key={i} className="flex items-start gap-4 group">
-                        <div className={cn("w-4 h-4 rounded-full mt-2 flex-shrink-0 group-hover:scale-110 transition-transform", templateStyles.accent.replace('text-', 'bg-'))}></div>
-                        <span className="leading-relaxed">{bullet}</span>
+                      <li key={i} className="flex items-start gap-3 group">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm",
+                          templateStyles.accent.replace('text-', 'bg-'),
+                          "group-hover:scale-110 transition-transform shadow-md"
+                        )}>
+                          {i + 1}
+                        </div>
+                        <span className="leading-relaxed pt-1">{bullet}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
-              <div className="flex items-center justify-center">
+              
+              {/* Right Image - 40% (Matches Export) */}
+              <div className="lg:col-span-2 flex items-center justify-center relative group">
                 {slide.image && !imageLoadErrors[slideIndex] ? (
-                  <div className={cn("rounded-2xl overflow-hidden", templateStyles.shadow, "shadow-xl")}>
+                  <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
                     <img 
                       src={slide.image} 
                       alt={slide.imageAlt || slide.title}
-                      className="max-w-full h-auto object-cover"
-                      style={{ maxHeight: '400px' }}
+                      className="w-full h-auto object-cover"
+                      style={{ maxHeight: '450px' }}
                       onError={() => handleImageError(slideIndex)}
                     />
+                    {/* Edit Image Button */}
+                    {allowImageEditing && !isFullscreen && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleEditImage(slideIndex)}
+                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
                   </div>
                 ) : (
-                  <div className={cn("w-full h-64 rounded-2xl flex items-center justify-center", templateStyles.border, "border-2 border-dashed", templateStyles.cardBg)}>
-                    <ImageIcon className="h-12 w-12 text-gray-400" />
-                  </div>
+                  <button
+                    onClick={() => allowImageEditing && !isFullscreen && handleEditImage(slideIndex)}
+                    className={cn(
+                      "w-full h-96 rounded-2xl flex flex-col items-center justify-center gap-4",
+                      templateStyles.border,
+                      "border-2 border-dashed",
+                      templateStyles.cardBg,
+                      allowImageEditing && !isFullscreen && "hover:border-yellow-400 cursor-pointer transition-all"
+                    )}
+                  >
+                    <ImageIcon className="h-16 w-16 text-gray-400" />
+                    {allowImageEditing && !isFullscreen && (
+                      <span className="text-sm text-muted-foreground">Click to add image</span>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
@@ -537,29 +784,44 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
         return (
           <div className={cn(baseClasses, "p-8 sm:p-12")}>
             <div className="h-full flex flex-col">
-              <div className="text-center mb-12">
-                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold mb-4", templateStyles.accent)}>
+              <div className="mb-10">
+                <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight", templateStyles.accent)}>
                   {slide.title}
                 </h2>
                 {slide.content && (
-                  <p className="text-lg sm:text-xl opacity-80 max-w-3xl mx-auto">
+                  <p className="text-lg sm:text-xl opacity-90 leading-relaxed max-w-4xl">
                     {slide.content}
                   </p>
                 )}
               </div>
               <div className="flex-1 flex items-center justify-center">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 w-full max-w-5xl">
                   {[1, 2, 3].map((step) => (
-                    <div key={step} className="text-center group">
-                      <div className={cn("w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg", templateStyles.accent.replace('text-', 'bg-'))}>
-                        {step}
+                    <div key={step} className="group">
+                      <div className="flex flex-col items-center text-center">
+                        <div className={cn(
+                          "w-16 h-16 rounded-2xl mb-5 flex items-center justify-center text-white font-bold text-2xl shadow-xl",
+                          templateStyles.accent.replace('text-', 'bg-'),
+                          "group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+                        )}>
+                          {step}
+                        </div>
+                        <div className={cn(
+                          "w-full p-5 rounded-xl",
+                          templateStyles.cardBg,
+                          templateStyles.border,
+                          "border-2",
+                          templateStyles.shadow,
+                          "group-hover:shadow-xl transition-shadow"
+                        )}>
+                          <h3 className="font-bold text-lg mb-3">Step {step}</h3>
+                          <p className="text-sm leading-relaxed opacity-80">
+                            {slide.bullets && slide.bullets[step - 1] 
+                              ? slide.bullets[step - 1] 
+                              : `Process description for step ${step}`}
+                          </p>
+                        </div>
                       </div>
-                      <h3 className="font-semibold text-xl mb-3">Step {step}</h3>
-                      <p className="text-sm opacity-80 leading-relaxed">
-                        {slide.bullets && slide.bullets[step - 1] 
-                          ? slide.bullets[step - 1] 
-                          : `Process description for step ${step}`}
-                      </p>
                     </div>
                   ))}
                 </div>
@@ -571,20 +833,25 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
       default:
         return (
           <div className={cn(baseClasses, "p-8 sm:p-12")}>
-            <div className="h-full flex flex-col justify-center max-w-4xl mx-auto">
+            <div className="h-full flex flex-col justify-center max-w-5xl mx-auto">
               <h2 className={cn("text-3xl sm:text-4xl lg:text-5xl font-bold mb-8 leading-tight", templateStyles.accent)}>
                 {slide.title}
               </h2>
-              <div className="text-lg sm:text-xl lg:text-2xl leading-relaxed space-y-6">
+              <div className="space-y-6">
                 {slide.content && (
-                  <p className="opacity-90">{slide.content}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed opacity-90">{slide.content}</p>
                 )}
                 {slide.bullets && (
-                  <ul className="space-y-4">
+                  <ul className="space-y-5 text-base sm:text-lg lg:text-xl">
                     {slide.bullets.map((bullet: string, i: number) => (
                       <li key={i} className="flex items-start gap-4">
-                        <div className={cn("w-3 h-3 rounded-full mt-3 flex-shrink-0", templateStyles.accent.replace('text-', 'bg-'))}></div>
-                        <span>{bullet}</span>
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm shadow-md",
+                          templateStyles.accent.replace('text-', 'bg-')
+                        )}>
+                          {i + 1}
+                        </div>
+                        <span className="leading-relaxed pt-1.5">{bullet}</span>
                       </li>
                     ))}
                   </ul>
@@ -707,6 +974,20 @@ export function PresentationPreview({ slides, template }: PresentationPreviewPro
             <div>Esc: Exit</div>
           </div>
         </div>
+      )}
+
+      {/* Image Editor Dialog */}
+      {allowImageEditing && slides[editingSlideIndex] && (
+        <PostGenerationImageEditor
+          isOpen={isImageEditorOpen}
+          onClose={() => setIsImageEditorOpen(false)}
+          slideIndex={editingSlideIndex}
+          slideTitle={slides[editingSlideIndex]?.title || ''}
+          slideContent={slides[editingSlideIndex]?.content || slides[editingSlideIndex]?.bullets?.join(', ') || ''}
+          currentImage={slides[editingSlideIndex]?.image}
+          onImageUpdate={handleImageUpdate}
+          onImageRemove={handleImageRemove}
+        />
       )}
     </div>
   );
