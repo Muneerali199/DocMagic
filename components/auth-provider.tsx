@@ -17,10 +17,12 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {}
 });
 
+// Create supabase client outside component to ensure single instance
+const supabase = createClient();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,12 +32,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
+          setUser(null);
+        } else {
+          // Set user from session
+          setUser(session?.user ?? null);
         }
-
-        // Set user from session
-        setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error in getInitialSession:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -46,15 +50,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         setLoading(false);
 
         // Handle different auth events
         if (event === 'SIGNED_IN') {
+          console.log('User signed in:', session?.user?.email);
           router.refresh();
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
           router.push('/');
           router.refresh();
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed for:', session?.user?.email);
         }
       }
     );
@@ -62,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, router]);
+  }, [router]);
 
   const signOut = async () => {
     try {
