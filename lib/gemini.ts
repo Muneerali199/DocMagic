@@ -274,6 +274,10 @@ export async function generatePresentation({
     await validateApiConnection();
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
     
+    // Import Unsplash and Mistral for image generation
+    const { searchImages } = await import('./unsplash');
+    const { generateImageDescriptions } = await import('./mistral');
+    
     const systemPrompt = `Generate a PROFESSIONAL presentation with GUARANTEED IMAGES AND CHARTS for every slide.
 
     Original prompt: "${prompt}"
@@ -281,7 +285,7 @@ export async function generatePresentation({
     Outlines: ${JSON.stringify(outlines)}
 
     CRITICAL REQUIREMENTS - EVERY SLIDE MUST HAVE:
-    1. A professional high-quality image from Pexels
+    1. A professional high-quality contextual image
     2. Meaningful charts for data slides (30% minimum)
     3. Canva-style professional design
 
@@ -306,7 +310,7 @@ export async function generatePresentation({
           "showLegend": true,
           "showGrid": true
         } (REQUIRED for chart layout, OPTIONAL for others),
-        "image": "https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=1200&h=800",
+        "imageQuery": "professional search query for Unsplash",
         "imageAlt": "Professional descriptive alt text",
         "imagePosition": "center|top|left|right",
         "backgroundColor": "#ffffff",
@@ -344,23 +348,53 @@ export async function generatePresentation({
     const jsonText = extractJsonFromMarkdown(response.text());
     const slides = JSON.parse(jsonText);
 
-    // GUARANTEE every slide has professional visuals
-    const enhancedSlides = slides.map((slide: any, index: number) => {
+    // Generate UNIQUE contextual image queries using Mistral for EACH slide
+    const imageDescriptions = await generateImageDescriptions(slides.map((s: any) => ({
+      title: s.title,
+      content: s.content || '',
+      context: prompt
+    })));
+
+    // Fetch UNIQUE images for each slide and convert to base64
+    const enhancedSlides = await Promise.all(slides.map(async (slide: any, index: number) => {
       const templateStyles = getProfessionalTemplateStyles(template);
       
-      // FORCE professional image for every slide
-      const professionalImageIds = [
-        3184291, 3184292, 3184293, 3184294, 3184295, 3184296, 3184297, 3184298, 3184299, 3184300,
-        3184311, 3184312, 3184313, 3184314, 3184315, 3184316, 3184317, 3184318, 3184319, 3184320,
-        3184321, 3184322, 3184323, 3184324, 3184325, 3184326, 3184327, 3184328, 3184329, 3184330,
-        3184331, 3184332, 3184333, 3184334, 3184335, 3184336, 3184337, 3184338, 3184339, 3184340,
-        3184341, 3184342, 3184343, 3184344, 3184345, 3184346, 3184347, 3184348, 3184349, 3184350,
-        3184351, 3184352, 3184353, 3184354, 3184355, 3184356, 3184357, 3184358, 3184359, 3184360
-      ];
-      
-      if (!slide.image || !slide.image.includes('pexels.com')) {
-        const randomId = professionalImageIds[index % professionalImageIds.length];
-        slide.image = `https://images.pexels.com/photos/${randomId}/pexels-photo-${randomId}.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800`;
+      // Get UNIQUE contextual image from Unsplash using topic-specific query
+      let imageData = null;
+      try {
+        // Create HIGHLY SPECIFIC search query combining presentation topic + slide content
+        const topicKeywords = prompt.split(' ').slice(0, 3).join(' '); // First 3 words of topic
+        const slideKeywords = slide.title.split(' ').slice(0, 4).join(' '); // First 4 words of title
+        const mistralQuery = imageDescriptions[index] || slide.imageQuery || '';
+        
+        // Combine for maximum relevance: Topic + Slide Title + AI suggestion
+        const uniqueQuery = `${topicKeywords} ${slideKeywords} ${mistralQuery}`.trim();
+        console.log(`Slide ${index + 1} - Topic: "${prompt}" | Searching: "${uniqueQuery}"`);
+        
+        // Fetch more images for better variety and relevance
+        const unsplashImages = await searchImages(uniqueQuery, 10);
+        
+        if (unsplashImages && unsplashImages.length > 0) {
+          // Pick different image from results to ensure variety
+          const imageIndex = index % unsplashImages.length;
+          const imageUrl = unsplashImages[imageIndex].urls.regular;
+          
+          console.log(`Selected image ${imageIndex + 1} of ${unsplashImages.length} for slide ${index + 1}`);
+          
+          // Convert to base64 for reliable export
+          try {
+            const response = await fetch(imageUrl);
+            const arrayBuffer = await response.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+            imageData = `data:image/jpeg;base64,${base64}`;
+          } catch (fetchError) {
+            console.warn(`Failed to convert image to base64 for slide ${index}:`, fetchError);
+            // Fallback to direct URL
+            imageData = imageUrl;
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch image for slide ${index}:`, error);
       }
 
       // FORCE chart data for chart slides and ensure proper distribution
@@ -386,6 +420,7 @@ export async function generatePresentation({
         slideNumber: index + 1,
         template,
         ...templateStyles,
+        image: imageData, // Base64 or URL
         imageAlt: slide.imageAlt || `Professional image for ${slide.title}`,
         imagePosition: slide.imagePosition || "center",
         animations: slide.animations || {
@@ -394,7 +429,7 @@ export async function generatePresentation({
           exit: "fadeOut"
         }
       };
-    });
+    }));
 
     return enhancedSlides;
   } catch (error) {
@@ -1038,5 +1073,56 @@ export async function generateDiagram({
   } catch (error) {
     console.error("Error generating diagram:", error);
     throw new Error(`Failed to generate diagram: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Generate images using Gemini 2.0 Flash (text-to-image with Imagen 3)
+ * Note: Gemini 2.0 Flash supports multimodal generation including images
+ */
+export async function generateImage({
+  prompt,
+  aspectRatio = '16:9'
+}: {
+  prompt: string;
+  aspectRatio?: '16:9' | '9:16' | '1:1' | '4:3';
+}): Promise<string> {
+  try {
+    // Note: As of now, Gemini API doesn't directly support image generation
+    // This is a placeholder for future implementation when the feature becomes available
+    // For now, we'll return a fallback URL or use Unsplash
+    
+    console.log(`Image generation requested for: ${prompt}`);
+    console.log('Note: Using Unsplash as fallback for image generation');
+    
+    // Return a placeholder or use Unsplash API instead
+    throw new Error('Gemini image generation not yet available. Please use Unsplash API.');
+  } catch (error) {
+    console.error("Error generating image:", error);
+    throw error;
+  }
+}
+
+/**
+ * Generate multiple image variations for a given prompt
+ */
+export async function generateImageVariations({
+  prompt,
+  count = 4,
+  aspectRatio = '16:9'
+}: {
+  prompt: string;
+  count?: number;
+  aspectRatio?: '16:9' | '9:16' | '1:1' | '4:3';
+}): Promise<string[]> {
+  try {
+    console.log(`Generating ${count} image variations for: ${prompt}`);
+    
+    // This is a placeholder for future Gemini image generation
+    // Currently returning empty array to indicate fallback to Unsplash
+    return [];
+  } catch (error) {
+    console.error("Error generating image variations:", error);
+    return [];
   }
 }
