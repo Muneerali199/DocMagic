@@ -9,7 +9,7 @@ export function FeaturesSection() {
       <div className="floating-orb w-48 h-48 sm:w-72 sm:h-72 ocean-gradient opacity-20 bottom-20 -left-24"></div>
       <div className="floating-orb w-56 h-56 sm:w-80 sm:h-80 forest-gradient opacity-15 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
 
-      <div className="mx-auto max-w-7xl px-2 xs:px-3 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-blue-200/30">
             <Brain className="h-5 w-5 text-blue-600" />
@@ -28,7 +28,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Enhanced features grid with better organization */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-12">
           {features.map((feature, index) => {
             const themes = [
               { cardClass: 'card-coral hover-coral', gradientClass: 'sunset-gradient', glowClass: 'sunset-glow', borderClass: 'border-amber-200/30' },
@@ -46,7 +46,7 @@ export function FeaturesSection() {
                 {/* Enhanced background glow */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${theme.gradientClass.includes('sunset') ? 'from-amber-400/10 to-orange-400/10' : theme.gradientClass.includes('ocean') ? 'from-blue-400/10 to-cyan-400/10' : theme.gradientClass.includes('forest') ? 'from-emerald-400/10 to-teal-400/10' : 'from-purple-400/10 to-pink-400/10'} rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300`}></div>
 
-                <div className={`relative professional-card p-8 rounded-3xl hover:scale-105 transition-all duration-500 ${theme.cardClass} hover:${theme.glowClass} border ${theme.borderClass}`}>
+                <div className={`relative professional-card p-5 sm:p-6 lg:p-8 rounded-3xl hover:scale-105 transition-all duration-500 ${theme.cardClass} hover:${theme.glowClass} border ${theme.borderClass}`}>
                   {/* Enhanced icon container */}
                   <div className={`w-16 h-16 mb-6 ${theme.gradientClass} rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300 relative`}>
                     {feature.icon}

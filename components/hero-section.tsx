@@ -8,7 +8,7 @@ import {TypedEffect} from '@/components/ui/typewriter';
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background py-12 xs:py-16 sm:py-28 lg:py-36">
+    <div className="relative overflow-hidden bg-background py-12 sm:py-20 md:py-28 lg:py-36">
       {/* Enhanced animated background elements */}
       <div className="absolute inset-0"></div>
       <div className="absolute inset-0 mesh-gradient-alt opacity-15"></div>
@@ -26,7 +26,7 @@ export function HeroSection() {
         }}
       />
 
-      <div className="mx-auto max-w-7xl px-2 xs:px-3 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-5xl text-center">
           {/* Enhanced Trust Badge */}
           <div className="mb-4 sm:mb-6 animate-fade-in-down will-change-transform">
@@ -59,7 +59,7 @@ export function HeroSection() {
             </div>
           </div>
           {/* Enhanced Main Headline */}
-          <h1 className="modern-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional text-balance leading-tight">
+          <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-6 sm:mb-8 animate-fade-in-down delay-100 will-change-transform text-shadow-professional text-balance leading-tight">
             <span className="block mb-2 sm:mb-4">
               Create stunning
             </span>
@@ -127,7 +127,7 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced CTA Buttons */}
-          <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-2 xs:px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full">
+          <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full">
             <Button
               asChild
               size="lg"
@@ -195,7 +195,7 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced Professional Stats with Better Visual Hierarchy */}
-          <div className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 px-2 xs:px-4 sm:px-0">
+          <div className="mt-12 sm:mt-16 lg:mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-0">
             <TooltipWithShortcut content="Over 10,000 professional documents successfully created by our users worldwide">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
