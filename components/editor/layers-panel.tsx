@@ -184,11 +184,11 @@ export function LayersPanel() {
   };
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 shadow-sm flex flex-col h-full">
+    <div className="w-80 bg-gradient-to-b from-gray-900 to-gray-800 border-l border-gray-700/50 shadow-2xl flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
-        <h3 className="font-bold text-lg text-gray-900">Layers</h3>
-        <p className="text-xs text-gray-600 mt-1 font-medium">
+      <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-750 backdrop-blur-sm">
+        <h3 className="font-bold text-lg text-white">Layers</h3>
+        <p className="text-sm text-gray-300 mt-1 font-medium">
           {layers.length} {layers.length === 1 ? 'element' : 'elements'}
         </p>
       </div>
@@ -196,9 +196,14 @@ export function LayersPanel() {
       {/* Layers List */}
       <ScrollArea className="flex-1">
         {layers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-            <p className="text-sm font-medium text-gray-700">No elements yet</p>
-            <p className="text-xs mt-1 text-gray-600">Add text, shapes, or images to get started</p>
+          <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
+              <Square className="w-8 h-8 text-gray-600" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-200">No Layers</p>
+              <p className="text-sm mt-2 text-gray-400">Add elements to see them here</p>
+            </div>
           </div>
         ) : (
           <div className="p-2 space-y-1">
@@ -210,28 +215,32 @@ export function LayersPanel() {
                   key={layer.id}
                   onClick={() => selectLayer(layer)}
                   className={cn(
-                    'group relative flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                    'group relative flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200',
                     layer.selected
-                      ? 'bg-primary/10 border-2 border-primary'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                      ? 'bg-gradient-to-r from-blue-600/30 to-blue-500/20 border-2 border-blue-500 shadow-xl ring-2 ring-blue-500/20'
+                      : 'bg-gray-800/60 hover:bg-gray-700/80 border-2 border-transparent hover:border-gray-600/50 hover:shadow-lg backdrop-blur-sm'
                   )}
                 >
                   {/* Icon */}
                   <div className="flex-shrink-0">
                     <div
                       className={cn(
-                        'w-8 h-8 rounded flex items-center justify-center',
-                        layer.selected ? 'bg-primary/20' : 'bg-white'
+                        'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200',
+                        layer.selected 
+                          ? 'bg-gradient-to-br from-blue-600/40 to-blue-500/20 shadow-lg' 
+                          : 'bg-gray-700/80 group-hover:bg-gray-600/80'
                       )}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className={cn(
+                        'w-5 h-5 transition-all duration-200',
+                        layer.selected ? 'text-blue-300' : 'text-gray-300 group-hover:text-white'
+                      )} />
                     </div>
                   </div>
 
                   {/* Name */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{layer.name}</p>
-                    <p className="text-xs text-gray-600 capitalize font-medium">{layer.type}</p>
+                    <p className="text-base font-bold text-white truncate">{layer.name}</p>
                   </div>
 
                   {/* Controls */}
@@ -339,13 +348,24 @@ export function LayersPanel() {
 
       {/* Footer */}
       {layers.length > 0 && (
-        <div className="p-4 border-t bg-gradient-to-r from-gray-50 to-gray-100">
-          <div className="text-xs text-gray-700">
-            <p className="font-bold">💡 Tips:</p>
-            <ul className="mt-1 space-y-1 list-disc list-inside font-medium">
-              <li>Click to select a layer</li>
-              <li>Hover to reveal controls</li>
-              <li>Use arrows to reorder</li>
+        <div className="p-4 border-t border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-750 backdrop-blur-sm">
+          <div className="text-sm text-gray-200">
+            <p className="font-bold text-white flex items-center gap-2">
+              <span className="text-lg">💡</span> Quick Tips
+            </p>
+            <ul className="mt-2.5 space-y-2 text-xs font-medium">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                Click to select
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                Hover for controls
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                Drag to reorder
+              </li>
             </ul>
           </div>
         </div>

@@ -27,6 +27,7 @@ import {
   Unlock,
   Eye,
   EyeOff,
+  Shapes,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -112,9 +113,15 @@ export function PropertiesPanel() {
 
   if (!selectedObject) {
     return (
-      <div className="w-80 bg-white border-l border-gray-200 shadow-sm p-6">
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <p className="text-sm font-medium text-gray-700">Select an element to edit its properties</p>
+      <div className="w-80 bg-gradient-to-b from-gray-900 to-gray-800 border-l border-gray-700/50 shadow-2xl p-6">
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
+            <Shapes className="w-8 h-8 text-gray-600" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-gray-200">No Selection</p>
+            <p className="text-sm text-gray-400 mt-2">Click any element on the canvas to edit its properties</p>
+          </div>
         </div>
       </div>
     );
@@ -123,65 +130,65 @@ export function PropertiesPanel() {
   const isText = selectedObject.type === 'text' || selectedObject.type === 'i-text' || selectedObject.type === 'textbox';
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 shadow-sm overflow-y-auto">
+    <div className="w-80 bg-gray-900 border-l border-gray-700 shadow-2xl overflow-y-auto">
       <div className="p-4 space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-50 to-teal-50 -m-4 mb-2 p-4">
-          <h3 className="font-bold text-lg capitalize text-gray-900">
-            {selectedObject.type} Properties
+        <div className="bg-gradient-to-r from-gray-800 to-gray-750 -m-4 mb-2 p-4 border-b border-gray-700/50 backdrop-blur-sm">
+          <h3 className="font-bold text-lg text-white">
+            Properties
           </h3>
-          <p className="text-xs text-gray-600 mt-1 font-medium">
-            Customize the selected element
+          <p className="text-sm text-gray-300 mt-1 font-medium">
+            Customize your selection
           </p>
         </div>
 
-        <Separator />
+        <Separator className="bg-gray-700" />
 
         {/* Position & Size */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-gray-900">Position & Size</h4>
+          <h4 className="text-sm font-bold text-white">Position & Size</h4>
           
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-700">X Position</Label>
+              <Label className="text-sm font-semibold text-gray-200">X Position</Label>
               <Input
                 type="number"
                 value={properties.left}
                 onChange={(e) => updateProperty('left', Number(e.target.value))}
-                className="h-8"
+                className="h-9 bg-gray-800 border-gray-600 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-700">Y Position</Label>
+              <Label className="text-sm font-semibold text-gray-200">Y Position</Label>
               <Input
                 type="number"
                 value={properties.top}
                 onChange={(e) => updateProperty('top', Number(e.target.value))}
-                className="h-8"
+                className="h-9 bg-gray-800 border-gray-600 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-700">Width</Label>
+              <Label className="text-sm font-semibold text-gray-200">Width</Label>
               <Input
                 type="number"
                 value={properties.width}
                 onChange={(e) => updateProperty('width', Number(e.target.value))}
-                className="h-8"
+                className="h-9 bg-gray-800 border-gray-600 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-gray-700">Height</Label>
+              <Label className="text-sm font-semibold text-gray-200">Height</Label>
               <Input
                 type="number"
                 value={properties.height}
                 onChange={(e) => updateProperty('height', Number(e.target.value))}
-                className="h-8"
+                className="h-9 bg-gray-800 border-gray-600 text-white"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">Rotation: {properties.angle}°</Label>
+            <Label className="text-sm font-semibold text-gray-200">Rotation: {properties.angle}°</Label>
             <Slider
               value={[properties.angle]}
               onValueChange={([value]) => updateProperty('angle', value)}
@@ -193,32 +200,32 @@ export function PropertiesPanel() {
           </div>
         </div>
 
-        <Separator />
+        <Separator className="bg-gray-700" />
 
         {/* Appearance */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-gray-900">Appearance</h4>
+          <h4 className="text-sm font-bold text-white">Appearance</h4>
           
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">Fill Color</Label>
+            <Label className="text-sm font-semibold text-gray-200">Fill Color</Label>
             <div className="flex gap-2">
               <Input
                 type="color"
                 value={properties.fill || '#000000'}
                 onChange={(e) => updateProperty('fill', e.target.value)}
-                className="w-12 h-8 p-1"
+                className="w-14 h-9 p-1 bg-gray-800 border-gray-600"
               />
               <Input
                 type="text"
                 value={properties.fill || '#000000'}
                 onChange={(e) => updateProperty('fill', e.target.value)}
-                className="h-8 flex-1"
+                className="h-9 flex-1 bg-gray-800 border-gray-600 text-white"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">Opacity: {Math.round(properties.opacity * 100)}%</Label>
+            <Label className="text-sm font-semibold text-gray-200">Opacity: {Math.round(properties.opacity * 100)}%</Label>
             <Slider
               value={[properties.opacity * 100]}
               onValueChange={([value]) => updateProperty('opacity', value / 100)}
@@ -230,30 +237,30 @@ export function PropertiesPanel() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">Stroke Color</Label>
+            <Label className="text-sm font-semibold text-gray-200">Stroke Color</Label>
             <div className="flex gap-2">
               <Input
                 type="color"
                 value={properties.stroke || '#000000'}
                 onChange={(e) => updateProperty('stroke', e.target.value)}
-                className="w-12 h-8 p-1"
+                className="w-14 h-9 p-1 bg-gray-800 border-gray-600"
               />
               <Input
                 type="text"
                 value={properties.stroke || '#000000'}
                 onChange={(e) => updateProperty('stroke', e.target.value)}
-                className="h-8 flex-1"
+                className="h-9 flex-1 bg-gray-800 border-gray-600 text-white"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">Stroke Width</Label>
+            <Label className="text-sm font-semibold text-gray-200">Stroke Width</Label>
             <Input
               type="number"
               value={properties.strokeWidth}
               onChange={(e) => updateProperty('strokeWidth', Number(e.target.value))}
-              className="h-8"
+              className="h-9 bg-gray-800 border-gray-600 text-white"
               min={0}
             />
           </div>
@@ -262,17 +269,17 @@ export function PropertiesPanel() {
         {/* Text Properties */}
         {isText && (
           <>
-            <Separator />
+            <Separator className="bg-gray-700" />
             <div className="space-y-4">
-              <h4 className="text-sm font-bold text-gray-900">Text</h4>
+              <h4 className="text-sm font-bold text-white">Text</h4>
               
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700">Font Family</Label>
+                <Label className="text-sm font-semibold text-gray-200">Font Family</Label>
                 <Select
                   value={properties.fontFamily}
                   onValueChange={(value) => updateProperty('fontFamily', value)}
                 >
-                  <SelectTrigger className="h-8">
+                  <SelectTrigger className="h-9 bg-gray-800 border-gray-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,19 +294,19 @@ export function PropertiesPanel() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700">Font Size</Label>
+                <Label className="text-sm font-semibold text-gray-200">Font Size</Label>
                 <Input
                   type="number"
                   value={properties.fontSize}
                   onChange={(e) => updateProperty('fontSize', Number(e.target.value))}
-                  className="h-8"
+                  className="h-9 bg-gray-800 border-gray-600 text-white"
                   min={8}
                   max={200}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700">Text Alignment</Label>
+                <Label className="text-sm font-semibold text-gray-200">Text Alignment</Label>
                 <div className="flex gap-1">
                   {[
                     { value: 'left', icon: AlignLeft },
@@ -321,7 +328,7 @@ export function PropertiesPanel() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700">Text Style</Label>
+                <Label className="text-sm font-semibold text-gray-200">Text Style</Label>
                 <div className="flex gap-1">
                   <Button
                     variant={properties.fontWeight === 'bold' ? 'default' : 'outline'}
@@ -329,9 +336,9 @@ export function PropertiesPanel() {
                     onClick={() =>
                       updateProperty('fontWeight', properties.fontWeight === 'bold' ? 'normal' : 'bold')
                     }
-                    className="flex-1 h-8 px-2"
+                    className="flex-1 h-9 px-2"
                   >
-                    <Bold className="w-4 h-4" />
+                    <Bold className="w-5 h-5" />
                   </Button>
                   <Button
                     variant={properties.fontStyle === 'italic' ? 'default' : 'outline'}
@@ -339,17 +346,17 @@ export function PropertiesPanel() {
                     onClick={() =>
                       updateProperty('fontStyle', properties.fontStyle === 'italic' ? 'normal' : 'italic')
                     }
-                    className="flex-1 h-8 px-2"
+                    className="flex-1 h-9 px-2"
                   >
-                    <Italic className="w-4 h-4" />
+                    <Italic className="w-5 h-5" />
                   </Button>
                   <Button
                     variant={properties.underline ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => updateProperty('underline', !properties.underline)}
-                    className="flex-1 h-8 px-2"
+                    className="flex-1 h-9 px-2"
                   >
-                    <Underline className="w-4 h-4" />
+                    <Underline className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
@@ -357,11 +364,11 @@ export function PropertiesPanel() {
           </>
         )}
 
-        <Separator />
+        <Separator className="bg-gray-700" />
 
         {/* Layer Controls */}
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-gray-900">Layer Controls</h4>
+          <h4 className="text-sm font-bold text-white">Layer Controls</h4>
           
           <div className="flex gap-2">
             <Button
