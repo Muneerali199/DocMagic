@@ -338,8 +338,8 @@ export function DiagramTemplates({ onSelectTemplate }: DiagramTemplatesProps) {
             <ul className="space-y-1 text-muted-foreground">
               <li>• <code>flowchart TD</code> - Top-down flowchart</li>
               <li>• <code>A[Rectangle]</code> - Rectangle node</li>
-              <li>• <code>B{"{Diamond}"}</code> - Decision node</li>
-              <li>• <code>A --> B</code> - Arrow connection</li>
+              <li>• <code>B{'{'}&quot;Diamond&quot;{'}'}</code> - Decision node</li>
+              <li>• <code>A --{'>'} B</code> - Arrow connection</li>
             </ul>
           </div>
           <div>
