@@ -12,44 +12,23 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fabric } from 'fabric';
+import { textPresets as templateTextPresets, colorPalettes as templateColorPalettes } from '@/lib/template-data';
 
-// Text Presets
+// Build a combined text presets list from shared template data
 const textPresets = [
-  { id: 'heading', name: 'Heading', fontSize: 48, fontWeight: 'bold', color: '#1a1a1a' },
-  { id: 'subheading', name: 'Subheading', fontSize: 32, fontWeight: '600', color: '#333333' },
-  { id: 'body', name: 'Body Text', fontSize: 16, fontWeight: 'normal', color: '#666666' },
-  { id: 'caption', name: 'Caption', fontSize: 12, fontWeight: 'normal', color: '#999999' },
-  { id: 'quote', name: 'Quote', fontSize: 24, fontWeight: 'normal', color: '#555555', fontStyle: 'italic' },
-];
+  ...(templateTextPresets.headings || []),
+  ...(templateTextPresets.body || []),
+  ...(templateTextPresets.emphasis || []),
+].map((p: any, idx: number) => ({
+  id: p.name?.toLowerCase().replace(/\s+/g, '-') || `preset-${idx}`,
+  name: p.name || `Preset ${idx + 1}`,
+  fontSize: p.size || p.fontSize || 18,
+  fontWeight: p.weight || 'normal',
+  color: p.color || '#111827',
+}));
 
-// Color Palettes
-const colorPalettes = [
-  {
-    id: 'modern',
-    name: 'Modern',
-    colors: ['#1a1a1a', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-  },
-  {
-    id: 'pastel',
-    name: 'Pastel',
-    colors: ['#fecaca', '#fed7aa', '#fef3c7', '#d9f99d', '#a7f3d0'],
-  },
-  {
-    id: 'vibrant',
-    name: 'Vibrant',
-    colors: ['#ec4899', '#f97316', '#eab308', '#22c55e', '#3b82f6'],
-  },
-  {
-    id: 'monochrome',
-    name: 'Monochrome',
-    colors: ['#000000', '#404040', '#808080', '#c0c0c0', '#ffffff'],
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset',
-    colors: ['#7c2d12', '#ea580c', '#fb923c', '#fbbf24', '#fde047'],
-  },
-];
+// Flatten color palettes
+const colorPalettes = Object.values(templateColorPalettes).flat();
 
 // Shape Library
 const shapeLibrary = [
