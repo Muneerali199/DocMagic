@@ -17,9 +17,37 @@ export default function TemplatesEnhancedPage() {
     if (template) {
       // Navigate to editor or create document from template
       toast.success(`Using template: ${template.name}`);
-      // TODO: Navigate to appropriate editor based on template category
-      // router.push(`/presentation/create?template=${templateId}`);
-      console.log('Selected template:', template);
+      // navigate based on template.type (presentation, resume, letter, cv, etc.)
+      try {
+        let path = '';
+        const tType = (template as any).type as string | undefined;
+        switch (tType) {
+          case 'presentation':
+            // prefer dedicated presentation create page if it exists, otherwise fallback to editor
+            path = `/presentation/create?template=${encodeURIComponent(templateId)}`;
+            break;
+          case 'resume':
+            path = `/resume/create?template=${encodeURIComponent(templateId)}`;
+            break;
+          case 'letter':
+            path = `/letter/create?template=${encodeURIComponent(templateId)}`;
+            break;
+          case 'cv':
+            path = `/resume/create?template=${encodeURIComponent(templateId)}&type=cv`;
+            break;
+          default:
+            // fallback to the unified editor
+            path = `/editor?template=${encodeURIComponent(
+              templateId
+            )}&type=${encodeURIComponent(tType ?? 'presentation')}`;
+        }
+
+        // perform navigation
+        router.push(path);
+      } catch (err) {
+        console.error('Navigation error:', err);
+        toast.error('Could not open template editor. Please try again.');
+      }
     }
   };
 
