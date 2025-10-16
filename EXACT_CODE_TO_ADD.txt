@@ -1,0 +1,50 @@
+====================================
+STEP 1: ADD THIS IMPORT (Line ~17)
+====================================
+
+import { UrlInputSection } from "@/components/presentation/url-input-section";
+
+
+====================================
+STEP 2: REPLACE THE TEXTAREA SECTION
+====================================
+
+REPLACE THIS ENTIRE BLOCK (lines ~1008-1021):
+
+              <div className="space-y-2">
+                <Label htmlFor="prompt" className="text-sm font-medium flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-yellow-500" />
+                  Describe your presentation
+                </Label>
+                <Textarea
+                  id="prompt"
+                  placeholder="E.g., Create a startup pitch deck for an AI-powered fitness app targeting millennials, including market analysis, product features, business model, and funding requirements"
+                  className="min-h-[140px] text-base glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  disabled={isGenerating}
+                />
+              </div>
+
+WITH THIS:
+
+              <UrlInputSection
+                prompt={prompt}
+                setPrompt={setPrompt}
+                isGenerating={isGenerating}
+              />
+
+
+====================================
+THAT'S ALL! SAVE AND TEST
+====================================
+
+The new component handles:
+- Text input (original functionality)
+- URL input (new feature)
+- Content extraction
+- Loading states
+- Error handling
+- Success messages
+
+Everything is styled to match your existing design!
