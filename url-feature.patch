@@ -1,0 +1,36 @@
+--- a/components/presentation/presentation-generator.tsx
++++ b/components/presentation/presentation-generator.tsx
+@@ -11,6 +11,7 @@ import { PresentationPreview } from "@/components/presentation/presentation-pre
+ import { AIPresentationAssistant } from "@/components/presentation/ai-presentation-assistant";
+ import { PresentationTemplates } from "@/components/presentation/presentation-templates";
+ import { SlideOutlinePreview } from "@/components/presentation/slide-outline-preview";
++import { UrlInputSection } from "@/components/presentation/url-input-section";
+ import { useToast } from "@/hooks/use-toast";
+ import { useUser } from "@/hooks/use-user";
+ import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, Wand2, Sliders as Slides, Palette, Eye, ArrowRight, CheckCircle, Play, Brain, Zap, Star, Share2, Copy, Globe, ExternalLink, Mail, MessageCircle, Twitter, Linkedin, Facebook, Send, Link as LinkIcon } from "lucide-react";
+@@ -1005,18 +1006,11 @@ export function PresentationGenerator() {
+                 </div>
+               </div>
+ 
+-              <div className="space-y-2">
+-                <Label htmlFor="prompt" className="text-sm font-medium flex items-center gap-2">
+-                  <Sparkles className="h-4 w-4 text-yellow-500" />
+-                  Describe your presentation
+-                </Label>
+-                <Textarea
+-                  id="prompt"
+-                  placeholder="E.g., Create a startup pitch deck for an AI-powered fitness app targeting millennials, including market analysis, product features, business model, and funding requirements"
+-                  className="min-h-[140px] text-base glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
+-                  value={prompt}
+-                  onChange={(e) => setPrompt(e.target.value)}
+-                  disabled={isGenerating}
+-                />
+-              </div>
++              <UrlInputSection
++                prompt={prompt}
++                setPrompt={setPrompt}
++                isGenerating={isGenerating}
++              />
+ 
+               <Button
+                 onClick={generateSlideOutlines}
