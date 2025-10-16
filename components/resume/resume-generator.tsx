@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { ResumeTemplates } from "@/components/resume/resume-templates";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
+import { LinkedInImport } from "@/components/resume/linkedin-import";
 import { useToast } from "@/hooks/use-toast";
 import {
   File as FileIcon,
@@ -134,6 +135,45 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
   const handleGuidedResumeGenerated = (resume: any) => {
     setResumeData(resume);
+  };
+
+  const handleLinkedInImport = (profile: any) => {
+    console.log('LinkedIn profile received:', profile);
+    
+    // Convert LinkedIn profile to resume format
+    // Handle both 'name' and 'fullName' field
+    const fullName = profile.fullName || profile.name || "";
+    
+    const resume = {
+      name: fullName,
+      email: profile.email || "",
+      phone: profile.phone || "",
+      location: profile.location || "",
+      website: profile.website || profile.profileUrl || "",
+      headline: profile.headline || "",
+      summary: profile.summary || "",
+      experience: profile.experience || [],
+      education: profile.education || [],
+      skills: profile.skills || [],
+      certifications: profile.certifications || [],
+      languages: profile.languages || [],
+    };
+
+    console.log('Converted resume data:', resume);
+
+    setResumeData(resume);
+    setName(fullName);
+    setEmail(profile.email || "");
+
+    // Log to verify state was updated
+    setTimeout(() => {
+      console.log('Resume data state after update:', resume);
+    }, 100);
+
+    toast({
+      title: "LinkedIn data imported! ✨",
+      description: "Your profile has been converted to resume format. Review and customize as needed.",
+    });
   };
 
   // Download functions
@@ -354,6 +394,14 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                 <span className="sm:hidden">Quick</span>
               </TabsTrigger>
               <TabsTrigger
+                value="linkedin"
+                className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-sm sm:text-base min-w-[140px] justify-center"
+              >
+                <Linkedin className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">LinkedIn Import</span>
+                <span className="sm:hidden">LinkedIn</span>
+              </TabsTrigger>
+              <TabsTrigger
                 value="templates"
                 className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-sm sm:text-base min-w-[140px] justify-center"
               >
@@ -363,6 +411,10 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <TabsContent value="linkedin" className="space-y-6 pt-4">
+            <LinkedInImport onImport={handleLinkedInImport} />
+          </TabsContent>
 
           <TabsContent value="guided" className="space-y-6 pt-4">
             {/* Guided Resume Builder Content */}
