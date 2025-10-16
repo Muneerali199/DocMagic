@@ -464,6 +464,30 @@ export function WebsiteBuilder() {
                       </div>
                     </div>
                   )}
+
+                  {/* Generated Images */}
+                  {websiteCode.assets.images && websiteCode.assets.images.length > 0 && (
+                    <div className="glass-effect rounded-xl p-6 border-2 border-blue-200/30 backdrop-blur-lg">
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <Eye className="h-5 w-5 text-blue-500" />
+                        Generated Images ({websiteCode.assets.images.length})
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {websiteCode.assets.images.map((imageUrl, index) => (
+                          <div key={index} className="group relative">
+                            <img
+                              src={imageUrl}
+                              alt={`Generated image ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg shadow-md ring-2 ring-white/20 group-hover:scale-105 transition-transform"
+                            />
+                            <div className="text-xs mt-1 text-center font-semibold text-muted-foreground">
+                              Image {index + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
