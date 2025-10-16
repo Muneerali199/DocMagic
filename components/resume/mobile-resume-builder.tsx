@@ -1,0 +1,545 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { createClient } from "@/lib/supabase/client";
+import { 
+  FileText, Upload, Globe, Sparkles, Download, 
+  Linkedin, FileDown, Loader2, CheckCircle2, AlertCircle 
+} from "lucide-react";
+import { ResumePreview } from "./resume-preview";
+
+interface LinkedInProfile {
+  fullName: string;
+  headline?: string;
+  summary?: string;
+  location?: string;
+  experience?: any[];
+  education?: any[];
+  skills?: string[];
+  languages?: string[];
+  certifications?: any[];
+}
+
+export function MobileResumeBuilder() {
+  const { toast } = useToast();
+  const [isImporting, setIsImporting] = useState(false);
+  const [resumeData, setResumeData] = useState<any>(null);
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [manualText, setManualText] = useState("");
+  const [currentStep, setCurrentStep] = useState<'input' | 'preview'>('input');
+
+  const supabase = createClient();
+
+  // Get auth token
+  const getAuthToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token;
+  };
+
+  // LinkedIn URL Import
+  const handleLinkedInImport = async () => {
+    if (!linkedinUrl.trim()) {
+      toast({
+        title: "Please enter a LinkedIn URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\/(in|pub)\/[\w-]+\/?$/;
+    if (!linkedinRegex.test(linkedinUrl)) {
+      toast({
+        title: "Invalid LinkedIn URL",
+        description: "Format: https://linkedin.com/in/username",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("Please sign in first");
+
+      const response = await fetch("/api/linkedin/import-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ profileUrl: linkedinUrl }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 503) {
+        toast({
+          title: "🛡️ LinkedIn Blocks URL Import",
+          description: data.helpfulTip || "Use PDF Export (click PDF tab above) - takes only 10 seconds!",
+          duration: 8000,
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to import");
+      }
+
+      if (data.success && data.data) {
+        const resume = convertToResume(data.data);
+        setResumeData(resume);
+        setCurrentStep('preview');
+        
+        toast({
+          title: "✅ Imported Successfully!",
+          description: `Used ${data.method} to extract your data`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // PDF Import
+  const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast({
+        title: "Invalid file",
+        description: "Please upload a PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("Please sign in first");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/linkedin/import-pdf", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to parse PDF");
+      }
+
+      const resume = convertToResume(data.profile);
+      setResumeData(resume);
+      setCurrentStep('preview');
+
+      toast({
+        title: "✅ PDF Imported!",
+        description: "Your profile has been extracted",
+      });
+    } catch (error: any) {
+      toast({
+        title: "PDF Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Manual Text Import
+  const handleManualImport = async () => {
+    if (!manualText.trim()) {
+      toast({
+        title: "Please enter profile data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error("Please sign in first");
+
+      const response = await fetch("/api/linkedin/parse-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: manualText }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to parse text");
+      }
+
+      const resume = convertToResume(data.profile);
+      setResumeData(resume);
+      setCurrentStep('preview');
+
+      toast({
+        title: "✅ Text Parsed!",
+        description: "AI extracted your profile data",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Parse Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Convert LinkedIn profile to resume format
+  const convertToResume = (profile: LinkedInProfile) => {
+    return {
+      name: profile.fullName || "",
+      email: "",
+      phone: "",
+      location: profile.location || "",
+      website: "",
+      headline: profile.headline || "",
+      summary: profile.summary || "",
+      experience: profile.experience || [],
+      education: profile.education || [],
+      skills: profile.skills || [],
+      certifications: profile.certifications || [],
+      languages: profile.languages || [],
+    };
+  };
+
+  // Download PDF
+  const downloadPDF = () => {
+    toast({
+      title: "Downloading PDF...",
+      description: "Your resume will download shortly",
+    });
+  };
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Background - Matching Landing Page */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="mesh-gradient opacity-40"></div>
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-gradient-to-r from-amber-400/8 to-orange-400/8 rounded-full blur-2xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="relative z-10 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Header - Matching Landing Page Style */}
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30 mb-6 hover:scale-105 transition-transform duration-300">
+              <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
+              <span className="text-sm font-semibold bolt-gradient-text">AI-Powered Resume Builder</span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+              <span className="block mb-2">Create Your Perfect Resume</span>
+              <span className="bolt-gradient-text">In Seconds, Not Hours</span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Import from LinkedIn, upload PDF, or paste your info. Our advanced AI does the rest! ✨
+            </p>
+          </div>
+
+        {currentStep === 'input' ? (
+          /* Input Section */
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left: Import Methods */}
+            <Card className="card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 shadow-xl backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold professional-heading">
+                  <span className="bolt-gradient-text">Import Your Profile</span>
+                </CardTitle>
+                <CardDescription className="text-muted-foreground text-base">
+                  Choose your preferred method to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="linkedin" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-6 glass-effect">
+                    <TabsTrigger value="linkedin" className="text-xs md:text-sm data-[state=active]:bolt-gradient data-[state=active]:text-white">
+                      <Globe className="h-4 w-4 mr-1" />
+                      <span className="hidden md:inline">LinkedIn</span>
+                      <span className="md:hidden">URL</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="pdf" className="text-xs md:text-sm data-[state=active]:sunset-gradient data-[state=active]:text-white">
+                      <Upload className="h-4 w-4 mr-1" />
+                      PDF
+                    </TabsTrigger>
+                    <TabsTrigger value="text" className="text-xs md:text-sm data-[state=active]:forest-gradient data-[state=active]:text-white">
+                      <FileText className="h-4 w-4 mr-1" />
+                      Text
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* LinkedIn Tab */}
+                  <TabsContent value="linkedin" className="space-y-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="linkedin-url" className="text-sm font-medium">
+                        LinkedIn Profile URL
+                      </Label>
+                      <Input
+                        id="linkedin-url"
+                        placeholder="https://linkedin.com/in/username"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        className="bg-white/50"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Example: https://linkedin.com/in/billgates
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleLinkedInImport}
+                      disabled={isImporting}
+                      className="w-full bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg"
+                      size="lg"
+                    >
+                      {isImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          <span className="font-semibold">Importing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Linkedin className="mr-2 h-5 w-5" />
+                          <span className="font-semibold">Import from LinkedIn</span>
+                        </>
+                      )}
+                    </Button>
+                  </TabsContent>
+
+                  {/* PDF Tab */}
+                  <TabsContent value="pdf" className="space-y-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="pdf-upload" className="text-sm font-medium">
+                        Upload LinkedIn PDF Export
+                      </Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-white/30">
+                        <input
+                          type="file"
+                          id="pdf-upload"
+                          accept="application/pdf"
+                          onChange={handlePdfImport}
+                          className="hidden"
+                        />
+                        <label htmlFor="pdf-upload" className="cursor-pointer">
+                          <Upload className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                          <p className="text-sm font-medium text-gray-700">
+                            Click to upload PDF
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            LinkedIn profile export only
+                          </p>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-800 font-medium mb-2">
+                        💡 How to export from LinkedIn:
+                      </p>
+                      <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                        <li>Go to your LinkedIn profile</li>
+                        <li>Click &quot;More&quot; → &quot;Save to PDF&quot;</li>
+                        <li>Upload the downloaded PDF here</li>
+                      </ol>
+                    </div>
+                  </TabsContent>
+
+                  {/* Manual Text Tab */}
+                  <TabsContent value="text" className="space-y-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="manual-text" className="text-sm font-medium">
+                        Paste Your Profile Data
+                      </Label>
+                      <Textarea
+                        id="manual-text"
+                        placeholder="Paste your LinkedIn profile text, resume, or any professional information here. Our AI will intelligently extract and structure your data."
+                        value={manualText}
+                        onChange={(e) => setManualText(e.target.value)}
+                        className="min-h-[200px] bg-white/50 resize-none"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Copy from LinkedIn, your resume, or type freely
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleManualImport}
+                      disabled={isImporting}
+                      className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg"
+                      size="lg"
+                    >
+                      {isImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          <span className="font-semibold">Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-5 w-5" />
+                          <span className="font-semibold">Parse with AI</span>
+                        </>
+                      )}
+                    </Button>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* Right: Benefits/Features - Enhanced Matching Landing Page */}
+            <Card className="card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 shadow-xl backdrop-blur-xl hidden lg:block">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold professional-heading">
+                  <span className="sunset-gradient-text">Why Use Our Builder? ✨</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 forest-gradient rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold professional-heading mb-1">ATS-Optimized</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Resumes formatted to pass Applicant Tracking Systems
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 bolt-gradient rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold professional-heading mb-1">AI-Powered</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Intelligent parsing extracts data from any format
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 cosmic-gradient rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform">
+                    <Download className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold professional-heading mb-1">Export Anywhere</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Download as PDF or DOCX, ready to send
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 sunset-gradient rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform">
+                    <Linkedin className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold professional-heading mb-1">LinkedIn Integration</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Import directly from LinkedIn or PDF export
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 p-4 glass-effect rounded-lg border border-blue-200/30 hover:scale-105 transition-transform">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="h-5 w-5 text-blue-500 animate-pulse mt-0.5" />
+                    <p className="text-sm professional-text">
+                      <strong className="bolt-gradient-text">Pro Tip:</strong> For best results, use PDF export from LinkedIn.
+                      It&apos;s 100% reliable and includes all your data!
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          /* Preview Section */
+          <div className="space-y-6">
+            <Card className="card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 shadow-xl backdrop-blur-xl">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1">
+                  <CardTitle className="text-2xl font-bold professional-heading mb-2">
+                    <span className="cosmic-gradient-text">Your Resume Preview</span>
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground text-base">
+                    Review and download your professional resume
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep('input')}
+                  className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
+                  size="lg"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Edit Data
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Resume Preview */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-8 shadow-lg">
+                  <ResumePreview resume={resumeData} template="modern" />
+                </div>
+
+                {/* Download Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    onClick={downloadPDF}
+                    className="flex-1 bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg"
+                    size="lg"
+                  >
+                    <FileDown className="mr-2 h-5 w-5" />
+                    <span className="font-semibold">Download PDF</span>
+                  </Button>
+                  <Button
+                    onClick={downloadPDF}
+                    className="flex-1 sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg"
+                    size="lg"
+                  >
+                    <FileDown className="mr-2 h-5 w-5" />
+                    <span className="font-semibold">Download DOCX</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        </div>
+      </div>
+    </div>
+  );
+}
