@@ -1,0 +1,222 @@
+/* Content script styles for coding platforms */
+
+#docmagic-helper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+}
+
+.docmagic-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3B82F6, #10B981);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transition: all 0.3s;
+}
+
+.docmagic-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.docmagic-icon {
+    font-size: 1.25rem;
+}
+
+/* Modal Styles */
+.docmagic-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.docmagic-modal-content {
+    background: white;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.docmagic-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #3B82F6, #10B981);
+    color: white;
+}
+
+.docmagic-modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.docmagic-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.docmagic-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.docmagic-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: calc(80vh - 100px);
+}
+
+.docmagic-modal-body h3 {
+    margin: 0 0 1rem 0;
+    color: #1F2937;
+    font-size: 1.125rem;
+}
+
+.docmagic-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.docmagic-action-btn {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 2px solid #E5E7EB;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+}
+
+.docmagic-action-btn:hover {
+    border-color: #3B82F6;
+    background: #EFF6FF;
+    transform: translateY(-2px);
+}
+
+.docmagic-result {
+    background: #F3F4F6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 100px;
+}
+
+.docmagic-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #6B7280;
+}
+
+.docmagic-error {
+    text-align: center;
+    padding: 1rem;
+    color: #EF4444;
+    background: #FEE2E2;
+    border-radius: 0.375rem;
+}
+
+.docmagic-hint,
+.docmagic-approach,
+.docmagic-solution,
+.docmagic-complexity {
+    line-height: 1.6;
+}
+
+.docmagic-hint h4,
+.docmagic-approach h4,
+.docmagic-solution h4,
+.docmagic-complexity h4 {
+    margin: 0 0 0.75rem 0;
+    color: #3B82F6;
+    font-size: 1rem;
+}
+
+.docmagic-solution pre {
+    background: #1F2937;
+    color: #10B981;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.docmagic-solution code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.docmagic-copy-btn {
+    padding: 0.5rem 1rem;
+    background: #3B82F6;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.docmagic-copy-btn:hover {
+    background: #2563EB;
+}
+
+.docmagic-complexity p {
+    margin: 0.5rem 0;
+}
+
+.docmagic-complexity strong {
+    color: #1F2937;
+}
