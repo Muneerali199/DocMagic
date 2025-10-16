@@ -12,19 +12,24 @@ import { PresentationPreview } from "@/components/presentation/presentation-prev
 import { AIPresentationAssistant } from "@/components/presentation/ai-presentation-assistant";
 import { PresentationTemplates } from "@/components/presentation/presentation-templates";
 import { SlideOutlinePreview } from "@/components/presentation/slide-outline-preview";
+import { UrlInputSection } from "@/components/presentation/url-input-section";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
-import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, Wand2, Sliders as Slides, Palette, Eye, ArrowRight, CheckCircle, Play, Brain, Zap, Star, Share2, Copy, Globe, ExternalLink, Mail, MessageCircle, Twitter, Linkedin, Facebook, Send } from "lucide-react";
+import { Loader2, Sparkles, Presentation as LayoutPresentation, Lock, Download, Wand2, Sliders as Slides, Palette, Eye, ArrowRight, CheckCircle, Play, Brain, Zap, Star, Share2, Copy, Globe, ExternalLink, Mail, MessageCircle, Twitter, Linkedin, Facebook, Send, Link as LinkIcon } from "lucide-react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { createClient } from "@/lib/supabase/client";
 import type PptxGenJS from 'pptxgenjs';
 
 type GenerationStep = 'input' | 'outline' | 'theme' | 'generated';
+type InputMode = 'text' | 'url';
 
 export function PresentationGenerator() {
   const [prompt, setPrompt] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [inputMode, setInputMode] = useState<InputMode>('text');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [slides, setSlides] = useState<any[]>([]);
   const [slideOutlines, setSlideOutlines] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("modern-business");
@@ -37,6 +42,7 @@ export function PresentationGenerator() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStage, setGenerationStage] = useState('');
+  const [extractedContent, setExtractedContent] = useState<string>('');
   const { toast } = useToast();
   const { user } = useUser();
   const supabase = createClient();
@@ -44,6 +50,56 @@ export function PresentationGenerator() {
   const MAX_FREE_PAGES = 8;
   const MAX_PRO_PAGES = 100;
   const isPro = false; // This would be connected to your auth/subscription system
+
+  const fetchUrlContent = async () => {
+    if (!websiteUrl.trim()) {
+      toast({
+        title: "Please enter a URL",
+        description: "Enter a valid website URL to extract content from",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingUrl(true);
+    setGenerationStage('🌐 Fetching content from URL...');
+
+    try {
+      const response = await fetch('/api/fetch-url-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: websiteUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch URL content');
+      }
+
+      const data = await response.json();
+      
+      // Set the extracted content as the prompt
+      const contentSummary = `Create a presentation based on this content from ${data.title}:\n\n${data.content}`;
+      setExtractedContent(data.content);
+      setPrompt(contentSummary);
+
+      toast({
+        title: "✅ Content Extracted Successfully!",
+        description: `Extracted ${data.wordCount} words from "${data.title}". Ready to generate presentation!`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to fetch URL",
+        description: error.message || "Could not extract content from the URL. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingUrl(false);
+      setGenerationStage('');
+    }
+  };
 
   const generateSlideOutlines = async () => {
     if (!prompt.trim()) {
@@ -647,6 +703,7 @@ export function PresentationGenerator() {
       });
     } finally {
       setIsExporting(false);
+      resetToInput();
     }
   };
 
@@ -655,6 +712,8 @@ export function PresentationGenerator() {
     setSlideOutlines([]);
     setSlides([]);
     setPrompt("");
+    setWebsiteUrl("");
+    setExtractedContent("");
     setShareUrl('');
     setPresentationId('');
   };
@@ -805,6 +864,65 @@ export function PresentationGenerator() {
     setCurrentStep('theme');
   };
 
+  const applyNewThemeToSlides = async () => {
+    if (!slides.length || !slideOutlines.length) return;
+    
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStage('🎨 Applying new theme...');
+
+    try {
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 300);
+
+      const response = await fetch('/api/generate/presentation-full', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          outlines: slideOutlines, 
+          template: selectedTemplate,
+          prompt 
+        }),
+      });
+
+      if (!response.ok) {
+        clearInterval(progressInterval);
+        throw new Error('Failed to apply new theme');
+      }
+
+      const data = await response.json();
+      
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+      setGenerationStage('✅ Theme Applied!');
+      
+      setSlides(data.slides);
+      setCurrentStep('generated');
+
+      toast({
+        title: "🎨 Theme Applied Successfully!",
+        description: `Your presentation now uses the ${selectedTemplate} theme!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply new theme. Please try again.",
+        variant: "destructive",
+      });
+      setCurrentStep('generated');
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress(0);
+      setGenerationStage('');
+    }
+  };
+
   const getTemplateBackground = (template: string) => {
     const backgrounds = {
       'modern-business': { 
@@ -935,7 +1053,7 @@ export function PresentationGenerator() {
                     value={pageCount}
                     onChange={(e) => setPageCount(Math.min(parseInt(e.target.value) || 1, isPro ? MAX_PRO_PAGES : MAX_FREE_PAGES))}
                     className="w-24 glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
-                    disabled={isGenerating}
+                    disabled={isGenerating || isFetchingUrl}
                   />
                   {!isPro && (
                     <div className="flex items-center text-xs text-muted-foreground glass-effect px-3 py-2 rounded-full">
@@ -947,24 +1065,15 @@ export function PresentationGenerator() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="prompt" className="text-sm font-medium flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-yellow-500" />
-                  Describe your presentation
-                </Label>
-                <Textarea
-                  id="prompt"
-                  placeholder="E.g., Create a startup pitch deck for an AI-powered fitness app targeting millennials, including market analysis, product features, business model, and funding requirements"
-                  className="min-h-[140px] text-base glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isGenerating}
-                />
-              </div>
+              <UrlInputSection
+                prompt={prompt}
+                setPrompt={setPrompt}
+                isGenerating={isGenerating}
+              />
 
               <Button
                 onClick={generateSlideOutlines}
-                disabled={isGenerating || !prompt.trim()}
+                disabled={isGenerating || isFetchingUrl || !prompt.trim()}
                 className="w-full bolt-gradient text-white font-semibold py-4 rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden"
               >
                 <div className="flex items-center justify-center gap-2 relative z-10">
@@ -1105,26 +1214,26 @@ export function PresentationGenerator() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button
-              onClick={() => setCurrentStep('outline')}
+              onClick={() => setCurrentStep(slides.length > 0 ? 'generated' : 'outline')}
               variant="outline"
               className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
             >
               ← Back to Structure
             </Button>
             <Button
-              onClick={generateFullPresentation}
+              onClick={slides.length > 0 ? applyNewThemeToSlides : generateFullPresentation}
               disabled={isGenerating}
               className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 px-8 py-3"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating your presentation...
+                  {slides.length > 0 ? 'Applying theme...' : 'Creating your presentation...'}
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Generate Professional Presentation
+                  {slides.length > 0 ? 'Apply This Theme' : 'Generate Professional Presentation'}
                 </>
               )}
             </Button>
