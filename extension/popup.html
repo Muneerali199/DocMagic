@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocMagic Interview Prep</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">📚</span>
+                <h1>DocMagic Prep</h1>
+            </div>
+            <div class="tagline">AI-Powered Interview Assistant</div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="dsa">DSA Problems</button>
+            <button class="tab" data-tab="interview">Interview Prep</button>
+            <button class="tab" data-tab="resume">Resume Tips</button>
+        </nav>
+
+        <!-- DSA Tab -->
+        <div id="dsa-tab" class="tab-content active">
+            <div class="section">
+                <h2>🧩 DSA Problem Solver</h2>
+                <p class="description">Get AI-powered solutions and explanations for any DSA problem</p>
+                
+                <div class="input-group">
+                    <label for="dsa-problem">Paste Problem Statement:</label>
+                    <textarea id="dsa-problem" placeholder="Paste your DSA problem here...&#10;&#10;Example: Given an array of integers, find two numbers that add up to a target sum." rows="6"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="dsa-language">Programming Language:</label>
+                    <select id="dsa-language">
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="csharp">C#</option>
+                    </select>
+                </div>
+
+                <button id="solve-dsa" class="btn btn-primary">
+                    <span class="btn-icon">🚀</span>
+                    Solve with AI
+                </button>
+
+                <div id="dsa-result" class="result hidden">
+                    <h3>Solution:</h3>
+                    <div class="solution-tabs">
+                        <button class="solution-tab active" data-solution="approach">Approach</button>
+                        <button class="solution-tab" data-solution="code">Code</button>
+                        <button class="solution-tab" data-solution="complexity">Complexity</button>
+                    </div>
+                    <div id="solution-content" class="solution-content"></div>
+                    <button id="copy-solution" class="btn btn-secondary">
+                        <span class="btn-icon">📋</span>
+                        Copy Solution
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interview Tab -->
+        <div id="interview-tab" class="tab-content">
+            <div class="section">
+                <h2>💼 Interview Preparation</h2>
+                <p class="description">Practice with AI-generated interview questions</p>
+                
+                <div class="input-group">
+                    <label for="interview-role">Job Role:</label>
+                    <select id="interview-role">
+                        <option value="frontend">Frontend Developer</option>
+                        <option value="backend">Backend Developer</option>
+                        <option value="fullstack">Full Stack Developer</option>
+                        <option value="devops">DevOps Engineer</option>
+                        <option value="data-science">Data Scientist</option>
+                        <option value="ml-engineer">ML Engineer</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="interview-level">Experience Level:</label>
+                    <select id="interview-level">
+                        <option value="entry">Entry Level (0-2 years)</option>
+                        <option value="mid">Mid Level (2-5 years)</option>
+                        <option value="senior">Senior Level (5+ years)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="interview-company">Target Company (Optional):</label>
+                    <input type="text" id="interview-company" placeholder="e.g., Google, Amazon, Microsoft">
+                </div>
+
+                <button id="generate-questions" class="btn btn-primary">
+                    <span class="btn-icon">❓</span>
+                    Generate Questions
+                </button>
+
+                <div id="interview-result" class="result hidden">
+                    <h3>Interview Questions:</h3>
+                    <div id="questions-list"></div>
+                    <button id="get-more-questions" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        Get More Questions
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resume Tab -->
+        <div id="resume-tab" class="tab-content">
+            <div class="section">
+                <h2>📄 Resume & Career Tips</h2>
+                <p class="description">Get personalized resume and career advice</p>
+                
+                <div class="quick-actions">
+                    <button class="action-card" data-action="resume-review">
+                        <span class="action-icon">✍️</span>
+                        <h3>Resume Review</h3>
+                        <p>Get AI feedback on your resume</p>
+                    </button>
+                    
+                    <button class="action-card" data-action="cover-letter">
+                        <span class="action-icon">📝</span>
+                        <h3>Cover Letter</h3>
+                        <p>Generate tailored cover letters</p>
+                    </button>
+                    
+                    <button class="action-card" data-action="linkedin">
+                        <span class="action-icon">💼</span>
+                        <h3>LinkedIn Tips</h3>
+                        <p>Optimize your profile</p>
+                    </button>
+                    
+                    <button class="action-card" data-action="salary">
+                        <span class="action-icon">💰</span>
+                        <h3>Salary Guide</h3>
+                        <p>Know your market value</p>
+                    </button>
+                </div>
+
+                <div id="resume-result" class="result hidden">
+                    <h3 id="resume-result-title">Result:</h3>
+                    <div id="resume-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-value" id="problems-solved">0</span>
+                    <span class="stat-label">Problems Solved</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="questions-practiced">0</span>
+                    <span class="stat-label">Questions Practiced</span>
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="https://docmagic.com" target="_blank">Powered by DocMagic</a>
+                <span>•</span>
+                <a href="#" id="settings-link">Settings</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>AI is thinking...</p>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
