@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "DocMagic Interview & DSA Prep",
+  "version": "1.0.0",
+  "description": "AI-powered interview preparation, DSA problem solver, and job placement assistant",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://leetcode.com/*",
+    "https://www.hackerrank.com/*",
+    "https://codeforces.com/*",
+    "https://www.geeksforgeeks.org/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://leetcode.com/*",
+        "https://www.hackerrank.com/*",
+        "https://codeforces.com/*",
+        "https://www.geeksforgeeks.org/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html", "styles.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
