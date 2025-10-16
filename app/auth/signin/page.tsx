@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getActivityDescription } from "@/lib/auth-utils";
 import {
   Sparkles,
   Zap,
@@ -19,11 +18,11 @@ import {
   Lock,
   ArrowRight,
   Wand2,
+  Shield,
   Check,
   Loader2,
   MousePointer2,
   Fingerprint,
-  Shield,
 } from "lucide-react";
 
 export default function SignIn() {
@@ -33,27 +32,13 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [redirectTo, setRedirectTo] = useState<string>("/");
-  const [activity, setActivity] = useState<string>("");
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
 
-  // Animation mount effect and URL parameter handling
+  // Animation mount effect
   useEffect(() => {
     setMounted(true);
-
-    // Get redirect parameters from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const redirectParam = urlParams.get('redirectTo');
-    const activityParam = urlParams.get('activity');
-
-    if (redirectParam) {
-      setRedirectTo(decodeURIComponent(redirectParam));
-    }
-    if (activityParam) {
-      setActivity(decodeURIComponent(activityParam));
-    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,14 +56,12 @@ export default function SignIn() {
       }
 
       if (data.user) {
-        const activityDescription = activity ? ` You can now ${activity.replace('_', ' ')}.` : '';
         toast({
           title: "Welcome back! ✨",
-          description: `You've successfully signed in to DocMagic.${activityDescription}`,
+          description: "You've successfully signed in to DocMagic.",
         });
 
-        // Redirect to the intended page or home
-        router.push(redirectTo);
+        router.push("/");
         router.refresh();
       }
     } catch (error: any) {
@@ -92,6 +75,12 @@ export default function SignIn() {
       setIsLoading(false);
     }
   };
+
+  const isFormValid =
+    email.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+    password.trim() &&
+    password.length >= 6;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
@@ -151,12 +140,12 @@ export default function SignIn() {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 badge-bg group hover:scale-105 transition-all duration-300 cursor-pointer">
                 <Zap className="h-4 w-4 text-yellow-500 group-hover:animate-pulse transition-transform duration-300" />
                 <span className="text-sm font-medium bolt-gradient-text">
-                  {activity ? `Sign in to ${getActivityDescription(activity)}` : "Welcome Back"}
+                  Welcome Back
                 </span>
                 <Wand2 className="h-4 w-4 text-blue-500 group-hover:animate-spin transition-transform duration-300" />
               </div>
 
-              {/* Modern heading with enhanced typography */}
+              {/* Modern heading */}
               <h1 className="modern-display text-2xl sm:text-3xl font-bold mb-2 text-shadow-professional animate-fade-in-up">
                 Sign In to{" "}
                 <span className="bolt-gradient-text animate-text-glow">
@@ -164,15 +153,12 @@ export default function SignIn() {
                 </span>
               </h1>
               <p className="modern-body text-muted-foreground text-sm sm:text-base animate-fade-in-up delay-100">
-                {activity
-                  ? `Continue to ${getActivityDescription(activity)} with AI assistance`
-                  : "Continue creating magical documents with AI"
-                }
+                Continue creating magical documents with AI
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-              {/* Enhanced email field with advanced interactions */}
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              {/* Enhanced Email field */}
               <div
                 className={`space-y-2 transition-all duration-500 delay-300 ${
                   mounted
@@ -226,7 +212,6 @@ export default function SignIn() {
                         : "border-yellow-400/20"
                     }`}
                   ></div>
-                  {/* Progress indicator */}
                   <div
                     className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${
                       email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -240,7 +225,6 @@ export default function SignIn() {
                   ></div>
                 </div>
                 
-                {/* Email validation feedback */}
                 {email && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
                   <div className="animate-fade-in-up">
                     <p className="text-xs text-red-500 flex items-center gap-1 animate-bounce">
@@ -251,7 +235,7 @@ export default function SignIn() {
                 )}
               </div>
 
-              {/* Enhanced password field with better UX */}
+              {/* Enhanced Password field */}
               <div
                 className={`space-y-2 transition-all duration-500 delay-400 ${
                   mounted
@@ -292,7 +276,6 @@ export default function SignIn() {
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading}
                   />
-                  {/* Enhanced toggle button */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -315,7 +298,6 @@ export default function SignIn() {
                         : "border-yellow-400/20"
                     }`}
                   ></div>
-                  {/* Progress indicator */}
                   <div
                     className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${
                       password && password.length >= 6
@@ -328,7 +310,7 @@ export default function SignIn() {
                 </div>
               </div>
 
-              {/* Enhanced submit button with advanced animations */}
+              {/* Enhanced submit button */}
               <div
                 className={`transition-all duration-500 delay-500 ${
                   mounted
@@ -338,7 +320,7 @@ export default function SignIn() {
               >
                 <Button
                   type="submit"
-                  disabled={isLoading || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password.trim()}
+                  disabled={isLoading || !isFormValid}
                   className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   aria-label="Sign in to your account"
                 >
@@ -366,20 +348,15 @@ export default function SignIn() {
                     )}
                   </div>
 
-                  {/* Epic button effects overlay */}
                   {!isLoading && (
                     <>
                       <div className="absolute inset-0 shimmer opacity-20 group-hover:opacity-40 transition-opacity duration-500 z-10"></div>
-
-                      {/* Particle effect on hover */}
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10">
                         <div className="absolute top-2 left-4 w-1 h-1 bg-yellow-300 rounded-full animate-ping"></div>
                         <div className="absolute top-4 right-6 w-1 h-1 bg-blue-300 rounded-full animate-ping delay-100"></div>
                         <div className="absolute bottom-3 left-6 w-1 h-1 bg-green-300 rounded-full animate-ping delay-200"></div>
                         <div className="absolute bottom-2 right-4 w-1 h-1 bg-purple-300 rounded-full animate-ping delay-300"></div>
                       </div>
-
-                      {/* Enhanced wave effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
                     </>
                   )}
@@ -387,7 +364,7 @@ export default function SignIn() {
               </div>
             </form>
 
-            {/* Enhanced footer with advanced styling */}
+            {/* Enhanced footer */}
             <div
               className={`mt-6 sm:mt-8 text-center transition-all duration-500 delay-600 ${
                 mounted
@@ -397,7 +374,7 @@ export default function SignIn() {
             >
               <div className="glass-effect p-4 rounded-xl border border-yellow-400/10 hover:border-yellow-400/20 transition-all duration-300 group hover:scale-105">
                 <p className="professional-text text-sm text-muted-foreground mb-3">
-                  Don't have an account?
+                  Don&apos;t have an account?
                 </p>
                 <Link
                   href="/auth/register"
