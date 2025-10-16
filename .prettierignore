@@ -1,0 +1,20 @@
+# Ignore CSS files to prevent auto-formatting issues with Tailwind
+*.css
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Dependencies
+node_modules
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Other
+.DS_Store
