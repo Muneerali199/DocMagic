@@ -1308,8 +1308,35 @@ img {
     }
 }
 
+
+/* Responsive text sizing - DO NOT USE @apply HERE - causes build errors */
+
 .typed-text {
-    @apply text-2xl sm:text-4xl md:text-5xl lg:text-7xl leading-tight tracking-tight;
+    font-size: 1.5rem;
+    /* text-2xl */
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+}
+
+@media (min-width: 640px) {
+    .typed-text {
+        font-size: 2.25rem;
+        /* text-4xl */
+    }
+}
+
+@media (min-width: 768px) {
+    .typed-text {
+        font-size: 3rem;
+        /* text-5xl */
+    }
+}
+
+@media (min-width: 1024px) {
+    .typed-text {
+        font-size: 4.5rem;
+        /* text-7xl */
+    }
 }
 
 @keyframes slide-in {
@@ -2094,4 +2121,61 @@ img {
 
 .cursor-settings-scroll::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.5);
+}
+
+
+/* Custom scrollbar for resume preview */
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.4) rgba(243, 244, 246, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.5);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.4);
+    border-radius: 4px;
+    border: 2px solid rgba(243, 244, 246, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.6);
+}
+
+
+/* Smooth scroll behavior */
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+/* Animation utilities */
+
+@keyframes slide-in-from-top {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+}
+
+.slide-in-from-top {
+    animation-name: slide-in-from-top;
 }

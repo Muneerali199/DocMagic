@@ -1,24 +1,51 @@
-// Background service worker for DocMagic Extension
+// DocMagic Smart AI Extension - Background Service Worker
+// Supports multiple AI providers - No backend needed!
+
+// Storage keys
+const STORAGE_KEYS = {
+    AI_PROVIDER: 'ai_provider',
+    GEMINI_KEY: 'gemini_api_key',
+    OPENAI_KEY: 'openai_api_key',
+    MISTRAL_KEY: 'mistral_api_key',
+    CLAUDE_KEY: 'claude_api_key'
+};
+
+// API URLs
+const API_URLS = {
+    gemini: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+    openai: 'https://api.openai.com/v1/chat/completions',
+    mistral: 'https://api.mistral.ai/v1/chat/completions',
+    claude: 'https://api.anthropic.com/v1/messages'
+};
 
 // Installation
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-        console.log('DocMagic Extension installed!');
+        console.log('DocMagic Smart Extension installed!');
         
         // Initialize storage
         chrome.storage.local.set({
             'problems-solved': 0,
             'questions-practiced': 0,
             'settings': {
-                'apiUrl': 'http://localhost:3000/api',
                 'autoDetect': true,
-                'notifications': true
+                'notifications': true,
+                'showHintsFirst': true,
+                'defaultLanguage': 'javascript'
             }
         });
         
-        // Open welcome page
+        // Open settings page
         chrome.tabs.create({
-            url: 'https://docmagic.com/extension-welcome'
+            url: chrome.runtime.getURL('settings.html')
+        });
+        
+        // Show setup notification
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'icons/icon128.png',
+            title: 'DocMagic Extension Installed!',
+            message: 'Configure your AI provider to get started.'
         });
     }
 });
@@ -27,13 +54,19 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
         id: 'docmagic-solve',
-        title: 'Solve with DocMagic AI',
+        title: '🚀 Solve with DocMagic AI',
         contexts: ['selection']
     });
     
     chrome.contextMenus.create({
         id: 'docmagic-explain',
-        title: 'Explain with DocMagic AI',
+        title: '💡 Explain with DocMagic AI',
+        contexts: ['selection']
+    });
+    
+    chrome.contextMenus.create({
+        id: 'docmagic-hint',
+        title: '🎯 Get Hint',
         contexts: ['selection']
     });
 });
@@ -44,30 +77,33 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         handleSolveRequest(info.selectionText, tab);
     } else if (info.menuItemId === 'docmagic-explain') {
         handleExplainRequest(info.selectionText, tab);
+    } else if (info.menuItemId === 'docmagic-hint') {
+        handleHintRequest(info.selectionText, tab);
     }
 });
 
+// AI Request Handler - Uses configured AI provider
 async function handleSolveRequest(text, tab) {
     try {
-        // Get API URL from settings
-        const { settings } = await chrome.storage.local.get('settings');
-        const apiUrl = settings?.apiUrl || 'http://localhost:3000/api';
+        const { provider, apiKey } = await getProviderAndKey();
+        if (!apiKey) {
+            showNotification('API Key Required', 'Please configure your AI provider in settings.');
+            return;
+        }
         
-        // Call API
-        const response = await fetch(`${apiUrl}/solve-dsa`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                problem: text,
-                language: 'javascript'
-            }),
-        });
+        const prompt = `You are an expert DSA problem solver. Solve this problem:
+
+${text}
+
+Provide:
+1. Approach (step-by-step thinking)
+2. Complete code solution in JavaScript
+3. Time and Space complexity
+4. Explanation of the solution
+
+Format your response as JSON with keys: approach, code, timeComplexity, spaceComplexity, explanation`;
         
-        if (!response.ok) throw new Error('API request failed');
-        
-        const result = await response.json();
+        const result = await callAI(provider, apiKey, prompt);
         
         // Send result to content script
         chrome.tabs.sendMessage(tab.id, {
@@ -75,39 +111,77 @@ async function handleSolveRequest(text, tab) {
             data: result
         });
         
+        // Increment stats
+        await incrementStat('problems-solved');
+        showNotification('Solution Ready! ✅', 'Check the page for your solution.');
+        
     } catch (error) {
         console.error('Failed to solve problem:', error);
-        showNotification('Failed to solve problem', 'Please try again later.');
+        showNotification('Error', error.message || 'Failed to solve problem. Please try again.');
     }
 }
 
 async function handleExplainRequest(text, tab) {
     try {
-        const { settings } = await chrome.storage.local.get('settings');
-        const apiUrl = settings?.apiUrl || 'http://localhost:3000/api';
+        const { provider, apiKey } = await getProviderAndKey();
+        if (!apiKey) {
+            showNotification('API Key Required', 'Please configure your AI provider in settings.');
+            return;
+        }
         
-        const response = await fetch(`${apiUrl}/explain-code`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                code: text
-            }),
-        });
+        const prompt = `Explain this code in detail:
+
+${text}
+
+Provide:
+1. What the code does
+2. How it works (line by line if complex)
+3. Time and space complexity
+4. Potential improvements
+
+Format as JSON with keys: explanation, complexity, improvements`;
         
-        if (!response.ok) throw new Error('API request failed');
-        
-        const result = await response.json();
+        const result = await callAI(provider, apiKey, prompt);
         
         chrome.tabs.sendMessage(tab.id, {
             type: 'SHOW_EXPLANATION',
             data: result
         });
         
+        showNotification('Explanation Ready! 💡', 'Check the page for code explanation.');
+        
     } catch (error) {
         console.error('Failed to explain code:', error);
-        showNotification('Failed to explain code', 'Please try again later.');
+        showNotification('Error', error.message || 'Failed to explain code.');
+    }
+}
+
+async function handleHintRequest(text, tab) {
+    try {
+        const { provider, apiKey } = await getProviderAndKey();
+        if (!apiKey) {
+            showNotification('API Key Required', 'Please configure your AI provider in settings.');
+            return;
+        }
+        
+        const prompt = `Give a helpful hint for this problem (don't give away the solution):
+
+${text}
+
+Provide a hint that guides thinking without revealing the answer.`;
+        
+        const result = await callAI(provider, apiKey, prompt);
+        
+        chrome.tabs.sendMessage(tab.id, {
+            type: 'SHOW_HINT',
+            data: { hint: result }
+        });
+        
+        showNotification('Hint Ready! 🎯', 'Check the page for your hint.');
+        
+    } catch (error) {
+        console.error('Failed to get hint:', error);
+        showNotification('Error', error.message || 'Failed to get hint.');
     }
 }
 
@@ -137,6 +211,177 @@ function updateBadge(count) {
     }
 }
 
+// Universal AI API Call - Supports multiple providers
+async function callAI(provider, apiKey, prompt) {
+    switch (provider) {
+        case 'gemini':
+            return await callGeminiAPI(apiKey, prompt);
+        case 'openai':
+            return await callOpenAIAPI(apiKey, prompt);
+        case 'mistral':
+            return await callMistralAPI(apiKey, prompt);
+        case 'claude':
+            return await callClaudeAPI(apiKey, prompt);
+        default:
+            throw new Error('Unsupported AI provider');
+    }
+}
+
+// Gemini AI API Call
+async function callGeminiAPI(apiKey, prompt) {
+    const url = `${API_URLS.gemini}?key=${apiKey}`;
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: prompt }]
+            }]
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Gemini API request failed');
+    }
+    
+    const data = await response.json();
+    const text = data.candidates[0]?.content?.parts[0]?.text || '';
+    
+    return parseAIResponse(text);
+}
+
+// OpenAI API Call
+async function callOpenAIAPI(apiKey, prompt) {
+    const response = await fetch(API_URLS.openai, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{
+                role: 'user',
+                content: prompt
+            }],
+            temperature: 0.7
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'OpenAI API request failed');
+    }
+    
+    const data = await response.json();
+    const text = data.choices[0]?.message?.content || '';
+    
+    return parseAIResponse(text);
+}
+
+// Mistral AI API Call
+async function callMistralAPI(apiKey, prompt) {
+    const response = await fetch(API_URLS.mistral, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: 'mistral-small-latest',
+            messages: [{
+                role: 'user',
+                content: prompt
+            }]
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Mistral API request failed');
+    }
+    
+    const data = await response.json();
+    const text = data.choices[0]?.message?.content || '';
+    
+    return parseAIResponse(text);
+}
+
+// Claude API Call
+async function callClaudeAPI(apiKey, prompt) {
+    const response = await fetch(API_URLS.claude, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 4096,
+            messages: [{
+                role: 'user',
+                content: prompt
+            }]
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Claude API request failed');
+    }
+    
+    const data = await response.json();
+    const text = data.content[0]?.text || '';
+    
+    return parseAIResponse(text);
+}
+
+// Parse AI response (try JSON first, fallback to text)
+function parseAIResponse(text) {
+    // Try to extract JSON from markdown code blocks
+    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch) {
+        try {
+            return JSON.parse(jsonMatch[1]);
+        } catch {}
+    }
+    
+    // Try to parse as JSON directly
+    try {
+        return JSON.parse(text);
+    } catch {
+        return { content: text };
+    }
+}
+
+// Get current provider and API key
+async function getProviderAndKey() {
+    const result = await chrome.storage.local.get([
+        STORAGE_KEYS.AI_PROVIDER,
+        STORAGE_KEYS.GEMINI_KEY,
+        STORAGE_KEYS.OPENAI_KEY,
+        STORAGE_KEYS.MISTRAL_KEY,
+        STORAGE_KEYS.CLAUDE_KEY
+    ]);
+    
+    const provider = result[STORAGE_KEYS.AI_PROVIDER] || 'gemini';
+    const keyMap = {
+        gemini: STORAGE_KEYS.GEMINI_KEY,
+        openai: STORAGE_KEYS.OPENAI_KEY,
+        mistral: STORAGE_KEYS.MISTRAL_KEY,
+        claude: STORAGE_KEYS.CLAUDE_KEY
+    };
+    
+    const apiKey = result[keyMap[provider]] || '';
+    
+    return { provider, apiKey };
+}
+
 // Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'INCREMENT_STAT') {
@@ -148,13 +393,72 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.storage.local.get('settings', (result) => {
             sendResponse(result.settings);
         });
-        return true; // Keep channel open for async response
+        return true;
     }
     
     if (request.type === 'UPDATE_SETTINGS') {
         chrome.storage.local.set({ settings: request.settings }, () => {
             sendResponse({ success: true });
         });
+        return true;
+    }
+    
+    if (request.type === 'SAVE_API_KEY') {
+        chrome.storage.local.set({ [STORAGE_KEYS.GEMINI_KEY]: request.apiKey }, () => {
+            sendResponse({ success: true });
+        });
+        return true;
+    }
+    
+    if (request.type === 'GET_API_KEY') {
+        getProviderAndKey().then(({ apiKey }) => {
+            sendResponse({ apiKey });
+        });
+        return true;
+    }
+    
+    if (request.type === 'OPEN_SETTINGS') {
+        chrome.tabs.create({
+            url: chrome.runtime.getURL('settings.html')
+        });
+        sendResponse({ success: true });
+        return true;
+    }
+    
+    if (request.type === 'TEST_API_CONNECTION') {
+        (async () => {
+            try {
+                const testPrompt = 'Say "Hello! API is working." in one sentence.';
+                const result = await callAI(request.provider, request.apiKey, testPrompt);
+                sendResponse({ success: true, result });
+            } catch (error) {
+                sendResponse({ success: false, error: error.message });
+            }
+        })();
+        return true;
+    }
+    
+    if (request.type === 'SETTINGS_UPDATED') {
+        console.log('Settings updated, reloading configuration...');
+        sendResponse({ success: true });
+        return true;
+    }
+    
+    if (request.type === 'SOLVE_PROBLEM') {
+        (async () => {
+            try {
+                const { provider, apiKey } = await getProviderAndKey();
+                if (!apiKey) {
+                    sendResponse({ error: 'API key not configured. Please open settings.' });
+                    return;
+                }
+                
+                const result = await callAI(provider, apiKey, request.prompt);
+                sendResponse({ success: true, data: result });
+            } catch (error) {
+                sendResponse({ error: error.message });
+            }
+        })();
         return true;
     }
 });
@@ -173,4 +477,4 @@ chrome.commands.onCommand.addListener((command) => {
     }
 });
 
-console.log('DocMagic Extension background script loaded');
+console.log('DocMagic Smart AI Extension loaded - Ready to help! 🚀');

@@ -13,12 +13,12 @@ export const passwordSchema = z
   .max(128, 'Password must be less than 128 characters')
   .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number');
 
-// Name validation schema
+// Name validation schema (relaxed for resume generation)
 export const nameSchema = z
   .string()
   .min(1, 'Name is required')
   .max(100, 'Name must be less than 100 characters')
-  .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
+  .regex(/^[a-zA-Z0-9\s.'-]+$/, 'Name contains invalid characters');
 
 // Registration schema
 export const registrationSchema = z.object({
@@ -74,13 +74,20 @@ export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): T
   return result.data;
 }
 
-// Check for common SQL injection patterns
+// Check for common SQL injection patterns (improved to reduce false positives)
 export function detectSqlInjection(input: string): boolean {
+  // Only detect actual SQL injection attempts, not common words
   const sqlPatterns = [
-    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/i,
-    /(\b(OR|AND)\s+\d+\s*=\s*\d+)/i,
-    /(--|\/\*|\*\/)/,
-    /(\b(SCRIPT|JAVASCRIPT|VBSCRIPT)\b)/i,
+    // SQL commands with special characters (actual injection attempts)
+    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC)\b.*['";])/i,
+    // Union-based injection
+    /(\bUNION\s+(ALL\s+)?SELECT\b)/i,
+    // Comment-based injection
+    /(;--|\/\*|\*\/|--\s|#)/,
+    // Hex-based injection
+    /(0x[0-9a-f]+)/i,
+    // Boolean-based blind injection (more specific pattern)
+    /(\'\s*(OR|AND)\s*\'\s*=\s*\')|(\'\s*(OR|AND)\s*\d+\s*=\s*\d+)/i,
   ];
   
   return sqlPatterns.some(pattern => pattern.test(input));

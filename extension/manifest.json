@@ -19,7 +19,10 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs",
+    "notifications",
+    "contextMenus"
   ],
   "host_permissions": [
     "https://leetcode.com/*",
@@ -44,8 +47,9 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup.html", "styles.css"],
+      "resources": ["popup.html", "styles.css", "settings.html", "settings.css"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "options_page": "settings.html"
 }

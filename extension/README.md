@@ -1,8 +1,10 @@
-# 📚 DocMagic Interview & DSA Prep Extension
+# 🚀 DocMagic Smart AI Extension
 
-## 🚀 The Ultimate Interview Preparation Companion
+> **No Backend Required!** Uses Gemini AI directly from your browser
 
-A powerful browser extension powered by DocMagic AI that helps you ace technical interviews, solve DSA problems, and land your dream job!
+## The Ultimate Interview Preparation Companion
+
+A powerful browser extension that uses **Google Gemini AI** to help you ace technical interviews, solve DSA problems, and land your dream job! No server setup needed - works entirely in your browser.
 
 ## ✨ Features
 
@@ -121,12 +123,20 @@ A powerful browser extension powered by DocMagic AI that helps you ace technical
 
 ## 🔧 Configuration
 
-### API Setup
+### Get Your Free Gemini API Key
 
-1. **Open extension**
-2. **Click Settings** (footer)
-3. **Set API URL**: `http://localhost:3000/api` (or your DocMagic server)
-4. **Save settings**
+1. **Visit** [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. **Sign in** with your Google account
+3. **Click "Create API Key"**
+4. **Copy** your API key
+
+### Configure Extension
+
+1. **Click the extension icon**
+2. **Expand "⚙️ Configure API Key"** section
+3. **Paste your API key**
+4. **Click "Save Key"**
+5. **You're ready to go!** ✅
 
 ### Permissions
 

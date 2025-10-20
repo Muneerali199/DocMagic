@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Get API key with fallback for build time
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+// Get API key with fallback for build time - support both env var names
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
 // Initialize with lazy loading to avoid build-time errors
 let genAI: GoogleGenerativeAI | null = null;
@@ -46,7 +46,7 @@ async function validateApiConnection() {
   }
 }
 
-// Basic resume generator function
+// ENHANCED ATS-OPTIMIZED RESUME GENERATOR (FREE TEXT INPUT)
 export async function generateResume({ 
   prompt, 
   name, 
@@ -57,74 +57,198 @@ export async function generateResume({
   email: string;
 }) {
   try {
+    console.log("🚀 Starting resume generation with Gemini 2.0 Flash...");
+    console.log("Input:", { prompt: prompt.substring(0, 100), name, email });
+
     await validateApiConnection();
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
     
-    const systemPrompt = `Create a professional resume for ${name} (${email}) based on: "${prompt}".
+    // ENHANCED SYSTEM PROMPT FOR 85%+ ATS SCORES
+    const systemPrompt = `You are an expert ATS-optimized resume writer. Create a professional, ATS-friendly resume for ${name} (${email}) based on: "${prompt}".
 
-    Return as JSON with this structure:
+    CRITICAL ATS OPTIMIZATION REQUIREMENTS:
+    1. Use STRONG ACTION VERBS: Led, Developed, Implemented, Optimized, Increased, Reduced, Managed, Designed
+    2. Include QUANTIFIABLE ACHIEVEMENTS: Use numbers, percentages, dollar amounts (e.g., "Increased revenue by 45%", "Managed $2M budget")
+    3. Add TECHNICAL KEYWORDS relevant to the role mentioned in the prompt
+    4. Use PROFESSIONAL FORMATTING with clear section headers
+    5. Include SKILLS SECTION with 8-12 relevant technical and soft skills
+    6. Write 3-5 bullet points per job with IMPACT-FOCUSED descriptions
+    7. Create PROFESSIONAL SUMMARY with 3-4 sentences highlighting key expertise
+
+    MANDATORY JSON STRUCTURE - ALL FIELDS REQUIRED:
     {
       "name": "${name}",
       "email": "${email}",
-      "phone": "",
-      "location": "",
-      "summary": "Professional summary based on the prompt",
+      "phone": "+1 (555) 123-4567",
+      "location": "City, State/Country",
+      "summary": "Dynamic [Job Title] with [X+] years of experience in [Key Skills]. Proven track record of [Major Achievement]. Expert in [Technical Skills] with strong [Soft Skills]. Seeking to leverage expertise in [Target Area].",
       "experience": [
         {
-          "title": "Job title",
-          "company": "Company name",
+          "title": "Senior/Lead [Job Title]",
+          "company": "[Company Name]",
           "location": "City, State",
-          "date": "MM/YYYY - MM/YYYY",
+          "date": "01/2020 - Present",
           "description": [
-            "• Achievement with quantified results",
-            "• Technical accomplishment with relevant skills",
-            "• Leadership or collaboration example"
+            "• Led cross-functional team of 10+ members to deliver $5M revenue-generating project, resulting in 40% efficiency improvement",
+            "• Implemented automated testing framework reducing bug rate by 60% and deployment time by 3 hours",
+            "• Developed scalable microservices architecture handling 1M+ daily transactions with 99.9% uptime",
+            "• Mentored 5 junior developers improving team productivity by 25% through code reviews and pair programming",
+            "• Optimized database queries reducing response time by 70% and improving user experience for 50K+ users"
+          ]
+        },
+        {
+          "title": "[Previous Job Title]",
+          "company": "[Previous Company]",
+          "location": "City, State",
+          "date": "06/2017 - 12/2019",
+          "description": [
+            "• Achieved 95% customer satisfaction rate by implementing real-time feedback system",
+            "• Reduced operational costs by $200K annually through process automation and optimization",
+            "• Collaborated with stakeholders to define requirements for 15+ successful product launches"
           ]
         }
       ],
       "education": [
         {
-          "degree": "Degree type and field",
-          "institution": "University/College name",
+          "degree": "Bachelor of Science in [Field] / Master of [Field]",
+          "institution": "[University Name]",
           "location": "City, State",
-          "date": "MM/YYYY",
-          "gpa": "",
-          "honors": ""
+          "date": "05/2017",
+          "gpa": "3.8/4.0",
+          "honors": "Cum Laude / Dean's List"
         }
       ],
       "skills": {
-        "technical": ["relevant technical skills"],
-        "programming": ["programming languages/frameworks"],
-        "tools": ["software and tools"],
-        "soft": ["communication, leadership, problem-solving"]
+        "technical": ["Python", "JavaScript", "React", "Node.js", "SQL", "AWS", "Docker", "Git"],
+        "programming": ["Java", "TypeScript", "C++", "Go", "Ruby"],
+        "tools": ["VS Code", "Jira", "GitHub", "Jenkins", "Kubernetes", "Tableau"],
+        "soft": ["Leadership", "Communication", "Problem Solving", "Team Collaboration", "Agile Methodologies", "Project Management"]
       },
       "projects": [
         {
-          "name": "Project name",
-          "description": "Brief description with technologies used",
-          "technologies": ["tech stack"],
-          "link": ""
+          "name": "[Project Name] - [Brief Description]",
+          "description": "Developed full-stack web application using React, Node.js, and MongoDB serving 10K+ users with 4.5-star rating",
+          "technologies": ["React", "Node.js", "MongoDB", "AWS", "Docker"],
+          "link": "https://github.com/username/project"
         }
       ],
       "certifications": [
         {
-          "name": "Certification name",
-          "issuer": "Issuing organization",
-          "date": "MM/YYYY",
-          "credential": ""
+          "name": "AWS Certified Solutions Architect / PMP / Certified Scrum Master",
+          "issuer": "Amazon Web Services / PMI / Scrum Alliance",
+          "date": "03/2023",
+          "credential": "ABC123XYZ"
         }
       ]
     }
 
-    Generate realistic and relevant content based on the prompt. Include quantifiable achievements and use professional language throughout.`;
+    CONTENT GENERATION RULES:
+    1. INFER realistic details from the prompt (job titles, companies, dates, achievements)
+    2. CREATE 2-3 relevant work experiences with 3-5 bullet points each
+    3. INCLUDE at least 3 quantified achievements with numbers/percentages
+    4. ADD 1-2 education entries relevant to the field
+    5. POPULATE skills section with 15-20 relevant technical and soft skills
+    6. GENERATE 1-2 relevant projects with technologies
+    7. ADD 1-2 relevant certifications if applicable to the role
+    8. USE professional tone and industry-standard terminology
+    9. ENSURE summary highlights 3-4 key strengths with measurable impact
+    10. FORMAT all dates as MM/YYYY consistently
 
+    ATS SCORING TARGETS (Generate content to achieve 85%+ score):
+    - Contact Info Complete: 20/20 points
+    - Professional Summary 100+ chars: 15/15 points  
+    - 2+ Work Experiences with quantified achievements: 30/30 points
+    - Education with GPA: 15/15 points
+    - 15+ Skills listed: 10/10 points
+    - Projects with technologies: 5/5 points
+    - Certifications: 5/5 points
+    TARGET TOTAL: 85%+ (Grade A)
+
+    CRITICAL: Return ONLY valid JSON. No markdown, no explanations, ONLY the JSON object.`;
+
+    console.log("📤 Sending request to Gemini API...");
     const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    const jsonText = extractJsonFromMarkdown(response.text());
-    return JSON.parse(jsonText);
+    
+    if (!result || !result.response) {
+      throw new Error("No response received from Gemini API");
+    }
+
+    const response = result.response;
+    console.log("✅ Gemini API response received");
+    
+    const rawText = response.text();
+    console.log("📝 Raw response length:", rawText.length);
+    
+    const jsonText = extractJsonFromMarkdown(rawText);
+    console.log("🔍 Extracted JSON length:", jsonText.length);
+    
+    const parsedResume = JSON.parse(jsonText);
+    console.log("✅ Resume JSON parsed successfully");
+    
+    // VALIDATE and ENHANCE the generated resume
+    const validatedResume = {
+      name: parsedResume.name || name,
+      email: parsedResume.email || email,
+      phone: parsedResume.phone || "+1 (555) 123-4567",
+      location: parsedResume.location || "City, State",
+      summary: parsedResume.summary || "Professional with expertise in the field.",
+      experience: Array.isArray(parsedResume.experience) && parsedResume.experience.length > 0 
+        ? parsedResume.experience 
+        : [{
+            title: "Professional",
+            company: "Company Name",
+            location: "City, State",
+            date: "01/2020 - Present",
+            description: [
+              "• Delivered high-impact projects with measurable results",
+              "• Collaborated with cross-functional teams to achieve organizational goals",
+              "• Implemented best practices to improve efficiency and quality"
+            ]
+          }],
+      education: Array.isArray(parsedResume.education) && parsedResume.education.length > 0
+        ? parsedResume.education
+        : [{
+            degree: "Bachelor's Degree",
+            institution: "University",
+            location: "City, State",
+            date: "05/2020",
+            gpa: "",
+            honors: ""
+          }],
+      skills: parsedResume.skills || {
+        technical: ["Microsoft Office", "Data Analysis", "Project Management"],
+        programming: [],
+        tools: ["Excel", "PowerPoint", "Outlook"],
+        soft: ["Communication", "Leadership", "Problem Solving", "Team Collaboration"]
+      },
+      projects: parsedResume.projects || [],
+      certifications: parsedResume.certifications || []
+    };
+
+    console.log("🎉 Resume generation completed successfully");
+    return validatedResume;
+    
   } catch (error) {
-    console.error("Error generating resume:", error);
-    throw new Error(`Failed to generate resume: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("❌ Error generating resume:", error);
+    
+    // Provide detailed error information
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3)
+      });
+    }
+    
+    // Return more specific error messages
+    if (error instanceof Error && error.message.includes('API key')) {
+      throw new Error('Gemini API key not configured. Please set GOOGLE_API_KEY in environment variables.');
+    } else if (error instanceof Error && error.message.includes('quota')) {
+      throw new Error('API quota exceeded. Please try again later.');
+    } else if (error instanceof Error && error.message.includes('JSON')) {
+      throw new Error('Failed to parse AI response. Please try again with different input.');
+    } else {
+      throw new Error(`Failed to generate resume: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 

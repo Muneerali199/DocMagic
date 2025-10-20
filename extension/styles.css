@@ -62,6 +62,104 @@ body {
     opacity: 0.9;
 }
 
+.api-status {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: inline-block;
+}
+
+/* API Configuration */
+.api-config {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.api-config details {
+    padding: 0.75rem 1rem;
+}
+
+.api-config summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--primary);
+    list-style: none;
+    user-select: none;
+}
+
+.api-config summary::-webkit-details-marker {
+    display: none;
+}
+
+.config-content {
+    margin-top: 0.75rem;
+}
+
+.config-info {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+.config-info a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.config-info a:hover {
+    text-decoration: underline;
+}
+
+.api-config .input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0;
+}
+
+.api-config input {
+    flex: 1;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Quick Settings */
+.quick-settings {
+    background: var(--bg-secondary);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.btn-settings {
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-settings:hover {
+    background: #2563EB;
+    transform: translateY(-1px);
+}
+
+.provider-info {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
 /* Tabs */
 .tabs {
     display: flex;

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocMagic Settings</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="settings-container">
+        <!-- Header -->
+        <header class="settings-header">
+            <div class="header-content">
+                <h1>⚙️ DocMagic Settings</h1>
+                <p>Configure your AI providers and preferences</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="settings-main">
+            <!-- AI Provider Selection -->
+            <section class="settings-section">
+                <h2>🤖 AI Provider</h2>
+                <p class="section-description">Choose your preferred AI provider for problem solving</p>
+                
+                <div class="provider-selector">
+                    <label class="provider-option">
+                        <input type="radio" name="ai-provider" value="gemini" checked>
+                        <div class="provider-card">
+                            <div class="provider-icon">🔷</div>
+                            <div class="provider-info">
+                                <h3>Google Gemini</h3>
+                                <p>Fast and accurate • Free tier available</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="provider-option">
+                        <input type="radio" name="ai-provider" value="openai">
+                        <div class="provider-card">
+                            <div class="provider-icon">🟢</div>
+                            <div class="provider-info">
+                                <h3>OpenAI GPT</h3>
+                                <p>Most powerful • Paid API required</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="provider-option">
+                        <input type="radio" name="ai-provider" value="mistral">
+                        <div class="provider-card">
+                            <div class="provider-icon">🔴</div>
+                            <div class="provider-info">
+                                <h3>Mistral AI</h3>
+                                <p>Open source • Good performance</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="provider-option">
+                        <input type="radio" name="ai-provider" value="claude">
+                        <div class="provider-card">
+                            <div class="provider-icon">🟣</div>
+                            <div class="provider-info">
+                                <h3>Claude (Anthropic)</h3>
+                                <p>Excellent reasoning • Paid API</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- API Keys Configuration -->
+            <section class="settings-section">
+                <h2>🔑 API Keys</h2>
+                <p class="section-description">Configure API keys for each provider</p>
+
+                <!-- Gemini API Key -->
+                <div class="api-key-group" id="gemini-config">
+                    <div class="api-key-header">
+                        <h3>🔷 Google Gemini API Key</h3>
+                        <span class="status-badge" id="gemini-status">Not Configured</span>
+                    </div>
+                    <div class="api-key-input-group">
+                        <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('gemini-api-key')">👁️</button>
+                    </div>
+                    <div class="api-key-help">
+                        <a href="https://makersuite.google.com/app/apikey" target="_blank">Get API Key</a>
+                        <span>•</span>
+                        <a href="https://ai.google.dev/tutorials/setup" target="_blank">Documentation</a>
+                    </div>
+                </div>
+
+                <!-- OpenAI API Key -->
+                <div class="api-key-group" id="openai-config">
+                    <div class="api-key-header">
+                        <h3>🟢 OpenAI API Key</h3>
+                        <span class="status-badge" id="openai-status">Not Configured</span>
+                    </div>
+                    <div class="api-key-input-group">
+                        <input type="password" id="openai-api-key" placeholder="Enter your OpenAI API key (sk-...)">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('openai-api-key')">👁️</button>
+                    </div>
+                    <div class="api-key-help">
+                        <a href="https://platform.openai.com/api-keys" target="_blank">Get API Key</a>
+                        <span>•</span>
+                        <a href="https://platform.openai.com/docs" target="_blank">Documentation</a>
+                    </div>
+                </div>
+
+                <!-- Mistral API Key -->
+                <div class="api-key-group" id="mistral-config">
+                    <div class="api-key-header">
+                        <h3>🔴 Mistral AI API Key</h3>
+                        <span class="status-badge" id="mistral-status">Not Configured</span>
+                    </div>
+                    <div class="api-key-input-group">
+                        <input type="password" id="mistral-api-key" placeholder="Enter your Mistral API key">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('mistral-api-key')">👁️</button>
+                    </div>
+                    <div class="api-key-help">
+                        <a href="https://console.mistral.ai/api-keys" target="_blank">Get API Key</a>
+                        <span>•</span>
+                        <a href="https://docs.mistral.ai" target="_blank">Documentation</a>
+                    </div>
+                </div>
+
+                <!-- Claude API Key -->
+                <div class="api-key-group" id="claude-config">
+                    <div class="api-key-header">
+                        <h3>🟣 Claude API Key</h3>
+                        <span class="status-badge" id="claude-status">Not Configured</span>
+                    </div>
+                    <div class="api-key-input-group">
+                        <input type="password" id="claude-api-key" placeholder="Enter your Claude API key">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('claude-api-key')">👁️</button>
+                    </div>
+                    <div class="api-key-help">
+                        <a href="https://console.anthropic.com/account/keys" target="_blank">Get API Key</a>
+                        <span>•</span>
+                        <a href="https://docs.anthropic.com" target="_blank">Documentation</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Preferences -->
+            <section class="settings-section">
+                <h2>🎯 Preferences</h2>
+                
+                <div class="preference-group">
+                    <label class="preference-item">
+                        <div class="preference-info">
+                            <h3>Auto-detect Problems</h3>
+                            <p>Automatically detect problems on coding platforms</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="auto-detect" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+
+                    <label class="preference-item">
+                        <div class="preference-info">
+                            <h3>Show Notifications</h3>
+                            <p>Get notified when solutions are ready</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="notifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+
+                    <label class="preference-item">
+                        <div class="preference-info">
+                            <h3>Show Hints First</h3>
+                            <p>Display hints before showing full solutions</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="hints-first" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="preference-group">
+                    <label class="preference-select">
+                        <h3>Default Programming Language</h3>
+                        <select id="default-language">
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                            <option value="csharp">C#</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <section class="settings-actions">
+                <button id="save-settings" class="btn btn-primary">
+                    💾 Save All Settings
+                </button>
+                <button id="test-connection" class="btn btn-secondary">
+                    🔌 Test Connection
+                </button>
+                <button id="reset-settings" class="btn btn-danger">
+                    🔄 Reset to Defaults
+                </button>
+            </section>
+
+            <!-- Status Message -->
+            <div id="status-message" class="status-message hidden"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="settings-footer">
+            <p>DocMagic Extension v2.0 • <a href="https://docmagic.com" target="_blank">Documentation</a></p>
+        </footer>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>

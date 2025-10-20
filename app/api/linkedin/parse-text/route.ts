@@ -62,18 +62,140 @@ export async function POST(req: Request) {
 
 // Helper function to extract structured profile data from text using AI
 async function extractProfileFromText(text: string): Promise<any> {
+  // Try Gemini first, fallback to OpenAI
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  if (!openaiApiKey) {
-    throw new Error("OpenAI API key not configured");
+  if (!geminiApiKey && !openaiApiKey) {
+    throw new Error("AI API key not configured. Please add GEMINI_API_KEY or OPENAI_API_KEY to your .env file");
   }
+
+  // Use Gemini if available
+  if (geminiApiKey) {
+    return await extractWithGemini(geminiApiKey, text);
+  }
+
+  // Fallback to OpenAI
+  return await extractWithOpenAI(openaiApiKey!, text);
+}
+
+// Extract profile using Gemini AI
+async function extractWithGemini(apiKey: string, text: string): Promise<any> {
+  const prompt = `Extract structured profile data from this text and return it as JSON.
+
+Text:
+${text}
+
+Extract and return ONLY valid JSON with this exact structure (no markdown, no explanations):
+{
+  "personalInfo": {
+    "name": "Full Name",
+    "email": "email@example.com",
+    "phone": "phone number",
+    "location": "City, State/Country",
+    "linkedin": "LinkedIn URL if found",
+    "website": "Personal website if found"
+  },
+  "summary": "Professional summary or bio",
+  "experience": [
+    {
+      "position": "Job Title",
+      "company": "Company Name",
+      "location": "City, State",
+      "startDate": "Month Year",
+      "endDate": "Month Year or Present",
+      "description": "Job responsibilities and achievements",
+      "highlights": ["Achievement 1", "Achievement 2"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name",
+      "field": "Field of Study",
+      "school": "School Name",
+      "location": "City, State",
+      "year": "Graduation Year",
+      "gpa": "GPA if mentioned"
+    }
+  ],
+  "skills": ["Skill 1", "Skill 2", "Skill 3"],
+  "certifications": [
+    {
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "Issue Date"
+    }
+  ],
+  "languages": ["Language 1", "Language 2"],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "Project description",
+      "technologies": ["Tech 1", "Tech 2"],
+      "url": "Project URL if available"
+    }
+  ]
+}
+
+If any section is not found in the text, use empty arrays [] or empty strings "". Be thorough and extract all available information.`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.2,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || "Gemini API request failed");
+    }
+
+    const data = await response.json();
+    let content = data.candidates[0]?.content?.parts[0]?.text || '';
+
+    // Clean up Gemini response (remove markdown code blocks if present)
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    // Parse JSON
+    const profileData = JSON.parse(content);
+    return profileData;
+  } catch (error: any) {
+    console.error("Gemini parsing error:", error);
+    throw new Error(`Failed to parse profile with Gemini: ${error.message}`);
+  }
+}
+
+// Extract profile using OpenAI (fallback)
+async function extractWithOpenAI(apiKey: string, text: string): Promise<any> {
+  const prompt = `Extract structured profile data from this text.
+
+Text:
+${text}
+
+Extract all available information including: personal info, summary, experience, education, skills, certifications, languages, and projects.`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiApiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",

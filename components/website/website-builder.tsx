@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { websiteTemplates } from "@/lib/website-templates";
+import { useRouter } from "next/navigation";
+import WebsiteChat from "./website-chat";
 import {
   Loader2,
   Sparkles,
@@ -23,7 +26,9 @@ import {
   Check,
   FileCode,
   Figma,
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
+  MessageSquare
 } from "lucide-react";
 
 type ViewMode = 'desktop' | 'tablet' | 'mobile';
@@ -33,16 +38,17 @@ interface WebsiteCode {
   html: string;
   css: string;
   javascript: string;
-  pages: {
+  pages?: {
     [key: string]: {
       html: string;
       title: string;
       description: string;
     };
   };
-  assets: {
+  assets?: {
     colors: string[];
     fonts: string[];
+    images?: string[];
   };
 }
 
@@ -55,8 +61,11 @@ export function WebsiteBuilder() {
   const [activeCodeTab, setActiveCodeTab] = useState<CodeTab>('html');
   const [copied, setCopied] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [showTemplates, setShowTemplates] = useState(true);
+  const [showChat, setShowChat] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const styles = [
     { id: 'modern', name: 'Modern', description: 'Clean & minimalist', color: 'bg-blue-500' },
@@ -112,6 +121,9 @@ export function WebsiteBuilder() {
         title: "🎉 Website Generated!",
         description: "Your website is ready. Check the preview!",
       });
+
+      // Auto-open chat sidebar after generation
+      setShowChat(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -211,98 +223,189 @@ export function WebsiteBuilder() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Elements - Matching Landing Page */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden -z-10">
         <div className="mesh-gradient opacity-40"></div>
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-gradient-to-r from-amber-400/8 to-orange-400/8 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
-        {/* Header - Matching Landing Page Style */}
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30 mb-6 hover:scale-105 transition-transform duration-300">
-            <Code className="h-5 w-5 text-blue-500 animate-pulse" />
-            <span className="text-sm font-semibold bolt-gradient-text">AI Website Builder</span>
-            <Sparkles className="h-5 w-5 text-purple-500 animate-bounce" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10">
+        {/* Compact Header */}
+        <div className="text-center mb-4 sm:mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect border border-blue-200/30 mb-3 hover:scale-105 transition-transform duration-300">
+            <Code className="h-4 w-4 text-blue-500" />
+            <span className="text-xs sm:text-sm font-semibold bolt-gradient-text">AI Website Builder</span>
+            <Sparkles className="h-4 w-4 text-purple-500" />
           </div>
           
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-            <span className="block mb-2">Create Stunning Websites</span>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 leading-tight">
+            <span className="block">Create Stunning Websites</span>
             <span className="bolt-gradient-text">In Seconds with AI</span>
           </h1>
-          
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Describe your website and watch AI build complete, production-ready code with live preview
-          </p>
         </div>
 
         {/* Input Section */}
         {!websiteCode && (
-          <div className="glass-effect rounded-2xl p-6 sm:p-8 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
-            <div className="space-y-6">
-              <div>
-                <Label htmlFor="prompt" className="text-lg font-semibold flex items-center gap-2 mb-3">
-                  <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
-                  Describe Your Website
-                </Label>
-                <Textarea
-                  id="prompt"
-                  placeholder="E.g., Create a modern landing page for a SaaS product with a hero section, features grid, pricing table, and contact form. Use blue and purple colors."
-                  className="min-h-[120px] text-base glass-effect border-blue-200/30 focus:border-blue-400/60 focus:ring-blue-400/20 resize-none"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={isGenerating}
-                />
-              </div>
+          <div className="space-y-6">
+            {/* Main Input Form */}
+            <div className="glass-effect rounded-xl p-4 sm:p-6 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    Describe Your Website
+                  </Label>
+                  <Textarea
+                    id="prompt"
+                    placeholder="E.g., Create a modern landing page for a SaaS product with a hero section, features grid, pricing table, and contact form."
+                    className="min-h-[120px] text-sm glass-effect border-blue-200/30 focus:border-blue-400/60 focus:ring-blue-400/20 resize-none"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    disabled={isGenerating}
+                  />
+                </div>
 
-              <div>
-                <Label className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Palette className="h-5 w-5 text-purple-500 animate-pulse" />
-                  Choose a Style
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {styles.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => setStyle(s.id)}
-                      className={`group p-4 rounded-xl border-2 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg ${
-                        style === s.id
-                          ? 'border-blue-400 glass-effect scale-105 ring-2 ring-blue-400/20'
-                          : 'border-gray-200/50 hover:border-blue-300/70 glass-effect hover:scale-105'
-                      }`}
+                <div>
+                  <Label className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                    <Layout className="h-4 w-4 text-blue-500" />
+                    Base Style
+                  </Label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {styles.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setStyle(s.id)}
+                        className={`group p-2 rounded-lg border transition-all duration-300 backdrop-blur-lg shadow-sm hover:shadow-md ${
+                          style === s.id
+                            ? 'border-blue-400 glass-effect scale-105 ring-1 ring-blue-400/20'
+                            : 'border-gray-200/50 hover:border-blue-300/70 glass-effect hover:scale-105'
+                        }`}
+                      >
+                        <div className={`w-full h-8 rounded-md ${s.color} mb-1 shadow-sm ring-1 ring-white/20 group-hover:scale-110 transition-transform`}></div>
+                        <div className="text-[10px] font-semibold text-gray-800 dark:text-white text-center">{s.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  onClick={generateWebsite}
+                  disabled={isGenerating || !prompt.trim()}
+                  className="w-full bolt-gradient text-white font-semibold py-5 text-base rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden shadow-lg"
+                >
+                  <div className="flex items-center justify-center gap-2 relative z-10">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Generating Your Website...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        <span>Generate Website with AI</span>
+                        <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
+                  </div>
+                  {!isGenerating && (
+                    <div className="absolute inset-0 shimmer opacity-30"></div>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Premium Templates Section - Full Width Below */}
+            <div className="glass-effect rounded-xl p-4 sm:p-6 border-2 border-purple-200/30 backdrop-blur-xl shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 mb-1">
+                    <Layout className="h-5 w-5 text-blue-500" />
+                    <span className="bolt-gradient-text">Premium Templates</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Start with professionally designed templates
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTemplates(!showTemplates)}
+                  className="text-sm"
+                >
+                  {showTemplates ? 'Hide Templates' : 'Show Templates'}
+                </Button>
+              </div>
+              
+              {showTemplates && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {websiteTemplates.map((template) => (
+                    <div
+                      key={template.id}
+                      className="group relative overflow-hidden rounded-lg border border-gray-200/50 hover:border-blue-300/70 glass-effect hover:scale-[1.02] transition-all duration-300 shadow-sm hover:shadow-lg"
                     >
-                      <div className={`w-full h-12 rounded-lg ${s.color} mb-2 shadow-md ring-2 ring-white/20 group-hover:scale-110 transition-transform`}></div>
-                      <div className="text-sm font-semibold text-gray-800 dark:text-white">{s.name}</div>
-                      <div className="text-xs text-muted-foreground">{s.description}</div>
-                    </button>
+                      {/* Template Thumbnail */}
+                      <div 
+                        className={`w-full h-40 bg-gradient-to-br ${template.gradient} relative overflow-hidden cursor-pointer`}
+                        onClick={() => router.push(`/website-builder/templates/${template.id}/preview`)}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-7xl opacity-20">{template.icon}</div>
+                        </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-white/90 hover:bg-white text-gray-900 backdrop-blur-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/website-builder/templates/${template.id}/preview`);
+                              }}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/website-builder/templates/${template.id}/editor`);
+                              }}
+                            >
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              Use
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Template Info */}
+                      <div className="p-4 bg-white dark:bg-gray-800">
+                        <h3 className="font-semibold text-sm mb-1 text-gray-800 dark:text-white">
+                          {template.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                          {template.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                            {template.category}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => router.push(`/website-builder/templates/${template.id}/preview`)}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-
-              <Button
-                onClick={generateWebsite}
-                disabled={isGenerating || !prompt.trim()}
-                className="w-full bolt-gradient text-white font-semibold py-6 text-lg rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden shadow-lg"
-              >
-                <div className="flex items-center justify-center gap-2 relative z-10">
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Generating Your Website...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-5 w-5" />
-                      <span>Generate Website with AI</span>
-                      <ArrowRight className="h-5 w-5" />
-                    </>
-                  )}
-                </div>
-                {!isGenerating && (
-                  <div className="absolute inset-0 shimmer opacity-30"></div>
-                )}
-              </Button>
+              )}
             </div>
           </div>
         )}
@@ -310,30 +413,34 @@ export function WebsiteBuilder() {
         {/* Preview & Code Section */}
         {websiteCode && (
           <div className="space-y-6">
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3">
+            {/* Action Buttons - Mobile Optimized */}
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button
                 onClick={() => setWebsiteCode(null)}
-                className="glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md"
+                className="glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md text-xs sm:text-sm"
                 variant="outline"
+                size="sm"
               >
-                ← New Website
+                ← New
               </Button>
               <Button
                 onClick={downloadCode}
-                className="glass-effect border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md gap-2"
+                className="glass-effect border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md gap-1 sm:gap-2 text-xs sm:text-sm"
                 variant="outline"
+                size="sm"
               >
-                <Download className="h-4 w-4" />
-                Download Files
+                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Download</span>
+                <span className="sm:hidden">Save</span>
               </Button>
               <Button
                 onClick={exportToFigma}
-                className="glass-effect border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md gap-2"
+                className="glass-effect border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md gap-1 sm:gap-2 text-xs sm:text-sm"
                 variant="outline"
+                size="sm"
               >
-                <Figma className="h-4 w-4" />
-                Export to Figma
+                <Figma className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Figma</span>
               </Button>
             </div>
 
@@ -352,16 +459,16 @@ export function WebsiteBuilder() {
                 </TabsList>
 
                 <TabsContent value="preview" className="space-y-4 mt-6">
-                  {/* Viewport Controls */}
-                  <div className="flex justify-center gap-2">
+                  {/* Viewport Controls - Mobile Optimized */}
+                  <div className="flex justify-center gap-1 sm:gap-2 flex-wrap">
                     <Button
                       className={viewMode === 'desktop' ? 'bolt-gradient text-white' : 'glass-effect border-2 border-blue-200/50 hover:border-blue-300/70'}
                       variant={viewMode === 'desktop' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setViewMode('desktop')}
                     >
-                      <Monitor className="h-4 w-4 mr-1" />
-                      Desktop
+                      <Monitor className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Desktop</span>
                     </Button>
                     <Button
                       className={viewMode === 'tablet' ? 'bolt-gradient text-white' : 'glass-effect border-2 border-blue-200/50 hover:border-blue-300/70'}
@@ -369,8 +476,8 @@ export function WebsiteBuilder() {
                       size="sm"
                       onClick={() => setViewMode('tablet')}
                     >
-                      <Tablet className="h-4 w-4 mr-1" />
-                      Tablet
+                      <Tablet className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Tablet</span>
                     </Button>
                     <Button
                       className={viewMode === 'mobile' ? 'bolt-gradient text-white' : 'glass-effect border-2 border-blue-200/50 hover:border-blue-300/70'}
@@ -378,18 +485,18 @@ export function WebsiteBuilder() {
                       size="sm"
                       onClick={() => setViewMode('mobile')}
                     >
-                      <Smartphone className="h-4 w-4 mr-1" />
-                      Mobile
+                      <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Mobile</span>
                     </Button>
                   </div>
 
-                  {/* Preview Frame */}
-                  <div className="glass-effect rounded-xl p-4 border border-blue-200/30">
+                  {/* Preview Frame - Mobile Optimized */}
+                  <div className="glass-effect rounded-xl p-2 sm:p-4 border border-blue-200/30">
                     <div className="bg-white rounded-lg shadow-2xl overflow-hidden mx-auto transition-all duration-300 ring-2 ring-blue-200/20" style={{ width: getViewportWidth() }}>
                       <iframe
                         ref={iframeRef}
                         srcDoc={previewHtml}
-                        className="w-full h-[600px] border-0"
+                        className="w-full h-[400px] sm:h-[500px] md:h-[600px] border-0"
                         title="Website Preview"
                         sandbox="allow-scripts allow-same-origin"
                       />
@@ -445,7 +552,7 @@ export function WebsiteBuilder() {
                   </div>
 
                   {/* Color Palette */}
-                  {websiteCode.assets.colors.length > 0 && (
+                  {websiteCode.assets?.colors && websiteCode.assets.colors.length > 0 && (
                     <div className="glass-effect rounded-xl p-6 border-2 border-purple-200/30 backdrop-blur-lg">
                       <h3 className="font-semibold mb-4 flex items-center gap-2">
                         <Palette className="h-5 w-5 text-purple-500" />
@@ -466,14 +573,14 @@ export function WebsiteBuilder() {
                   )}
 
                   {/* Generated Images */}
-                  {websiteCode.assets.images && websiteCode.assets.images.length > 0 && (
+                  {websiteCode.assets?.images && websiteCode.assets.images.length > 0 && (
                     <div className="glass-effect rounded-xl p-6 border-2 border-blue-200/30 backdrop-blur-lg">
                       <h3 className="font-semibold mb-4 flex items-center gap-2">
                         <Eye className="h-5 w-5 text-blue-500" />
                         Generated Images ({websiteCode.assets.images.length})
                       </h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                        {websiteCode.assets.images.map((imageUrl, index) => (
+                        {websiteCode.assets.images.map((imageUrl: string, index: number) => (
                           <div key={index} className="group relative">
                             <img
                               src={imageUrl}
@@ -492,6 +599,36 @@ export function WebsiteBuilder() {
               </Tabs>
             </div>
           </div>
+        )}
+
+        {/* Chat Sidebar Toggle Button - Mobile Optimized */}
+        {websiteCode && !showChat && (
+          <Button
+            onClick={() => setShowChat(true)}
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-2xl hover:scale-110 transition-all duration-300 text-xs sm:text-sm"
+            size="sm"
+          >
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2" />
+            <span className="hidden sm:inline">Improve Website</span>
+            <span className="sm:hidden ml-1">Improve</span>
+          </Button>
+        )}
+
+        {/* Chat Sidebar Component */}
+        {websiteCode && (
+          <WebsiteChat
+            currentCode={websiteCode}
+            onCodeUpdate={(newCode) => {
+              setWebsiteCode(newCode);
+              toast({
+                title: "✅ Website Updated!",
+                description: "Your changes have been applied",
+              });
+            }}
+            isOpen={showChat}
+            onClose={() => setShowChat(false)}
+            style={style}
+          />
         )}
       </div>
     </div>

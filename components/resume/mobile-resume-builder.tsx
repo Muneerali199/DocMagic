@@ -11,9 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { 
   FileText, Upload, Globe, Sparkles, Download, 
-  Linkedin, FileDown, Loader2, CheckCircle2, AlertCircle 
+  Linkedin, FileDown, Loader2, CheckCircle2, AlertCircle, Edit, MessageSquare 
 } from "lucide-react";
 import { ResumePreview } from "./resume-preview";
+import { ATSScoreDisplay } from "./ats-score-display";
+import { AIResumeChat } from "./ai-resume-chat";
 
 interface LinkedInProfile {
   fullName: string;
@@ -31,9 +33,11 @@ export function MobileResumeBuilder() {
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
   const [resumeData, setResumeData] = useState<any>(null);
+  const [atsScore, setAtsScore] = useState<any>(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [manualText, setManualText] = useState("");
   const [currentStep, setCurrentStep] = useState<'input' | 'preview'>('input');
+  const [showAIChat, setShowAIChat] = useState(false);
 
   const supabase = createClient();
 
@@ -84,7 +88,6 @@ export function MobileResumeBuilder() {
         toast({
           title: "🛡️ LinkedIn Blocks URL Import",
           description: data.helpfulTip || "Use PDF Export (click PDF tab above) - takes only 10 seconds!",
-          duration: 8000,
         });
         return;
       }
@@ -168,11 +171,22 @@ export function MobileResumeBuilder() {
     }
   };
 
-  // Manual Text Import
+  // Manual Text Import - Using existing working resume generation
   const handleManualImport = async () => {
     if (!manualText.trim()) {
       toast({
-        title: "Please enter profile data",
+        title: "Please enter your information",
+        description: "Tell us about yourself - name, role, experience, skills, etc.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate minimum length (API requires at least 10 characters)
+    if (manualText.trim().length < 10) {
+      toast({
+        title: "Please provide more information",
+        description: "Tell us more about yourself (at least 10 characters)",
         variant: "destructive",
       });
       return;
@@ -184,38 +198,247 @@ export function MobileResumeBuilder() {
       const token = await getAuthToken();
       if (!token) throw new Error("Please sign in first");
 
-      const response = await fetch("/api/linkedin/parse-text", {
+      // Extract name and email from text if possible
+      const emailMatch = manualText.match(/[\w.-]+@[\w.-]+\.\w+/);
+      const lines = manualText.split('\n').filter(line => line.trim());
+      const nameMatch = lines[0]?.trim() || "";
+      
+      // Validate extracted name (must be at least 2 characters)
+      const validName = nameMatch && nameMatch.length >= 2 ? nameMatch : "John Doe";
+      
+      // Validate email format
+      const validEmail = emailMatch ? emailMatch[0] : "user@example.com";
+
+      // Use existing working resume generation API
+      const response = await fetch("/api/generate/resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ text: manualText }),
+        body: JSON.stringify({ 
+          prompt: manualText.trim(),
+          name: validName,
+          email: validEmail
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to parse text");
+        // Provide detailed error message
+        const errorMsg = data.details || data.error || "Failed to generate resume";
+        console.error("Resume generation error:", { status: response.status, data });
+        throw new Error(errorMsg);
       }
 
-      const resume = convertToResume(data.profile);
+      // Calculate ATS score
+      const atsScore = calculateATSScore(data);
+      
+      // Convert to resume format with proper skills structure
+      const resume = {
+        name: data.name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        location: data.location || "",
+        website: "",
+        headline: data.name || "",
+        summary: data.summary || "",
+        experience: data.experience || [],
+        education: data.education || [],
+        skills: data.skills || {}, // Keep as object for resume-preview compatibility
+        certifications: data.certifications || [],
+        languages: [],
+        projects: data.projects || [],
+      };
+      
       setResumeData(resume);
+      setAtsScore(atsScore);
       setCurrentStep('preview');
 
       toast({
-        title: "✅ Text Parsed!",
-        description: "AI extracted your profile data",
+        title: "✨ Resume Generated!",
+        description: `ATS Score: ${atsScore?.score}% (${atsScore?.grade} Grade)`,
       });
     } catch (error: any) {
+      console.error("Resume generation error:", error);
       toast({
-        title: "Parse Failed",
-        description: error.message,
+        title: "Generation Failed",
+        description: error.message || "Please try again with more details",
         variant: "destructive",
       });
     } finally {
       setIsImporting(false);
     }
+  };
+
+  // Helper function to convert skills object to array
+  const convertSkillsToArray = (skills: any): string[] => {
+    if (Array.isArray(skills)) return skills;
+    if (!skills) return [];
+    
+    const skillsArray: string[] = [];
+    if (skills.technical) skillsArray.push(...skills.technical);
+    if (skills.programming) skillsArray.push(...skills.programming);
+    if (skills.tools) skillsArray.push(...skills.tools);
+    if (skills.soft) skillsArray.push(...skills.soft);
+    
+    return skillsArray;
+  };
+
+  // Calculate ATS Score
+  const calculateATSScore = (resume: any): any => {
+    let score = 0;
+    const feedback: string[] = [];
+    const improvements: string[] = [];
+
+    // Check contact info (20 points)
+    if (resume.name && resume.name !== 'Your Name') {
+      score += 5;
+    } else {
+      improvements.push("Add your full name");
+    }
+    
+    if (resume.email && resume.email.includes('@')) {
+      score += 5;
+    } else {
+      improvements.push("Add a professional email");
+    }
+    
+    if (resume.phone) {
+      score += 5;
+    } else {
+      improvements.push("Add phone number");
+    }
+    
+    if (resume.location) {
+      score += 5;
+    } else {
+      improvements.push("Add your location");
+    }
+
+    // Check professional summary (15 points)
+    if (resume.summary && resume.summary.length > 100) {
+      score += 15;
+      feedback.push("✅ Strong professional summary");
+    } else {
+      score += 5;
+      improvements.push("Expand professional summary to 3-4 sentences");
+    }
+
+    // Check experience (30 points)
+    const exp = resume.experience || [];
+    if (exp.length >= 2) {
+      score += 10;
+      feedback.push("✅ Multiple work experiences listed");
+    } else if (exp.length === 1) {
+      score += 5;
+      improvements.push("Add more work experience");
+    } else {
+      improvements.push("Add work experience section");
+    }
+
+    // Check for quantifiable achievements
+    const hasMetrics = exp.some((e: any) => {
+      const desc = Array.isArray(e.description) ? e.description.join(' ') : (e.description || '');
+      return /\d+%|\$\d+|\d+\+/.test(desc);
+    });
+    
+    if (hasMetrics) {
+      score += 10;
+      feedback.push("✅ Includes quantifiable achievements");
+    } else {
+      improvements.push("Add numbers/metrics to achievements (e.g., 'increased sales by 25%')");
+    }
+
+    // Check achievement count
+    const totalAchievements = exp.reduce((sum: number, e: any) => {
+      const desc = e.description || [];
+      return sum + (Array.isArray(desc) ? desc.length : 0);
+    }, 0);
+    
+    if (totalAchievements >= 6) {
+      score += 10;
+      feedback.push("✅ Detailed work achievements");
+    } else {
+      improvements.push("Add 3-5 achievements per role");
+    }
+
+    // Check education (15 points)
+    const edu = resume.education || [];
+    if (edu.length > 0) {
+      score += 10;
+      feedback.push("✅ Education included");
+      if (edu[0].gpa) {
+        score += 5;
+        feedback.push("✅ GPA mentioned");
+      }
+    } else {
+      improvements.push("Add education section");
+    }
+
+    // Check skills (15 points)
+    const skills = convertSkillsToArray(resume.skills);
+    const totalSkills = skills.length;
+    
+    if (totalSkills >= 10) {
+      score += 15;
+      feedback.push("✅ Comprehensive skills list");
+    } else if (totalSkills >= 5) {
+      score += 10;
+      improvements.push("Add more relevant skills (aim for 10-15)");
+    } else {
+      score += 5;
+      improvements.push("Add technical and soft skills");
+    }
+
+    // Check certifications (5 points)
+    if (resume.certifications && resume.certifications.length > 0) {
+      score += 5;
+      feedback.push("✅ Certifications included");
+    } else {
+      improvements.push("Add relevant certifications if available");
+    }
+
+    // Determine grade
+    let grade = 'F';
+    let color = 'red';
+    if (score >= 90) {
+      grade = 'A';
+      color = 'green';
+      feedback.push("🎉 Excellent! Your resume is ATS-optimized");
+    } else if (score >= 80) {
+      grade = 'B';
+      color = 'blue';
+      feedback.push("👍 Good! A few tweaks will make it perfect");
+    } else if (score >= 70) {
+      grade = 'C';
+      color = 'yellow';
+      feedback.push("⚠️ Decent, but needs improvement");
+    } else if (score >= 60) {
+      grade = 'D';
+      color = 'orange';
+      feedback.push("⚠️ Needs significant improvement");
+    } else {
+      color = 'red';
+      feedback.push("❌ Needs major improvements for ATS compatibility");
+    }
+
+    return {
+      score,
+      grade,
+      color,
+      feedback,
+      improvements,
+      breakdown: {
+        contactInfo: Math.min(20, score >= 20 ? 20 : (score > 0 ? 10 : 0)),
+        summary: resume.summary ? 15 : 5,
+        experience: Math.min(30, totalAchievements >= 6 ? 30 : 15),
+        education: edu.length > 0 ? 15 : 0,
+        skills: Math.min(15, totalSkills >= 10 ? 15 : 8),
+        certifications: resume.certifications?.length > 0 ? 5 : 0
+      }
+    };
   };
 
   // Convert LinkedIn profile to resume format
@@ -378,22 +601,45 @@ export function MobileResumeBuilder() {
                     </div>
                   </TabsContent>
 
-                  {/* Manual Text Tab */}
+                  {/* Manual Text Tab - Using Working Resume Generation */}
                   <TabsContent value="text" className="space-y-4">
                     <div className="space-y-3">
-                      <Label htmlFor="manual-text" className="text-sm font-medium">
-                        Paste Your Profile Data
+                      <Label htmlFor="manual-text" className="text-sm font-medium flex items-center gap-2">
+                        Enter Your Information
+                        <span className="px-2 py-0.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs rounded-full font-bold">
+                          AI-Powered ✨
+                        </span>
                       </Label>
                       <Textarea
                         id="manual-text"
-                        placeholder="Paste your LinkedIn profile text, resume, or any professional information here. Our AI will intelligently extract and structure your data."
+                        placeholder="Tell us about yourself! Include:
+
+• Your name and contact info
+• Current or target job role
+• Work experience and achievements  
+• Education background
+• Technical and soft skills
+• Certifications (if any)
+• Projects you've worked on
+
+Example:
+John Doe
+Software Engineer
+5 years of experience in full-stack development
+Bachelor's in Computer Science
+Skills: React, Node.js, Python, AWS
+..."
                         value={manualText}
                         onChange={(e) => setManualText(e.target.value)}
                         className="min-h-[200px] bg-white/50 resize-none"
                       />
-                      <p className="text-xs text-gray-500">
-                        Copy from LinkedIn, your resume, or type freely
-                      </p>
+                      <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                        <Sparkles className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
+                        <p className="text-xs text-gray-700">
+                          <strong className="text-blue-700">AI will create:</strong> Complete professional resume with 
+                          proper formatting, quantified achievements, and ATS optimization + instant compatibility score!
+                        </p>
+                      </div>
                     </div>
                     <Button
                       onClick={handleManualImport}
@@ -404,12 +650,12 @@ export function MobileResumeBuilder() {
                       {isImporting ? (
                         <>
                           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          <span className="font-semibold">Processing...</span>
+                          <span className="font-semibold">Generating Professional Resume...</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="mr-2 h-5 w-5" />
-                          <span className="font-semibold">Parse with AI</span>
+                          <span className="font-semibold">Generate Resume with AI</span>
                         </>
                       )}
                     </Button>
@@ -487,55 +733,111 @@ export function MobileResumeBuilder() {
             </Card>
           </div>
         ) : (
-          /* Preview Section */
-          <div className="space-y-6">
-            <Card className="card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 shadow-xl backdrop-blur-xl">
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1">
-                  <CardTitle className="text-2xl font-bold professional-heading mb-2">
-                    <span className="cosmic-gradient-text">Your Resume Preview</span>
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground text-base">
-                    Review and download your professional resume
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep('input')}
-                  className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
-                  size="lg"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Edit Data
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Resume Preview */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-8 shadow-lg">
-                  <ResumePreview resume={resumeData} template="modern" />
-                </div>
+          /* Preview Section with ATS Score and AI Chat */
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column: Resume Preview */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 shadow-xl backdrop-blur-xl">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl font-bold professional-heading mb-2">
+                      <span className="cosmic-gradient-text">Your Resume Preview</span>
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground text-base">
+                      Review, edit, and download your professional resume
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAIChat(!showAIChat)}
+                      className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      {showAIChat ? 'Hide' : 'Show'} AI Coach
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentStep('input')}
+                      className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Edit Data
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Resume Preview */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-8 shadow-lg">
+                    <ResumePreview resume={resumeData} template="modern" />
+                  </div>
 
-                {/* Download Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    onClick={downloadPDF}
-                    className="flex-1 bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg"
-                    size="lg"
-                  >
-                    <FileDown className="mr-2 h-5 w-5" />
-                    <span className="font-semibold">Download PDF</span>
-                  </Button>
-                  <Button
-                    onClick={downloadPDF}
-                    className="flex-1 sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg"
-                    size="lg"
-                  >
-                    <FileDown className="mr-2 h-5 w-5" />
-                    <span className="font-semibold">Download DOCX</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  {/* Download Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      onClick={downloadPDF}
+                      className="flex-1 bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg"
+                      size="lg"
+                    >
+                      <FileDown className="mr-2 h-5 w-5" />
+                      <span className="font-semibold">Download PDF</span>
+                    </Button>
+                    <Button
+                      onClick={downloadPDF}
+                      className="flex-1 sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg"
+                      size="lg"
+                    >
+                      <FileDown className="mr-2 h-5 w-5" />
+                      <span className="font-semibold">Download DOCX</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column: ATS Score & AI Chat */}
+            <div className="space-y-6">
+              {/* ATS Score */}
+              {atsScore && <ATSScoreDisplay atsScore={atsScore} />}
+
+              {/* AI Chat */}
+              {showAIChat && (
+                <AIResumeChat 
+                  resumeData={resumeData} 
+                  onResumeUpdate={(updated: any) => setResumeData(updated)}
+                />
+              )}
+
+              {/* Quick Tips */}
+              {!showAIChat && (
+                <Card className="glass-effect border-2 border-blue-200/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-blue-600" />
+                      <span>Pro Tips</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Use the AI Coach to improve your resume in real-time</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Target 85%+ ATS score for best results</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Add metrics and numbers to achievements</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Use keywords from your target job description</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         )}
         </div>

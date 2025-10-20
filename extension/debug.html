@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocMagic Debug</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #3B82F6; }
+        h2 { color: #10B981; margin-top: 0; }
+        button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563EB; }
+        .success { color: #10B981; font-weight: bold; }
+        .error { color: #EF4444; font-weight: bold; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 DocMagic Extension Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>1. Test Settings Page</h2>
+        <button onclick="testSettingsPage()">Open Settings Page</button>
+        <button onclick="testOptionsPage()">Open via Options API</button>
+        <div id="settings-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. Check Files</h2>
+        <button onclick="checkFiles()">Verify All Files</button>
+        <div id="files-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. Check Storage</h2>
+        <button onclick="checkStorage()">View Stored Data</button>
+        <button onclick="clearStorage()">Clear All Storage</button>
+        <div id="storage-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>4. Test AI Providers</h2>
+        <button onclick="testProviders()">Check Provider Config</button>
+        <div id="providers-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>5. Extension Info</h2>
+        <button onclick="showExtensionInfo()">Show Extension Details</button>
+        <div id="info-result"></div>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            el.innerHTML = `<p class="${className}">${message}</p>`;
+        }
+
+        function testSettingsPage() {
+            try {
+                const url = chrome.runtime.getURL('settings.html');
+                log('settings-result', `Settings URL: ${url}`, 'success');
+                chrome.tabs.create({ url: url });
+            } catch (error) {
+                log('settings-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testOptionsPage() {
+            try {
+                chrome.runtime.openOptionsPage(() => {
+                    if (chrome.runtime.lastError) {
+                        log('settings-result', `Error: ${chrome.runtime.lastError.message}`, 'error');
+                    } else {
+                        log('settings-result', 'Options page opened successfully!', 'success');
+                    }
+                });
+            } catch (error) {
+                log('settings-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkFiles() {
+            const files = [
+                'settings.html',
+                'settings.css',
+                'settings.js',
+                'popup.html',
+                'popup.js',
+                'background.js',
+                'content.js',
+                'manifest.json'
+            ];
+
+            let result = '<h3>File Check Results:</h3><ul>';
+            
+            for (const file of files) {
+                try {
+                    const url = chrome.runtime.getURL(file);
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        result += `<li class="success">✅ ${file} - OK</li>`;
+                    } else {
+                        result += `<li class="error">❌ ${file} - Not Found</li>`;
+                    }
+                } catch (error) {
+                    result += `<li class="error">❌ ${file} - Error: ${error.message}</li>`;
+                }
+            }
+            
+            result += '</ul>';
+            document.getElementById('files-result').innerHTML = result;
+        }
+
+        function checkStorage() {
+            chrome.storage.local.get(null, (data) => {
+                const formatted = JSON.stringify(data, null, 2);
+                document.getElementById('storage-result').innerHTML = 
+                    `<h3>Stored Data:</h3><pre>${formatted}</pre>`;
+            });
+        }
+
+        function clearStorage() {
+            if (confirm('Are you sure you want to clear all stored data?')) {
+                chrome.storage.local.clear(() => {
+                    log('storage-result', 'All storage cleared!', 'success');
+                });
+            }
+        }
+
+        function testProviders() {
+            chrome.storage.local.get([
+                'ai_provider',
+                'gemini_api_key',
+                'openai_api_key',
+                'mistral_api_key',
+                'claude_api_key'
+            ], (result) => {
+                const provider = result.ai_provider || 'Not set';
+                let html = `<h3>Provider Configuration:</h3>`;
+                html += `<p><strong>Active Provider:</strong> ${provider}</p>`;
+                html += `<ul>`;
+                html += `<li>Gemini: ${result.gemini_api_key ? '✅ Configured' : '❌ Not set'}</li>`;
+                html += `<li>OpenAI: ${result.openai_api_key ? '✅ Configured' : '❌ Not set'}</li>`;
+                html += `<li>Mistral: ${result.mistral_api_key ? '✅ Configured' : '❌ Not set'}</li>`;
+                html += `<li>Claude: ${result.claude_api_key ? '✅ Configured' : '❌ Not set'}</li>`;
+                html += `</ul>`;
+                document.getElementById('providers-result').innerHTML = html;
+            });
+        }
+
+        function showExtensionInfo() {
+            const manifest = chrome.runtime.getManifest();
+            const info = {
+                name: manifest.name,
+                version: manifest.version,
+                id: chrome.runtime.id,
+                optionsPage: manifest.options_page || 'Not set'
+            };
+            
+            const formatted = JSON.stringify(info, null, 2);
+            document.getElementById('info-result').innerHTML = 
+                `<h3>Extension Info:</h3><pre>${formatted}</pre>`;
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            showExtensionInfo();
+        });
+    </script>
+</body>
+</html>
