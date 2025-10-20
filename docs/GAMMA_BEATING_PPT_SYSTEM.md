@@ -281,7 +281,7 @@ reader.readAsDataURL(file);
 ### 1. Gemini API (Text Generation)
 ```bash
 # Get from: https://ai.google.dev
-GOOGLE_API_KEY=AIzaSyBuaA7VOfJKYUmhtb6J7MH2UeE64I_Q80E
+GOOGLE_API_KEY=your-google-api-key-here
 ```
 
 ### 2. Mistral AI (Visual Intelligence)
