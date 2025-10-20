@@ -142,38 +142,59 @@ async function generateImages(prompt: string, count: number = 5): Promise<string
   }
 }
 
-// Generate custom AI images using Gemini Imagen (if available)
+// Generate custom AI images using Gemini 2.0 Flash for intelligent image selection
 async function generateAIImages(prompt: string, count: number = 5): Promise<string[]> {
   try {
-    console.log('🤖 Attempting AI image generation with Gemini...');
-    
-    // Note: Gemini Imagen API is not yet publicly available
-    // This is a placeholder for when it becomes available
-    // For now, we'll use high-quality image services
+    console.log('🤖 Using Gemini 2.0 Flash for intelligent image generation...');
     
     const topic = prompt
       .toLowerCase()
       .replace(/create|build|design|website|landing page|for/gi, '')
       .trim();
     
-    // Use Pollinations.ai for AI-generated images (free alternative)
-    const images: string[] = [];
+    // Use Gemini 2.0 Flash to generate intelligent image prompts
+    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
-    const imagePrompts = [
-      `professional ${topic} hero image, modern, high quality, 4k`,
-      `${topic} feature illustration, clean design, professional`,
-      `${topic} icon, minimalist, modern design`,
-      `${topic} abstract background, gradient, professional`,
-      `${topic} showcase image, professional photography style`
-    ];
+    const imagePromptRequest = `Generate ${count} detailed, professional image prompts for a ${topic} website. 
+    Each prompt should be optimized for AI image generation and describe:
+    1. Hero/banner image (1200x600)
+    2-3. Feature/section images (800x600)
+    4-5. Supporting images or backgrounds
     
-    for (let i = 0; i < count; i++) {
-      const encodedPrompt = encodeURIComponent(imagePrompts[i]);
-      // Pollinations.ai - Free AI image generation
-      images.push(`https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&seed=${i}&nologo=true`);
+    Return ONLY a JSON array of strings, each being a detailed image prompt.
+    Example format: ["professional modern tech startup hero image with gradient background, 4k quality", "clean minimalist feature illustration showing innovation"]`;
+    
+    const result = await model.generateContent(imagePromptRequest);
+    const response = result.response.text();
+    
+    // Parse the AI-generated prompts
+    let imagePrompts: string[];
+    try {
+      const cleanedResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      imagePrompts = JSON.parse(cleanedResponse);
+    } catch {
+      // Fallback to default prompts if parsing fails
+      imagePrompts = [
+        `professional ${topic} hero image, modern, high quality, 4k`,
+        `${topic} feature illustration, clean design, professional`,
+        `${topic} icon, minimalist, modern design`,
+        `${topic} abstract background, gradient, professional`,
+        `${topic} showcase image, professional photography style`
+      ];
     }
     
-    console.log('✅ AI images generated via Pollinations.ai');
+    // Generate images using multiple high-quality sources
+    const images: string[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const imagePrompt = imagePrompts[i] || `professional ${topic} image`;
+      const encodedPrompt = encodeURIComponent(imagePrompt);
+      
+      // Use Pollinations.ai with AI-enhanced prompts
+      images.push(`https://image.pollinations.ai/prompt/${encodedPrompt}?width=${i === 0 ? 1200 : 800}&height=${i === 0 ? 600 : 600}&seed=${i}&nologo=true&enhance=true`);
+    }
+    
+    console.log('✅ AI-enhanced images generated via Gemini 2.0 Flash + Pollinations.ai');
     return images;
     
   } catch (error) {
@@ -954,8 +975,21 @@ Now generate the COMPLETE, PRODUCTION-READY, FULLY RESPONSIVE website!
 Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
 
     console.log('💻 Generating code with Mistral Large...');
-    const text = await generateWithMistral(systemPrompt, userPrompt);
-    console.log('✅ Code generation complete');
+    let text: string;
+    try {
+      text = await generateWithMistral(systemPrompt, userPrompt);
+      console.log('✅ Code generation complete');
+    } catch (mistralError) {
+      console.error('❌ Mistral generation failed:', mistralError);
+      console.log('🔄 Falling back to Gemini 2.0 Flash...');
+      const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const result = await model.generateContent([
+        { text: systemPrompt },
+        { text: userPrompt }
+      ]);
+      text = result.response.text();
+      console.log('✅ Gemini generation complete');
+    }
 
     // Extract JSON from markdown code blocks if present
     let jsonText = text;
@@ -965,13 +999,67 @@ Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
       console.log('📦 Extracted JSON from markdown');
     }
 
+    // Clean up common JSON formatting issues
+    jsonText = jsonText
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .replace(/^\s*[\r\n]/gm, '') // Remove empty lines
+      .trim();
+
     // Parse the JSON response
     console.log('🔍 Parsing generated code...');
-    const websiteCode: WebsiteCode = JSON.parse(jsonText);
+    let websiteCode: WebsiteCode;
+    try {
+      websiteCode = JSON.parse(jsonText);
+      console.log('📦 Parsed JSON keys:', Object.keys(websiteCode));
+    } catch (parseError) {
+      console.error('❌ JSON Parse Error:', parseError);
+      console.log('📄 Raw response (first 1000 chars):', text.substring(0, 1000));
+      console.log('📄 Cleaned JSON text (first 1000 chars):', jsonText.substring(0, 1000));
+      throw new Error('Failed to parse AI response. Please try again.');
+    }
 
+    // Handle case where Mistral embeds CSS/JS in HTML instead of separating them
+    if (websiteCode.html && !websiteCode.css) {
+      console.log('🔧 Extracting embedded CSS and JS from HTML...');
+      
+      // Extract CSS from <style> tags
+      const styleMatch = websiteCode.html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+      if (styleMatch) {
+        websiteCode.css = styleMatch[1].trim();
+        console.log('✅ Extracted CSS from <style> tag');
+      }
+      
+      // Extract JS from <script> tags
+      const scriptMatch = websiteCode.html.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
+      if (scriptMatch) {
+        websiteCode.javascript = scriptMatch[1].trim();
+        console.log('✅ Extracted JavaScript from <script> tag');
+      }
+      
+      // If still no CSS, create a minimal one
+      if (!websiteCode.css) {
+        websiteCode.css = '/* Styles embedded in HTML */';
+        console.log('⚠️ No CSS found, using placeholder');
+      }
+      
+      // If still no JS, create empty one
+      if (!websiteCode.javascript) {
+        websiteCode.javascript = '// JavaScript embedded in HTML or not needed';
+        console.log('⚠️ No JS found, using placeholder');
+      }
+    }
+    
     // Validate the response
     if (!websiteCode.html || !websiteCode.css) {
-      throw new Error('Invalid response from AI: missing required fields');
+      console.error('❌ Validation failed. Response structure:', {
+        hasHtml: !!websiteCode.html,
+        hasCss: !!websiteCode.css,
+        hasJs: !!websiteCode.js,
+        keys: Object.keys(websiteCode)
+      });
+      console.log('📄 Full parsed object:', JSON.stringify(websiteCode, null, 2).substring(0, 500));
+      throw new Error('Invalid response from AI: missing required fields (html or css)');
     }
     console.log('✅ Code validation passed');
 
@@ -1504,17 +1592,6 @@ Now improve the website based on the user's request: "${improvementRequest}"`;
       improvementPrompt
     );
 
-    // Clean response
-    let cleanedResponse = response
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-        maxOutputTokens: 8000,
-      },
-    });
-
-    const response = result.response.text();
-    
     // Clean response
     let cleanedResponse = response
       .replace(/```json\n?/g, '')

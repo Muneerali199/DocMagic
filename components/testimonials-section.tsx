@@ -27,7 +27,7 @@ export function TestimonialsSection() {
     }, [currentIndex, autoSlide, autoSlideInterval]);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 py-20 sm:py-28 lg:py-36">
+    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 dark:from-purple-950/20 dark:via-background dark:to-blue-950/20 py-20 sm:py-28 lg:py-36">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 mesh-gradient opacity-30"></div>
       <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
@@ -36,34 +36,34 @@ export function TestimonialsSection() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border border-pink-200/30">
-            <Heart className="h-5 w-5 text-pink-600" />
-            <span className="text-base font-semibold bolt-gradient-text">Customer Love</span>
-            <Star className="h-5 w-5 text-amber-500 fill-current" />
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 transition-all duration-300">
+            <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
+            <span className="text-base sm:text-lg font-bold bolt-gradient-text">Customer Love</span>
+            <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
           </div>
 
-          <h2 className="modern-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-tight">
-            <span className="block mb-2">Trusted by</span>
+          <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-8 leading-tight font-extrabold">
+            <span className="block mb-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">Trusted by</span>
             <span className="bolt-gradient-text">10,000+ Professionals</span>
           </h2>
 
-          <p className="modern-body text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Join thousands of satisfied users who have transformed their document creation process with DocMagic&apos;s AI-powered platform.
+          <p className="modern-body text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium px-4 sm:px-0">
+            Join thousands of satisfied users who have transformed their document creation process with DocMagic's AI-powered platform.
           </p>
 
           {/* Social proof stats */}
-          <div className="flex flex-wrap justify-center gap-6 mt-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-amber-200/30">
-              <Star className="h-4 w-4 text-amber-500 fill-current" />
-              <span className="text-sm font-semibold text-amber-700">4.9/5 Rating</span>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-8 px-4 sm:px-0">
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-effect border-2 border-amber-200/40 dark:border-amber-500/30 shadow-md hover:scale-105 transition-all duration-300">
+              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 fill-current" />
+              <span className="text-sm sm:text-base font-bold text-amber-700 dark:text-amber-300">4.9/5 Rating</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-semibold text-blue-700">10K+ Users</span>
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 shadow-md hover:scale-105 transition-all duration-300">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm sm:text-base font-bold text-blue-700 dark:text-blue-300">10K+ Users</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-green-200/30">
-              <Trophy className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-700">Industry Leader</span>
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-effect border-2 border-green-200/40 dark:border-green-500/30 shadow-md hover:scale-105 transition-all duration-300">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
+              <span className="text-sm sm:text-base font-bold text-green-700 dark:text-green-300">Industry Leader</span>
             </div>
           </div>
         </div>
@@ -71,17 +71,17 @@ export function TestimonialsSection() {
         {/* Enhanced testimonials carousel */}
         <div className="relative">
           {/* Testimonial Cards Container */}
-          <div className="overflow-hidden relative min-h-[400px] sm:min-h-[450px] flex items-center justify-center px-4 sm:px-0">
+          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
             {testimonials.slice(0, 6).map((testimonial, i) => (
-              <div key={i} className={`group w-full absolute flex items-center justify-center animate-fade-in-up transition-all ease-out duration-790 transform ${i === currentIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`} style={{animationDelay: `${i * 100}ms`}}>
+              <div key={i} className={`group w-full absolute flex items-center justify-center animate-fade-in-up transition-all ease-out duration-790 transform ${i === currentIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`} style={{ animationDelay: `${i * 100}ms` }}>
                 {/* Enhanced background glow */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
 
-                <Card className="relative professional-card glass-effect group w-full max-w-3xl flex flex-col rounded-3xl border border-blue-200/30 hover:scale-105 transition-all duration-300">
-                  <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
-                    <div className="flex items-center space-x-3 sm:space-x-4">
+                <Card className="relative professional-card glass-effect group w-full max-w-4xl flex flex-col rounded-3xl border-2 border-blue-200/40 dark:border-blue-500/30 hover:scale-105 transition-all duration-500 shadow-2xl hover:shadow-3xl">
+                  <CardHeader className="pb-3 sm:pb-4 p-5 sm:p-7 md:p-8">
+                    <div className="flex items-center space-x-3 sm:space-x-5">
                       <div className="relative flex-shrink-0">
-                        <Avatar className="ring-2 ring-blue-400/30 h-12 w-12 sm:h-14 sm:w-14 group-hover:ring-blue-400/50 transition-all duration-300">
+                        <Avatar className="ring-2 ring-blue-400/30 h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 group-hover:ring-blue-400/50 transition-all duration-300">
                           <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
                           <AvatarFallback className="bolt-gradient text-white font-bold text-base sm:text-lg">
                             {testimonial.name.charAt(0)}
@@ -95,28 +95,28 @@ export function TestimonialsSection() {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-base sm:text-lg group-hover:bolt-gradient-text transition-colors truncate">{testimonial.name}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">{testimonial.title}</p>
-                        <p className="text-xs text-muted-foreground/70 mt-0.5 sm:mt-1 truncate">{testimonial.company}</p>
+                        <p className="font-bold text-base sm:text-lg md:text-xl group-hover:bolt-gradient-text transition-colors truncate">{testimonial.name}</p>
+                        <p className="text-sm sm:text-base text-muted-foreground font-semibold truncate">{testimonial.title}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground/70 mt-0.5 sm:mt-1 truncate">{testimonial.company}</p>
                       </div>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="relative flex-1 p-4 sm:p-6 pt-0">
-                    <Quote className="absolute -top-2 -left-2 h-8 w-8 sm:h-10 sm:w-10 text-blue-400/20" />
-                    <p className="relative z-10 text-sm sm:text-base leading-relaxed text-muted-foreground group-hover:text-foreground/80 transition-colors">
+                  <CardContent className="relative flex-1 p-5 sm:p-7 md:p-8 pt-0">
+                    <Quote className="absolute -top-2 -left-2 h-10 w-10 sm:h-12 sm:w-12 text-blue-400/20" />
+                    <p className="relative z-10 text-base sm:text-lg md:text-xl leading-relaxed text-muted-foreground group-hover:text-foreground/80 transition-colors font-medium">
                       &quot;{testimonial.content}&quot;
                     </p>
                   </CardContent>
 
-                  <CardFooter className="pt-3 sm:pt-4 p-4 sm:p-6">
+                  <CardFooter className="pt-3 sm:pt-4 p-5 sm:p-7 md:p-8">
                     <div className="flex items-center justify-between w-full">
                       <div className="flex space-x-0.5 sm:space-x-1">
                         {Array(5).fill(0).map((_, starIndex) => (
-                          <Star key={starIndex} className="w-3 h-3 sm:w-4 sm:h-4 fill-amber-400 text-amber-400" />
+                          <Star key={starIndex} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
                         ))}
                       </div>
-                      <div className="text-xs text-muted-foreground font-medium">
+                      <div className="text-xs sm:text-sm text-muted-foreground font-semibold">
                         Verified User
                       </div>
                     </div>
@@ -127,43 +127,43 @@ export function TestimonialsSection() {
           </div>
 
           {/* Navigation Buttons - Improved positioning */}
-          <div className="flex items-center justify-center gap-4 mt-6 sm:mt-8">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
             <button
-              className="p-3 sm:p-4 rounded-full glass-effect border border-blue-200/30 hover:bg-blue-100/50 transition-all duration-300 hover:scale-110 touch-manipulation"
+              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl touch-manipulation"
               onClick={prevSlide}
               aria-label="Previous testimonial"
             >
-              <FaCircleChevronRight className="h-6 w-6 sm:h-8 sm:w-8 rotate-180 text-blue-600" />
+              <FaCircleChevronRight className="h-6 w-6 sm:h-8 sm:w-8 rotate-180 text-blue-600 dark:text-blue-400" />
             </button>
-            
+
             {/* Pagination Dots */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
               {testimonials.map((_, i) => (
                 <button
                   key={i}
-                  className={`rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-blue-600 w-8 h-2 sm:w-10 sm:h-2' : 'bg-gray-300 w-2 h-2 hover:bg-gray-400'}`}
+                  className={`rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-blue-600 dark:bg-blue-400 w-10 h-2.5 sm:w-12 sm:h-3' : 'bg-gray-300 dark:bg-gray-600 w-2.5 h-2.5 sm:w-3 sm:h-3 hover:bg-gray-400 dark:hover:bg-gray-500'}`}
                   onClick={() => setCurrentIndex(i)}
                   aria-label={`Go to testimonial ${i + 1}`}
                 />
               ))}
             </div>
-            
+
             <button
-              className="p-3 sm:p-4 rounded-full glass-effect border border-blue-200/30 hover:bg-blue-100/50 transition-all duration-300 hover:scale-110 touch-manipulation"
+              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl touch-manipulation"
               onClick={nextSlide}
               aria-label="Next testimonial"
             >
-              <FaCircleChevronRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <FaCircleChevronRight className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400" />
             </button>
           </div>
         </div>
 
         {/* Enhanced bottom CTA */}
         <div className="text-center mt-16 sm:mt-20">
-          <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full glass-effect border border-purple-200/30 hover:scale-105 transition-transform duration-300">
-            <Heart className="h-5 w-5 text-pink-600" />
-            <span className="text-base font-semibold text-purple-700">Join our happy community</span>
-            <Star className="h-5 w-5 text-amber-500 fill-current" />
+          <div className="inline-flex items-center gap-3 sm:gap-4 px-6 sm:px-8 py-3 sm:py-4 rounded-full glass-effect border-2 border-purple-200/40 dark:border-purple-500/30 hover:scale-105 transition-transform duration-300 shadow-lg hover:shadow-xl">
+            <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
+            <span className="text-sm sm:text-base font-bold text-purple-700 dark:text-purple-300">Join our happy community</span>
+            <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
   Sparkles,
   Check
 } from "lucide-react";
+import Image from "next/image";
 import { searchImages } from "@/lib/unsplash";
 import { generateAlternativeImages } from "@/lib/mistral";
 import { cn } from "@/lib/utils";
@@ -111,7 +112,7 @@ export function EditableSlideCard({ slide, index, onUpdate, onDelete }: Editable
             thumb: img.urls.thumb,
             alt: img.alt_description || suggestion.description,
             photographer: img.user?.name,
-            photographerUrl: img.user?.links?.html
+            photographerUrl: img.links?.download_location
           }))
         };
       });
@@ -178,10 +179,12 @@ export function EditableSlideCard({ slide, index, onUpdate, onDelete }: Editable
 
           {slide.imageUrl && (
             <div className="mt-3 rounded-lg overflow-hidden border border-gray-200">
-              <img 
-                src={slide.imageUrl} 
-                alt={slide.title}
+              <Image
+                src={slide.imageUrl}
+                alt={slide.title || 'Slide image'}
                 className="w-full h-32 object-cover"
+                width={400}
+                height={128}
               />
             </div>
           )}
@@ -264,10 +267,12 @@ export function EditableSlideCard({ slide, index, onUpdate, onDelete }: Editable
             <div className="space-y-3">
               {editedSlide.imageUrl && (
                 <div className="relative rounded-lg overflow-hidden border-2 border-gray-200">
-                  <img 
-                    src={editedSlide.imageUrl} 
-                    alt={editedSlide.title}
+                  <Image
+                    src={editedSlide.imageUrl}
+                    alt={editedSlide.title || 'Slide image'}
                     className="w-full h-48 object-cover"
+                    width={400}
+                    height={192}
                   />
                   <div className="absolute top-2 right-2 flex gap-2">
                     <Button
@@ -349,10 +354,12 @@ export function EditableSlideCard({ slide, index, onUpdate, onDelete }: Editable
                             : "border-gray-200"
                         )}
                       >
-                        <img 
-                          src={img.thumb} 
-                          alt={img.alt}
+                        <Image
+                          src={img.thumb}
+                          alt={img.alt || 'Alternative image'}
                           className="w-full h-24 object-cover"
+                          width={128}
+                          height={96}
                         />
                         {editedSlide.imageUrl === img.url && (
                           <div className="absolute top-1 right-1 bg-yellow-400 rounded-full p-1">

@@ -76,13 +76,13 @@ Make each query UNIQUE and HIGHLY RELEVANT to both the presentation topic AND th
       maxTokens: 2000,
     });
 
-    const content = response.choices?.[0]?.message?.content || '[]';
+    let content = response.choices?.[0]?.message?.content || '[]';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
     return [];
   } catch (error) {
     console.error('Error generating image descriptions with Mistral:', error);
@@ -139,13 +139,13 @@ Generate realistic, relevant data that supports the slide content.`;
       maxTokens: 2000,
     });
 
-    const content = response.choices?.[0]?.message?.content || '[]';
+    let content = response.choices?.[0]?.message?.content || '[]';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
     return [];
   } catch (error) {
     console.error('Error generating chart data with Mistral:', error);
@@ -204,13 +204,13 @@ Omit "chart" if not applicable.`;
       maxTokens: 1000,
     });
 
-    const content = response.choices?.[0]?.message?.content || '{}';
+    let content = response.choices?.[0]?.message?.content || '{}';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
     return {};
   } catch (error) {
     console.error('Error enhancing slide with Mistral:', error);
@@ -262,13 +262,13 @@ Guidelines:
       maxTokens: 3000,
     });
 
-    const content = response.choices?.[0]?.message?.content || '[]';
+    let content = response.choices?.[0]?.message?.content || '[]';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
     return [];
   } catch (error) {
     console.error('Error generating presentation text with Mistral:', error);
@@ -317,13 +317,13 @@ Provide variety in:
       maxTokens: 1500,
     });
 
-    const content = response.choices?.[0]?.message?.content || '[]';
+    let content = response.choices?.[0]?.message?.content || '[]';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
-    
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
     return [];
   } catch (error) {
     console.error('Error generating alternative images with Mistral:', error);

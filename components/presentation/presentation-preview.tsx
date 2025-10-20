@@ -526,11 +526,14 @@ export function PresentationPreview({
               <div className="hidden">
                 {/* Hidden image for preloading and error detection */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={slide.image} 
+                {/* Preload image for error detection (hidden) */}
+                <Image
+                  src={slide.image}
                   alt="preload"
                   onError={() => handleImageError(slideIndex)}
                   style={{ display: 'none' }}
+                  width={1}
+                  height={1}
                 />
               </div>
             )}
@@ -567,12 +570,14 @@ export function PresentationPreview({
               <div className="lg:col-span-2 flex items-center justify-center relative group">
                 {slide.image && !imageLoadErrors[slideIndex] ? (
                   <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
-                    <img 
-                      src={slide.image} 
-                      alt={slide.imageAlt || slide.title}
+                    <Image
+                      src={slide.image}
+                      alt={slide.imageAlt || slide.title || 'Slide image'}
                       className="w-full h-auto object-cover"
                       style={{ maxHeight: '450px' }}
                       onError={() => handleImageError(slideIndex)}
+                      width={800}
+                      height={450}
                     />
                     {/* Edit Image Button */}
                     {allowImageEditing && !isFullscreen && (
@@ -660,12 +665,14 @@ export function PresentationPreview({
               <div className="lg:col-span-2 flex items-center justify-center relative group">
                 {slide.image && !imageLoadErrors[slideIndex] ? (
                   <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
-                    <img 
-                      src={slide.image} 
-                      alt={slide.imageAlt || slide.title}
+                    <Image
+                      src={slide.image}
+                      alt={slide.imageAlt || slide.title || 'Slide image'}
                       className="w-full h-auto object-cover"
                       style={{ maxHeight: '450px' }}
                       onError={() => handleImageError(slideIndex)}
+                      width={800}
+                      height={450}
                     />
                     {/* Edit Image Button */}
                     {allowImageEditing && !isFullscreen && (
@@ -738,11 +745,13 @@ export function PresentationPreview({
               <div className="lg:col-span-2 flex items-center justify-center relative group">
                 {slide.image && !imageLoadErrors[slideIndex] ? (
                   <div className={cn("rounded-2xl overflow-hidden relative w-full", templateStyles.shadow, "shadow-2xl")}>
-                    <img 
-                      src={slide.image} 
+                    <Image
+                      src={slide.image}
                       alt={slide.imageAlt || slide.title}
                       className="w-full h-auto object-cover"
                       style={{ maxHeight: '450px' }}
+                      width={800}
+                      height={450}
                       onError={() => handleImageError(slideIndex)}
                     />
                     {/* Edit Image Button */}

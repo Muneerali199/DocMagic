@@ -64,7 +64,10 @@ export async function generateResume({
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
     
     // ENHANCED SYSTEM PROMPT FOR 85%+ ATS SCORES
-    const systemPrompt = `You are an expert ATS-optimized resume writer. Create a professional, ATS-friendly resume for ${name} (${email}) based on: "${prompt}".
+    const systemPrompt = `You are an expert ATS-optimized resume writer. Create a professional, ATS-friendly resume based on this job description/requirement: "${prompt}".
+
+    The candidate's name is: ${name}
+    The candidate's email is: ${email}
 
     CRITICAL ATS OPTIMIZATION REQUIREMENTS:
     1. Use STRONG ACTION VERBS: Led, Developed, Implemented, Optimized, Increased, Reduced, Managed, Designed
@@ -473,11 +476,14 @@ export async function generatePresentation({
     const slides = JSON.parse(jsonText);
 
     // Generate UNIQUE contextual image queries using Mistral for EACH slide
-    const imageDescriptions = await generateImageDescriptions(slides.map((s: any) => ({
-      title: s.title,
-      content: s.content || '',
-      context: prompt
-    })));
+    const imageDescriptions = await generateImageDescriptions(
+      slides.map((s: any) => ({
+        title: s.title,
+        content: s.content || '',
+        context: prompt
+      })),
+      prompt
+    );
 
     // Fetch UNIQUE images for each slide and convert to base64
     const enhancedSlides = await Promise.all(slides.map(async (slide: any, index: number) => {
@@ -1168,11 +1174,36 @@ export async function generateDiagram({
     For ER DIAGRAM:
     - Use "erDiagram"
     - Entities: CUSTOMER ||--o{ ORDER : places
-    - Relationships: ||--||, }|..|{, ||--o{
+    - Relationships: ||--||, }|..|{, ||--o{, }o--o{
+    - Attributes: CUSTOMER { string name string email }
+    
+    For STATE DIAGRAM:
+    - Use "stateDiagram-v2"
+    - States: [*] --> State1, State1 --> State2
+    - Composite: state State1 { [*] --> SubState }
+    
+    For GANTT CHART:
+    - Use "gantt"
+    - Sections: section Section Name
+    - Tasks: Task Name :done, a1, 2024-01-01, 30d
+    
+    For PIE CHART:
+    - Use "pie title Chart Title"
+    - Data: "Label" : value
     
     For GIT GRAPH:
     - Use "gitGraph"
     - Commands: commit, branch, checkout, merge
+    
+    For MINDMAP:
+    - Use "mindmap"
+    - Root: root((Central Idea))
+    - Branches: Child1, Child2
+    
+    For TIMELINE:
+    - Use "timeline"
+    - Title: title Timeline Title
+    - Events: 2024 : Event Description
     
     REQUIREMENTS:
     1. Generate syntactically correct Mermaid code

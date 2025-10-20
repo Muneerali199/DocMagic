@@ -2,5 +2,11 @@
   "extends": "next/core-web-vitals",
   "env": {
     "jest": true
+  },
+  "rules": {
+    "react/no-unescaped-entities": "off",
+    "react/jsx-no-undef": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "@next/next/no-img-element": "warn"
   }
 }

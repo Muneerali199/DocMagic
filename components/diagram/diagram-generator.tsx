@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DiagramPreview } from "@/components/diagram/diagram-preview";
 import { DiagramTemplates } from "@/components/diagram/diagram-templates";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +29,20 @@ import {
   Zap
 } from "lucide-react";
 import { toPng, toSvg } from 'html-to-image';
+
+const DIAGRAM_TYPES = [
+  { value: 'flowchart', label: 'Flowchart', icon: '📊' },
+  { value: 'sequence', label: 'Sequence Diagram', icon: '🔄' },
+  { value: 'classDiagram', label: 'Class Diagram', icon: '📦' },
+  { value: 'erDiagram', label: 'ER Diagram', icon: '🗄️' },
+  { value: 'stateDiagram', label: 'State Diagram', icon: '⚡' },
+  { value: 'gantt', label: 'Gantt Chart', icon: '📅' },
+  { value: 'pie', label: 'Pie Chart', icon: '🥧' },
+  { value: 'gitGraph', label: 'Git Graph', icon: '🌿' },
+  { value: 'mindmap', label: 'Mindmap', icon: '🧠' },
+  { value: 'timeline', label: 'Timeline', icon: '⏳' },
+  { value: 'journey', label: 'User Journey', icon: '🚶' },
+];
 
 const DIAGRAM_EXAMPLES = {
   flowchart: `flowchart TD
@@ -55,6 +71,48 @@ const DIAGRAM_EXAMPLES = {
     }
     Animal <|-- Dog`,
   
+  erDiagram: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    CUSTOMER {
+        string name
+        string email
+        string phone
+    }
+    ORDER ||--|{ LINE-ITEM : contains
+    ORDER {
+        int orderNumber
+        date orderDate
+    }
+    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`,
+  
+  stateDiagram: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing : Start
+    Processing --> Success : Complete
+    Processing --> Failed : Error
+    Failed --> Processing : Retry
+    Success --> [*]
+    Failed --> [*]`,
+  
+  gantt: `gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    section Planning
+    Requirements :done, req, 2024-01-01, 7d
+    Design :active, des, 2024-01-08, 10d
+    section Development
+    Frontend :dev1, 2024-01-18, 14d
+    Backend :dev2, 2024-01-18, 14d
+    section Testing
+    QA Testing :test, 2024-02-01, 7d`,
+  
+  pie: `pie title Project Distribution
+    "Development" : 45
+    "Testing" : 20
+    "Design" : 15
+    "Documentation" : 10
+    "Deployment" : 10`,
+  
   gitGraph: `gitGraph
     commit
     branch develop
@@ -65,10 +123,27 @@ const DIAGRAM_EXAMPLES = {
     merge develop
     commit`,
   
-  erDiagram: `erDiagram
-    CUSTOMER ||--o{ ORDER : places
-    ORDER ||--|{ LINE-ITEM : contains
-    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`,
+  mindmap: `mindmap
+  root((DocMagic))
+    Features
+      Resume Builder
+      Presentation Maker
+      Diagram Generator
+    Technology
+      Next.js
+      AI Integration
+      Mermaid
+    Benefits
+      Fast
+      Professional
+      Easy to Use`,
+  
+  timeline: `timeline
+    title Product Development Timeline
+    2024-Q1 : Planning Phase : Market Research
+    2024-Q2 : Development : MVP Launch
+    2024-Q3 : Growth : User Acquisition
+    2024-Q4 : Scale : Enterprise Features`,
   
   journey: `journey
     title My working day
@@ -84,6 +159,8 @@ const DIAGRAM_EXAMPLES = {
 export function DiagramGenerator() {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [selectedTemplate, setSelectedTemplate] = useState("flowchart");
+  const [prompt, setPrompt] = useState("");
+  const [selectedDiagramType, setSelectedDiagramType] = useState("flowchart");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -97,35 +174,50 @@ export function DiagramGenerator() {
   };
 
   const generateDiagramFromPrompt = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Prompt Required",
+        description: "Please enter a description for your diagram",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     
     try {
-      // Simulate AI generation - in real implementation, this would call your AI API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For demo purposes, we'll use a sample diagram
-      const aiGeneratedDiagram = `flowchart TD
-    A[User Request] --> B{Analyze Requirements}
-    B -->|Complex| C[Break Down Tasks]
-    B -->|Simple| D[Direct Implementation]
-    C --> E[Create Subtasks]
-    E --> F[Execute Tasks]
-    D --> F
-    F --> G{Quality Check}
-    G -->|Pass| H[Deploy]
-    G -->|Fail| I[Fix Issues]
-    I --> F
-    H --> J[Success!]`;
-      
-      setDiagramCode(aiGeneratedDiagram);
-      
-      toast({
-        title: "🎯 AI Diagram Generated!",
-        description: "Your diagram has been created based on your requirements",
+      const response = await fetch('/api/generate/diagram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          diagramType: selectedDiagramType
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate diagram');
+      }
+
+      const data = await response.json();
+      
+      if (data.code) {
+        setDiagramCode(data.code);
+        setActiveTab("preview");
+        
+        toast({
+          title: "🎯 AI Diagram Generated!",
+          description: data.title || "Your diagram has been created successfully",
+        });
+      } else {
+        throw new Error('Invalid response from API');
+      }
     } catch (error) {
+      console.error('Diagram generation error:', error);
       toast({
-        title: "Error",
+        title: "Generation Failed",
         description: "Failed to generate diagram. Please try again.",
         variant: "destructive",
       });
@@ -166,27 +258,54 @@ export function DiagramGenerator() {
       
       let dataUrl: string;
       
+      // Enhanced export options to preserve colors and styling
+      const exportOptions = {
+        backgroundColor: '#ffffff',
+        quality: 1.0,
+        pixelRatio: 3, // Higher resolution for better quality
+        cacheBust: true,
+        width: element.scrollWidth + 60, // Add padding
+        height: element.scrollHeight + 60, // Add padding
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          padding: '30px',
+        },
+        // Include all CSS styles
+        includeQueryParams: true,
+        skipAutoScale: false,
+        // Ensure fonts and colors are embedded
+        fontEmbedCSS: true,
+        filter: (node: HTMLElement) => {
+          // Ensure all text elements are captured with black color
+          if (node.tagName === 'text' || node.tagName === 'tspan') {
+            node.setAttribute('fill', '#000000');
+            node.style.fill = '#000000';
+          }
+          return true;
+        },
+      };
+      
       if (format === 'png') {
-        dataUrl = await toPng(element as HTMLElement, {
-          backgroundColor: '#ffffff',
-          quality: 1.0,
-          pixelRatio: 2
-        });
+        dataUrl = await toPng(element as HTMLElement, exportOptions);
       } else {
         dataUrl = await toSvg(element as HTMLElement, {
-          backgroundColor: '#ffffff'
+          ...exportOptions,
+          // For SVG, ensure all styles are inline
+          skipFonts: false,
         });
       }
       
-      // Create download link
+      // Create download link with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
       const link = document.createElement('a');
-      link.download = `diagram.${format}`;
+      link.download = `diagram-${timestamp}.${format}`;
       link.href = dataUrl;
       link.click();
       
       toast({
         title: `Diagram exported as ${format.toUpperCase()}!`,
-        description: "Your diagram has been downloaded successfully",
+        description: "Your diagram has been downloaded with full styling preserved",
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -273,6 +392,68 @@ export function DiagramGenerator() {
               </div>
 
               <div className="space-y-4">
+                {/* AI Prompt Section */}
+                <div className="glass-effect p-4 rounded-xl border-2 border-yellow-400/30 space-y-3">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Wand2 className="h-4 w-4 text-yellow-500" />
+                    AI Diagram Generator
+                  </Label>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="diagramType" className="text-xs text-muted-foreground mb-1.5 block">
+                        Diagram Type
+                      </Label>
+                      <Select value={selectedDiagramType} onValueChange={setSelectedDiagramType}>
+                        <SelectTrigger id="diagramType" className="glass-effect border-yellow-400/20">
+                          <SelectValue placeholder="Select diagram type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DIAGRAM_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              <span className="flex items-center gap-2">
+                                <span>{type.icon}</span>
+                                <span>{type.label}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="aiPrompt" className="text-xs text-muted-foreground mb-1.5 block">
+                        Describe Your Diagram
+                      </Label>
+                      <Textarea
+                        id="aiPrompt"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="E.g., Create an ER diagram for a blog system with users, posts, comments, and tags..."
+                        className="min-h-[80px] text-sm glass-effect border-yellow-400/20 focus:border-yellow-400/60 resize-none"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={generateDiagramFromPrompt}
+                      disabled={isGenerating}
+                      className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating with AI...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate with AI
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Quick Template Buttons */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium flex items-center gap-2">
@@ -291,6 +472,7 @@ export function DiagramGenerator() {
                         {template === 'classDiagram' ? 'Class' : 
                          template === 'erDiagram' ? 'ER Diagram' :
                          template === 'gitGraph' ? 'Git Graph' :
+                         template === 'stateDiagram' ? 'State' :
                          template}
                       </Button>
                     ))}
@@ -310,33 +492,32 @@ export function DiagramGenerator() {
                     placeholder="Enter your Mermaid diagram code here..."
                     className="min-h-[300px] font-mono text-sm glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
                   />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={generateDiagramFromPrompt}
                     disabled={isGenerating}
-                    className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+                    className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                   >
                     {isGenerating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
+                        Generating with AI...
                       </>
                     ) : (
                       <>
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        AI Generate
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate with AI
                       </>
                     )}
                   </Button>
-                  
+                </div>
+
+                {/* Copy Code Button */}
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     onClick={copyToClipboard}
                     disabled={isCopying}
-                    className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+                    className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 flex-1"
                   >
                     {isCopying ? (
                       <Check className="mr-2 h-4 w-4 text-green-500" />

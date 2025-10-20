@@ -187,32 +187,47 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
         throw new Error('Resume content not found');
       }
 
+      // Capture with better quality and proper sizing
       const canvas = await html2canvas(resumeElement, {
-        scale: 2,
+        scale: 3, // Higher quality
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 794, // A4 width in pixels at 96 DPI
+        windowHeight: 1123, // A4 height in pixels at 96 DPI
+        width: resumeElement.scrollWidth,
+        height: resumeElement.scrollHeight,
+        x: 0,
+        y: 0
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      // Create PDF with proper A4 dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'pt',
-        format: 'a4'
+        unit: 'mm',
+        format: 'a4',
+        compress: true
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
       
+      // Calculate proper dimensions to fit content
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const ratio = Math.min(pdfWidth / (imgWidth / 3.78), pdfHeight / (imgHeight / 3.78)); // Convert pixels to mm
       
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+      const finalWidth = (imgWidth / 3.78) * ratio;
+      const finalHeight = (imgHeight / 3.78) * ratio;
       
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`${resumeData.name?.replace(/\\s+/g, '-').toLowerCase() || 'resume'}.pdf`);
+      // Center the content
+      const xOffset = (pdfWidth - finalWidth) / 2;
+      const yOffset = 0;
+      
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight, '', 'FAST');
+      pdf.save(`${resumeData.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.pdf`);
       
       toast({
         title: "Resume downloaded!",

@@ -18,6 +18,7 @@ import {
   Trash2,
   Download
 } from "lucide-react";
+import Image from "next/image";
 import { searchImages } from "@/lib/unsplash";
 import { generateAlternativeImages } from "@/lib/mistral";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ export function PostGenerationImageEditor({
           thumb: img.urls.small,
           alt: img.alt_description || suggestion.description,
           photographer: img.user?.name,
-          photographerUrl: img.user?.links?.html,
+          photographerUrl: img.links?.download_location,
           downloadLocation: img.links?.download_location,
           description: suggestion.description
         }));
@@ -93,9 +94,9 @@ export function PostGenerationImageEditor({
         url: img.urls.regular,
         thumb: img.urls.small,
         alt: img.alt_description || searchQuery,
-        photographer: img.user?.name,
-        photographerUrl: img.user?.links?.html,
-        downloadLocation: img.links?.download_location
+    photographer: img.user?.name,
+    photographerUrl: img.links?.download_location,
+    downloadLocation: img.links?.download_location
       })));
     } catch (error) {
       console.error("Error searching images:", error);
@@ -160,10 +161,12 @@ export function PostGenerationImageEditor({
               <div className="mb-4 p-4 border rounded-lg bg-gray-50">
                 <Label className="text-sm font-medium mb-2 block">Current Image</Label>
                 <div className="relative">
-                  <img 
-                    src={currentImage} 
-                    alt="Current" 
+                  <Image
+                    src={currentImage}
+                    alt="Current"
                     className="w-full h-32 object-cover rounded-lg"
+                    width={400}
+                    height={128}
                   />
                   <Button
                     size="sm"
@@ -232,10 +235,12 @@ export function PostGenerationImageEditor({
                           : "border-gray-200 hover:border-yellow-300"
                       )}
                     >
-                      <img 
-                        src={img.thumb} 
-                        alt={img.alt}
+                      <Image
+                        src={img.thumb}
+                        alt={img.alt || 'AI suggestion'}
                         className="w-full h-32 object-cover"
+                        width={128}
+                        height={96}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
                       {currentImage === img.url && (
@@ -289,10 +294,12 @@ export function PostGenerationImageEditor({
                           : "border-gray-200 hover:border-yellow-300"
                       )}
                     >
-                      <img 
-                        src={img.thumb} 
-                        alt={img.alt}
+                      <Image
+                        src={img.thumb}
+                        alt={img.alt || 'Search result'}
                         className="w-full h-24 object-cover"
+                        width={128}
+                        height={96}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
                       {currentImage === img.url && (

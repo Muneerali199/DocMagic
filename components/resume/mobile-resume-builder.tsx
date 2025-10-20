@@ -36,6 +36,8 @@ export function MobileResumeBuilder() {
   const [atsScore, setAtsScore] = useState<any>(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [manualText, setManualText] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [currentStep, setCurrentStep] = useState<'input' | 'preview'>('input');
   const [showAIChat, setShowAIChat] = useState(false);
 
@@ -173,20 +175,47 @@ export function MobileResumeBuilder() {
 
   // Manual Text Import - Using existing working resume generation
   const handleManualImport = async () => {
-    if (!manualText.trim()) {
+    if (!userName.trim()) {
       toast({
-        title: "Please enter your information",
-        description: "Tell us about yourself - name, role, experience, skills, etc.",
+        title: "Please enter your name",
+        description: "Your name is required to generate the resume",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate minimum length (API requires at least 10 characters)
+    if (!userEmail.trim()) {
+      toast({
+        title: "Please enter your email",
+        description: "Your email is required to generate the resume",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      toast({
+        title: "Invalid email format",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!manualText.trim()) {
+      toast({
+        title: "Please enter job description",
+        description: "Tell us about the role you're targeting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (manualText.trim().length < 10) {
       toast({
         title: "Please provide more information",
-        description: "Tell us more about yourself (at least 10 characters)",
+        description: "Tell us more about the role (at least 10 characters)",
         variant: "destructive",
       });
       return;
@@ -198,17 +227,6 @@ export function MobileResumeBuilder() {
       const token = await getAuthToken();
       if (!token) throw new Error("Please sign in first");
 
-      // Extract name and email from text if possible
-      const emailMatch = manualText.match(/[\w.-]+@[\w.-]+\.\w+/);
-      const lines = manualText.split('\n').filter(line => line.trim());
-      const nameMatch = lines[0]?.trim() || "";
-      
-      // Validate extracted name (must be at least 2 characters)
-      const validName = nameMatch && nameMatch.length >= 2 ? nameMatch : "John Doe";
-      
-      // Validate email format
-      const validEmail = emailMatch ? emailMatch[0] : "user@example.com";
-
       // Use existing working resume generation API
       const response = await fetch("/api/generate/resume", {
         method: "POST",
@@ -218,8 +236,8 @@ export function MobileResumeBuilder() {
         },
         body: JSON.stringify({ 
           prompt: manualText.trim(),
-          name: validName,
-          email: validEmail
+          name: userName.trim(),
+          email: userEmail.trim()
         }),
       });
 
@@ -529,7 +547,36 @@ export function MobileResumeBuilder() {
 
                   {/* LinkedIn Tab */}
                   <TabsContent value="linkedin" className="space-y-4">
-                    <div className="space-y-3">
+                    <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 mb-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Linkedin className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <h3 className="font-bold text-lg text-gray-900">LinkedIn Import</h3>
+                          <p className="text-sm text-gray-600">Feature In Progress</p>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2 p-3 bg-white rounded-lg border border-blue-200">
+                          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Coming Soon!</p>
+                            <p className="text-xs text-gray-600">
+                              We're working on LinkedIn URL import feature. It will be available soon!
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <Sparkles className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">Use Quick Generate Instead</p>
+                            <p className="text-xs text-gray-600">
+                              For now, use the &quot;Quick Generate&quot; tab. Just enter your name, email, and job description!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3 opacity-50 pointer-events-none">
                       <Label htmlFor="linkedin-url" className="text-sm font-medium">
                         LinkedIn Profile URL
                       </Label>
@@ -539,6 +586,7 @@ export function MobileResumeBuilder() {
                         value={linkedinUrl}
                         onChange={(e) => setLinkedinUrl(e.target.value)}
                         className="bg-white/50"
+                        disabled
                       />
                       <p className="text-xs text-gray-500">
                         Example: https://linkedin.com/in/billgates
@@ -604,35 +652,55 @@ export function MobileResumeBuilder() {
                   {/* Manual Text Tab - Using Working Resume Generation */}
                   <TabsContent value="text" className="space-y-4">
                     <div className="space-y-3">
-                      <Label htmlFor="manual-text" className="text-sm font-medium flex items-center gap-2">
-                        Enter Your Information
-                        <span className="px-2 py-0.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs rounded-full font-bold">
-                          AI-Powered ✨
-                        </span>
-                      </Label>
-                      <Textarea
-                        id="manual-text"
-                        placeholder="Tell us about yourself! Include:
-
-• Your name and contact info
-• Current or target job role
-• Work experience and achievements  
-• Education background
-• Technical and soft skills
-• Certifications (if any)
-• Projects you've worked on
+                      <div>
+                        <Label htmlFor="user-name" className="text-sm font-medium">
+                          Your Name *
+                        </Label>
+                        <Input
+                          id="user-name"
+                          placeholder="e.g., John Doe"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                          className="bg-white/50"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="user-email" className="text-sm font-medium">
+                          Your Email *
+                        </Label>
+                        <Input
+                          id="user-email"
+                          type="email"
+                          placeholder="e.g., john.doe@example.com"
+                          value={userEmail}
+                          onChange={(e) => setUserEmail(e.target.value)}
+                          className="bg-white/50"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="manual-text" className="text-sm font-medium flex items-center gap-2">
+                          Job Description / Target Role *
+                          <span className="px-2 py-0.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs rounded-full font-bold">
+                            AI-Powered ✨
+                          </span>
+                        </Label>
+                        <Textarea
+                          id="manual-text"
+                          placeholder="Describe the job role you're targeting:
 
 Example:
-John Doe
-Software Engineer
-5 years of experience in full-stack development
+Full Stack Developer with 5 years of experience
+Expert in React, Node.js, Python, AWS
+Led team of 10 developers
+Increased performance by 40%
 Bachelor's in Computer Science
-Skills: React, Node.js, Python, AWS
+Certified AWS Solutions Architect
 ..."
-                        value={manualText}
-                        onChange={(e) => setManualText(e.target.value)}
-                        className="min-h-[200px] bg-white/50 resize-none"
-                      />
+                          value={manualText}
+                          onChange={(e) => setManualText(e.target.value)}
+                          className="min-h-[180px] bg-white/50 resize-none"
+                        />
+                      </div>
                       <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                         <Sparkles className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
                         <p className="text-xs text-gray-700">

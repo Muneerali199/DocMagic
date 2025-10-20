@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from "next/image";
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -164,10 +165,12 @@ export function TemplatePreviewFullScreen({
                         className="relative"
                         style={{ transform: `scale(${zoom / 100})` }}
                       >
-                        <img
+                        <Image
                           src={previewImages[currentSlide]}
                           alt={`${template.name} - Slide ${currentSlide + 1}`}
                           className="max-w-full h-auto rounded-lg shadow-2xl"
+                          width={1280}
+                          height={720}
                         />
                       </motion.div>
                     ) : (

@@ -255,8 +255,8 @@ export function ResumePreview({ resume, template, onChange }: ResumePreviewProps
   };
 
   const renderProfessionalTemplate = () => (
-    <div className="w-full h-full bg-white text-gray-900 overflow-auto" id="resume-content">
-      <div className="p-6 sm:p-8 max-w-[800px] mx-auto font-sans min-h-[600px]">
+    <div className="w-full bg-white text-gray-900 overflow-auto" id="resume-content">
+      <div className="p-8 max-w-[794px] mx-auto font-sans" style={{ width: '794px', minHeight: '1123px' }}>
         {/* Header Section */}
         <div className="text-center mb-6 border-b border-gray-200 pb-6">
           {isEditing ? (

@@ -27,29 +27,44 @@ export function DiagramPreview({ code, fullScreen = false }: DiagramPreviewProps
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: 'Inter, system-ui, sans-serif',
+          themeVariables: {
+            primaryTextColor: '#000000',
+            secondaryTextColor: '#1a1a1a',
+            tertiaryTextColor: '#2d2d2d',
+            textColor: '#000000',
+            fontSize: '16px',
+            fontWeight: '500',
+          },
           flowchart: {
-            useMaxWidth: true,
+            useMaxWidth: false,
             htmlLabels: true,
-            curve: 'basis'
+            curve: 'basis',
+            padding: 20,
+            nodeSpacing: 50,
+            rankSpacing: 50,
           },
           sequence: {
-            useMaxWidth: true,
-            wrap: true
+            useMaxWidth: false,
+            wrap: true,
+            width: 800,
+            height: 600,
           },
           gantt: {
-            useMaxWidth: true
+            useMaxWidth: false,
+            fontSize: 14,
           },
           journey: {
-            useMaxWidth: true
+            useMaxWidth: false,
           },
           gitGraph: {
-            useMaxWidth: true
+            useMaxWidth: false,
           },
           er: {
-            useMaxWidth: true
+            useMaxWidth: false,
+            fontSize: 14,
           },
           class: {
-            useMaxWidth: true
+            useMaxWidth: false,
           }
         });
         
@@ -110,8 +125,29 @@ export function DiagramPreview({ code, fullScreen = false }: DiagramPreviewProps
           diagramContainer.style.display = 'flex';
           diagramContainer.style.justifyContent = 'center';
           diagramContainer.style.alignItems = 'center';
-          diagramContainer.style.minHeight = fullScreen ? '500px' : '300px';
-          diagramContainer.style.padding = '20px';
+          diagramContainer.style.minHeight = fullScreen ? '600px' : '400px';
+          diagramContainer.style.padding = '30px';
+          diagramContainer.style.backgroundColor = '#ffffff';
+          
+          // Find the SVG element and enhance it
+          const svgElement = diagramContainer.querySelector('svg');
+          if (svgElement) {
+            // Increase diagram size for better visibility
+            svgElement.style.maxWidth = '100%';
+            svgElement.style.height = 'auto';
+            svgElement.style.minWidth = fullScreen ? '800px' : '600px';
+            
+            // Ensure text is black and visible
+            const textElements = svgElement.querySelectorAll('text, tspan, .nodeLabel, .edgeLabel');
+            textElements.forEach((text: any) => {
+              text.style.fill = '#000000';
+              text.style.color = '#000000';
+              text.setAttribute('fill', '#000000');
+            });
+            
+            // Make diagram responsive on mobile
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          }
           
           containerRef.current.appendChild(diagramContainer);
         }
@@ -175,12 +211,13 @@ export function DiagramPreview({ code, fullScreen = false }: DiagramPreviewProps
       
       <div 
         ref={containerRef} 
-        className={`w-full ${fullScreen ? 'min-h-[600px]' : 'min-h-[300px]'} overflow-auto`}
+        className={`w-full ${fullScreen ? 'min-h-[600px]' : 'min-h-[400px]'} overflow-x-auto overflow-y-auto`}
         style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center',
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
         }}
       />
     </div>
