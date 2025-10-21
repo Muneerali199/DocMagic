@@ -498,78 +498,78 @@ export function MobileResumeBuilder() {
       <div className="relative z-10 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header - Matching Landing Page Style */}
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30 mb-6 hover:scale-105 transition-transform duration-300">
-              <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
-              <span className="text-sm font-semibold bolt-gradient-text">AI-Powered Resume Builder</span>
+          <div className="text-center mb-6 sm:mb-12 lg:mb-16 px-4">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-effect border border-blue-200/30 mb-4 sm:mb-6 hover:scale-105 transition-transform duration-300">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-pulse" />
+              <span className="text-xs sm:text-sm font-semibold bolt-gradient-text">AI-Powered Resume Builder</span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-              <span className="block mb-2">Create Your Perfect Resume</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
+              <span className="block mb-1 sm:mb-2">Create Your Perfect Resume</span>
               <span className="bolt-gradient-text">In Seconds, Not Hours</span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Import from LinkedIn, upload PDF, or paste your info. Our advanced AI does the rest! ✨
             </p>
           </div>
 
         {currentStep === 'input' ? (
           /* Input Section */
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 px-4 sm:px-0">
             {/* Left: Import Methods */}
             <Card className="card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 shadow-xl backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold professional-heading">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-xl sm:text-2xl font-bold professional-heading">
                   <span className="bolt-gradient-text">Import Your Profile</span>
                 </CardTitle>
-                <CardDescription className="text-muted-foreground text-base">
+                <CardDescription className="text-muted-foreground text-sm sm:text-base">
                   Choose your preferred method to get started
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <Tabs defaultValue="linkedin" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-6 glass-effect">
-                    <TabsTrigger value="linkedin" className="text-xs md:text-sm data-[state=active]:bolt-gradient data-[state=active]:text-white">
-                      <Globe className="h-4 w-4 mr-1" />
-                      <span className="hidden md:inline">LinkedIn</span>
-                      <span className="md:hidden">URL</span>
+                  <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 glass-effect h-auto">
+                    <TabsTrigger value="linkedin" className="text-xs sm:text-sm data-[state=active]:bolt-gradient data-[state=active]:text-white py-2 sm:py-2.5">
+                      <Globe className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
+                      <span className="hidden sm:inline">LinkedIn</span>
+                      <span className="sm:hidden">URL</span>
                     </TabsTrigger>
-                    <TabsTrigger value="pdf" className="text-xs md:text-sm data-[state=active]:sunset-gradient data-[state=active]:text-white">
-                      <Upload className="h-4 w-4 mr-1" />
+                    <TabsTrigger value="pdf" className="text-xs sm:text-sm data-[state=active]:sunset-gradient data-[state=active]:text-white py-2 sm:py-2.5">
+                      <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                       PDF
                     </TabsTrigger>
-                    <TabsTrigger value="text" className="text-xs md:text-sm data-[state=active]:forest-gradient data-[state=active]:text-white">
-                      <FileText className="h-4 w-4 mr-1" />
+                    <TabsTrigger value="text" className="text-xs sm:text-sm data-[state=active]:forest-gradient data-[state=active]:text-white py-2 sm:py-2.5">
+                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                       Text
                     </TabsTrigger>
                   </TabsList>
 
                   {/* LinkedIn Tab */}
-                  <TabsContent value="linkedin" className="space-y-4">
-                    <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 mb-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Linkedin className="h-8 w-8 text-blue-600" />
+                  <TabsContent value="linkedin" className="space-y-3 sm:space-y-4">
+                    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <Linkedin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
                         <div>
-                          <h3 className="font-bold text-lg text-gray-900">LinkedIn Import</h3>
-                          <p className="text-sm text-gray-600">Feature In Progress</p>
+                          <h3 className="font-bold text-base sm:text-lg text-gray-900">LinkedIn Import</h3>
+                          <p className="text-xs sm:text-sm text-gray-600">Feature In Progress</p>
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-2 p-3 bg-white rounded-lg border border-blue-200">
-                          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-2 sm:space-y-3">
+                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-white rounded-lg border border-blue-200">
+                          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Coming Soon!</p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs sm:text-sm font-medium text-gray-900 mb-0.5 sm:mb-1">Coming Soon!</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600">
                               We're working on LinkedIn URL import feature. It will be available soon!
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <Sparkles className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900 mb-1">Use Quick Generate Instead</p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs sm:text-sm font-medium text-gray-900 mb-0.5 sm:mb-1">Use Quick Generate Instead</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600">
                               For now, use the &quot;Quick Generate&quot; tab. Just enter your name, email, and job description!
                             </p>
                           </div>
@@ -595,30 +595,30 @@ export function MobileResumeBuilder() {
                     <Button
                       onClick={handleLinkedInImport}
                       disabled={isImporting}
-                      className="w-full bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg"
+                      className="w-full bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg text-sm sm:text-base"
                       size="lg"
                     >
                       {isImporting ? (
                         <>
                           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          <span className="font-semibold">Importing...</span>
+                          <span className="font-semibold text-white">Importing...</span>
                         </>
                       ) : (
                         <>
                           <Linkedin className="mr-2 h-5 w-5" />
-                          <span className="font-semibold">Import from LinkedIn</span>
+                          <span className="font-semibold text-white">Import from LinkedIn</span>
                         </>
                       )}
                     </Button>
                   </TabsContent>
 
                   {/* PDF Tab */}
-                  <TabsContent value="pdf" className="space-y-4">
-                    <div className="space-y-3">
+                  <TabsContent value="pdf" className="space-y-3 sm:space-y-4">
+                    <div className="space-y-2 sm:space-y-3">
                       <Label htmlFor="pdf-upload" className="text-sm font-medium">
                         Upload LinkedIn PDF Export
                       </Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-white/30">
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 md:p-8 text-center hover:border-yellow-400 transition-colors cursor-pointer bg-white/30">
                         <input
                           type="file"
                           id="pdf-upload"
@@ -627,21 +627,21 @@ export function MobileResumeBuilder() {
                           className="hidden"
                         />
                         <label htmlFor="pdf-upload" className="cursor-pointer">
-                          <Upload className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                          <p className="text-sm font-medium text-gray-700">
+                          <Upload className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mx-auto mb-2 sm:mb-3 text-gray-400" />
+                          <p className="text-xs sm:text-sm font-medium text-gray-700">
                             Click to upload PDF
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                             LinkedIn profile export only
                           </p>
                         </label>
                       </div>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-xs text-blue-800 font-medium mb-2">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-3">
+                      <p className="text-[10px] sm:text-xs text-blue-800 font-medium mb-1.5 sm:mb-2">
                         💡 How to export from LinkedIn:
                       </p>
-                      <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                      <ol className="text-[10px] sm:text-xs text-blue-700 space-y-0.5 sm:space-y-1 list-decimal list-inside">
                         <li>Go to your LinkedIn profile</li>
                         <li>Click &quot;More&quot; → &quot;Save to PDF&quot;</li>
                         <li>Upload the downloaded PDF here</li>
@@ -650,8 +650,8 @@ export function MobileResumeBuilder() {
                   </TabsContent>
 
                   {/* Manual Text Tab - Using Working Resume Generation */}
-                  <TabsContent value="text" className="space-y-4">
-                    <div className="space-y-3">
+                  <TabsContent value="text" className="space-y-3 sm:space-y-4">
+                    <div className="space-y-2 sm:space-y-3">
                       <div>
                         <Label htmlFor="user-name" className="text-sm font-medium">
                           Your Name *
@@ -701,9 +701,9 @@ Certified AWS Solutions Architect
                           className="min-h-[180px] bg-white/50 resize-none"
                         />
                       </div>
-                      <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                        <Sparkles className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
-                        <p className="text-xs text-gray-700">
+                      <div className="flex items-start gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
+                        <p className="text-[10px] sm:text-xs text-gray-700">
                           <strong className="text-blue-700">AI will create:</strong> Complete professional resume with 
                           proper formatting, quantified achievements, and ATS optimization + instant compatibility score!
                         </p>
@@ -712,7 +712,7 @@ Certified AWS Solutions Architect
                     <Button
                       onClick={handleManualImport}
                       disabled={isImporting}
-                      className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg"
+                      className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
                       size="lg"
                     >
                       {isImporting ? (
@@ -734,8 +734,8 @@ Certified AWS Solutions Architect
 
             {/* Right: Benefits/Features - Enhanced Matching Landing Page */}
             <Card className="card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 shadow-xl backdrop-blur-xl hidden lg:block">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold professional-heading">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-xl sm:text-2xl font-bold professional-heading">
                   <span className="sunset-gradient-text">Why Use Our Builder? ✨</span>
                 </CardTitle>
               </CardHeader>
