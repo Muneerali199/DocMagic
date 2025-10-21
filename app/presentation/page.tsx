@@ -8,17 +8,39 @@ import {
   Star,
   Wand2,
   Sliders as Slides,
+  Smartphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PresentationPreviewSkeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function PresentationPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobilePrompt, setShowMobilePrompt] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    // Check if mobile
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setShowMobilePrompt(true);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -37,6 +59,43 @@ export default function PresentationPage() {
       />
 
       <SiteHeader />
+      
+      {/* Mobile Prompt Banner */}
+      {showMobilePrompt && isMobile && (
+        <div className="relative z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-start gap-3">
+              <Smartphone className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm mb-1">
+                  Mobile-Optimized Version Available! 📱
+                </h3>
+                <p className="text-xs text-blue-100 mb-3">
+                  Get a better experience with our mobile-friendly interface designed specifically for your device
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => router.push('/presentation/mobile')}
+                    size="sm"
+                    className="bg-white text-blue-600 hover:bg-blue-50 font-semibold h-8 text-xs"
+                  >
+                    Switch to Mobile View
+                  </Button>
+                  <Button
+                    onClick={() => setShowMobilePrompt(false)}
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20 h-8 text-xs"
+                  >
+                    Continue Here
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <main className="flex-1 relative z-10 flex items-center justify-center">
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           {/* Enhanced Header */}
