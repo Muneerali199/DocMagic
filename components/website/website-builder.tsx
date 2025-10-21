@@ -231,14 +231,14 @@ export function WebsiteBuilder() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10">
         {/* Compact Header */}
-        <div className="text-center mb-4 sm:mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect border border-blue-200/30 mb-3 hover:scale-105 transition-transform duration-300">
-            <Code className="h-4 w-4 text-blue-500" />
-            <span className="text-xs sm:text-sm font-semibold bolt-gradient-text">AI Website Builder</span>
-            <Sparkles className="h-4 w-4 text-purple-500" />
+        <div className="text-center mb-4 sm:mb-6 px-2">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full glass-effect border border-blue-200/30 mb-2 sm:mb-3 hover:scale-105 transition-transform duration-300">
+            <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+            <span className="text-[10px] sm:text-xs md:text-sm font-semibold bolt-gradient-text">AI Website Builder</span>
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" />
           </div>
           
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 leading-tight">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 leading-tight">
             <span className="block">Create Stunning Websites</span>
             <span className="bolt-gradient-text">In Seconds with AI</span>
           </h1>
@@ -246,19 +246,19 @@ export function WebsiteBuilder() {
 
         {/* Input Section */}
         {!websiteCode && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Main Input Form */}
-            <div className="glass-effect rounded-xl p-4 sm:p-6 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
-              <div className="space-y-4">
+            <div className="glass-effect rounded-xl p-3 sm:p-4 md:p-6 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-1.5 mb-2">
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                  <Label htmlFor="prompt" className="text-xs sm:text-sm font-semibold flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" />
                     Describe Your Website
                   </Label>
                   <Textarea
                     id="prompt"
                     placeholder="E.g., Create a modern landing page for a SaaS product with a hero section, features grid, pricing table, and contact form."
-                    className="min-h-[120px] text-sm glass-effect border-blue-200/30 focus:border-blue-400/60 focus:ring-blue-400/20 resize-none"
+                    className="min-h-[100px] sm:min-h-[120px] text-xs sm:text-sm glass-effect border-blue-200/30 focus:border-blue-400/60 focus:ring-blue-400/20 resize-none"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     disabled={isGenerating}
@@ -266,23 +266,23 @@ export function WebsiteBuilder() {
                 </div>
 
                 <div>
-                  <Label className="text-sm font-semibold flex items-center gap-1.5 mb-2">
-                    <Layout className="h-4 w-4 text-blue-500" />
+                  <Label className="text-xs sm:text-sm font-semibold flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+                    <Layout className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
                     Base Style
                   </Label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2">
                     {styles.map((s) => (
                       <button
                         key={s.id}
                         onClick={() => setStyle(s.id)}
-                        className={`group p-2 rounded-lg border transition-all duration-300 backdrop-blur-lg shadow-sm hover:shadow-md ${
+                        className={`group p-1.5 sm:p-2 rounded-lg border transition-all duration-300 backdrop-blur-lg shadow-sm hover:shadow-md ${
                           style === s.id
                             ? 'border-blue-400 glass-effect scale-105 ring-1 ring-blue-400/20'
                             : 'border-gray-200/50 hover:border-blue-300/70 glass-effect hover:scale-105'
                         }`}
                       >
-                        <div className={`w-full h-8 rounded-md ${s.color} mb-1 shadow-sm ring-1 ring-white/20 group-hover:scale-110 transition-transform`}></div>
-                        <div className="text-[10px] font-semibold text-gray-800 dark:text-white text-center">{s.name}</div>
+                        <div className={`w-full h-6 sm:h-8 rounded-md ${s.color} mb-0.5 sm:mb-1 shadow-sm ring-1 ring-white/20 group-hover:scale-110 transition-transform`}></div>
+                        <div className="text-[9px] sm:text-[10px] font-semibold text-gray-800 dark:text-white text-center">{s.name}</div>
                       </button>
                     ))}
                   </div>
@@ -291,19 +291,19 @@ export function WebsiteBuilder() {
                 <Button
                   onClick={generateWebsite}
                   disabled={isGenerating || !prompt.trim()}
-                  className="w-full bolt-gradient text-white font-semibold py-5 text-base rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden shadow-lg"
+                  className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 text-sm sm:text-base rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden shadow-lg"
                 >
-                  <div className="flex items-center justify-center gap-2 relative z-10">
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2 relative z-10">
                     {isGenerating ? (
                       <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         <span>Generating Your Website...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-5 w-5" />
+                        <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span>Generate Website with AI</span>
-                        <ArrowRight className="h-5 w-5" />
+                        <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                       </>
                     )}
                   </div>
@@ -315,14 +315,14 @@ export function WebsiteBuilder() {
             </div>
 
             {/* Premium Templates Section - Full Width Below */}
-            <div className="glass-effect rounded-xl p-4 sm:p-6 border-2 border-purple-200/30 backdrop-blur-xl shadow-xl">
-              <div className="flex items-center justify-between mb-4">
+            <div className="glass-effect rounded-xl p-3 sm:p-4 md:p-6 border-2 border-purple-200/30 backdrop-blur-xl shadow-xl">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 mb-1">
-                    <Layout className="h-5 w-5 text-blue-500" />
+                  <h2 className="text-base sm:text-lg md:text-xl font-bold flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                    <Layout className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                     <span className="bolt-gradient-text">Premium Templates</span>
                   </h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">
                     Start with professionally designed templates
                   </p>
                 </div>
@@ -330,14 +330,14 @@ export function WebsiteBuilder() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowTemplates(!showTemplates)}
-                  className="text-sm"
+                  className="text-xs sm:text-sm px-2 sm:px-3"
                 >
                   {showTemplates ? 'Hide Templates' : 'Show Templates'}
                 </Button>
               </div>
               
               {showTemplates && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                   {websiteTemplates.map((template) => (
                     <div
                       key={template.id}
@@ -380,11 +380,11 @@ export function WebsiteBuilder() {
                       </div>
                       
                       {/* Template Info */}
-                      <div className="p-4 bg-white dark:bg-gray-800">
-                        <h3 className="font-semibold text-sm mb-1 text-gray-800 dark:text-white">
+                      <div className="p-3 sm:p-4 bg-white dark:bg-gray-800">
+                        <h3 className="font-semibold text-xs sm:text-sm mb-1 text-gray-800 dark:text-white">
                           {template.name}
                         </h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 mb-2 sm:mb-3">
                           {template.description}
                         </p>
                         <div className="flex items-center justify-between">
@@ -412,9 +412,9 @@ export function WebsiteBuilder() {
 
         {/* Preview & Code Section */}
         {websiteCode && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Action Buttons - Mobile Optimized */}
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
               <Button
                 onClick={() => setWebsiteCode(null)}
                 className="glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md text-xs sm:text-sm"
@@ -445,20 +445,22 @@ export function WebsiteBuilder() {
             </div>
 
             {/* Preview & Code Tabs */}
-            <div className="glass-effect rounded-2xl p-6 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
+            <div className="glass-effect rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border-2 border-blue-200/30 backdrop-blur-xl shadow-xl">
               <Tabs defaultValue="preview" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 glass-effect border border-blue-200/30">
-                  <TabsTrigger value="preview" className="gap-2 data-[state=active]:bolt-gradient data-[state=active]:text-white">
-                    <Eye className="h-4 w-4" />
-                    Live Preview
+                <TabsList className="grid w-full grid-cols-2 glass-effect border border-blue-200/30 h-auto">
+                  <TabsTrigger value="preview" className="gap-1 sm:gap-2 data-[state=active]:bolt-gradient data-[state=active]:text-white text-xs sm:text-sm py-2 sm:py-2.5">
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Live Preview</span>
+                    <span className="sm:hidden">Preview</span>
                   </TabsTrigger>
-                  <TabsTrigger value="code" className="gap-2 data-[state=active]:bolt-gradient data-[state=active]:text-white">
-                    <FileCode className="h-4 w-4" />
-                    View Code
+                  <TabsTrigger value="code" className="gap-1 sm:gap-2 data-[state=active]:bolt-gradient data-[state=active]:text-white text-xs sm:text-sm py-2 sm:py-2.5">
+                    <FileCode className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">View Code</span>
+                    <span className="sm:hidden">Code</span>
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="preview" className="space-y-4 mt-6">
+                <TabsContent value="preview" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                   {/* Viewport Controls - Mobile Optimized */}
                   <div className="flex justify-center gap-1 sm:gap-2 flex-wrap">
                     <Button
@@ -491,7 +493,7 @@ export function WebsiteBuilder() {
                   </div>
 
                   {/* Preview Frame - Mobile Optimized */}
-                  <div className="glass-effect rounded-xl p-2 sm:p-4 border border-blue-200/30">
+                  <div className="glass-effect rounded-lg sm:rounded-xl p-1.5 sm:p-2 md:p-4 border border-blue-200/30">
                     <div className="bg-white rounded-lg shadow-2xl overflow-hidden mx-auto transition-all duration-300 ring-2 ring-blue-200/20" style={{ width: getViewportWidth() }}>
                       <iframe
                         ref={iframeRef}
@@ -504,9 +506,9 @@ export function WebsiteBuilder() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="code" className="space-y-4 mt-6">
+                <TabsContent value="code" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
                   {/* Code Type Tabs */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                     <Button
                       className={activeCodeTab === 'html' ? 'bolt-gradient text-white' : 'glass-effect border-2 border-blue-200/50'}
                       variant={activeCodeTab === 'html' ? 'default' : 'outline'}
@@ -543,7 +545,7 @@ export function WebsiteBuilder() {
                   </div>
 
                   {/* Code Display */}
-                  <div className="glass-effect rounded-xl p-4 bg-gray-900/95 text-green-400 font-mono text-sm overflow-auto max-h-[600px] border border-blue-200/30">
+                  <div className="glass-effect rounded-lg sm:rounded-xl p-2.5 sm:p-3 md:p-4 bg-gray-900/95 text-green-400 font-mono text-xs sm:text-sm overflow-auto max-h-[400px] sm:max-h-[600px] border border-blue-200/30">
                     <pre className="whitespace-pre-wrap">
                       {activeCodeTab === 'html' && websiteCode.html}
                       {activeCodeTab === 'css' && websiteCode.css}
@@ -553,19 +555,19 @@ export function WebsiteBuilder() {
 
                   {/* Color Palette */}
                   {websiteCode.assets?.colors && websiteCode.assets.colors.length > 0 && (
-                    <div className="glass-effect rounded-xl p-6 border-2 border-purple-200/30 backdrop-blur-lg">
-                      <h3 className="font-semibold mb-4 flex items-center gap-2">
-                        <Palette className="h-5 w-5 text-purple-500" />
+                    <div className="glass-effect rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 border-purple-200/30 backdrop-blur-lg">
+                      <h3 className="font-semibold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+                        <Palette className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
                         Color Palette
                       </h3>
-                      <div className="flex gap-3 flex-wrap">
+                      <div className="flex gap-2 sm:gap-3 flex-wrap">
                         {websiteCode.assets.colors.map((color, index) => (
                           <div key={index} className="text-center group">
                             <div
-                              className="w-16 h-16 rounded-xl shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform"
+                              className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl shadow-lg ring-2 ring-white/20 group-hover:scale-110 transition-transform"
                               style={{ backgroundColor: color }}
                             />
-                            <div className="text-xs mt-2 font-mono font-semibold">{color}</div>
+                            <div className="text-[10px] sm:text-xs mt-1 sm:mt-2 font-mono font-semibold">{color}</div>
                           </div>
                         ))}
                       </div>
@@ -574,20 +576,20 @@ export function WebsiteBuilder() {
 
                   {/* Generated Images */}
                   {websiteCode.assets?.images && websiteCode.assets.images.length > 0 && (
-                    <div className="glass-effect rounded-xl p-6 border-2 border-blue-200/30 backdrop-blur-lg">
-                      <h3 className="font-semibold mb-4 flex items-center gap-2">
-                        <Eye className="h-5 w-5 text-blue-500" />
+                    <div className="glass-effect rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border-2 border-blue-200/30 backdrop-blur-lg">
+                      <h3 className="font-semibold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+                        <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                         Generated Images ({websiteCode.assets.images.length})
                       </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                         {websiteCode.assets.images.map((imageUrl: string, index: number) => (
                           <div key={index} className="group relative">
                             <img
                               src={imageUrl}
                               alt={`Generated image ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg shadow-md ring-2 ring-white/20 group-hover:scale-105 transition-transform"
+                              className="w-full h-20 sm:h-24 object-cover rounded-lg shadow-md ring-2 ring-white/20 group-hover:scale-105 transition-transform"
                             />
-                            <div className="text-xs mt-1 text-center font-semibold text-muted-foreground">
+                            <div className="text-[10px] sm:text-xs mt-1 text-center font-semibold text-muted-foreground">
                               Image {index + 1}
                             </div>
                           </div>
