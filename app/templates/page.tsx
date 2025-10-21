@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CanvaTemplateGallery } from "@/components/templates/canva-template-gallery";
+import { ResumeTemplateGallery } from "@/components/templates/resume-template-gallery";
 import { Template } from "@/types/templates";
 import { useToast } from "@/hooks/use-toast";
 import { SiteHeader } from "@/components/site-header";
@@ -173,9 +174,17 @@ export default function TemplatesPage() {
             </div>
           </div>
 
-          {/* Canva-Style Template Gallery */}
+          {/* Resume Template Gallery - Talentelse Style */}
           <div className="rounded-3xl shadow-xl border-2 p-6 sm:p-8 lg:p-10" style={{ backgroundColor: '#FFFFFF', borderColor: '#D4A574' }}>
-            <CanvaTemplateGallery />
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-2" style={{ color: '#211C1C' }}>
+                Resume Templates
+              </h2>
+              <p className="text-lg" style={{ color: '#6B5C4C' }}>
+                Professional, ATS-friendly resume templates. Download and customize in minutes.
+              </p>
+            </div>
+            <ResumeTemplateGallery />
           </div>
 
           {/* Bottom CTA */}
