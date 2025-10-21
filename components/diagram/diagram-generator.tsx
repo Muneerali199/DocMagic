@@ -346,47 +346,48 @@ export function DiagramGenerator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4 sm:mb-6 px-2">
           <TabsList className="glass-effect border border-yellow-400/20 p-1 h-auto">
             <TabsTrigger
               value="editor"
-              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
             >
-              <Code className="h-4 w-4" />
-              Code Editor
+              <Code className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Code Editor</span>
+              <span className="sm:hidden">Editor</span>
             </TabsTrigger>
             <TabsTrigger
               value="templates"
-              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
             >
-              <Workflow className="h-4 w-4" />
+              <Workflow className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Templates
             </TabsTrigger>
             <TabsTrigger
               value="preview"
-              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Preview
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="editor" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <TabsContent value="editor" className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Left Side - Code Editor */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-effect mb-3">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full glass-effect mb-2 sm:mb-3">
                   <Code className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs font-medium">Mermaid Editor</span>
+                  <span className="text-[10px] sm:text-xs font-medium">Mermaid Editor</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-2 bolt-gradient-text">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1.5 sm:mb-2 bolt-gradient-text">
                   Write Your Diagram
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Use Mermaid syntax to create professional diagrams with live preview
                 </p>
               </div>
@@ -531,16 +532,16 @@ export function DiagramGenerator() {
             </div>
 
             {/* Right Side - Live Preview */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-effect mb-3">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full glass-effect mb-2 sm:mb-3">
                   <Eye className="h-3 w-3 text-blue-500" />
-                  <span className="text-xs font-medium">Live Preview</span>
+                  <span className="text-[10px] sm:text-xs font-medium">Live Preview</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold bolt-gradient-text">Preview</h2>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold bolt-gradient-text">Preview</h2>
               </div>
 
-              <div ref={diagramRef} className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative min-h-[400px]">
+              <div ref={diagramRef} className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative min-h-[300px] sm:min-h-[400px]">
                 <div className="absolute inset-0 shimmer opacity-10"></div>
                 <div className="relative z-10">
                   <DiagramPreview code={diagramCode} />
@@ -609,18 +610,18 @@ export function DiagramGenerator() {
           </div>
         </TabsContent>
 
-        <TabsContent value="preview" className="pt-4">
-          <div className="space-y-6">
+        <TabsContent value="preview" className="pt-3 sm:pt-4 px-2 sm:px-0">
+          <div className="space-y-4 sm:space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 bolt-gradient-text">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 bolt-gradient-text">
                 Full Screen Preview
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto px-4">
                 View your diagram in full detail with export and sharing options
               </p>
             </div>
 
-            <div ref={diagramRef} className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative min-h-[600px]">
+            <div ref={diagramRef} className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative min-h-[400px] sm:min-h-[500px] md:min-h-[600px]">
               <div className="absolute inset-0 shimmer opacity-10"></div>
               <div className="relative z-10">
                 <DiagramPreview code={diagramCode} fullScreen />
