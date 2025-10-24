@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         day: 'numeric'
       }),
       subject: letter.subject || "Re: " + prompt.substring(0, 30) + "...",
-      content: letter.content || letter.letter || "Letter content not available."
+      content: letter.content || "Letter content not available."
     };
     
     return NextResponse.json(formattedResponse);
