@@ -72,8 +72,22 @@ export function TestimonialsSection() {
         <div className="relative">
           {/* Testimonial Cards Container */}
           <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
-            {testimonials.slice(0, 6).map((testimonial, i) => (
-              <div key={i} className={`group w-full absolute flex items-center justify-center animate-fade-in-up transition-all ease-out duration-790 transform ${i === currentIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`} style={{ animationDelay: `${i * 100}ms` }}>
+            {testimonials.map((testimonial, i) => {
+              let positionClass = 'translate-x-full opacity-0'; // Off-screen to the right
+              if (i === currentIndex) {
+                positionClass = 'translate-x-0 opacity-100'; // Active slide
+              } else if (i === (currentIndex - 1 + testimonials.length) % testimonials.length) {
+                positionClass = '-translate-x-full opacity-0'; // Off-screen to the left
+              }
+
+              return (
+              <div 
+                key={i} 
+                className={`group w-full absolute flex items-center justify-center transition-all ease-in-out duration-500 transform ${positionClass}`}
+                style={{
+                  transitionProperty: 'transform, opacity',
+                }}
+              >
                 {/* Enhanced background glow */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
 
@@ -123,7 +137,7 @@ export function TestimonialsSection() {
                   </CardFooter>
                 </Card>
               </div>
-            ))}
+            )})}
           </div>
 
           {/* Navigation Buttons - Improved positioning */}
