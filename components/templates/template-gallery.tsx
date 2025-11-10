@@ -100,23 +100,23 @@ export function TemplateGallery({
     return (
       <div className={`space-y-6 ${className}`}>
         {showHeader && (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight">Templates</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Templates</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Browse and manage your document templates
               </p>
             </div>
-            <Button onClick={handleCreateNew}>
+            <Button onClick={handleCreateNew} className="touch-target">
               <Plus className="h-4 w-4 mr-2" />
               New Template
             </Button>
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mobile-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-64 w-full rounded-lg" />
+            <Skeleton key={i} className="h-56 sm:h-64 w-full rounded-lg" />
           ))}
         </div>
       </div>
@@ -141,7 +141,7 @@ export function TemplateGallery({
   }
   
   const renderTemplates = (templatesToRender: Template[]) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="mobile-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {templatesToRender.length > 0 ? (
         templatesToRender.map(template => (
           <TemplatePreview
@@ -149,21 +149,21 @@ export function TemplateGallery({
             template={template}
             onUseTemplate={(template) => handleUseTemplate(template)}
             onEdit={() => router.push(`/templates/${template.id}/edit`)}
-            className="h-full"
+            className="h-full mobile-card"
           />
         ))
       ) : (
-        <div className="col-span-full text-center py-12">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Search className="h-6 w-6 text-muted-foreground" />
+        <div className="col-span-full text-center py-8 sm:py-12">
+          <div className="mx-auto flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-muted">
+            <Search className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
           </div>
-          <h3 className="mt-4 text-lg font-medium">No templates found</h3>
-          <p className="text-muted-foreground mt-2">
+          <h3 className="mt-4 text-base sm:text-lg font-medium">No templates found</h3>
+          <p className="text-sm text-muted-foreground mt-2 px-4">
             {searchQuery
               ? 'No templates match your search. Try a different term.'
               : 'Get started by creating a new template.'}
           </p>
-          <Button className="mt-4" onClick={handleCreateNew}>
+          <Button className="mt-4 touch-target" onClick={handleCreateNew}>
             <Plus className="h-4 w-4 mr-2" />
             New Template
           </Button>
@@ -173,16 +173,16 @@ export function TemplateGallery({
   );
   
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-4 sm:space-y-6 ${className}`}>
       {showHeader && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight">Templates</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Templates</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Browse and manage your document templates
             </p>
           </div>
-          <Button onClick={handleCreateNew}>
+          <Button onClick={handleCreateNew} className="touch-target">
             <Plus className="h-4 w-4 mr-2" />
             New Template
           </Button>
@@ -195,7 +195,7 @@ export function TemplateGallery({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search templates..."
-              className="pl-10"
+              className="pl-10 mobile-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
