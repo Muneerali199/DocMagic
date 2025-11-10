@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Mobile Responsive Utilities */
+
+@import './mobile-responsive.css';
 @layer base {
      :root {
         /* Light mode with F3E9DC base */

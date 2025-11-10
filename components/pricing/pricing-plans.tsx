@@ -145,83 +145,83 @@ export default function PricingPlans() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent px-4 sm:px-0 leading-tight">
           Simple, Transparent Pricing
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 sm:px-0">
           Choose the perfect plan for your needs. Upgrade, downgrade, or cancel anytime.
         </p>
       </div>
 
       {/* Billing Period Toggle */}
-      <div className="flex justify-center mb-12">
-        <Tabs value={billingPeriod} onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'yearly')} className="w-auto">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-            <TabsTrigger value="yearly">
+      <div className="flex justify-center mb-8 sm:mb-12 px-4 sm:px-0">
+        <Tabs value={billingPeriod} onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'yearly')} className="w-full sm:w-auto">
+          <TabsList className="grid w-full grid-cols-2 h-auto">
+            <TabsTrigger value="monthly" className="text-sm sm:text-base py-2.5 sm:py-3">Monthly</TabsTrigger>
+            <TabsTrigger value="yearly" className="text-sm sm:text-base py-2.5 sm:py-3 gap-1 sm:gap-2 flex-wrap">
               Yearly
-              <Badge variant="secondary" className="ml-2">Save 20%</Badge>
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">Save 20%</Badge>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4 sm:px-0">
         {plans.map((plan) => (
           <Card 
             key={plan.id} 
-            className={`relative ${plan.popular ? 'border-blue-500 border-2 shadow-xl' : ''}`}
+            className={`relative hover:shadow-2xl transition-all duration-300 ${plan.popular ? 'border-blue-500 border-2 shadow-xl scale-105 md:scale-100' : ''}`}
           >
             {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1">
+              <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
+                <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
                   <Crown className="w-3 h-3 mr-1" />
                   Most Popular
                 </Badge>
               </div>
             )}
 
-            <CardHeader>
+            <CardHeader className="p-5 sm:p-6 lg:p-7">
               <div className="flex items-center gap-2 mb-2">
-                {plan.plan_type === 'individual' && <Zap className="w-5 h-5 text-blue-600" />}
-                {plan.plan_type === 'organization' && <Building2 className="w-5 h-5 text-purple-600" />}
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                {plan.plan_type === 'individual' && <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />}
+                {plan.plan_type === 'organization' && <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />}
+                <CardTitle className="text-xl sm:text-2xl">{plan.name}</CardTitle>
               </div>
-              <CardDescription>{plan.description}</CardDescription>
+              <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
               <div className="mt-4">
-                <span className="text-4xl font-bold">
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-bold">
                   ${plan.price}
                 </span>
                 {plan.price > 0 && (
-                  <span className="text-muted-foreground">
+                  <span className="text-sm sm:text-base text-muted-foreground">
                     /{billingPeriod === 'monthly' ? 'mo' : 'yr'}
                   </span>
                 )}
               </div>
               {billingPeriod === 'yearly' && plan.price > 0 && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   ${(plan.price / 12).toFixed(2)}/month billed annually
                 </p>
               )}
             </CardHeader>
 
-            <CardContent>
-              <ul className="space-y-3">
+            <CardContent className="p-5 sm:p-6 lg:p-7 pt-0">
+              <ul className="space-y-2.5 sm:space-y-3">
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
+                  <li key={index} className="flex items-start gap-2 sm:gap-3">
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm leading-relaxed">{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
 
-            <CardFooter>
+            <CardFooter className="p-5 sm:p-6 lg:p-7 pt-0">
               <Button
-                className="w-full"
+                className="w-full touch-target"
                 variant={plan.popular ? 'default' : 'outline'}
                 size="lg"
                 onClick={() => handleSubscribe(plan)}
@@ -241,12 +241,12 @@ export default function PricingPlans() {
       </div>
 
       {/* Payment Methods Section */}
-      <div className="mt-16 text-center">
-        <h3 className="text-lg font-semibold mb-4">Secure Payment Methods</h3>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">💳</span>
-            <span className="text-sm font-medium">All Major Cards</span>
+      <div className="mt-12 sm:mt-16 text-center px-4 sm:px-0">
+        <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">Secure Payment Methods</h3>
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-muted-foreground">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg hover:border-blue-500 transition-colors">
+            <span className="text-xl sm:text-2xl">💳</span>
+            <span className="text-xs sm:text-sm font-medium">All Major Cards</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
             <span className="text-2xl">🍎</span>
