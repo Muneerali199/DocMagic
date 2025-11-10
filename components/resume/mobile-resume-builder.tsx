@@ -26,6 +26,7 @@ import { TemplateCustomizationPanel } from "@/components/templates/template-cust
 import { VersionHistoryPanel } from "@/components/templates/version-history-panel";
 import { CollaborationPanel } from "@/components/templates/collaboration-panel";
 import { versionHistoryService } from "@/lib/version-history-service";
+import { LinkedInImportDialog } from "@/components/resume/linkedin-import-dialog";
 
 interface LinkedInProfile {
   fullName: string;
@@ -375,6 +376,59 @@ export function MobileResumeBuilder({ templateId }: MobileResumeBuilderProps) {
       toast({
         title: "Generation Failed",
         description: error.message || "Please try again with more details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // New LinkedIn Profile Import Handler
+  const handleLinkedInProfileImport = async (linkedinData: any) => {
+    try {
+      setIsImporting(true);
+
+      const token = await getAuthToken();
+      if (!token) throw new Error("Please sign in first");
+
+      // Convert LinkedIn data to resume format
+      const resume = {
+        name: linkedinData.personalInfo?.name || "",
+        email: linkedinData.personalInfo?.email || "",
+        phone: linkedinData.personalInfo?.phone || "",
+        location: linkedinData.personalInfo?.location || "",
+        website: "",
+        headline: linkedinData.personalInfo?.headline || "",
+        summary: linkedinData.personalInfo?.summary || "",
+        experience: linkedinData.experience || [],
+        education: linkedinData.education || [],
+        skills: {
+          technical: linkedinData.skills?.slice(0, 8) || [],
+          soft: [],
+          tools: [],
+          languages: linkedinData.languages?.map((l: any) => l.language || l) || []
+        },
+        certifications: linkedinData.certifications || [],
+        languages: linkedinData.languages || [],
+        projects: linkedinData.projects || [],
+      };
+
+      // Calculate ATS score
+      const atsScore = calculateATSScore(resume);
+      
+      setResumeData(resume);
+      setAtsScore(atsScore);
+      setCurrentStep('preview');
+
+      toast({
+        title: "✨ LinkedIn Profile Imported!",
+        description: "Your professional resume is ready! Review and download.",
+      });
+    } catch (error: any) {
+      console.error("LinkedIn import error:", error);
+      toast({
+        title: "Import Failed",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -897,69 +951,58 @@ export function MobileResumeBuilder({ templateId }: MobileResumeBuilderProps) {
 
                   {/* LinkedIn Tab */}
                   <TabsContent value="linkedin" className="space-y-3 sm:space-y-4">
-                    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 mb-3 sm:mb-4">
+                    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border-2 border-blue-200 dark:border-blue-800 mb-3 sm:mb-4">
                       <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        <Linkedin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                        <Linkedin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                         <div>
-                          <h3 className="font-bold text-base sm:text-lg text-gray-900">LinkedIn Import</h3>
-                          <p className="text-xs sm:text-sm text-gray-600">Feature In Progress</p>
+                          <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">LinkedIn Import</h3>
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Multiple import options available</p>
                         </div>
                       </div>
                       <div className="space-y-2 sm:space-y-3">
-                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-white rounded-lg border border-blue-200">
-                          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
+                          <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs sm:text-sm font-medium text-gray-900 mb-0.5 sm:mb-1">Coming Soon!</p>
-                            <p className="text-[10px] sm:text-xs text-gray-600">
-                              We're working on LinkedIn URL import feature. It will be available soon!
+                            <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-0.5 sm:mb-1">✨ Now Available!</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">
+                              Import from LinkedIn profile URL, JSON export, or upload your data file
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-amber-50 rounded-lg border border-amber-200">
-                          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex items-start gap-2 p-2.5 sm:p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+                          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs sm:text-sm font-medium text-gray-900 mb-0.5 sm:mb-1">Use Quick Generate Instead</p>
-                            <p className="text-[10px] sm:text-xs text-gray-600">
-                              For now, use the &quot;Quick Generate&quot; tab. Just enter your name, email, and job description!
+                            <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-0.5 sm:mb-1">3 Easy Methods</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">
+                              Choose from URL import, JSON data paste, or file upload for maximum flexibility
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-3 opacity-50 pointer-events-none">
-                      <Label htmlFor="linkedin-url" className="text-sm font-medium">
-                        LinkedIn Profile URL
-                      </Label>
-                      <Input
-                        id="linkedin-url"
-                        placeholder="https://linkedin.com/in/username"
-                        value={linkedinUrl}
-                        onChange={(e) => setLinkedinUrl(e.target.value)}
-                        className="bg-white/50"
-                        disabled
-                      />
-                      <p className="text-xs text-gray-500">
-                        Example: https://linkedin.com/in/billgates
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleLinkedInImport}
-                      disabled={isImporting}
-                      className="w-full bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg text-sm sm:text-base"
-                      size="lg"
-                    >
-                      {isImporting ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          <span className="font-semibold text-white">Importing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Linkedin className="mr-2 h-5 w-5" />
-                          <span className="font-semibold text-white">Import from LinkedIn</span>
-                        </>
-                      )}
-                    </Button>
+                    
+                    <LinkedInImportDialog 
+                      onImport={handleLinkedInProfileImport}
+                      trigger={
+                        <Button
+                          disabled={isImporting}
+                          className="w-full bolt-gradient hover:scale-105 transition-all duration-300 bolt-glow text-white shadow-lg text-sm sm:text-base touch-target"
+                          size="lg"
+                        >
+                          {isImporting ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              <span className="font-semibold text-white">Importing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Linkedin className="mr-2 h-5 w-5" />
+                              <span className="font-semibold text-white">Import from LinkedIn</span>
+                            </>
+                          )}
+                        </Button>
+                      }
+                    />
                   </TabsContent>
 
                   {/* PDF Tab */}
