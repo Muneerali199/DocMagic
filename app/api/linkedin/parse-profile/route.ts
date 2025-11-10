@@ -38,17 +38,25 @@ export async function POST(req: NextRequest) {
 
 async function scrapeLinkedInProfile(url: string) {
   try {
-    // Use public profile URL (linkedin.com/in/username)
+    // Note: LinkedIn actively blocks automated requests with status code 999
+    // This method is provided as a fallback but may not work reliably
+    // Recommended: Use the JSON export or manual import methods instead
+    
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0'
       },
-      timeout: 10000
+      timeout: 15000,
+      maxRedirects: 5
     });
 
     const $ = cheerio.load(response.data);
@@ -89,7 +97,14 @@ async function scrapeLinkedInProfile(url: string) {
     return profileData;
   } catch (error: any) {
     console.error('Error scraping profile:', error.message);
-    throw new Error('Unable to access LinkedIn profile. Please use manual import or JSON export option.');
+    
+    // LinkedIn blocks automated requests with status 999
+    if (error.response?.status === 999) {
+      throw new Error('LinkedIn is blocking automated profile access. Please use the "JSON Data" or "Upload File" import methods instead. To get your LinkedIn data: Go to LinkedIn Settings → Get a copy of your data → Download your profile JSON.');
+    }
+    
+    // Other errors
+    throw new Error(`Unable to access LinkedIn profile (${error.message}). Please use the "JSON Data" or "Upload File" import methods for reliable results.`);
   }
 }
 

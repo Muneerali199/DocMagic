@@ -157,14 +157,21 @@ export function LinkedInImportDialog({ onImport, trigger }: LinkedInImportDialog
           </Alert>
         )}
 
-        <Tabs defaultValue="url" className="w-full">
+        <Tabs defaultValue="json" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="url">Profile URL</TabsTrigger>
-            <TabsTrigger value="json">JSON Data</TabsTrigger>
+            <TabsTrigger value="json">JSON Data ⭐</TabsTrigger>
             <TabsTrigger value="file">Upload File</TabsTrigger>
+            <TabsTrigger value="url">Profile URL</TabsTrigger>
           </TabsList>
 
           <TabsContent value="url" className="space-y-4">
+            <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-xs text-yellow-800">
+                <strong>Note:</strong> LinkedIn actively blocks automated profile access (error 999). 
+                We recommend using the <strong>"JSON Data"</strong> or <strong>"Upload File"</strong> methods for reliable results.
+              </AlertDescription>
+            </Alert>
             <div className="space-y-2">
               <Label htmlFor="linkedin-url">LinkedIn Public Profile URL</Label>
               <Input
@@ -192,13 +199,19 @@ export function LinkedInImportDialog({ onImport, trigger }: LinkedInImportDialog
               ) : (
                 <>
                   <Link2 className="h-4 w-4 mr-2" />
-                  Import from URL
+                  Try Import from URL
                 </>
               )}
             </Button>
           </TabsContent>
 
           <TabsContent value="json" className="space-y-4">
+            <Alert variant="default" className="bg-green-50 border-green-200">
+              <AlertCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-xs text-green-800">
+                <strong>✅ Recommended Method:</strong> This is the most reliable way to import your complete LinkedIn profile.
+              </AlertDescription>
+            </Alert>
             <div className="space-y-2">
               <Label htmlFor="json-data">LinkedIn Profile JSON</Label>
               <Textarea
@@ -208,9 +221,17 @@ export function LinkedInImportDialog({ onImport, trigger }: LinkedInImportDialog
                 onChange={(e) => setJsonData(e.target.value)}
                 className="mobile-input min-h-[200px] font-mono text-xs"
               />
-              <p className="text-xs text-muted-foreground">
-                You can get this from LinkedIn's data export or by using browser developer tools
-              </p>
+              <div className="text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold">How to get your LinkedIn JSON data:</p>
+                <ol className="list-decimal list-inside space-y-1 ml-2">
+                  <li>Go to LinkedIn → Settings & Privacy</li>
+                  <li>Click "Get a copy of your data"</li>
+                  <li>Select "Request archive" or specific sections</li>
+                  <li>Download the ZIP file (you'll get an email)</li>
+                  <li>Extract and open the JSON file</li>
+                  <li>Copy and paste the content here</li>
+                </ol>
+              </div>
             </div>
             <Button 
               onClick={handleJsonImport} 
