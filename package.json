@@ -1,3 +1,4 @@
+
 {
   "name": "docmagic",
   "version": "2.0.0",
@@ -94,7 +95,6 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
-    "detect-libc": "^2.1.2",
     "docx": "^8.5.0",
     "embla-carousel-react": "^8.3.0",
     "eslint": "^8.56.0",
@@ -113,7 +113,6 @@
     "nodemailer": "^6.10.1",
     "officeparser": "^5.2.0",
     "pdf-parse": "^1.1.1",
-    "pdf-to-img": "^5.0.0",
     "pptxgenjs": "^3.12.0",
     "puppeteer-core": "^24.25.0",
     "react": "^18.2.0",
@@ -127,7 +126,6 @@
     "react-resizable-panels": "^2.1.9",
     "react-simple-typewriter": "^5.0.1",
     "recharts": "^2.15.4",
-    "sharp": "^0.34.4",
     "sonner": "^1.7.4",
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.6.0",

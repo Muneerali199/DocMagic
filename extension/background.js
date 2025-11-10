@@ -1,5 +1,8 @@
 // DocMagic Smart AI Extension - Background Service Worker
-// Supports multiple AI providers - No backend needed!
+// Supports multiple AI providers, MCP server, voice, and interviewer mode
+
+// Import MCP Server (will be loaded as module)
+let mcpServer = null;
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -27,11 +30,17 @@ chrome.runtime.onInstalled.addListener((details) => {
         chrome.storage.local.set({
             'problems-solved': 0,
             'questions-practiced': 0,
+            'interview_sessions': [],
+            'voice_enabled': false,
+            'mcp_enabled': true,
             'settings': {
                 'autoDetect': true,
                 'notifications': true,
                 'showHintsFirst': true,
-                'defaultLanguage': 'javascript'
+                'defaultLanguage': 'javascript',
+                'voiceEnabled': false,
+                'interviewerMode': false,
+                'mcpAnalysis': true
             }
         });
         
@@ -459,6 +468,90 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse({ error: error.message });
             }
         })();
+        return true;
+    }
+    
+    // Voice command handling
+    if (request.type === 'VOICE_COMMAND') {
+        (async () => {
+            try {
+                const { provider, apiKey } = await getProviderAndKey();
+                if (!apiKey) {
+                    sendResponse({ reply: 'Please configure your API key first.' });
+                    return;
+                }
+                
+                let prompt = '';
+                switch (request.action) {
+                    case 'solve':
+                        prompt = `Solve this problem: ${request.text}`;
+                        break;
+                    case 'hint':
+                        prompt = `Give a hint for: ${request.text}`;
+                        break;
+                    case 'approach':
+                        prompt = `Explain the approach for: ${request.text}`;
+                        break;
+                    case 'start':
+                        sendResponse({ reply: 'Starting interview mode. Get ready!' });
+                        return;
+                    default:
+                        prompt = request.text;
+                }
+                
+                const result = await callAI(provider, apiKey, prompt);
+                const reply = typeof result === 'string' ? result : result.content || JSON.stringify(result);
+                sendResponse({ success: true, reply: reply });
+            } catch (error) {
+                sendResponse({ reply: 'Sorry, I encountered an error. Please try again.' });
+            }
+        })();
+        return true;
+    }
+    
+    // Voice conversation handling
+    if (request.type === 'VOICE_CONVERSATION') {
+        (async () => {
+            try {
+                const { provider, apiKey } = await getProviderAndKey();
+                if (!apiKey) {
+                    sendResponse({ reply: 'Please configure your API key first.' });
+                    return;
+                }
+                
+                const prompt = `You are a friendly AI coding assistant. Respond naturally to: ${request.text}`;
+                const result = await callAI(provider, apiKey, prompt);
+                const reply = typeof result === 'string' ? result : result.content || JSON.stringify(result);
+                sendResponse({ success: true, reply: reply });
+            } catch (error) {
+                sendResponse({ reply: 'Sorry, I didn\'t catch that. Could you repeat?' });
+            }
+        })();
+        return true;
+    }
+    
+    // MCP analysis complete
+    if (request.type === 'MCP_ANALYSIS_COMPLETE') {
+        console.log('📊 MCP Analysis received:', request.analysis);
+        // Store analysis for use by other components
+        chrome.storage.local.set({ last_mcp_analysis: request.analysis });
+        sendResponse({ success: true });
+        return true;
+    }
+    
+    // Interview mode messages
+    if (request.type === 'START_INTERVIEW') {
+        console.log('🎤 Starting interview mode...');
+        sendResponse({ success: true, message: 'Interview mode started' });
+        return true;
+    }
+    
+    if (request.type === 'DISPLAY_QUESTION' || 
+        request.type === 'DISPLAY_EVALUATION' || 
+        request.type === 'DISPLAY_FINAL_EVALUATION') {
+        // Forward to popup if open
+        chrome.runtime.sendMessage(request);
+        sendResponse({ success: true });
         return true;
     }
 });

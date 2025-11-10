@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,11 +20,16 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { createClient } from "@/lib/supabase/client";
 import type PptxGenJS from 'pptxgenjs';
+import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
 
 type GenerationStep = 'input' | 'outline' | 'theme' | 'generated';
 type InputMode = 'text' | 'url';
 
-export function PresentationGenerator() {
+interface PresentationGeneratorProps {
+  templateId?: string | null;
+}
+
+export function PresentationGenerator({ templateId }: PresentationGeneratorProps) {
   const [prompt, setPrompt] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [inputMode, setInputMode] = useState<InputMode>('text');
@@ -50,6 +55,22 @@ export function PresentationGenerator() {
   const MAX_FREE_PAGES = 8;
   const MAX_PRO_PAGES = 100;
   const isPro = false; // This would be connected to your auth/subscription system
+
+  // Load template data if templateId is provided
+  useEffect(() => {
+    if (templateId) {
+      const template = RESUME_TEMPLATES.find(t => t.id === templateId && t.type === 'presentation');
+      if (template) {
+        setSelectedTemplate(templateId);
+        setPrompt(`Create a presentation based on: ${template.title} - ${template.description}`);
+        
+        toast({
+          title: "✨ Template Loaded!",
+          description: `Using ${template.title}. Customize the prompt or generate directly.`,
+        });
+      }
+    }
+  }, [templateId, toast]);
 
   const fetchUrlContent = async () => {
     if (!websiteUrl.trim()) {

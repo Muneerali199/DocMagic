@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SECURITY_CONFIG, getSecurityHeaders, isAllowedOrigin, logSecurityEvent } from '@/lib/security';
@@ -40,7 +40,36 @@ function rateLimit(ip: string, endpoint: string): boolean {
 }
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  let res = NextResponse.next();
+  
+  // ✅ IMPORTANT: Create Supabase client and refresh session FIRST
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          res.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+  
+  await supabase.auth.getSession(); // This refreshes the auth cookies!
   
   // Get client IP for rate limiting
   const ip = req.ip || req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -106,7 +135,7 @@ export async function middleware(req: NextRequest) {
     // Skip authentication check in development with placeholder credentials
     if (!isUsingPlaceholders) {
       try {
-        const supabase = createMiddlewareClient({ req, res });
+        // Reuse the supabase client we already created at the top
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {

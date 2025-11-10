@@ -6,6 +6,13 @@
     
     console.log('🚀 DocMagic Smart Extension activated!');
     
+    // Check if extension context is valid on load
+    if (!chrome.runtime || !chrome.runtime.id) {
+        console.warn('⚠️ Extension context may be invalid. Try refreshing the page.');
+        showReloadNotification();
+        return;
+    }
+    
     // Detect platform
     const platform = detectPlatform();
     
@@ -223,9 +230,75 @@
         });
     }
     
+    // Show reload notification
+    function showReloadNotification() {
+        const notification = document.createElement('div');
+        notification.id = 'docmagic-reload-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 999999;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            max-width: 300px;
+        `;
+        notification.innerHTML = `
+            <div style="font-weight: 600; margin-bottom: 8px;">⚠️ DocMagic Extension Disconnected</div>
+            <div style="margin-bottom: 12px; font-size: 13px;">Please refresh the page to reconnect.</div>
+            <button onclick="location.reload()" style="width: 100%; padding: 8px; background: #EF4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                Refresh Page Now
+            </button>
+            <button onclick="this.parentElement.remove()" style="width: 100%; margin-top: 6px; padding: 6px; background: transparent; color: #991B1B; border: 1px solid #991B1B; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                Dismiss
+            </button>
+        `;
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (notification && notification.parentElement) {
+                notification.remove();
+            }
+        }, 10000);
+    }
+    
+    // Check if extension context is valid
+    function isExtensionContextValid() {
+        try {
+            return chrome.runtime && chrome.runtime.id;
+        } catch (e) {
+            return false;
+        }
+    }
+    
     // Smart action handler - uses background script with Gemini AI
     async function handleAction(action, problemData) {
         const resultDiv = document.getElementById('docmagic-result');
+        if (!resultDiv) {
+            console.error('Result div not found!');
+            return;
+        }
+        
+        // Check if extension context is still valid
+        if (!isExtensionContextValid()) {
+            resultDiv.innerHTML = `
+                <div class="docmagic-error">
+                    ❌ Extension was reloaded. Please refresh this page (F5) to reconnect.
+                    <br><br>
+                    <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        Refresh Page Now
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
         resultDiv.innerHTML = '<div class="docmagic-loading">🤖 AI is analyzing your problem...</div>';
         
         try {
@@ -238,20 +311,65 @@
             
             const prompt = prompts[action];
             
+            console.log('📤 Sending message to background:', action);
+            
+            // Double-check context before sending
+            if (!isExtensionContextValid()) {
+                resultDiv.innerHTML = `
+                    <div class="docmagic-error">
+                        ❌ Extension connection lost. 
+                        <button onclick="location.reload()" style="margin-left: 10px; padding: 0.5rem 1rem; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Refresh Page
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
             chrome.runtime.sendMessage(
                 { type: 'SOLVE_PROBLEM', prompt },
                 (response) => {
+                    // Check for Chrome runtime errors
+                    if (chrome.runtime.lastError) {
+                        console.error('Chrome runtime error:', chrome.runtime.lastError);
+                        
+                        // Check if it's a context invalidation error
+                        if (chrome.runtime.lastError.message.includes('Extension context invalidated')) {
+                            resultDiv.innerHTML = `
+                                <div class="docmagic-error">
+                                    ❌ Extension was reloaded. Please refresh this page.
+                                    <br><br>
+                                    <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                        Refresh Page Now
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = `<div class="docmagic-error">❌ Extension error: ${chrome.runtime.lastError.message}</div>`;
+                        }
+                        return;
+                    }
+                    
+                    console.log('📥 Received response:', response);
+                    
+                    if (!response) {
+                        resultDiv.innerHTML = '<div class="docmagic-error">❌ No response from AI. Please check your API key in settings.</div>';
+                        return;
+                    }
+                    
                     if (response.error) {
                         resultDiv.innerHTML = `<div class="docmagic-error">❌ ${response.error}</div>`;
-                    } else {
+                    } else if (response.data) {
                         displayResult(action, response.data, resultDiv);
+                    } else {
+                        resultDiv.innerHTML = '<div class="docmagic-error">❌ Invalid response from AI.</div>';
                     }
                 }
             );
             
         } catch (error) {
-            resultDiv.innerHTML = '<div class="docmagic-error">❌ Failed to get AI help. Please configure your API key.</div>';
-            console.error(error);
+            console.error('Error in handleAction:', error);
+            resultDiv.innerHTML = `<div class="docmagic-error">❌ Failed to get AI help: ${error.message}</div>`;
         }
     }
     
@@ -263,6 +381,18 @@
             showInlineResult('Explanation', request.data);
         } else if (request.type === 'SHOW_HINT') {
             showInlineResult('Hint', request.data);
+        } else if (request.type === 'MCP_SCAN_PAGE') {
+            // Return page content for MCP analysis
+            const content = extractProblemData(platform);
+            sendResponse({ content: content });
+            return true;
+        } else if (request.type === 'MCP_ANALYSIS_COMPLETE') {
+            // Display MCP analysis results
+            displayMCPAnalysis(request.analysis);
+        } else if (request.type === 'VOICE_LISTENING_STATE') {
+            updateVoiceIndicator(request.isListening);
+        } else if (request.type === 'VOICE_COMMAND') {
+            handleVoiceCommand(request);
         }
         sendResponse({ received: true });
     }
@@ -323,6 +453,116 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Display MCP Analysis
+    function displayMCPAnalysis(analysis) {
+        // Remove existing analysis if any
+        const existing = document.getElementById('docmagic-mcp-analysis');
+        if (existing) existing.remove();
+        
+        const analysisBox = document.createElement('div');
+        analysisBox.id = 'docmagic-mcp-analysis';
+        analysisBox.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 999998;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+        `;
+        
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 16px;">🔬 AI Analysis</h3>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold;">×</button>
+            </div>
+        `;
+        
+        if (analysis.patterns && analysis.patterns.length > 0) {
+            html += `<p><strong>🎯 Patterns:</strong> ${analysis.patterns.join(', ')}</p>`;
+        }
+        
+        if (analysis.dataStructures && analysis.dataStructures.length > 0) {
+            html += `<p><strong>💾 Suggested DS:</strong> ${analysis.dataStructures[0].dataStructure}</p>`;
+        }
+        
+        if (analysis.approaches && analysis.approaches.length > 0) {
+            const recommended = analysis.approaches.filter(a => a.recommended)[0] || analysis.approaches[0];
+            html += `<p><strong>✅ Best Approach:</strong> ${recommended.name} (${recommended.timeComplexity})</p>`;
+        }
+        
+        if (analysis.hints && analysis.hints.length > 0) {
+            html += `<p><strong>💡 Hint:</strong> ${analysis.hints[0].hint}</p>`;
+        }
+        
+        html += `<button onclick="this.parentElement.remove()" style="margin-top: 10px; width: 100%; padding: 8px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Got it!</button>`;
+        
+        analysisBox.innerHTML = html;
+        document.body.appendChild(analysisBox);
+    }
+    
+    // Update voice indicator
+    function updateVoiceIndicator(isListening) {
+        let indicator = document.getElementById('docmagic-voice-indicator');
+        
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'docmagic-voice-indicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                background: #10B981;
+                color: white;
+                border-radius: 25px;
+                font-weight: 600;
+                z-index: 999999;
+                display: none;
+                animation: pulse 1.5s infinite;
+            `;
+            indicator.textContent = '🎤 Listening...';
+            document.body.appendChild(indicator);
+            
+            // Add pulse animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        indicator.style.display = isListening ? 'block' : 'none';
+    }
+    
+    // Handle voice commands
+    function handleVoiceCommand(request) {
+        console.log('Voice command received:', request.action);
+        
+        switch (request.action) {
+            case 'solve':
+            case 'hint':
+            case 'approach':
+                const problemData = extractProblemData(platform);
+                showHelpModal(problemData);
+                break;
+            case 'start':
+                // Start interview mode
+                chrome.runtime.sendMessage({ type: 'START_INTERVIEW' });
+                break;
+        }
     }
     
     function displayResult(action, result, container) {

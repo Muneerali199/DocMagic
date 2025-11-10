@@ -401,3 +401,188 @@ chrome.storage.local.get(['problems-solved', 'questions-practiced'], (result) =>
 document.getElementById('get-more-questions').addEventListener('click', () => {
     document.getElementById('generate-questions').click();
 });
+
+// Voice Mode Toggle
+const toggleVoiceBtn = document.getElementById('toggle-voice');
+if (toggleVoiceBtn && window.voiceHandler) {
+    toggleVoiceBtn.addEventListener('click', () => {
+        window.voiceHandler.toggleListening();
+    });
+}
+
+// Listen for voice state changes
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'VOICE_LISTENING_STATE') {
+        const voiceBtn = document.getElementById('toggle-voice');
+        const voiceStatus = document.getElementById('voice-status');
+        const voiceIcon = document.getElementById('voice-icon');
+        
+        if (request.isListening) {
+            voiceStatus.textContent = 'Voice On';
+            voiceIcon.textContent = '🎙️';
+            voiceBtn.style.background = '#10B981';
+            voiceBtn.style.color = 'white';
+        } else {
+            voiceStatus.textContent = 'Voice Off';
+            voiceIcon.textContent = '🎤';
+            voiceBtn.style.background = '';
+            voiceBtn.style.color = '';
+        }
+    } else if (request.type === 'DISPLAY_QUESTION') {
+        displayInterviewQuestion(request.question);
+    } else if (request.type === 'DISPLAY_EVALUATION') {
+        displayInterviewEvaluation(request.question, request.evaluation);
+    } else if (request.type === 'DISPLAY_FINAL_EVALUATION') {
+        displayFinalEvaluation(request.evaluation, request.session);
+    }
+});
+
+// Start Interview Mode
+document.getElementById('start-interview-mode').addEventListener('click', () => {
+    if (!window.interviewerMode) {
+        showNotification('Interviewer mode is loading...', 'info');
+        return;
+    }
+    
+    // Show interview configuration dialog
+    const config = {
+        type: 'dsa',
+        role: 'Software Engineer',
+        level: 'mid',
+        company: '',
+        duration: 30,
+        questionCount: 5
+    };
+    
+    window.interviewerMode.startInterview(config);
+    showNotification('Interview started! Good luck!', 'success');
+});
+
+// Display interview question
+function displayInterviewQuestion(question) {
+    // Switch to interview tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-tab="interview"]').classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('interview-tab').classList.add('active');
+    
+    // Display question
+    const resultDiv = document.getElementById('interview-result');
+    const listDiv = document.getElementById('questions-list');
+    
+    listDiv.innerHTML = `
+        <div class="interview-question-active">
+            <h4>Question: ${question.question}</h4>
+            <p class="difficulty">Difficulty: ${question.difficulty}</p>
+            <div class="answer-input">
+                <textarea id="interview-answer" placeholder="Type your answer here..." rows="6"></textarea>
+                <button id="submit-interview-answer" class="btn btn-primary">Submit Answer</button>
+            </div>
+        </div>
+    `;
+    
+    resultDiv.classList.remove('hidden');
+    
+    // Add submit handler
+    document.getElementById('submit-interview-answer').addEventListener('click', () => {
+        const answer = document.getElementById('interview-answer').value;
+        if (answer.trim() && window.interviewerMode) {
+            window.interviewerMode.submitAnswer(answer);
+        }
+    });
+}
+
+// Display interview evaluation
+function displayInterviewEvaluation(question, evaluation) {
+    const listDiv = document.getElementById('questions-list');
+    
+    listDiv.innerHTML += `
+        <div class="evaluation-result">
+            <h4>Score: ${Math.round(evaluation.overallScore)}/100</h4>
+            <div class="score-breakdown">
+                <div class="score-item">
+                    <span>Correctness:</span>
+                    <span>${Math.round(evaluation.correctness)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Approach:</span>
+                    <span>${Math.round(evaluation.approach)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Communication:</span>
+                    <span>${Math.round(evaluation.communication)}/100</span>
+                </div>
+            </div>
+            ${evaluation.strengths && evaluation.strengths.length > 0 ? `
+                <div class="feedback-section">
+                    <strong>Strengths:</strong>
+                    <p>${evaluation.strengths[0]}</p>
+                </div>
+            ` : ''}
+            ${evaluation.improvements && evaluation.improvements.length > 0 ? `
+                <div class="feedback-section">
+                    <strong>To Improve:</strong>
+                    <p>${evaluation.improvements[0]}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Display final evaluation
+function displayFinalEvaluation(evaluation, session) {
+    const listDiv = document.getElementById('questions-list');
+    
+    listDiv.innerHTML = `
+        <div class="final-evaluation">
+            <h2>Interview Complete! 🎉</h2>
+            <div class="final-score">
+                <h3>Overall Score: ${Math.round(evaluation.overallScore)}/100</h3>
+            </div>
+            <div class="detailed-scores">
+                <h4>Score Breakdown:</h4>
+                <div class="score-item">
+                    <span>Correctness:</span>
+                    <span>${Math.round(evaluation.correctness)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Approach:</span>
+                    <span>${Math.round(evaluation.approach)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Code Quality:</span>
+                    <span>${Math.round(evaluation.codeQuality)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Complexity:</span>
+                    <span>${Math.round(evaluation.complexity)}/100</span>
+                </div>
+                <div class="score-item">
+                    <span>Communication:</span>
+                    <span>${Math.round(evaluation.communication)}/100</span>
+                </div>
+            </div>
+            <div class="strengths-weaknesses">
+                <div class="strengths">
+                    <h4>Your Strengths:</h4>
+                    <ul>
+                        ${evaluation.strengths.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="improvements">
+                    <h4>Areas to Improve:</h4>
+                    <ul>
+                        ${evaluation.improvements.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+            <p class="session-info">Answered ${evaluation.questionsAnswered} questions in ${Math.round(evaluation.duration)} minutes</p>
+            <button id="start-new-interview" class="btn btn-primary">Start New Interview</button>
+        </div>
+    `;
+    
+    // Add handler for new interview
+    document.getElementById('start-new-interview').addEventListener('click', () => {
+        document.getElementById('start-interview-mode').click();
+    });
+}

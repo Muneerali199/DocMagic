@@ -27,6 +27,18 @@
             </button>
             <span class="provider-info" id="current-provider">Using: Gemini</span>
         </div>
+        
+        <!-- Voice & Interviewer Mode Controls -->
+        <div class="feature-controls">
+            <button id="toggle-voice" class="btn-feature" title="Toggle Voice Mode">
+                <span id="voice-icon">🎤</span>
+                <span id="voice-status">Voice Off</span>
+            </button>
+            <button id="start-interview-mode" class="btn-feature" title="Start Interviewer Mode">
+                <span>🎯</span>
+                <span>Start Interview</span>
+            </button>
+        </div>
 
         <!-- Tab Navigation -->
         <nav class="tabs">
@@ -191,6 +203,9 @@
         <p>AI is thinking...</p>
     </div>
 
+    <script src="voice-handler.js"></script>
+    <script src="interviewer-mode.js"></script>
+    <script src="mcp-server.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

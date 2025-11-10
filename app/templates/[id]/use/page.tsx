@@ -59,27 +59,35 @@ export default function UseTemplatePage() {
     }
   }, [params.id]);
 
-  const handleUseTemplate = () => {
-    if (!template) return;
+  const handleUseTemplate = async () => {
+    if (!template || !user) {
+      toast.error('Please sign in to use this template');
+      router.push('/auth/signin');
+      return;
+    }
     
-    // Navigate to the appropriate editor based on template type
-    switch (template.type) {
-      case 'resume':
-        router.push(`/resume?templateId=${template.id}`);
-        break;
-      case 'cv':
-        router.push(`/cv?templateId=${template.id}`);
-        break;
-      case 'letter':
-        router.push(`/letter?templateId=${template.id}`);
-        break;
-      case 'presentation':
-        router.push(`/presentation?templateId=${template.id}`);
-        break;
-      default:
-        // For other types, you might want to create a generic document editor
-        toast.error('Template type not supported yet');
-        break;
+    try {
+      // Create a new document from the template
+      const response = await fetch('/api/documents/create-from-template', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: template.id,
+          type: template.type,
+          title: `${template.title} - Copy`
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create document');
+
+      const newDocument = await response.json();
+      
+      // Navigate to the unified editor with the new document
+      router.push(`/editor/${template.type}/${newDocument.id}`);
+      toast.success('Template loaded in editor!');
+    } catch (error) {
+      console.error('Error creating document:', error);
+      toast.error('Failed to load template');
     }
   };
 

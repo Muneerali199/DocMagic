@@ -79,15 +79,15 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
   };
 
   return (
-    <Card className="glass-effect border-2 border-green-200/50 shadow-xl overflow-hidden">
+    <Card className="glass-effect border-2 border-green-200/50 shadow-xl overflow-hidden dark:bg-gray-800 dark:border-green-700/50">
       <CardHeader className={cn(
-        "bg-gradient-to-r border-b transition-colors",
+        "bg-gradient-to-r border-b transition-colors dark:from-gray-800 dark:to-gray-800",
         atsScore.score >= 85 ? "from-green-50 to-blue-50" : "from-orange-50 to-yellow-50"
       )}>
         <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span className="flex items-center gap-2 text-base sm:text-lg">
-            <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0" />
-            <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <span className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-400 dark:to-blue-400 bg-clip-text text-transparent font-bold">
               ATS Compatibility Score
             </span>
           </span>
@@ -100,7 +100,7 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6 dark:bg-gray-800">
         {/* Overall Score - Enhanced Visibility */}
         <div className="text-center space-y-3">
           <div className={cn(
@@ -116,7 +116,7 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
             />
           </div>
           <p className={cn(
-            "text-sm sm:text-base font-medium px-4 py-2 rounded-lg border-2",
+            "text-sm sm:text-base font-medium px-4 py-2 rounded-lg border-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100",
             getScoreBgColor(atsScore.score)
           )}>
             {getMessage()}
@@ -128,11 +128,11 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
           <Button
             variant="ghost"
             onClick={() => setShowBreakdown(!showBreakdown)}
-            className="w-full flex items-center justify-between hover:bg-gray-100 p-3 rounded-lg"
+            className="w-full flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 p-3 rounded-lg"
           >
-            <span className="font-semibold text-gray-700 text-sm sm:text-base flex items-center gap-2">
+            <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base flex items-center gap-2">
               <span>📊 Section Breakdown</span>
-              <span className="text-xs text-gray-500">({Object.values(atsScore.breakdown).reduce((a, b) => a + b, 0)}/100 pts)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">({Object.values(atsScore.breakdown).reduce((a, b) => a + b, 0)}/100 pts)</span>
             </span>
             {showBreakdown ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
@@ -140,91 +140,91 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
           {showBreakdown && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in slide-in-from-top duration-300">
               {/* Contact Info */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Contact Info</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Contact Info</span>
                   {getSectionIcon(atsScore.breakdown.contactInfo, 20)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.contactInfo / 20) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.contactInfo}/20 pts
                 </span>
               </div>
 
               {/* Summary */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Summary</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Summary</span>
                   {getSectionIcon(atsScore.breakdown.summary, 15)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.summary / 15) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.summary}/15 pts
                 </span>
               </div>
 
               {/* Experience */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Experience</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Experience</span>
                   {getSectionIcon(atsScore.breakdown.experience, 30)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.experience / 30) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.experience}/30 pts
                 </span>
               </div>
 
               {/* Education */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Education</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Education</span>
                   {getSectionIcon(atsScore.breakdown.education, 15)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.education / 15) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.education}/15 pts
                 </span>
               </div>
 
               {/* Skills */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Skills</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Skills</span>
                   {getSectionIcon(atsScore.breakdown.skills, 10)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.skills / 10) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.skills}/10 pts
                 </span>
               </div>
 
               {/* Certifications & Projects */}
-              <div className="p-3 bg-white rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Extras</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Extras</span>
                   {getSectionIcon(atsScore.breakdown.certifications, 10)}
                 </div>
                 <Progress 
                   value={(atsScore.breakdown.certifications / 10) * 100} 
                   className="h-2 mb-1"
                 />
-                <span className="text-xs text-gray-500 block">
+                <span className="text-xs text-gray-500 dark:text-gray-400 block">
                   {atsScore.breakdown.certifications}/10 pts
                 </span>
               </div>
@@ -238,12 +238,12 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
             <Button
               variant="ghost"
               onClick={() => setShowFeedback(!showFeedback)}
-              className="w-full flex items-center justify-between hover:bg-green-50 p-3 rounded-lg"
+              className="w-full flex items-center justify-between hover:bg-green-50 dark:hover:bg-gray-700 p-3 rounded-lg"
             >
-              <span className="font-semibold text-gray-700 text-sm sm:text-base flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
+              <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                 <span>What&apos;s Working</span>
-                <span className="text-xs text-gray-500">({atsScore.feedback.length})</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">({atsScore.feedback.length})</span>
               </span>
               {showFeedback ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </Button>
@@ -252,9 +252,9 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
                 {atsScore.feedback.slice(0, 5).map((item, index) => (
                   <div 
                     key={index}
-                    className="flex items-start gap-2 p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200"
+                    className="flex items-start gap-2 p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700"
                   >
-                    <span className="text-xs sm:text-sm text-green-800 leading-relaxed">{item}</span>
+                    <span className="text-xs sm:text-sm text-green-800 dark:text-green-200 leading-relaxed">{item}</span>
                   </div>
                 ))}
               </div>
@@ -268,12 +268,12 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
             <Button
               variant="ghost"
               onClick={() => setShowImprovements(!showImprovements)}
-              className="w-full flex items-center justify-between hover:bg-orange-50 p-3 rounded-lg"
+              className="w-full flex items-center justify-between hover:bg-orange-50 dark:hover:bg-gray-700 p-3 rounded-lg"
             >
-              <span className="font-semibold text-gray-700 text-sm sm:text-base flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" />
+              <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
                 <span>Suggested Improvements</span>
-                <span className="text-xs text-gray-500">({atsScore.improvements.length})</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">({atsScore.improvements.length})</span>
               </span>
               {showImprovements ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </Button>
@@ -282,10 +282,10 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
                 {atsScore.improvements.slice(0, 6).map((item, index) => (
                   <div 
                     key={index}
-                    className="flex items-start gap-2 p-2 sm:p-3 bg-orange-50 rounded-lg border border-orange-200"
+                    className="flex items-start gap-2 p-2 sm:p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700"
                   >
-                    <span className="text-orange-600 font-bold flex-shrink-0">•</span>
-                    <span className="text-xs sm:text-sm text-orange-800 leading-relaxed">{item}</span>
+                    <span className="text-orange-600 dark:text-orange-400 font-bold flex-shrink-0">•</span>
+                    <span className="text-xs sm:text-sm text-orange-800 dark:text-orange-200 leading-relaxed">{item}</span>
                   </div>
                 ))}
               </div>
@@ -294,12 +294,12 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
         )}
 
         {/* ATS Tips - Compact */}
-        <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-          <h3 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base flex items-center gap-2">
+        <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+          <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 text-sm sm:text-base flex items-center gap-2">
             <span>💡</span>
             <span>ATS Pro Tips</span>
           </h3>
-          <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
+          <ul className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 space-y-1">
             <li>• Use standard section headings</li>
             <li>• Include job description keywords</li>
             <li>• Quantify achievements with numbers</li>

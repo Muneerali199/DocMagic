@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { PresentationGenerator } from "@/components/presentation/presentation-generator";
 import {
@@ -9,17 +10,20 @@ import {
   Wand2,
   Sliders as Slides,
   Smartphone,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PresentationPreviewSkeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function PresentationPage() {
+function PresentationContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobilePrompt, setShowMobilePrompt] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateId = searchParams?.get('template') || null;
 
   useEffect(() => {
     // Check if mobile
@@ -178,7 +182,7 @@ export default function PresentationPage() {
               {isLoading ? (
                 <PresentationPreviewSkeleton />
               ) : (
-                <PresentationGenerator />
+                <PresentationGenerator templateId={templateId} />
               )}
             </div>
           </div>
@@ -218,5 +222,17 @@ export default function PresentationPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PresentationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+      </div>
+    }>
+      <PresentationContent />
+    </Suspense>
   );
 }

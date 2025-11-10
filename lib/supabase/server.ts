@@ -1,29 +1,55 @@
-import { createServerComponentClient, createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { type Database } from '@/types/supabase';
 
 // Server Component Client - For Server Components
 export const createServer = () => {
-  try {
-    const cookieStore = cookies();
-    return createServerComponentClient<Database>({
-      cookies: () => cookieStore,
-    });
-  } catch (error) {
-    console.error('Error creating server client:', error);
-    throw error;
-  }
+  const cookieStore = cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 };
 
 // Route Handler Client - For API Routes
 export const createRoute = () => {
-  try {
-    const cookieStore = cookies();
-    return createRouteHandlerClient<Database>({
-      cookies: () => cookieStore,
-    });
-  } catch (error) {
-    console.error('Error creating route handler client:', error);
-    throw error;
-  }
+  const cookieStore = cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  );
 };

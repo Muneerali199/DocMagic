@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/site-header";
+import { SponsorBanner } from "@/components/sponsor-banner";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
@@ -40,11 +41,12 @@ export default async function Home() {
 
   return (
     <div id="top" className="min-h-screen flex flex-col">
+      <SponsorBanner />
       <SiteHeader />
       <main className="flex-1">
         <HeroSection />
         {/* Enhanced AI-Powered Features Showcase */}
-        <section id="document-types" className="py-20 sm:py-24 lg:py-32 relative overflow-hidden scroll-mt-20">
+        <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
           {/* Enhanced Background Elements - Matching other sections */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="mesh-gradient opacity-40"></div>
@@ -55,36 +57,36 @@ export default async function Home() {
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
             {/* Enhanced Header */}
-            <div className="text-center mb-16 sm:mb-20">
-              <div className="inline-flex items-center gap-2 sm:gap-3 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 mb-8 hover:scale-105 transition-transform duration-300 shadow-lg">
-                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 animate-pulse" />
-                <span className="text-sm sm:text-base font-bold bolt-gradient-text">AI-Powered Document Creation</span>
-                <Wand2 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500 animate-bounce" />
+            <div className="text-center mb-12 sm:mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30 mb-6 hover:scale-105 transition-transform duration-300">
+                <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
+                <span className="text-sm font-semibold bolt-gradient-text">AI-Powered Document Creation</span>
+                <Wand2 className="h-5 w-5 text-purple-500 animate-bounce" />
               </div>
               
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 sm:mb-8 leading-tight px-4">
-                <span className="block mb-3">Create Professional Documents</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+                <span className="block mb-2">Create Professional Documents</span>
                 <span className="bolt-gradient-text">In Seconds, Not Hours</span>
               </h2>
               
-              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-10 px-4 font-medium">
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
                 Transform your ideas into stunning documents with our advanced AI. From resumes to presentations, 
                 experience the magic of instant professional creation.
               </p>
 
               {/* Quick Stats */}
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 lg:gap-12 mb-10 px-4">
-                <div className="text-center min-w-[100px] sm:min-w-[120px]">
-                  <div className="text-3xl sm:text-4xl font-extrabold bolt-gradient-text mb-1">50K+</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-semibold">Documents Created</div>
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 mb-8">
+                <div className="text-center min-w-[90px] sm:min-w-[100px]">
+                  <div className="text-2xl sm:text-3xl font-bold bolt-gradient-text">50K+</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Documents Created</div>
                 </div>
-                <div className="text-center min-w-[100px] sm:min-w-[120px]">
-                  <div className="text-3xl sm:text-4xl font-extrabold sunset-gradient-text mb-1">30s</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-semibold">Average Creation Time</div>
+                <div className="text-center min-w-[90px] sm:min-w-[100px]">
+                  <div className="text-2xl sm:text-3xl font-bold sunset-gradient-text">30s</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Average Creation Time</div>
                 </div>
-                <div className="text-center min-w-[100px] sm:min-w-[120px]">
-                  <div className="text-3xl sm:text-4xl font-extrabold forest-gradient-text mb-1">99%</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-semibold">ATS Compatibility</div>
+                <div className="text-center min-w-[90px] sm:min-w-[100px]">
+                  <div className="text-2xl sm:text-3xl font-bold forest-gradient-text">99%</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">ATS Compatibility</div>
                 </div>
               </div>
             </div>

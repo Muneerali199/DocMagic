@@ -1,4 +1,4 @@
-import { createClient as createClientOriginal, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import { type Database } from '@/types/supabase';
 
 // Environment variable validation
@@ -10,33 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing required Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment configuration.');
 }
 
-let supabaseInstance: SupabaseClient<Database> | null = null;
-
 // Export the Supabase client
 export const createClient = () => {
-  if (typeof window === 'undefined') {
-    // For server-side, always create new instance
-    return createClientOriginal<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      }
-    });
-  }
-
-  // For client-side, use singleton with proper storage key to prevent multiple instances
-  if (!supabaseInstance) {
-    supabaseInstance = createClientOriginal<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storageKey: 'docmagic-auth',
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      }
-    });
-  }
-
-  return supabaseInstance;
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 };

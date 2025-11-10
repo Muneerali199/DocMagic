@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "problemAnalyzer": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  },
+  "capabilities": {
+    "pageScanning": true,
+    "contextAnalysis": true,
+    "multipleApproaches": true,
+    "intelligentHints": true,
+    "adaptiveLearning": true
+  },
+  "features": {
+    "autoScan": {
+      "enabled": true,
+      "interval": 2000,
+      "platforms": ["leetcode", "hackerrank", "codeforces", "geeksforgeeks"]
+    },
+    "analysis": {
+      "extractProblemStatement": true,
+      "identifyPatterns": true,
+      "suggestDataStructures": true,
+      "estimateComplexity": true
+    },
+    "solutions": {
+      "generateMultiple": true,
+      "maxApproaches": 5,
+      "includeBruteForce": true,
+      "includeOptimal": true,
+      "includeAlternatives": true
+    }
+  }
+}

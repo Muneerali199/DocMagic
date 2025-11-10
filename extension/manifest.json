@@ -47,9 +47,21 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup.html", "styles.css", "settings.html", "settings.css"],
+      "resources": [
+        "popup.html",
+        "styles.css",
+        "settings.html",
+        "settings.css",
+        "voice-handler.js",
+        "interviewer-mode.js",
+        "mcp-server.js",
+        "mcp-config.json"
+      ],
       "matches": ["<all_urls>"]
     }
   ],
-  "options_page": "settings.html"
+  "options_page": "settings.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

@@ -26,6 +26,37 @@ function extractJsonFromMarkdown(text: string): string {
   return jsonMatch ? jsonMatch[1].trim() : text.trim();
 }
 
+// Helper function to retry with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a 503 (overloaded) or 429 (rate limit) error
+      const isRetryable = error?.status === 503 || error?.status === 429;
+      
+      if (!isRetryable || i === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = initialDelay * Math.pow(2, i);
+      console.log(`⏳ API overloaded, retrying in ${delay}ms... (attempt ${i + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
 async function validateApiConnection() {
   try {
     // Skip API validation during build time
@@ -34,14 +65,30 @@ async function validateApiConnection() {
     }
     
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
-    await model.generateContent("test");
+    
+    // Use retry logic for validation
+    await retryWithBackoff(async () => {
+      await model.generateContent("test");
+    });
+    
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("API Connection Test Failed:", error);
+    
     // Don't throw during build time
     if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_ENV) {
       return true;
     }
+    
+    // Provide more helpful error messages
+    if (error?.status === 503) {
+      throw new Error("Google AI service is temporarily overloaded. Please try again in a few moments.");
+    } else if (error?.status === 429) {
+      throw new Error("Rate limit exceeded. Please wait a moment before trying again.");
+    } else if (error?.status === 401 || error?.status === 403) {
+      throw new Error("Invalid API key. Please check your GEMINI_API_KEY environment variable.");
+    }
+    
     throw new Error("Unable to connect to Google Generative AI API.");
   }
 }
@@ -170,7 +217,11 @@ export async function generateResume({
     CRITICAL: Return ONLY valid JSON. No markdown, no explanations, ONLY the JSON object.`;
 
     console.log("📤 Sending request to Gemini API...");
-    const result = await model.generateContent(systemPrompt);
+    
+    // Use retry logic for the main generation request
+    const result = await retryWithBackoff(async () => {
+      return await model.generateContent(systemPrompt);
+    });
     
     if (!result || !result.response) {
       throw new Error("No response received from Gemini API");
@@ -231,7 +282,7 @@ export async function generateResume({
     console.log("🎉 Resume generation completed successfully");
     return validatedResume;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error generating resume:", error);
     
     // Provide detailed error information
@@ -242,13 +293,21 @@ export async function generateResume({
       });
     }
     
-    // Return more specific error messages
-    if (error instanceof Error && error.message.includes('API key')) {
+    // Return more specific error messages based on error type
+    if (error?.status === 503) {
+      throw new Error('Google AI service is temporarily overloaded. Please try again in a few moments.');
+    } else if (error?.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+    } else if (error?.status === 401 || error?.status === 403) {
+      throw new Error('Invalid API key. Please check your GEMINI_API_KEY environment variable.');
+    } else if (error instanceof Error && error.message.includes('API key')) {
       throw new Error('Gemini API key not configured. Please set GOOGLE_API_KEY in environment variables.');
     } else if (error instanceof Error && error.message.includes('quota')) {
       throw new Error('API quota exceeded. Please try again later.');
     } else if (error instanceof Error && error.message.includes('JSON')) {
       throw new Error('Failed to parse AI response. Please try again with different input.');
+    } else if (error instanceof Error && error.message.includes('overloaded')) {
+      throw error; // Re-throw the overloaded message as-is
     } else {
       throw new Error(`Failed to generate resume: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

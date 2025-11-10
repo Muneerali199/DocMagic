@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocMagic Extension Test Page</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        .test-section {
+            background: white;
+            padding: 2rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1f2937; }
+        h2 { color: #3b82f6; }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>🚀 DocMagic Extension Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Extension Check</h2>
+        <button onclick="checkExtension()">Check if Extension is Loaded</button>
+        <div id="extension-status" class="status info">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API Key Check</h2>
+        <button onclick="checkAPIKey()">Check API Key</button>
+        <div id="api-status" class="status info">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Problem Extraction</h2>
+        <div style="padding: 1rem; background: #f3f4f6; border-radius: 6px; margin: 1rem 0;">
+            <h3>Sample Problem: Two Sum</h3>
+            <p>Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.</p>
+            <p><strong>Example:</strong></p>
+            <pre>Input: nums = [2,7,11,15], target = 9
+Output: [0,1]</pre>
+        </div>
+        <button onclick="testExtraction()">Test Problem Extraction</button>
+        <div id="extraction-status" class="status info">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test AI Call</h2>
+        <button onclick="testAICall()">Send Test Message to Background</button>
+        <div id="ai-status" class="status info">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Modal</h2>
+        <button onclick="testModal()">Show Help Modal</button>
+        <div id="modal-status" class="status info">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Console Logs</h2>
+        <p>Open browser console (F12) to see detailed logs</p>
+        <button onclick="clearConsole()">Clear Console</button>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = 'status ' + type;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function checkExtension() {
+            log('extension-status', 'Checking...', 'info');
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+                log('extension-status', '✅ Extension is loaded! ID: ' + chrome.runtime.id, 'success');
+            } else {
+                log('extension-status', '❌ Extension not detected. Make sure it is installed and enabled.', 'error');
+            }
+        }
+
+        function checkAPIKey() {
+            log('api-status', 'Checking API key...', 'info');
+            
+            chrome.runtime.sendMessage({ type: 'GET_API_KEY' }, (response) => {
+                if (chrome.runtime.lastError) {
+                    log('api-status', '❌ Error: ' + chrome.runtime.lastError.message, 'error');
+                    return;
+                }
+                
+                if (response && response.apiKey) {
+                    log('api-status', '✅ API Key is configured! Length: ' + response.apiKey.length, 'success');
+                } else {
+                    log('api-status', '⚠️ No API key found. Please configure in settings.', 'error');
+                }
+            });
+        }
+
+        function testExtraction() {
+            log('extraction-status', 'Testing problem extraction...', 'info');
+            
+            const problemData = {
+                title: 'Two Sum',
+                description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+                difficulty: 'Easy',
+                tags: ['Array', 'Hash Table'],
+                platform: 'test',
+                url: window.location.href
+            };
+            
+            console.log('Extracted problem data:', problemData);
+            log('extraction-status', '✅ Problem data extracted successfully! Check console for details.', 'success');
+        }
+
+        function testAICall() {
+            log('ai-status', 'Sending test message to background script...', 'info');
+            
+            const prompt = 'Say "Hello! The extension is working correctly." in one sentence.';
+            
+            chrome.runtime.sendMessage(
+                { type: 'SOLVE_PROBLEM', prompt: prompt },
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                        log('ai-status', '❌ Chrome error: ' + chrome.runtime.lastError.message, 'error');
+                        return;
+                    }
+                    
+                    console.log('AI Response:', response);
+                    
+                    if (!response) {
+                        log('ai-status', '❌ No response received. Check if API key is configured.', 'error');
+                    } else if (response.error) {
+                        log('ai-status', '❌ Error: ' + response.error, 'error');
+                    } else if (response.data) {
+                        const text = typeof response.data === 'string' ? response.data : 
+                                    response.data.content || JSON.stringify(response.data);
+                        log('ai-status', '✅ Success! Response: ' + text.substring(0, 100), 'success');
+                    } else {
+                        log('ai-status', '⚠️ Unexpected response format', 'error');
+                    }
+                }
+            );
+        }
+
+        function testModal() {
+            log('modal-status', 'Creating test modal...', 'info');
+            
+            // Remove existing modal if any
+            const existing = document.getElementById('test-modal');
+            if (existing) existing.remove();
+            
+            const modal = document.createElement('div');
+            modal.id = 'test-modal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px;">
+                        <h2 style="margin: 0 0 1rem 0;">📚 Test Modal</h2>
+                        <p>If you can see this, the modal system is working!</p>
+                        <button onclick="document.getElementById('test-modal').remove()" style="width: 100%; margin-top: 1rem;">Close Modal</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            log('modal-status', '✅ Modal created! Close it to continue.', 'success');
+        }
+
+        function clearConsole() {
+            console.clear();
+            console.log('Console cleared! Ready for new tests.');
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            console.log('🚀 DocMagic Extension Test Page Loaded');
+            console.log('Click the buttons above to test each feature');
+            checkExtension();
+        });
+    </script>
+</body>
+</html>
