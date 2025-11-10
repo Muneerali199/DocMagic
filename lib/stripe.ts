@@ -89,12 +89,8 @@ export const createCheckoutSession = async ({
         address: 'auto',
         name: 'auto',
       },
-      // Enable payment method options to show wallets
-      payment_method_options: {
-        card: {
-          setup_future_usage: 'off_session',
-        },
-      },
+      // Note: payment_method_options.setup_future_usage is not needed for subscriptions
+      // Stripe automatically saves payment methods for future subscription payments
     });
 
     return session;
