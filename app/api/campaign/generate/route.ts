@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
-import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || '',
-});
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 interface CampaignIdea {
   title: string;
@@ -85,14 +85,9 @@ Return ONLY a JSON array with this structure:
 ]`;
 
   try {
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'mixtral-8x7b-32768',
-      temperature: 0.8,
-      max_tokens: 2000,
-    });
-
-    const content = completion.choices[0]?.message?.content || '[]';
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text();
     
     // Extract JSON from response
     const jsonMatch = content.match(/\[[\s\S]*\]/);
@@ -146,14 +141,9 @@ Return ONLY a JSON object:
 }`;
 
   try {
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'mixtral-8x7b-32768',
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-
-    const content = completion.choices[0]?.message?.content || '{}';
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text();
     
     // Extract JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
