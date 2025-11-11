@@ -129,7 +129,7 @@ function extractFonts(document: Document): string[] {
   const keyElements = ['h1', 'h2', 'p', 'body'];
   keyElements.forEach(tag => {
     const el = document.querySelector(tag);
-    if (el instanceof HTMLElement) {
+    if (el) {
       const style = el.getAttribute('style') || '';
       const fontMatch = style.match(/font-family:\s*([^;]+)/i);
       if (fontMatch) {
