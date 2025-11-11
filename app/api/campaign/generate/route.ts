@@ -4,7 +4,38 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+// Try multiple model names in order of preference
+const MODEL_FALLBACKS = [
+  'gemini-2.0-flash-exp',      // Newest experimental model
+  'gemini-1.5-pro',             // Stable production model
+  'gemini-1.5-pro-latest',      // Latest stable
+  'gemini-pro'                  // Legacy fallback
+];
+
+let activeModel: any = null;
+
+async function getModel() {
+  if (activeModel) return activeModel;
+  
+  for (const modelName of MODEL_FALLBACKS) {
+    try {
+      const testModel = genAI.getGenerativeModel({ model: modelName });
+      // Quick test to verify the model works
+      await testModel.generateContent('test');
+      activeModel = testModel;
+      console.log(`✅ Using Gemini model: ${modelName}`);
+      return activeModel;
+    } catch (error: any) {
+      console.log(`⚠️ Model ${modelName} not available, trying next...`);
+      continue;
+    }
+  }
+  
+  // If all fail, use the first one anyway and let it error properly
+  activeModel = genAI.getGenerativeModel({ model: MODEL_FALLBACKS[0] });
+  return activeModel;
+}
 
 interface CampaignIdea {
   title: string;
@@ -60,6 +91,8 @@ export async function POST(req: NextRequest) {
 }
 
 async function generateCampaignIdeas(brandDNA: any, goal: string) {
+  const model = await getModel();
+  
   const prompt = `You are an expert marketing strategist. Generate 5 creative campaign ideas for the following brand:
 
 Brand Name: ${brandDNA.brandName}
@@ -103,6 +136,8 @@ Return ONLY a JSON array with this structure:
 }
 
 async function generatePlatformPost(idea: any, platform: string, brandDNA: any) {
+  const model = await getModel();
+  
   const platformSpecs: Record<string, any> = {
     instagram: { maxChars: 2200, style: 'visual, emoji-rich, casual', hashtagCount: '8-10' },
     linkedin: { maxChars: 3000, style: 'professional, value-driven', hashtagCount: '3-5' },
