@@ -27,14 +27,18 @@ async function getModel() {
       console.log(`✅ Using Gemini model: ${modelName}`);
       return activeModel;
     } catch (error: any) {
+      // Check if it's a quota/rate limit error (429)
+      if (error.status === 429) {
+        console.log(`⚠️ Quota exceeded for all Gemini models. Please wait or upgrade your API plan.`);
+        throw new Error('QUOTA_EXCEEDED: You have exceeded your Gemini API quota. Please wait a few minutes or upgrade your API plan at https://ai.google.dev/pricing');
+      }
       console.log(`⚠️ Model ${modelName} not available, trying next...`);
       continue;
     }
   }
   
-  // If all fail, use the first one anyway and let it error properly
-  activeModel = genAI.getGenerativeModel({ model: MODEL_FALLBACKS[0] });
-  return activeModel;
+  // If all fail, throw an error
+  throw new Error('NO_MODELS_AVAILABLE: All Gemini models failed. Please check your API key and quota at https://ai.google.dev/');
 }
 
 interface CampaignIdea {
@@ -83,6 +87,23 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Error generating campaign:', error);
+    
+    // Handle specific error types
+    if (error.message?.includes('QUOTA_EXCEEDED')) {
+      return NextResponse.json({ 
+        error: 'API Quota Exceeded',
+        details: 'You have exceeded your Gemini API free tier quota. Please wait a few minutes and try again, or upgrade your plan at https://ai.google.dev/pricing',
+        retryAfter: 60 // Suggest retry after 60 seconds
+      }, { status: 429 });
+    }
+    
+    if (error.message?.includes('NO_MODELS_AVAILABLE')) {
+      return NextResponse.json({ 
+        error: 'AI Models Unavailable',
+        details: 'No Gemini models are currently available. Please check your API key at https://ai.google.dev/',
+      }, { status: 503 });
+    }
+    
     return NextResponse.json({ 
       error: 'Failed to generate campaign',
       details: error.message 

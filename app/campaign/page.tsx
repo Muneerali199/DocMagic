@@ -108,6 +108,10 @@ export default function CampaignGeneratorPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle quota exceeded error
+        if (response.status === 429) {
+          throw new Error(`API Quota Exceeded: ${data.details || 'Please wait a few minutes and try again, or upgrade your Gemini API plan.'}`);
+        }
         throw new Error(data.error || 'Failed to generate campaign');
       }
 
