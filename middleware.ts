@@ -105,6 +105,7 @@ export async function middleware(req: NextRequest) {
     '/cv', // Can view CV page but not create/save
     '/letter', // Can view letter page but not create/save
     '/diagram', // Can view diagram page but not create/save
+    '/campaign', // Can view campaign generator page
   ];
 
   // Pages that require full authentication
