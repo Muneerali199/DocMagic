@@ -5,41 +5,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Try multiple model names in order of preference
-const MODEL_FALLBACKS = [
-  'gemini-2.0-flash-exp',      // Newest experimental model
-  'gemini-1.5-pro',             // Stable production model
-  'gemini-1.5-pro-latest',      // Latest stable
-  'gemini-pro'                  // Legacy fallback
-];
-
-let activeModel: any = null;
-
-async function getModel() {
-  if (activeModel) return activeModel;
-  
-  for (const modelName of MODEL_FALLBACKS) {
-    try {
-      const testModel = genAI.getGenerativeModel({ model: modelName });
-      // Quick test to verify the model works
-      await testModel.generateContent('test');
-      activeModel = testModel;
-      console.log(`✅ Using Gemini model: ${modelName}`);
-      return activeModel;
-    } catch (error: any) {
-      // Check if it's a quota/rate limit error (429)
-      if (error.status === 429) {
-        console.log(`⚠️ Quota exceeded for all Gemini models. Please wait or upgrade your API plan.`);
-        throw new Error('QUOTA_EXCEEDED: You have exceeded your Gemini API quota. Please wait a few minutes or upgrade your API plan at https://ai.google.dev/pricing');
-      }
-      console.log(`⚠️ Model ${modelName} not available, trying next...`);
-      continue;
-    }
-  }
-  
-  // If all fail, throw an error
-  throw new Error('NO_MODELS_AVAILABLE: All Gemini models failed. Please check your API key and quota at https://ai.google.dev/');
-}
+// Use Gemini 2.0 Flash model (latest experimental model)
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
 interface CampaignIdea {
   title: string;
@@ -112,8 +79,6 @@ export async function POST(req: NextRequest) {
 }
 
 async function generateCampaignIdeas(brandDNA: any, goal: string) {
-  const model = await getModel();
-  
   const prompt = `You are an expert marketing strategist. Generate 5 creative campaign ideas for the following brand:
 
 Brand Name: ${brandDNA.brandName}
@@ -157,8 +122,6 @@ Return ONLY a JSON array with this structure:
 }
 
 async function generatePlatformPost(idea: any, platform: string, brandDNA: any) {
-  const model = await getModel();
-  
   const platformSpecs: Record<string, any> = {
     instagram: { maxChars: 2200, style: 'visual, emoji-rich, casual', hashtagCount: '8-10' },
     linkedin: { maxChars: 3000, style: 'professional, value-driven', hashtagCount: '3-5' },
