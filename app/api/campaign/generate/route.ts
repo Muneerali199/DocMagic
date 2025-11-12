@@ -5,9 +5,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Use Gemini 1.5 Flash 8B model (smaller, faster, more quota-friendly)
+// Use Gemini 2.0 Flash model (experimental - latest model)
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-flash-8b',
+  model: 'gemini-2.0-flash-exp',
   generationConfig: {
     maxOutputTokens: 2048, // Limit output to save quota
     temperature: 0.7,
