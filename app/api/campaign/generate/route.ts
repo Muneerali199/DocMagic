@@ -5,8 +5,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Use Gemini 2.0 Flash model (latest experimental model)
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+// Use Gemini 1.5 Flash 8B model (smaller, faster, more quota-friendly)
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-1.5-flash-8b',
+  generationConfig: {
+    maxOutputTokens: 2048, // Limit output to save quota
+    temperature: 0.7,
+  }
+});
 
 interface CampaignIdea {
   title: string;
@@ -78,6 +84,38 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// Helper function to retry API calls with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // If it's a quota error, wait longer
+      if (error.status === 429) {
+        const retryDelay = error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay;
+        const waitTime = retryDelay ? parseInt(retryDelay) * 1000 : initialDelay * Math.pow(2, i);
+        
+        console.log(`Rate limited. Retrying in ${waitTime / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      
+      // For other errors, don't retry
+      throw error;
+    }
+  }
+  
+  throw lastError;
+}
+
 async function generateCampaignIdeas(brandDNA: any, goal: string) {
   const prompt = `You are an expert marketing strategist. Generate 5 creative campaign ideas for the following brand:
 
@@ -104,7 +142,7 @@ Return ONLY a JSON array with this structure:
 ]`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await retryWithBackoff(() => model.generateContent(prompt));
     const response = await result.response;
     const content = response.text();
     
@@ -160,7 +198,7 @@ Return ONLY a JSON object:
 }`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await retryWithBackoff(() => model.generateContent(prompt));
     const response = await result.response;
     const content = response.text();
     
