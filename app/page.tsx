@@ -1,3 +1,4 @@
+import ImportProfile from "../components/ImportProfile";
 import { SiteHeader } from "@/components/site-header";
 import { SponsorBanner } from "@/components/sponsor-banner";
 import { HeroSection } from "@/components/hero-section";
@@ -288,6 +289,7 @@ export default async function Home() {
         <FeaturesSection />
         <TestimonialsSection />
         <ScrollToTop />
+        <ImportProfile />
       </main>
     </div>
   );
