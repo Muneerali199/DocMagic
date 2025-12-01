@@ -1607,7 +1607,13 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
   const chartColors = slide.chartData?.colors || [theme.colors.accent, '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="group relative bg-card rounded-[2rem] shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-border">
+    <div 
+      className="group relative rounded-[2rem] shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border"
+      style={{ 
+        backgroundColor: theme.colors.card,
+        borderColor: theme.colors.border
+      }}
+    >
       {/* Edit indicator */}
       {isEditable && (
         <div className="absolute top-4 left-4 z-30 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1618,7 +1624,10 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
       
       <div 
         className={`${getGradientClass(slide.design?.background)} p-12 md:p-16 min-h-[600px] flex items-center justify-center relative overflow-hidden`}
-        style={{ color: textColor }}
+        style={{ 
+          color: textColor,
+          backgroundColor: theme.colors.background // Ensure background color is set
+        }}
       >
         {/* Background Image */}
         {hasImage && (
@@ -1631,9 +1640,15 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
           />
         )}
 
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        {/* Decorative Background Elements - use theme-aware colors */}
+        <div 
+          className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" 
+          style={{ backgroundColor: `${theme.colors.accent}15` }}
+        />
+        <div 
+          className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" 
+          style={{ backgroundColor: `${textColor}10` }}
+        />
         
         {/* Slide Number Badge */}
         <div 
@@ -1664,6 +1679,7 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             suppressContentEditableWarning
             onBlur={(e) => onUpdate?.({ ...slide, title: e.currentTarget.textContent || slide.title })}
             className={`font-bold mb-8 leading-tight tracking-tight drop-shadow-md ${isHero ? 'text-5xl md:text-7xl' : 'text-4xl md:text-5xl'} ${isEditable ? 'cursor-text hover:outline hover:outline-2 hover:outline-blue-500/50 rounded-lg px-2 -mx-2' : ''}`}
+            style={{ color: textColor }}
           >
             {slide.title}
           </h2>
@@ -1675,6 +1691,7 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
               suppressContentEditableWarning
               onBlur={(e) => onUpdate?.({ ...slide, subtitle: e.currentTarget.textContent || slide.subtitle })}
               className={`text-2xl md:text-3xl mb-10 font-light leading-relaxed drop-shadow-sm opacity-90 ${isEditable ? 'cursor-text hover:outline hover:outline-2 hover:outline-blue-500/50 rounded-lg px-2 -mx-2' : ''}`}
+              style={{ color: textColor }}
             >
               {slide.subtitle}
             </p>
@@ -1757,6 +1774,7 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
               suppressContentEditableWarning
               onBlur={(e) => onUpdate?.({ ...slide, content: e.currentTarget.textContent || slide.content })}
               className={`text-xl md:text-2xl leading-relaxed font-medium max-w-3xl mx-auto drop-shadow-sm opacity-90 ${isEditable ? 'cursor-text hover:outline hover:outline-2 hover:outline-blue-500/50 rounded-lg px-2 -mx-2' : ''}`}
+              style={{ color: textColor }}
             >
               {slide.content}
             </p>
@@ -1771,16 +1789,17 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
                   className="flex items-start gap-4 backdrop-blur-sm rounded-2xl p-6 transition-all group/item border"
                   style={{ 
                     borderColor: `${textColor}20`,
-                    backgroundColor: `${theme.colors.background}20`
+                    backgroundColor: `${theme.colors.background}20`,
+                    color: textColor
                   }}
                 >
                   <div 
                     className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold group-hover/item:scale-110 transition-transform"
-                    style={{ backgroundColor: `${textColor}20` }}
+                    style={{ backgroundColor: `${textColor}20`, color: textColor }}
                   >
                     {idx + 1}
                   </div>
-                  <span className="text-xl md:text-2xl font-medium leading-relaxed flex-1 opacity-95">{bullet}</span>
+                  <span className="text-xl md:text-2xl font-medium leading-relaxed flex-1 opacity-95" style={{ color: textColor }}>{bullet}</span>
                 </div>
               ))}
             </div>
@@ -1790,12 +1809,13 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
           {isFlowchart && slide.bullets && slide.bullets.length > 0 && (
             <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-10 flex-wrap">
               {slide.bullets.map((step, idx) => (
-                <div key={idx} className="flex items-center gap-4">
+                <div key={idx} className="flex items-center gap-4" style={{ color: textColor }}>
                   <div 
                     className="relative px-6 py-4 rounded-xl backdrop-blur-sm border transition-all hover:scale-105"
                     style={{ 
                       borderColor: `${textColor}30`,
-                      backgroundColor: `${theme.colors.background}30`
+                      backgroundColor: `${theme.colors.background}30`,
+                      color: textColor
                     }}
                   >
                     <span className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
