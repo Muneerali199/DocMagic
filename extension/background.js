@@ -25,10 +25,10 @@ const API_URLS = {
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
         console.log('DocMagic Smart Extension installed!');
-        
+
         // Initialize storage
         chrome.storage.local.set({
-            'gemini_api_key': 'AIzaSyCDs-mjox5cYtg1c5GeDhJp-hhoTEi6Cl0',
+            'gemini_api_key': '', // User must set their own API key in extension settings
             'problems-solved': 0,
             'questions-practiced': 0,
             'interview_sessions': [],
@@ -44,12 +44,12 @@ chrome.runtime.onInstalled.addListener((details) => {
                 'mcpAnalysis': true
             }
         });
-        
+
         // Open settings page
         chrome.tabs.create({
             url: chrome.runtime.getURL('settings.html')
         });
-        
+
         // Show setup notification
         chrome.notifications.create({
             type: 'basic',
@@ -67,13 +67,13 @@ chrome.runtime.onInstalled.addListener(() => {
         title: '🚀 Solve with DocMagic AI',
         contexts: ['selection']
     });
-    
+
     chrome.contextMenus.create({
         id: 'docmagic-explain',
         title: '💡 Explain with DocMagic AI',
         contexts: ['selection']
     });
-    
+
     chrome.contextMenus.create({
         id: 'docmagic-hint',
         title: '🎯 Get Hint',
@@ -100,7 +100,7 @@ async function handleSolveRequest(text, tab) {
             showNotification('API Key Required', 'Please configure your AI provider in settings.');
             return;
         }
-        
+
         const prompt = `You are an expert DSA problem solver. Solve this problem:
 
 ${text}
@@ -112,19 +112,19 @@ Provide:
 4. Explanation of the solution
 
 Format your response as JSON with keys: approach, code, timeComplexity, spaceComplexity, explanation`;
-        
+
         const result = await callAI(provider, apiKey, prompt);
-        
+
         // Send result to content script
         chrome.tabs.sendMessage(tab.id, {
             type: 'SHOW_SOLUTION',
             data: result
         });
-        
+
         // Increment stats
         await incrementStat('problems-solved');
         showNotification('Solution Ready! ✅', 'Check the page for your solution.');
-        
+
     } catch (error) {
         console.error('Failed to solve problem:', error);
         showNotification('Error', error.message || 'Failed to solve problem. Please try again.');
@@ -138,7 +138,7 @@ async function handleExplainRequest(text, tab) {
             showNotification('API Key Required', 'Please configure your AI provider in settings.');
             return;
         }
-        
+
         const prompt = `Explain this code in detail:
 
 ${text}
@@ -150,16 +150,16 @@ Provide:
 4. Potential improvements
 
 Format as JSON with keys: explanation, complexity, improvements`;
-        
+
         const result = await callAI(provider, apiKey, prompt);
-        
+
         chrome.tabs.sendMessage(tab.id, {
             type: 'SHOW_EXPLANATION',
             data: result
         });
-        
+
         showNotification('Explanation Ready! 💡', 'Check the page for code explanation.');
-        
+
     } catch (error) {
         console.error('Failed to explain code:', error);
         showNotification('Error', error.message || 'Failed to explain code.');
@@ -173,22 +173,22 @@ async function handleHintRequest(text, tab) {
             showNotification('API Key Required', 'Please configure your AI provider in settings.');
             return;
         }
-        
+
         const prompt = `Give a helpful hint for this problem (don't give away the solution):
 
 ${text}
 
 Provide a hint that guides thinking without revealing the answer.`;
-        
+
         const result = await callAI(provider, apiKey, prompt);
-        
+
         chrome.tabs.sendMessage(tab.id, {
             type: 'SHOW_HINT',
             data: { hint: result }
         });
-        
+
         showNotification('Hint Ready! 🎯', 'Check the page for your hint.');
-        
+
     } catch (error) {
         console.error('Failed to get hint:', error);
         showNotification('Error', error.message || 'Failed to get hint.');
@@ -240,7 +240,7 @@ async function callAI(provider, apiKey, prompt) {
 // Gemini AI API Call
 async function callGeminiAPI(apiKey, prompt) {
     const url = `${API_URLS.gemini}?key=${apiKey}`;
-    
+
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -252,15 +252,15 @@ async function callGeminiAPI(apiKey, prompt) {
             }]
         })
     });
-    
+
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'Gemini API request failed');
+        throw new Error(error.error ? .message || 'Gemini API request failed');
     }
-    
+
     const data = await response.json();
-    const text = data.candidates[0]?.content?.parts[0]?.text || '';
-    
+    const text = data.candidates[0] ? .content ? .parts[0] ? .text || '';
+
     return parseAIResponse(text);
 }
 
@@ -281,15 +281,15 @@ async function callOpenAIAPI(apiKey, prompt) {
             temperature: 0.7
         })
     });
-    
+
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'OpenAI API request failed');
+        throw new Error(error.error ? .message || 'OpenAI API request failed');
     }
-    
+
     const data = await response.json();
-    const text = data.choices[0]?.message?.content || '';
-    
+    const text = data.choices[0] ? .message ? .content || '';
+
     return parseAIResponse(text);
 }
 
@@ -309,15 +309,15 @@ async function callMistralAPI(apiKey, prompt) {
             }]
         })
     });
-    
+
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Mistral API request failed');
     }
-    
+
     const data = await response.json();
-    const text = data.choices[0]?.message?.content || '';
-    
+    const text = data.choices[0] ? .message ? .content || '';
+
     return parseAIResponse(text);
 }
 
@@ -339,15 +339,15 @@ async function callClaudeAPI(apiKey, prompt) {
             }]
         })
     });
-    
+
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'Claude API request failed');
+        throw new Error(error.error ? .message || 'Claude API request failed');
     }
-    
+
     const data = await response.json();
-    const text = data.content[0]?.text || '';
-    
+    const text = data.content[0] ? .text || '';
+
     return parseAIResponse(text);
 }
 
@@ -360,7 +360,7 @@ function parseAIResponse(text) {
             return JSON.parse(jsonMatch[1]);
         } catch {}
     }
-    
+
     // Try to parse as JSON directly
     try {
         return JSON.parse(text);
@@ -378,7 +378,7 @@ async function getProviderAndKey() {
         STORAGE_KEYS.MISTRAL_KEY,
         STORAGE_KEYS.CLAUDE_KEY
     ]);
-    
+
     const provider = result[STORAGE_KEYS.AI_PROVIDER] || 'gemini';
     const keyMap = {
         gemini: STORAGE_KEYS.GEMINI_KEY,
@@ -386,9 +386,9 @@ async function getProviderAndKey() {
         mistral: STORAGE_KEYS.MISTRAL_KEY,
         claude: STORAGE_KEYS.CLAUDE_KEY
     };
-    
+
     const apiKey = result[keyMap[provider]] || '';
-    
+
     return { provider, apiKey };
 }
 
@@ -398,35 +398,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         incrementStat(request.stat, request.count);
         sendResponse({ success: true });
     }
-    
+
     if (request.type === 'GET_SETTINGS') {
         chrome.storage.local.get('settings', (result) => {
             sendResponse(result.settings);
         });
         return true;
     }
-    
+
     if (request.type === 'UPDATE_SETTINGS') {
         chrome.storage.local.set({ settings: request.settings }, () => {
             sendResponse({ success: true });
         });
         return true;
     }
-    
+
     if (request.type === 'SAVE_API_KEY') {
-        chrome.storage.local.set({ [STORAGE_KEYS.GEMINI_KEY]: request.apiKey }, () => {
+        chrome.storage.local.set({
+            [STORAGE_KEYS.GEMINI_KEY]: request.apiKey }, () => {
             sendResponse({ success: true });
         });
         return true;
     }
-    
+
     if (request.type === 'GET_API_KEY') {
         getProviderAndKey().then(({ apiKey }) => {
             sendResponse({ apiKey });
         });
         return true;
     }
-    
+
     if (request.type === 'OPEN_SETTINGS') {
         chrome.tabs.create({
             url: chrome.runtime.getURL('settings.html')
@@ -434,9 +435,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
         return true;
     }
-    
+
     if (request.type === 'TEST_API_CONNECTION') {
-        (async () => {
+        (async() => {
             try {
                 const testPrompt = 'Say "Hello! API is working." in one sentence.';
                 const result = await callAI(request.provider, request.apiKey, testPrompt);
@@ -447,22 +448,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })();
         return true;
     }
-    
+
     if (request.type === 'SETTINGS_UPDATED') {
         console.log('Settings updated, reloading configuration...');
         sendResponse({ success: true });
         return true;
     }
-    
+
     if (request.type === 'SOLVE_PROBLEM') {
-        (async () => {
+        (async() => {
             try {
                 const { provider, apiKey } = await getProviderAndKey();
                 if (!apiKey) {
                     sendResponse({ error: 'API key not configured. Please open settings.' });
                     return;
                 }
-                
+
                 const result = await callAI(provider, apiKey, request.prompt);
                 sendResponse({ success: true, data: result });
             } catch (error) {
@@ -471,17 +472,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })();
         return true;
     }
-    
+
     // Voice command handling
     if (request.type === 'VOICE_COMMAND') {
-        (async () => {
+        (async() => {
             try {
                 const { provider, apiKey } = await getProviderAndKey();
                 if (!apiKey) {
                     sendResponse({ reply: 'Please configure your API key first.' });
                     return;
                 }
-                
+
                 let prompt = '';
                 switch (request.action) {
                     case 'solve':
@@ -499,7 +500,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     default:
                         prompt = request.text;
                 }
-                
+
                 const result = await callAI(provider, apiKey, prompt);
                 const reply = typeof result === 'string' ? result : result.content || JSON.stringify(result);
                 sendResponse({ success: true, reply: reply });
@@ -509,17 +510,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })();
         return true;
     }
-    
+
     // Voice conversation handling
     if (request.type === 'VOICE_CONVERSATION') {
-        (async () => {
+        (async() => {
             try {
                 const { provider, apiKey } = await getProviderAndKey();
                 if (!apiKey) {
                     sendResponse({ reply: 'Please configure your API key first.' });
                     return;
                 }
-                
+
                 const prompt = `You are a friendly AI coding assistant. Respond naturally to: ${request.text}`;
                 const result = await callAI(provider, apiKey, prompt);
                 const reply = typeof result === 'string' ? result : result.content || JSON.stringify(result);
@@ -530,7 +531,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })();
         return true;
     }
-    
+
     // MCP analysis complete
     if (request.type === 'MCP_ANALYSIS_COMPLETE') {
         console.log('📊 MCP Analysis received:', request.analysis);
@@ -539,16 +540,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
         return true;
     }
-    
+
     // Interview mode messages
     if (request.type === 'START_INTERVIEW') {
         console.log('🎤 Starting interview mode...');
         sendResponse({ success: true, message: 'Interview mode started' });
         return true;
     }
-    
-    if (request.type === 'DISPLAY_QUESTION' || 
-        request.type === 'DISPLAY_EVALUATION' || 
+
+    if (request.type === 'DISPLAY_QUESTION' ||
+        request.type === 'DISPLAY_EVALUATION' ||
         request.type === 'DISPLAY_FINAL_EVALUATION') {
         // Forward to popup if open
         chrome.runtime.sendMessage(request);
@@ -561,7 +562,8 @@ async function incrementStat(stat, count = 1) {
     const result = await chrome.storage.local.get(stat);
     const currentValue = result[stat] || 0;
     const newValue = currentValue + count;
-    await chrome.storage.local.set({ [stat]: newValue });
+    await chrome.storage.local.set({
+        [stat]: newValue });
 }
 
 // Keyboard shortcuts
