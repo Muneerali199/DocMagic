@@ -38,6 +38,7 @@ import { OutlineEditor } from './outline-editor';
 interface Slide {
   slideNumber: number;
   type: string;
+  layout?: string;
   title: string;
   subtitle?: string;
   content: string;
@@ -49,11 +50,32 @@ interface Slide {
   };
   imageUrl?: string;
   chartData?: {
-    type: 'bar' | 'line' | 'pie' | 'area';
+    type: 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'funnel';
     data: { name: string; value: number; category?: string }[];
     xAxis?: string;
     yAxis?: string;
     colors?: string[];
+  };
+  // Enhanced slide types
+  stats?: { value: string; label: string; context?: string }[];
+  comparison?: {
+    leftTitle?: string;
+    rightTitle?: string;
+    left: string[];
+    right: string[];
+  };
+  timeline?: { date: string; title: string; description?: string }[];
+  mockup?: {
+    type: 'phone' | 'laptop' | 'tablet' | 'browser' | 'dashboard';
+    title?: string;
+    elements: { type: string; content: string }[];
+  };
+  icons?: { icon: string; label: string }[];
+  logos?: string[];
+  testimonial?: {
+    quote: string;
+    author: string;
+    role?: string;
   };
 }
 
@@ -1594,35 +1616,78 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
 }) {
   const isHero = slide.type === 'hero' || slide.type === 'cover';
   const isFlowchart = slide.type === 'process' || slide.type === 'flowchart';
+  const isStats = slide.type === 'stats' || slide.type === 'big-number';
+  const isComparison = slide.type === 'comparison' || slide.type === 'before-after';
+  const isTimeline = slide.type === 'timeline' || slide.type === 'roadmap';
+  const isMockup = slide.type === 'mockup';
+  const isFeatureGrid = slide.type === 'feature-grid' || slide.type === 'icon-grid';
+  const isTestimonial = slide.type === 'testimonial' || slide.type === 'quote';
+  const isLogoCloud = slide.type === 'logo-cloud';
   const hasChart = slide.chartData && slide.chartData.data && slide.chartData.data.length > 0;
   const hasImage = slide.imageUrl && slide.imageUrl.length > 0;
+  const hasStats = slide.stats && slide.stats.length > 0;
+  const hasComparison = slide.comparison && (slide.comparison.left?.length > 0 || slide.comparison.right?.length > 0);
+  const hasTimeline = slide.timeline && slide.timeline.length > 0;
+  const hasMockup = slide.mockup && slide.mockup.elements?.length > 0;
+  const hasIcons = slide.icons && slide.icons.length > 0;
+  const hasLogos = slide.logos && slide.logos.length > 0;
+  const hasTestimonial = slide.testimonial && slide.testimonial.quote;
   const isEditable = !!onUpdate;
 
   // Dynamic import for Recharts
-  const { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = 
+  const { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } = 
     require('recharts');
 
-  // Icon mapping for different slide types
+  // Enhanced icon mapping for different slide types
   const getSlideIcon = (type: string) => {
     switch(type) {
       case 'hero': return '🚀';
-      case 'list': return '📋';
-      case 'bullets': return '✓';
+      case 'stats': return '📊';
+      case 'comparison': return '⚖️';
+      case 'before-after': return '🔄';
+      case 'timeline': return '📅';
+      case 'roadmap': return '🗺️';
+      case 'mockup': return '📱';
+      case 'feature-grid': return '✨';
+      case 'icon-grid': return '🎯';
+      case 'testimonial': return '💬';
+      case 'quote': return '💭';
+      case 'logo-cloud': return '🏢';
       case 'process': return '⚡';
-      case 'flowchart': return '📊';
-      case 'quote': return '💬';
-      case 'big-number': return '📈';
-      case 'data': return '📊';
-      case 'chart': return '📈';
+      case 'flowchart': return '📈';
+      case 'data-viz': return '📉';
+      case 'chart': return '📊';
+      case 'bullets': return '✓';
       default: return '✨';
     }
+  };
+
+  // Parse icon from bullet text like "<Icon:Zap> Fast Performance"
+  const parseIconBullet = (text: string) => {
+    const iconMatch = text.match(/<Icon:(\w+)>/);
+    if (iconMatch) {
+      const iconName = iconMatch[1];
+      const cleanText = text.replace(/<Icon:\w+>\s*/, '');
+      const iconMap: Record<string, string> = {
+        'Zap': '⚡', 'Shield': '🛡️', 'Users': '👥', 'Globe': '🌍', 'Target': '🎯',
+        'Rocket': '🚀', 'Heart': '❤️', 'Star': '⭐', 'Check': '✓', 'TrendUp': '📈',
+        'Clock': '⏰', 'Lock': '🔒', 'Award': '🏆', 'Lightbulb': '💡', 'BarChart': '📊',
+        'DollarSign': '💰', 'Smartphone': '📱', 'Cloud': '☁️', 'Code': '💻', 'Palette': '🎨'
+      };
+      return { icon: iconMap[iconName] || '•', text: cleanText };
+    }
+    // Check for emoji at start
+    const emojiMatch = text.match(/^([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✓|•)\s*/u);
+    if (emojiMatch) {
+      return { icon: emojiMatch[1], text: text.substring(emojiMatch[0].length) };
+    }
+    return { icon: '•', text };
   };
 
   // Import color contrast utility
   const { getOptimalTextColor } = require('@/lib/color-contrast');
 
   // Smart text color based on background using WCAG 2.0 luminance calculation
-  // Use the theme's actual background color (hex) instead of gradient class for accurate contrast
   const slideBackground = slide.design?.background || '';
   const gradientClass = getGradientClass(slideBackground);
   
@@ -1793,8 +1858,327 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             </div>
           )}
 
+          {/* Stats Grid - Beautiful KPI Cards */}
+          {slide.stats && slide.stats.length > 0 && (
+            <div className={`grid gap-6 mt-10 ${slide.stats.length === 2 ? 'grid-cols-2' : slide.stats.length === 3 ? 'grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
+              {slide.stats.map((stat, idx) => (
+                <div 
+                  key={idx}
+                  className="relative backdrop-blur-md rounded-2xl p-8 border text-center transition-all hover:scale-105 hover:shadow-xl group overflow-hidden"
+                  style={{ 
+                    borderColor: `${textColor}20`,
+                    backgroundColor: `${theme.colors.background}30`
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 group-hover:to-black/10 transition-all" />
+                  <div className="relative z-10">
+                    <div 
+                      className="text-5xl md:text-6xl font-black mb-3 tracking-tight"
+                      style={{ color: theme.colors.accent }}
+                    >
+                      {stat.value}
+                    </div>
+                    <div className="text-lg font-semibold opacity-90" style={{ color: textColor }}>{stat.label}</div>
+                    {stat.context && (
+                      <div className="text-sm mt-2 opacity-60" style={{ color: textColor }}>{stat.context}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Comparison View - Side by Side */}
+          {slide.comparison && (
+            <div className="grid grid-cols-2 gap-8 mt-10">
+              <div 
+                className="backdrop-blur-md rounded-2xl p-8 border"
+                style={{ 
+                  borderColor: `${textColor}20`,
+                  backgroundColor: `${theme.colors.background}30`
+                }}
+              >
+                <h4 
+                  className="text-2xl font-bold mb-6 pb-4 border-b"
+                  style={{ color: textColor, borderColor: `${textColor}20` }}
+                >
+                  {slide.comparison.leftTitle || 'Before'}
+                </h4>
+                <ul className="space-y-4">
+                  {slide.comparison.left.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-3 text-lg" style={{ color: textColor }}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div 
+                className="backdrop-blur-md rounded-2xl p-8 border"
+                style={{ 
+                  borderColor: `${theme.colors.accent}40`,
+                  backgroundColor: `${theme.colors.accent}10`
+                }}
+              >
+                <h4 
+                  className="text-2xl font-bold mb-6 pb-4 border-b"
+                  style={{ color: textColor, borderColor: `${textColor}20` }}
+                >
+                  {slide.comparison.rightTitle || 'After'}
+                </h4>
+                <ul className="space-y-4">
+                  {slide.comparison.right.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-3 text-lg" style={{ color: textColor }}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Timeline View */}
+          {slide.timeline && slide.timeline.length > 0 && (
+            <div className="mt-10 relative">
+              <div 
+                className="absolute left-8 top-0 bottom-0 w-1 rounded-full"
+                style={{ backgroundColor: `${theme.colors.accent}40` }}
+              />
+              <div className="space-y-8">
+                {slide.timeline.map((item, idx) => (
+                  <div key={idx} className="flex gap-6 items-start relative">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-lg shrink-0"
+                      style={{ backgroundColor: theme.colors.accent, color: '#fff' }}
+                    >
+                      {item.date}
+                    </div>
+                    <div 
+                      className="flex-1 backdrop-blur-md rounded-2xl p-6 border"
+                      style={{ 
+                        borderColor: `${textColor}20`,
+                        backgroundColor: `${theme.colors.background}30`
+                      }}
+                    >
+                      <h5 className="text-xl font-bold mb-2" style={{ color: textColor }}>{item.title}</h5>
+                      {item.description && (
+                        <p className="text-base opacity-80" style={{ color: textColor }}>{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Device Mockup - Phone/Laptop/Browser */}
+          {slide.mockup && (
+            <div className="mt-10 flex justify-center">
+              {slide.mockup.type === 'phone' && (
+                <div className="relative w-72 h-[580px] rounded-[3rem] border-8 border-gray-800 bg-gray-900 shadow-2xl overflow-hidden">
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-6 bg-gray-800 rounded-full" />
+                  <div 
+                    className="absolute top-12 left-2 right-2 bottom-2 rounded-[2rem] overflow-hidden"
+                    style={{ backgroundColor: theme.colors.background }}
+                  >
+                    <div className="p-4 h-full flex flex-col">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 rounded-full" style={{ backgroundColor: theme.colors.accent }} />
+                        <span className="font-bold text-sm" style={{ color: textColor }}>{slide.mockup.title || 'App'}</span>
+                      </div>
+                      <div className="space-y-3 flex-1">
+                        {slide.mockup.elements.map((el, idx) => (
+                          <div key={idx}>
+                            {el.type === 'header' && (
+                              <div className="text-lg font-bold" style={{ color: textColor }}>{el.content}</div>
+                            )}
+                            {el.type === 'card' && (
+                              <div className="p-3 rounded-xl border" style={{ borderColor: `${textColor}20`, backgroundColor: `${textColor}05` }}>
+                                <span className="text-sm" style={{ color: textColor }}>{el.content}</span>
+                              </div>
+                            )}
+                            {el.type === 'button' && (
+                              <div className="px-4 py-2 rounded-lg text-center text-sm font-semibold text-white" style={{ backgroundColor: theme.colors.accent }}>
+                                {el.content}
+                              </div>
+                            )}
+                            {el.type === 'input' && (
+                              <div className="px-3 py-2 rounded-lg border text-sm opacity-60" style={{ borderColor: `${textColor}30`, color: textColor }}>
+                                {el.content}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {slide.mockup.type === 'laptop' && (
+                <div className="relative">
+                  <div className="w-[600px] h-[380px] rounded-t-xl border-8 border-gray-800 bg-gray-900 shadow-2xl overflow-hidden">
+                    <div 
+                      className="h-full"
+                      style={{ backgroundColor: theme.colors.background }}
+                    >
+                      <div className="h-8 border-b flex items-center gap-2 px-4" style={{ borderColor: `${textColor}20` }}>
+                        <div className="flex gap-1.5">
+                          <div className="w-3 h-3 rounded-full bg-red-500" />
+                          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                        </div>
+                        <div className="flex-1 mx-4 h-5 rounded-full" style={{ backgroundColor: `${textColor}10` }} />
+                      </div>
+                      <div className="p-6">
+                        <div className="text-xl font-bold mb-4" style={{ color: textColor }}>{slide.mockup.title}</div>
+                        <div className="grid grid-cols-3 gap-4">
+                          {slide.mockup.elements.map((el, idx) => (
+                            <div key={idx} className="p-4 rounded-xl border" style={{ borderColor: `${textColor}20` }}>
+                              <span className="text-sm" style={{ color: textColor }}>{el.content}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-[700px] h-4 bg-gray-800 rounded-b-lg mx-auto" />
+                  <div className="w-[200px] h-2 bg-gray-700 rounded-b-lg mx-auto" />
+                </div>
+              )}
+              {slide.mockup.type === 'browser' && (
+                <div className="w-full max-w-4xl rounded-xl border-2 overflow-hidden shadow-2xl" style={{ borderColor: `${textColor}30` }}>
+                  <div className="h-10 border-b flex items-center gap-2 px-4" style={{ borderColor: `${textColor}20`, backgroundColor: `${textColor}05` }}>
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 mx-4 h-6 rounded-full px-3 flex items-center text-sm" style={{ backgroundColor: `${textColor}10`, color: `${textColor}60` }}>
+                      {slide.mockup.title || 'https://example.com'}
+                    </div>
+                  </div>
+                  <div className="p-8" style={{ backgroundColor: theme.colors.background }}>
+                    <div className="space-y-4">
+                      {slide.mockup.elements.map((el, idx) => (
+                        <div key={idx}>
+                          {el.type === 'hero' && (
+                            <div className="text-center py-8">
+                              <h3 className="text-3xl font-bold mb-4" style={{ color: textColor }}>{el.content}</h3>
+                            </div>
+                          )}
+                          {el.type === 'nav' && (
+                            <div className="flex gap-6 justify-center text-sm" style={{ color: `${textColor}80` }}>
+                              {el.content.split(',').map((item, i) => (
+                                <span key={i} className="hover:opacity-100">{item.trim()}</span>
+                              ))}
+                            </div>
+                          )}
+                          {el.type === 'feature' && (
+                            <div className="grid grid-cols-3 gap-4 py-4">
+                              {el.content.split(',').map((feature, i) => (
+                                <div key={i} className="p-4 rounded-xl text-center border" style={{ borderColor: `${textColor}20` }}>
+                                  <span className="text-sm" style={{ color: textColor }}>{feature.trim()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {slide.mockup.type === 'dashboard' && (
+                <div className="w-full max-w-4xl rounded-xl border-2 overflow-hidden shadow-2xl" style={{ borderColor: `${textColor}30` }}>
+                  <div className="flex">
+                    <div className="w-48 border-r p-4 space-y-3" style={{ borderColor: `${textColor}20`, backgroundColor: `${textColor}05` }}>
+                      <div className="font-bold text-lg mb-4" style={{ color: textColor }}>Dashboard</div>
+                      {['Overview', 'Analytics', 'Reports', 'Settings'].map((item, idx) => (
+                        <div 
+                          key={idx}
+                          className={`px-3 py-2 rounded-lg text-sm ${idx === 0 ? 'font-medium' : 'opacity-60'}`}
+                          style={{ 
+                            backgroundColor: idx === 0 ? `${theme.colors.accent}20` : 'transparent',
+                            color: textColor
+                          }}
+                        >
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex-1 p-6" style={{ backgroundColor: theme.colors.background }}>
+                      <div className="grid grid-cols-3 gap-4 mb-6">
+                        {slide.mockup.elements.slice(0, 3).map((el, idx) => (
+                          <div key={idx} className="p-4 rounded-xl border" style={{ borderColor: `${textColor}20` }}>
+                            <div className="text-2xl font-bold" style={{ color: theme.colors.accent }}>{el.content}</div>
+                            <div className="text-sm opacity-60" style={{ color: textColor }}>{el.type}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="h-40 rounded-xl border flex items-center justify-center" style={{ borderColor: `${textColor}20` }}>
+                        <span className="text-sm opacity-40" style={{ color: textColor }}>📊 Chart Area</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Icons Grid */}
+          {slide.icons && slide.icons.length > 0 && (
+            <div className={`grid gap-6 mt-10 ${slide.icons.length <= 3 ? 'grid-cols-3' : slide.icons.length === 4 ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-6'}`}>
+              {slide.icons.map((item, idx) => (
+                <div 
+                  key={idx}
+                  className="flex flex-col items-center gap-4 p-6 rounded-2xl border backdrop-blur-md transition-all hover:scale-105"
+                  style={{ 
+                    borderColor: `${textColor}20`,
+                    backgroundColor: `${theme.colors.background}30`
+                  }}
+                >
+                  <span className="text-5xl">{item.icon}</span>
+                  <span className="text-sm font-medium text-center" style={{ color: textColor }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Testimonial */}
+          {slide.testimonial && (
+            <div className="mt-10 max-w-3xl mx-auto">
+              <div 
+                className="relative backdrop-blur-md rounded-3xl p-10 border"
+                style={{ 
+                  borderColor: `${textColor}20`,
+                  backgroundColor: `${theme.colors.background}30`
+                }}
+              >
+                <span className="absolute -top-6 -left-2 text-8xl opacity-20" style={{ color: theme.colors.accent }}>"</span>
+                <p className="text-2xl md:text-3xl font-medium italic leading-relaxed mb-8 relative z-10" style={{ color: textColor }}>
+                  {slide.testimonial.quote}
+                </p>
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
+                    style={{ backgroundColor: theme.colors.accent, color: '#fff' }}
+                  >
+                    {slide.testimonial.author.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg" style={{ color: textColor }}>{slide.testimonial.author}</div>
+                    {slide.testimonial.role && (
+                      <div className="text-sm opacity-70" style={{ color: textColor }}>{slide.testimonial.role}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Content */}
-          {slide.content && !slide.bullets && !isFlowchart && !hasChart && (
+          {slide.content && !slide.bullets && !isFlowchart && !hasChart && !slide.stats && !slide.comparison && !slide.timeline && !slide.mockup && !slide.icons && !slide.testimonial && (
             <p 
               contentEditable={isEditable}
               suppressContentEditableWarning

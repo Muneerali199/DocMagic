@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { createPresentationPrompt } from '@/lib/prompts/presentation-prompt';
+import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,10 +21,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`🎨 Generating presentation: "${topic}" for ${audience}`);
+    console.log(`🎨 Generating ENHANCED presentation: "${topic}" for ${audience}`);
 
-    // Create the prompt
-    const prompt = createPresentationPrompt(
+    // Create the ENHANCED prompt for 10x better presentations
+    const prompt = createEnhancedPresentationPrompt(
       topic,
       audience || 'business professionals',
       outline,
@@ -39,21 +39,33 @@ export async function POST(req: NextRequest) {
     // Start streaming in the background
     (async () => {
       try {
-        console.log('📡 Starting Qwen3-235B stream...');
+        console.log('📡 Starting Qwen3-235B stream with ENHANCED prompt...');
 
         const completion = await openai.chat.completions.create({
           model: 'Qwen/Qwen3-235B-A22B-Instruct-2507',
           messages: [
             {
               role: 'system',
-              content: 'You are an expert presentation designer. Always return valid JSON.',
+              content: `You are an elite presentation designer who creates presentations 10X BETTER than Gamma.
+Your presentations feature:
+- Professional mockups (phone, laptop, dashboard views)
+- Rich data visualizations with realistic numbers
+- Before/After comparisons
+- Timeline/Roadmap views
+- Stats grids with impressive metrics
+- Feature grids with icons
+- Testimonials with social proof
+- Logo clouds for credibility
+
+Always return valid TOON format starting with ---SLIDE---
+Never include explanatory text, just the slide content.`,
             },
             {
               role: 'user',
               content: prompt,
             },
           ],
-          max_tokens: 8000,
+          max_tokens: 12000,
           temperature: 0.7,
           stream: true,
         });
@@ -73,7 +85,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        console.log('✅ Qwen3-235B stream complete');
+        console.log('✅ ENHANCED stream complete');
         console.log(`📊 Generated ${fullContent.length} characters`);
 
         // Send completion signal
