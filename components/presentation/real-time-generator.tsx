@@ -29,12 +29,15 @@ import {
   X,
   Search,
   Presentation,
-  Minus
+  Minus,
+  Wand2,
+  PenTool
 } from 'lucide-react';
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
 import { ThemePreview } from './theme-preview';
 import { OutlineEditor } from './outline-editor';
 import { getProIcon, ProFeatureCard, ProStatCard, ProLogo, ProIconGrid } from './pro-icons';
+import { AIImageGeneratorModal } from './ai-image-generator';
 
 // Circuit Pattern Component (inline for now)
 const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -134,6 +137,10 @@ export default function RealTimeGenerator() {
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   
+  // AI Image Generator Modal State
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
+  const [imageGeneratorSlideIndex, setImageGeneratorSlideIndex] = useState<number | null>(null);
+  
   // Theme Gallery State
   const [showThemeGallery, setShowThemeGallery] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState('peach');
@@ -159,6 +166,29 @@ export default function RealTimeGenerator() {
       newSlides[index] = updatedSlide;
       return newSlides;
     });
+  };
+
+  // Handler to open AI Image Generator for a specific slide
+  const handleOpenImageGenerator = (slideIndex: number) => {
+    setImageGeneratorSlideIndex(slideIndex);
+    setShowImageGenerator(true);
+  };
+
+  // Handler to add AI-generated image to slide
+  const handleAddImageToSlide = (imageUrl: string, imageType: string) => {
+    if (imageGeneratorSlideIndex !== null) {
+      setSlides(prev => {
+        const newSlides = [...prev];
+        newSlides[imageGeneratorSlideIndex] = {
+          ...newSlides[imageGeneratorSlideIndex],
+          imageUrl
+        };
+        return newSlides;
+      });
+      console.log(`✅ Added ${imageType} image to slide ${imageGeneratorSlideIndex + 1}`);
+    }
+    setShowImageGenerator(false);
+    setImageGeneratorSlideIndex(null);
   };
 
   const handleAddSlide = () => {
@@ -527,19 +557,16 @@ export default function RealTimeGenerator() {
     
     // Start parallel image generation if enabled
     if (imageSource === 'ai') {
-      console.log('🎨 Starting background image generation...');
+      console.log('🎨 Starting AI image generation for ALL slides...');
       try {
         // Import dynamically to avoid SSR issues
         const { generateSlideImage } = await import('@/lib/flux-image-generator');
         
-        // Generate images for each slide in the outline
+        // Generate images for EVERY slide in the outline
         const imagePromises = finalOutline.map(async (slide, index) => {
-          // Only generate images for 50% of slides (alternating)
-          if (index % 2 !== 0) {
-            return { index, imageUrl: null };
-          }
-
           try {
+            console.log(`🖼️ Generating image for slide ${index + 1}: "${slide.title}"`);
+            
             const imageUrl = await generateSlideImage(
               slide.type || 'content',
               slide.title,
@@ -1307,6 +1334,21 @@ export default function RealTimeGenerator() {
           </div>
         )}
 
+        {/* AI Image Generator Modal */}
+        <AIImageGeneratorModal
+          isOpen={showImageGenerator}
+          onClose={() => {
+            setShowImageGenerator(false);
+            setImageGeneratorSlideIndex(null);
+          }}
+          onImageSelect={handleAddImageToSlide}
+          slideTitle={imageGeneratorSlideIndex !== null && slides[imageGeneratorSlideIndex] ? slides[imageGeneratorSlideIndex].title : ''}
+          slideContent={imageGeneratorSlideIndex !== null && slides[imageGeneratorSlideIndex] ? slides[imageGeneratorSlideIndex].content : ''}
+          slideType={imageGeneratorSlideIndex !== null && slides[imageGeneratorSlideIndex] ? slides[imageGeneratorSlideIndex].type : 'content'}
+          presentationTopic={topic}
+          theme={currentTheme}
+        />
+
         {/* VIEW 4: PRESENTATION */}
         {view === 'presentation' && (
           <div className="max-w-6xl mx-auto px-6 py-8">
@@ -1431,6 +1473,7 @@ export default function RealTimeGenerator() {
                     getGradientClass={getGradientClass} 
                     theme={currentTheme}
                     onUpdate={(updatedSlide) => handleSlideUpdate(index, updatedSlide)}
+                    onAddImage={() => handleOpenImageGenerator(index)}
                   />
                 </div>
               ))}
@@ -1629,11 +1672,12 @@ export default function RealTimeGenerator() {
 }
 
 // Enhanced Slide Card Component with Icons, Diagrams, Images, and Charts
-function SlideCard({ slide, getGradientClass, theme, onUpdate }: { 
+function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: { 
   slide: Slide; 
   getGradientClass: (bg?: string) => string; 
   theme: PresentationTheme;
   onUpdate?: (updatedSlide: Slide) => void;
+  onAddImage?: () => void;
 }) {
   const isHero = slide.type === 'hero' || slide.type === 'cover';
   const isFlowchart = slide.type === 'process' || slide.type === 'flowchart';
@@ -1735,10 +1779,28 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
     >
       {/* Edit indicator */}
       {isEditable && (
-        <div className="absolute top-4 left-4 z-30 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div 
+          data-export-hide="true"
+          className="absolute top-4 left-4 z-30 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <Type className="w-3 h-3" />
           Click to edit
         </div>
+      )}
+
+      {/* AI Image Generator Button */}
+      {onAddImage && (
+        <button
+          data-export-hide="true"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddImage();
+          }}
+          className="absolute top-4 left-32 z-30 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-105 shadow-lg"
+        >
+          <Wand2 className="w-3 h-3" />
+          Add AI Image
+        </button>
       )}
       
       <div 
@@ -1782,6 +1844,7 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
         
         {/* Slide Number Badge */}
         <div 
+          data-export-hide="true"
           className="absolute top-8 right-8 backdrop-blur-md border px-4 py-2 rounded-full text-sm font-bold tracking-wide shadow-lg z-20"
           style={{ 
             borderColor: `${textColor}30`,

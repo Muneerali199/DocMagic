@@ -75,6 +75,82 @@ async function waitForResources(element: HTMLElement): Promise<void> {
 }
 
 /**
+ * Hide UI elements that shouldn't appear in exports
+ * Returns array of hidden elements for later restoration
+ */
+function hideUIElementsForExport(element: HTMLElement): HTMLElement[] {
+  const hiddenElements: HTMLElement[] = [];
+
+  // Primary selector: data-export-hide attribute (most reliable)
+  const dataHideElements = element.querySelectorAll('[data-export-hide="true"]');
+  dataHideElements.forEach(el => {
+    const htmlEl = el as HTMLElement;
+    htmlEl.dataset.originalDisplay = htmlEl.style.display;
+    htmlEl.style.display = 'none';
+    hiddenElements.push(htmlEl);
+  });
+
+  // Fallback: Find elements by text content
+  const allElements = element.querySelectorAll('*');
+  allElements.forEach(el => {
+    const htmlEl = el as HTMLElement;
+    const text = htmlEl.innerText?.trim();
+    
+    // Skip if already hidden or if it's a text node inside something already hidden
+    if (htmlEl.style.display === 'none' || !text) return;
+    
+    // Hide "SLIDE X" badges
+    if (/^SLIDE\s*\d+$/i.test(text)) {
+      htmlEl.dataset.originalDisplay = htmlEl.style.display;
+      htmlEl.style.display = 'none';
+      hiddenElements.push(htmlEl);
+      return;
+    }
+    
+    // Hide "Click to edit" text
+    if (/click to edit/i.test(text) && text.length < 50) {
+      htmlEl.dataset.originalDisplay = htmlEl.style.display;
+      htmlEl.style.display = 'none';
+      hiddenElements.push(htmlEl);
+    }
+  });
+
+  // Hide group-hover elements that only show on hover
+  const hoverElements = element.querySelectorAll('[class*="group-hover"]');
+  hoverElements.forEach(el => {
+    const htmlEl = el as HTMLElement;
+    if (htmlEl.style.display !== 'none') {
+      htmlEl.dataset.originalDisplay = htmlEl.style.display;
+      htmlEl.style.display = 'none';
+      hiddenElements.push(htmlEl);
+    }
+  });
+
+  // Hide any edit indicators
+  const editIndicators = element.querySelectorAll('[class*="edit-indicator"], [data-edit-indicator]');
+  editIndicators.forEach(el => {
+    const htmlEl = el as HTMLElement;
+    if (htmlEl.style.display !== 'none') {
+      htmlEl.dataset.originalDisplay = htmlEl.style.display;
+      htmlEl.style.display = 'none';
+      hiddenElements.push(htmlEl);
+    }
+  });
+
+  return hiddenElements;
+}
+
+/**
+ * Restore hidden UI elements after export
+ */
+function showUIElementsAfterExport(elements: HTMLElement[]): void {
+  elements.forEach(el => {
+    el.style.display = el.dataset.originalDisplay || '';
+    delete el.dataset.originalDisplay;
+  });
+}
+
+/**
  * Premium PNG Export - High quality with all effects
  */
 export async function exportPremiumPNG(
@@ -97,6 +173,9 @@ export async function exportPremiumPNG(
     clone.style.transform = 'none';
     clone.style.animation = 'none';
     
+    // Hide UI elements that shouldn't be in export
+    hideExportUIElements(clone);
+    
     // Temporarily append to get computed styles
     document.body.appendChild(clone);
     clone.style.position = 'absolute';
@@ -111,11 +190,21 @@ export async function exportPremiumPNG(
         allowTaint: true,
         imageTimeout: 15000,
         onclone: (clonedDoc) => {
-          // Ensure gradients and backdrop filters render
-          const clonedElement = clonedDoc.body.querySelector('[data-slide]') || clonedDoc.body.firstElementChild;
+          // Hide UI elements in the cloned document
+          const clonedElement = clonedDoc.body.querySelector('[data-slide-card]') || clonedDoc.body.firstElementChild;
           if (clonedElement) {
+            hideExportUIElements(clonedElement as HTMLElement);
             (clonedElement as HTMLElement).style.backdropFilter = 'none';
           }
+          
+          // Also hide slide badges by finding them directly
+          const badges = clonedDoc.querySelectorAll('div');
+          badges.forEach(el => {
+            const text = el.innerText?.trim();
+            if (text && /^SLIDE\s*\d+$/i.test(text)) {
+              el.style.display = 'none';
+            }
+          });
         }
       });
 
@@ -164,30 +253,38 @@ export async function exportPremiumPDF(
   for (let i = 0; i < slideElements.length; i++) {
     const element = slideElements[i];
     
-    await waitForResources(element);
+    // Hide UI elements before capture
+    const hiddenElements = hideUIElementsForExport(element);
     
-    const canvas = await html2canvas(element, {
-      scale: scale,
-      backgroundColor: null,
-      logging: false,
-      useCORS: true,
-      allowTaint: true,
-      imageTimeout: 15000,
-      width: element.offsetWidth,
-      height: element.offsetHeight,
-    });
+    try {
+      await waitForResources(element);
+      
+      const canvas = await html2canvas(element, {
+        scale: scale,
+        backgroundColor: null,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 15000,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    
-    if (i > 0) {
-      pdf.addPage([1920, 1080], 'landscape');
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      if (i > 0) {
+        pdf.addPage([1920, 1080], 'landscape');
+      }
+
+      // Calculate dimensions to fit 16:9
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'MEDIUM');
+    } finally {
+      // Restore UI elements after capture
+      showUIElementsAfterExport(hiddenElements);
     }
-
-    // Calculate dimensions to fit 16:9
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'MEDIUM');
   }
 
   pdf.save(`${presentationName}.pdf`);
