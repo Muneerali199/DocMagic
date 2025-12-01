@@ -141,6 +141,13 @@ export default function RealTimeGenerator() {
   const [shareUrl, setShareUrl] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [presentationId, setPresentationId] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const handleCopyLink = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
 
   const handleSavePresentation = async () => {
     setIsSaving(true);
@@ -1261,7 +1268,7 @@ export default function RealTimeGenerator() {
         {view === 'presentation' && (
           <div className="max-w-6xl mx-auto px-6 py-8">
             {!isStreaming && (
-              <div className="mb-8 flex items-center justify-between">
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                 <button 
                   onClick={() => setView('dashboard')}
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-medium group"
@@ -1269,87 +1276,97 @@ export default function RealTimeGenerator() {
                   <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center group-hover:border-foreground/20 transition-colors">
                     <ArrowLeft className="w-4 h-4" />
                   </div>
-                  Create New Presentation
+                  Create New
                 </button>
 
-                {/* Save & Share Button */}
+                {/* Action Buttons Container */}
                 {slides.length > 0 && (
-                  <button
-                    onClick={handleSavePresentation}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-bold transition-all shadow-lg disabled:opacity-50"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="w-5 h-5" />
-                        Save & Share
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {/* Export Button */}
-                {slides.length > 0 && (
-                  <div className="relative">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Theme Selector Button */}
                     <button
-                      onClick={() => setShowExportMenu(!showExportMenu)}
-                      disabled={isExporting}
-                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg disabled:opacity-50"
+                      onClick={() => setShowThemeGallery(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-card hover:bg-muted border border-border rounded-xl font-medium transition-all"
                     >
-                      {isExporting ? (
+                      <Palette className="w-4 h-4" />
+                      <span className="hidden sm:inline">Theme</span>
+                    </button>
+
+                    {/* Save & Share Button */}
+                    <button
+                      onClick={handleSavePresentation}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-bold transition-all shadow-lg disabled:opacity-50"
+                    >
+                      {isSaving ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Exporting...
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="hidden sm:inline">Saving...</span>
                         </>
                       ) : (
                         <>
-                          <Download className="w-5 h-5" />
-                          Export
-                          <ChevronDown className="w-4 h-4" />
+                          <Globe className="w-4 h-4" />
+                          <span className="hidden sm:inline">Share</span>
                         </>
                       )}
                     </button>
 
-                    {/* Export Dropdown Menu */}
-                    {showExportMenu && !isExporting && (
-                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
-                        <button
-                          onClick={() => handleExport('png')}
-                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
-                        >
-                          <ImageIcon className="w-4 h-4" />
-                          <div>
-                            <div className="font-semibold text-sm">PNG Images</div>
-                            <div className="text-xs text-muted-foreground">High quality</div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => handleExport('pdf')}
-                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
-                        >
-                          <FileText className="w-4 h-4" />
-                          <div>
-                            <div className="font-semibold text-sm">PDF Document</div>
-                            <div className="text-xs text-muted-foreground">Portable format</div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => handleExport('pptx')}
-                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
-                        >
-                          <Layout className="w-4 h-4" />
-                          <div>
-                            <div className="font-semibold text-sm">PowerPoint</div>
-                            <div className="text-xs text-muted-foreground">Editable slides</div>
-                          </div>
-                        </button>
-                      </div>
-                    )}
+                    {/* Export Button */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowExportMenu(!showExportMenu)}
+                        disabled={isExporting}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg disabled:opacity-50"
+                      >
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="hidden sm:inline">Exporting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Export</span>
+                            <ChevronDown className="w-3 h-3" />
+                          </>
+                        )}
+                      </button>
+
+                      {/* Export Dropdown Menu */}
+                      {showExportMenu && !isExporting && (
+                        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
+                          <button
+                            onClick={() => handleExport('png')}
+                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <div>
+                              <div className="font-semibold text-sm">PNG Images</div>
+                              <div className="text-xs text-muted-foreground">High quality</div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => handleExport('pdf')}
+                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
+                          >
+                            <FileText className="w-4 h-4" />
+                            <div>
+                              <div className="font-semibold text-sm">PDF Document</div>
+                              <div className="text-xs text-muted-foreground">Portable format</div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => handleExport('pptx')}
+                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
+                          >
+                            <Layout className="w-4 h-4" />
+                            <div>
+                              <div className="font-semibold text-sm">PowerPoint</div>
+                              <div className="text-xs text-muted-foreground">Editable slides</div>
+                            </div>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1459,14 +1476,24 @@ export default function RealTimeGenerator() {
                         className="flex-1 px-4 py-3 bg-muted border border-border rounded-xl text-sm font-mono"
                       />
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(shareUrl);
-                          alert('Link copied to clipboard!');
-                        }}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center gap-2"
+                        onClick={() => handleCopyLink(shareUrl)}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
+                          copySuccess 
+                            ? 'bg-green-600 hover:bg-green-700 text-white' 
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
                       >
-                        <FileText className="w-4 h-4" />
-                        Copy
+                        {copySuccess ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4" />
+                            Copy
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1481,7 +1508,10 @@ export default function RealTimeGenerator() {
                           <div className="text-xs text-muted-foreground">Can view this presentation</div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-green-600">Active</div>
+                      <div className="text-sm font-medium text-green-600 flex items-center gap-1">
+                        <Check className="w-4 h-4" />
+                        Active
+                      </div>
                     </div>
                   </div>
 
@@ -1495,11 +1525,7 @@ export default function RealTimeGenerator() {
                       Open Link
                     </button>
                     <button
-                      onClick={() => {
-                        const text = `Check out my presentation: ${shareUrl}`;
-                        navigator.clipboard.writeText(text);
-                        alert('Share text copied!');
-                      }}
+                      onClick={() => handleCopyLink(`Check out my presentation: ${shareUrl}`)}
                       className="px-4 py-3 bg-card hover:bg-muted border border-border rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                     >
                       <FileText className="w-4 h-4" />
