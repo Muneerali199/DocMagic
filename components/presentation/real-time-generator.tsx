@@ -1810,17 +1810,6 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: {
           backgroundColor: theme.colors.background // Ensure background color is set
         }}
       >
-        {/* Background Image */}
-        {hasImage && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ 
-              backgroundImage: `url(${slide.imageUrl})`,
-              filter: 'blur(0px)'
-            }}
-          />
-        )}
-
         {/* Premium Decorative Background Elements with Animations */}
         <div 
           className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 float-animation" 
@@ -2355,6 +2344,42 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: {
                       <div className="text-sm opacity-70" style={{ color: textColor }}>{slide.testimonial.role}</div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Generated Image Display - Prominent visible image */}
+          {hasImage && (
+            <div className="mt-8 mb-8 flex justify-center">
+              <div 
+                className="relative rounded-2xl overflow-hidden shadow-2xl border-2 group/image transition-all hover:scale-[1.02] hover:shadow-3xl"
+                style={{ 
+                  borderColor: `${theme.colors.accent}40`,
+                  maxWidth: '90%'
+                }}
+              >
+                {/* Image glow effect */}
+                <div 
+                  className="absolute -inset-1 rounded-2xl blur-xl opacity-30 group-hover/image:opacity-50 transition-opacity"
+                  style={{ backgroundColor: theme.colors.accent }}
+                />
+                <img 
+                  src={slide.imageUrl} 
+                  alt={slide.title}
+                  className="relative z-10 w-full h-auto max-h-[400px] object-cover rounded-2xl"
+                  style={{ minHeight: '200px' }}
+                />
+                {/* Image type badge */}
+                <div 
+                  className="absolute bottom-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
+                  style={{ 
+                    backgroundColor: `${theme.colors.background}80`,
+                    color: textColor,
+                    border: `1px solid ${theme.colors.accent}40`
+                  }}
+                >
+                  ✨ AI Generated
                 </div>
               </div>
             </div>
