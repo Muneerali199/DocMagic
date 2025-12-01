@@ -7,6 +7,67 @@ import {
   generatePresentationText, 
   generateChartData 
 } from '@/lib/mistral';
+import OpenAI from 'openai';
+
+// Fallback to Nebius/Qwen when Gemini fails
+const nebiusClient = new OpenAI({
+  baseURL: 'https://api.tokenfactory.nebius.com/v1/',
+  apiKey: process.env.NEBIUS_API_KEY,
+});
+
+async function generateWithNebius(prompt: string, pageCount: number) {
+  console.log('🔄 Using Nebius/Qwen as fallback...');
+  
+  const completion = await nebiusClient.chat.completions.create({
+    model: 'Qwen/Qwen3-235B-A22B-Instruct-2507',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a professional presentation designer. Generate exactly ${pageCount} slides for a presentation.
+Return a JSON array of slides with this structure:
+[
+  {
+    "slideNumber": 1,
+    "type": "title",
+    "title": "Main Title",
+    "subtitle": "Subtitle text",
+    "content": "Brief description",
+    "bulletPoints": ["Point 1", "Point 2", "Point 3"]
+  }
+]
+Slide types: title, content, bullets, stats, comparison, timeline, conclusion
+Make content professional, engaging, and visually focused.`
+      },
+      {
+        role: 'user',
+        content: `Create a ${pageCount}-slide presentation about: ${prompt}`
+      }
+    ],
+    max_tokens: 4000,
+    temperature: 0.7,
+  });
+
+  const content = completion.choices[0]?.message?.content || '[]';
+  
+  // Extract JSON from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.error('Failed to parse Nebius response:', e);
+    }
+  }
+  
+  // Fallback: create basic slides
+  return Array.from({ length: pageCount }, (_, i) => ({
+    slideNumber: i + 1,
+    type: i === 0 ? 'title' : i === pageCount - 1 ? 'conclusion' : 'content',
+    title: i === 0 ? prompt : `Slide ${i + 1}`,
+    content: 'Content for this slide',
+    bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
+  }));
+}
 
 
 export async function POST(request: Request) {
@@ -23,14 +84,20 @@ export async function POST(request: Request) {
 
     console.log('📝 Step 1: Generating slide text content...');
     
-    // Step 1: Generate text content (choice between Gemini or Mistral)
+    // Step 1: Generate text content with fallback
     let outlines;
-    if (useGemini) {
-      console.log('Using Gemini 2.0 Flash for text generation');
-      outlines = await generatePresentationOutline({ prompt, pageCount });
-    } else {
-      console.log('Using Mistral Large for text generation');
-      outlines = await generatePresentationText(prompt, pageCount);
+    try {
+      if (useGemini) {
+        console.log('Using Gemini 2.0 Flash for text generation');
+        outlines = await generatePresentationOutline({ prompt, pageCount });
+      } else {
+        console.log('Using Mistral Large for text generation');
+        outlines = await generatePresentationText(prompt, pageCount);
+      }
+    } catch (geminiError: any) {
+      console.error('⚠️ Gemini failed:', geminiError.message);
+      console.log('🔄 Falling back to Nebius/Qwen...');
+      outlines = await generateWithNebius(prompt, pageCount);
     }
     
     console.log(`✅ Generated ${outlines.length} slides`);
