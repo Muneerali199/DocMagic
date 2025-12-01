@@ -4,7 +4,7 @@ import { createPortalSession } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();

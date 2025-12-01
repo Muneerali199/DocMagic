@@ -40,6 +40,13 @@
         if (hostname.includes('hackerrank.com')) return 'hackerrank';
         if (hostname.includes('codeforces.com')) return 'codeforces';
         if (hostname.includes('geeksforgeeks.org')) return 'geeksforgeeks';
+        if (hostname.includes('linkedin.com')) return 'linkedin';
+        
+        // Job portals
+        if (hostname.includes('linkedin.com/jobs')) return 'linkedin-jobs';
+        if (hostname.includes('indeed.com')) return 'indeed';
+        if (hostname.includes('wellfound.com') || hostname.includes('angel.co')) return 'wellfound';
+        if (hostname.includes('glassdoor.com')) return 'glassdoor';
         
         return null;
     }
@@ -50,8 +57,8 @@
         helperButton.id = 'docmagic-helper';
         helperButton.innerHTML = `
             <button class="docmagic-btn">
-                <span class="docmagic-icon">📚</span>
-                <span class="docmagic-text">Get AI Help</span>
+                <span class="docmagic-icon">${platform === 'linkedin' ? '👔' : '📚'}</span>
+                <span class="docmagic-text">${platform === 'linkedin' ? 'Optimize Profile' : 'Get AI Help'}</span>
             </button>
         `;
         
@@ -92,6 +99,11 @@
                 title: ['.problems_problem_content__Xm_eO h3', '.problem-title', 'h1'],
                 description: ['.problems_problem_content__Xm_eO', '.problem-description'],
                 difficulty: ['.difficulty', '[class*="difficulty"]']
+            },
+            linkedin: {
+                title: ['.text-heading-xlarge', '.pv-text-details__left-panel h1', 'h1'],
+                description: ['.pv-about__summary-text', '#about', '.display-flex .ph5'],
+                difficulty: [] // Not applicable
             }
         };
         
@@ -141,12 +153,40 @@
         // Clean up description (remove extra whitespace)
         description = description.replace(/\s+/g, ' ').trim();
         
+        // Special handling for LinkedIn
+        if (platform === 'linkedin') {
+            return extractLinkedInData();
+        }
+
         return {
             title: title || 'Problem',
             description: description || 'No description found',
             difficulty: difficulty,
             tags: tags,
             platform: platform,
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    function extractLinkedInData() {
+        const name = document.querySelector('.text-heading-xlarge')?.textContent?.trim() || 'Profile';
+        const headline = document.querySelector('.text-body-medium')?.textContent?.trim() || '';
+        const about = document.querySelector('.pv-about__summary-text')?.textContent?.trim() || 
+                      document.querySelector('#about')?.parentElement?.nextElementSibling?.textContent?.trim() || '';
+        
+        // Extract experience (simplified)
+        const experienceSection = document.querySelector('#experience');
+        let experience = '';
+        if (experienceSection) {
+            const expList = experienceSection.parentElement.nextElementSibling;
+            if (expList) experience = expList.textContent.trim().substring(0, 500) + '...';
+        }
+
+        return {
+            title: name,
+            description: `Headline: ${headline}\n\nAbout: ${about}\n\nExperience: ${experience}`,
+            platform: 'linkedin',
             url: window.location.href,
             timestamp: new Date().toISOString()
         };
@@ -202,6 +242,11 @@
                             <button class="docmagic-action-btn" data-action="complexity">
                                 ⏱️ Complexity Analysis
                             </button>
+                            ${problemData.platform === 'linkedin' ? `
+                            <button class="docmagic-action-btn" data-action="optimize-profile" style="background: #0A66C2; color: white;">
+                                🚀 Optimize Profile
+                            </button>
+                            ` : ''}
                         </div>
                         <div id="docmagic-result" class="docmagic-result"></div>
                     </div>
@@ -306,7 +351,8 @@
                 hint: `Give a helpful hint for this coding problem (don't reveal the solution):\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide a hint that guides thinking.`,
                 approach: `Explain the approach to solve this problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide step-by-step approach without code.`,
                 solution: `Solve this coding problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide: approach, complete code in JavaScript, time/space complexity. Format as JSON.`,
-                complexity: `Analyze the complexity for this problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide time and space complexity analysis.`
+                complexity: `Analyze the complexity for this problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide time and space complexity analysis.`,
+                'optimize-profile': `Analyze this LinkedIn profile and provide optimization tips:\n\nName: ${problemData.title}\n${problemData.description}\n\nProvide:\n1. Headline improvements\n2. About section rewrite\n3. Key skills to highlight\n4. General profile rating (0-10)`
             };
             
             const prompt = prompts[action];
@@ -565,6 +611,242 @@
         }
     }
     
+    // Job Portal Features
+    function detectJobPosting() {
+        const platform = detectPlatform();
+        if (!['linkedin-jobs', 'indeed', 'wellfound', 'glassdoor'].includes(platform)) return null;
+        
+        let jobData = {
+            title: '',
+            company: '',
+            description: '',
+            requirements: '',
+            platform: platform
+        };
+        
+        // Extract job details based on platform
+        if (platform === 'linkedin-jobs') {
+            jobData.title = document.querySelector('.job-details-jobs-unified-top-card__job-title')?.textContent?.trim() || '';
+            jobData.company = document.querySelector('.job-details-jobs-unified-top-card__company-name')?.textContent?.trim() || '';
+            jobData.description = document.querySelector('.jobs-description__content')?.textContent?.trim() || '';
+        } else if (platform === 'indeed') {
+            jobData.title = document.querySelector('.jobsearch-JobInfoHeader-title')?.textContent?.trim() || '';
+            jobData.company = document.querySelector('[data-company-name="true"]')?.textContent?.trim() || '';
+            jobData.description = document.getElementById('jobDescriptionText')?.textContent?.trim() || '';
+        }
+        
+        return jobData.description ? jobData : null;
+    }
+    
+    // Auto-generate resume for job posting
+    async function handleJobPosting() {
+        const jobData = detectJobPosting();
+        if (!jobData) return;
+        
+        // Show floating action button
+        showJobAssistant(jobData);
+    }
+    
+    function showJobAssistant(jobData) {
+        // Remove existing assistant
+        const existing = document.getElementById('docmagic-job-assistant');
+        if (existing) existing.remove();
+        
+        const assistant = document.createElement('div');
+        assistant.id = 'docmagic-job-assistant';
+        assistant.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 999999;
+            max-width: 300px;
+            font-family: system-ui, -apple-system, sans-serif;
+        `;
+        
+        assistant.innerHTML = `
+            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 8px;">
+                🎯 DocMagic Job Assistant
+            </div>
+            <div style="font-size: 0.9em; margin-bottom: 12px; opacity: 0.95;">
+                Detected: ${jobData.title} at ${jobData.company}
+            </div>
+            <button id="generate-tailored-resume" style="
+                width: 100%;
+                padding: 10px;
+                background: white;
+                color: #667eea;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 8px;
+            ">
+                📝 Generate Tailored Resume
+            </button>
+            <button id="auto-fill-application" style="
+                width: 100%;
+                padding: 10px;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid white;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 8px;
+            ">
+                ✨ Auto-Fill Application
+            </button>
+            <button id="start-voice-interview" style="
+                width: 100%;
+                padding: 10px;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid white;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+            ">
+                🎤 Practice Interview (10 min)
+            </button>
+            <button onclick="this.parentElement.remove()" style="
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: transparent;
+                color: white;
+                border: none;
+                font-size: 1.2em;
+                cursor: pointer;
+                padding: 4px;
+            ">×</button>
+        `;
+        
+        document.body.appendChild(assistant);
+        
+        // Add event listeners
+        document.getElementById('generate-tailored-resume')?.addEventListener('click', async () => {
+            await generateTailoredResumeForJob(jobData);
+        });
+        
+        document.getElementById('auto-fill-application')?.addEventListener('click', async () => {
+            await autoFillJobApplication(jobData);
+        });
+        
+        document.getElementById('start-voice-interview')?.addEventListener('click', () => {
+            startVoiceInterviewForJob(jobData);
+        });
+    }
+    
+    async function generateTailoredResumeForJob(jobData) {
+        showInlineResult('Generating Resume', 'Analyzing job description and creating tailored resume...');
+        
+        try {
+            // Send to background for AI processing
+            chrome.runtime.sendMessage({
+                type: 'GENERATE_TAILORED_RESUME',
+                jobData: jobData
+            }, (response) => {
+                if (response && response.resume) {
+                    displayGeneratedResume(response.resume);
+                } else {
+                    showInlineResult('Error', 'Failed to generate resume. Please try again.');
+                }
+            });
+        } catch (error) {
+            console.error('Error generating resume:', error);
+            showInlineResult('Error', error.message);
+        }
+    }
+    
+    function displayGeneratedResume(resume) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                max-width: 800px;
+                max-height: 90vh;
+                overflow-y: auto;
+                position: relative;
+            ">
+                <h2 style="margin-bottom: 1rem; color: #667eea;">📝 Tailored Resume Generated!</h2>
+                <div style="white-space: pre-wrap; line-height: 1.6;">${JSON.stringify(resume, null, 2)}</div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 10px;">
+                    <button onclick="navigator.clipboard.writeText(${JSON.stringify(JSON.stringify(resume))})" style="
+                        flex: 1;
+                        padding: 12px;
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        cursor: pointer;
+                    ">
+                        📋 Copy Resume
+                    </button>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                        flex: 1;
+                        padding: 12px;
+                        background: #6B7280;
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        cursor: pointer;
+                    ">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async function autoFillJobApplication(jobData) {
+        showInlineResult('Auto-Filling', 'Filling application form automatically...');
+        
+        // This would interact with form fields on the page
+        // Implementation depends on specific job portal structure
+        chrome.runtime.sendMessage({
+            type: 'AUTO_FILL_JOB_APPLICATION',
+            jobData: jobData
+        });
+    }
+    
+    function startVoiceInterviewForJob(jobData) {
+        chrome.runtime.sendMessage({
+            type: 'START_VOICE_INTERVIEW',
+            jobData: jobData
+        });
+    }
+    
+    // Check for job postings on page load
+    if (detectPlatform()?.includes('jobs') || detectPlatform()?.includes('indeed') || 
+        detectPlatform()?.includes('wellfound') || detectPlatform()?.includes('glassdoor')) {
+        setTimeout(handleJobPosting, 2000);
+    }
+    
     function displayResult(action, result, container) {
         let html = '';
         
@@ -600,12 +882,18 @@
                 </div>`;
                 break;
                 
-            case 'complexity':
                 html = `<div class="docmagic-complexity">
                     <h4>⏱️ Complexity Analysis:</h4>
                     <p><strong>Time:</strong> ${data.timeComplexity || data.content || 'O(n)'}</p>
                     <p><strong>Space:</strong> ${data.spaceComplexity || 'O(1)'}</p>
                     ${data.explanation || data.complexityExplanation ? `<p>${data.explanation || data.complexityExplanation}</p>` : ''}
+                </div>`;
+                break;
+
+            case 'optimize-profile':
+                html = `<div class="docmagic-solution">
+                    <h4>🚀 Profile Optimization:</h4>
+                    <div style="white-space: pre-wrap;">${data.content || data.reply || JSON.stringify(data, null, 2)}</div>
                 </div>`;
                 break;
         }

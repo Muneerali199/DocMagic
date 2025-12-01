@@ -4,7 +4,7 @@ export async function GET(request: Request) {
   const type = searchParams.get('type');
   const limit = searchParams.get('limit');
   const includePublic = searchParams.get('includePublic') === 'true';
-  const supabase = createRoute();
+  const supabase = await createRoute();
   try {
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
   }
 }
 export async function POST(request: Request) {
-  const supabase = createRoute();
+  const supabase = await createRoute();
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

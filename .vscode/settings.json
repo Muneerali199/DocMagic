@@ -20,5 +20,7 @@
     "**/.git": true,
     "**/.next": true,
     "**/node_modules": true
-  }
+  },
+  "typescript.autoClosingTags": false,
+  "kiroAgent.configureMCP": "Disabled"
 }

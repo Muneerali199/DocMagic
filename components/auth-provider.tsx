@@ -54,7 +54,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
         } else {
           // Set user from session
-          setUser(session?.user ?? null);
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+          if (currentUser) {
+            console.log('Initial session loaded for:', currentUser.email);
+          }
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);

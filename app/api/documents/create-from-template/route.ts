@@ -3,7 +3,7 @@ import { createRoute } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

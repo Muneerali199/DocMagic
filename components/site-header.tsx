@@ -15,6 +15,7 @@ import {
   DollarSign,
   Workflow,
   User,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -369,12 +370,6 @@ const navItems = [
     tooltip: "Generate stunning slide presentations instantly",
   },
   {
-    href: "/campaign",
-    label: "Campaign",
-    icon: <Sparkles className="h-4 w-4" />,
-    tooltip: "Generate AI-powered marketing campaigns from any website",
-  },
-  {
     href: "/cv",
     label: "CV",
     icon: <FileText className="h-4 w-4" />,
@@ -391,6 +386,12 @@ const navItems = [
     label: "Diagram",
     icon: <Workflow className="h-4 w-4" />,
     tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
+  },
+  {
+    href: "/dashboard/history",
+    label: "History",
+    icon: <History className="h-4 w-4" />,
+    tooltip: "View all your created content",
   },
   {
     href: "/templates",

@@ -3,8 +3,142 @@
 
 let currentApiKey = '';
 
+// Gamification System
+const GAMIFICATION = {
+    levels: [
+        { level: 1, xp: 0, title: 'Beginner' },
+        { level: 2, xp: 100, title: 'Learner' },
+        { level: 3, xp: 250, title: 'Practitioner' },
+        { level: 4, xp: 500, title: 'Expert' },
+        { level: 5, xp: 1000, title: 'Master' },
+        { level: 6, xp: 2000, title: 'Legend' }
+    ],
+    achievements: [
+        { id: 'first_solve', name: 'First Steps', desc: 'Solve your first problem', xp: 10 },
+        { id: 'streak_3', name: 'Consistent', desc: '3 day streak', xp: 25 },
+        { id: 'streak_7', name: 'Dedicated', desc: '7 day streak', xp: 50 },
+        { id: 'solve_10', name: 'Problem Solver', desc: 'Solve 10 problems', xp: 50 },
+        { id: 'solve_50', name: 'Code Warrior', desc: 'Solve 50 problems', xp: 100 },
+        { id: 'interview_1', name: 'Interview Ready', desc: 'Complete first interview', xp: 30 }
+    ]
+};
+
+function calculateLevel(xp) {
+    let currentLevel = GAMIFICATION.levels[0];
+    for (const level of GAMIFICATION.levels) {
+        if (xp >= level.xp) currentLevel = level;
+        else break;
+    }
+    return currentLevel;
+}
+
+function addXP(amount) {
+    chrome.storage.local.get(['user_xp', 'user_achievements'], (result) => {
+        const newXP = (result.user_xp || 0) + amount;
+        const level = calculateLevel(newXP);
+        
+        chrome.storage.local.set({ user_xp: newXP }, () => {
+            updateLevelDisplay(level);
+            checkAchievements(newXP, result.user_achievements || []);
+        });
+    });
+}
+
+function checkAchievements(xp, unlockedAchievements) {
+    chrome.storage.local.get(['problems-solved', 'streak_count', 'interview_sessions'], (result) => {
+        const problemsSolved = result['problems-solved'] || 0;
+        const streak = result.streak_count || 0;
+        const interviews = result.interview_sessions?.length || 0;
+        
+        GAMIFICATION.achievements.forEach(achievement => {
+            if (unlockedAchievements.includes(achievement.id)) return;
+            
+            let unlock = false;
+            if (achievement.id === 'first_solve' && problemsSolved >= 1) unlock = true;
+            if (achievement.id === 'solve_10' && problemsSolved >= 10) unlock = true;
+            if (achievement.id === 'solve_50' && problemsSolved >= 50) unlock = true;
+            if (achievement.id === 'streak_3' && streak >= 3) unlock = true;
+            if (achievement.id === 'streak_7' && streak >= 7) unlock = true;
+            if (achievement.id === 'interview_1' && interviews >= 1) unlock = true;
+            
+            if (unlock) {
+                unlockedAchievements.push(achievement.id);
+                chrome.storage.local.set({ user_achievements: unlockedAchievements });
+                showAchievementNotification(achievement);
+                addXP(achievement.xp);
+            }
+        });
+    });
+}
+
+function showAchievementNotification(achievement) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #F59E0B, #EF4444);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 250px;
+    `;
+    notification.innerHTML = `
+        <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 4px;">🏆 Achievement Unlocked!</div>
+        <div style="font-weight: 600;">${achievement.name}</div>
+        <div style="font-size: 0.85em; opacity: 0.9;">${achievement.desc}</div>
+        <div style="font-size: 0.85em; margin-top: 4px;">+${achievement.xp} XP</div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 4000);
+}
+
+function updateLevelDisplay(level) {
+    const levelBadge = document.getElementById('level-badge');
+    const userLevel = document.getElementById('user-level');
+    if (levelBadge && userLevel) {
+        levelBadge.style.display = 'inline-block';
+        userLevel.textContent = level.level;
+        levelBadge.title = level.title;
+    }
+}
+
+function updateStreakDisplay() {
+    chrome.storage.local.get(['streak_count', 'last_activity_date'], (result) => {
+        const today = new Date().toDateString();
+        const lastActivity = result.last_activity_date || '';
+        let streak = result.streak_count || 0;
+        
+        if (lastActivity !== today) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (lastActivity === yesterday.toDateString()) {
+                streak++;
+            } else if (lastActivity !== today) {
+                streak = 1;
+            }
+            
+            chrome.storage.local.set({ 
+                streak_count: streak, 
+                last_activity_date: today 
+            });
+        }
+        
+        const streakBadge = document.getElementById('streak-badge');
+        const streakCount = document.getElementById('streak-count');
+        if (streakBadge && streakCount && streak > 0) {
+            streakBadge.style.display = 'inline-block';
+            streakCount.textContent = streak;
+        }
+    });
+}
+
 // Load API key and provider on startup
-chrome.storage.local.get(['ai_provider', 'gemini_api_key', 'openai_api_key', 'mistral_api_key', 'claude_api_key'], (result) => {
+chrome.storage.local.get(['ai_provider', 'gemini_api_key', 'openai_api_key', 'mistral_api_key', 'claude_api_key', 'user_xp'], (result) => {
     const provider = result.ai_provider || 'gemini';
     const keyMap = {
         gemini: result.gemini_api_key,
@@ -31,6 +165,37 @@ chrome.storage.local.get(['ai_provider', 'gemini_api_key', 'openai_api_key', 'mi
     } else {
         document.getElementById('api-key-status').textContent = '⚠️ API Key Not Set';
         document.getElementById('api-key-status').style.color = '#EF4444';
+    }
+
+    // Gamification startup
+    const userXP = result.user_xp || 0;
+    const level = calculateLevel(userXP);
+    updateLevelDisplay(level);
+    updateStreakDisplay();
+});
+
+// Theme Management
+const themeToggle = document.getElementById('toggle-theme');
+const themeIcon = document.getElementById('theme-icon');
+
+// Load theme
+chrome.storage.local.get(['theme'], (result) => {
+    if (result.theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+    }
+});
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        themeIcon.textContent = '🌙';
+        chrome.storage.local.set({ theme: 'light' });
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+        chrome.storage.local.set({ theme: 'dark' });
     }
 });
 
@@ -147,6 +312,67 @@ document.querySelectorAll('.action-card').forEach(card => {
     });
 });
 
+
+// Study Plan Generator
+document.getElementById('generate-plan').addEventListener('click', async () => {
+    const goal = document.getElementById('study-goal').value.trim();
+    const duration = document.getElementById('study-duration').value;
+    const hours = document.getElementById('study-hours').value;
+    
+    if (!goal) {
+        showNotification('Please enter your study goal', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const plan = await generateStudyPlan(goal, duration, hours);
+        displayStudyPlan(plan);
+    } catch (error) {
+        showNotification('Failed to generate plan. Please try again.', 'error');
+        console.error(error);
+    } finally {
+        showLoading(false);
+    }
+});
+
+document.getElementById('copy-plan').addEventListener('click', () => {
+    const content = document.getElementById('study-content').textContent;
+    navigator.clipboard.writeText(content);
+    showNotification('Study plan copied!', 'success');
+});
+
+// Study Plan Generator
+document.getElementById('generate-plan').addEventListener('click', async () => {
+    const goal = document.getElementById('study-goal').value.trim();
+    const duration = document.getElementById('study-duration').value;
+    const hours = document.getElementById('study-hours').value;
+    
+    if (!goal) {
+        showNotification('Please enter your study goal', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const plan = await generateStudyPlan(goal, duration, hours);
+        displayStudyPlan(plan);
+    } catch (error) {
+        showNotification('Failed to generate plan. Please try again.', 'error');
+        console.error(error);
+    } finally {
+        showLoading(false);
+    }
+});
+
+document.getElementById('copy-plan').addEventListener('click', () => {
+    const content = document.getElementById('study-content').textContent;
+    navigator.clipboard.writeText(content);
+    showNotification('Study plan copied!', 'success');
+});
+
 // Copy Solution
 document.getElementById('copy-solution').addEventListener('click', () => {
     const content = document.getElementById('solution-content').textContent;
@@ -223,10 +449,27 @@ Format as JSON array with objects having keys: question, category, difficulty, a
 }
 
 async function handleResumeAction(action) {
+    let context = '';
+    
+    // If LinkedIn action, try to get profile data from current tab
+    if (action === 'linkedin') {
+        try {
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tabs[0] && tabs[0].url.includes('linkedin.com')) {
+                const response = await chrome.tabs.sendMessage(tabs[0].id, { type: 'MCP_SCAN_PAGE' });
+                if (response && response.content) {
+                    context = `\n\nAnalyze this specific profile:\nName: ${response.content.title}\n${response.content.description}`;
+                }
+            }
+        } catch (e) {
+            console.log('Could not fetch LinkedIn data:', e);
+        }
+    }
+
     const prompts = {
         'resume-review': 'Provide a comprehensive resume review checklist with best practices for 2024.',
         'cover-letter': 'Generate a professional cover letter template with tips for customization.',
-        'linkedin': 'Provide LinkedIn profile optimization tips including headline, summary, and experience sections.',
+        'linkedin': `Provide LinkedIn profile optimization tips including headline, summary, and experience sections.${context}`,
         'salary': 'Provide salary negotiation tips and current market trends for tech professionals.'
     };
     
@@ -240,6 +483,32 @@ async function handleResumeAction(action) {
                     reject(new Error(response.error));
                 } else {
                     resolve({ content: response.data.content || JSON.stringify(response.data) });
+                }
+            }
+        );
+    });
+}
+
+async function generateStudyPlan(goal, duration, hours) {
+    const prompt = `Create a detailed ${duration}-week study plan for: "${goal}".
+    Available time: ${hours} hours per week.
+    
+    Provide a week-by-week breakdown with:
+    1. Weekly focus/topic
+    2. Daily tasks or milestones
+    3. Recommended resources (free/paid)
+    4. Practice exercises
+    
+    Format as HTML with 4th level headings for weeks and unordered lists for tasks. Do not use markdown code blocks.`;
+    
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+            { type: 'SOLVE_PROBLEM', prompt },
+            (response) => {
+                if (response.error) {
+                    reject(new Error(response.error));
+                } else {
+                    resolve(response.data.content || response.data);
                 }
             }
         );
@@ -328,6 +597,22 @@ function displayResumeResult(action, result) {
     resultDiv.classList.remove('hidden');
 }
 
+
+
+function displayStudyPlan(plan) {
+    const resultDiv = document.getElementById('study-result');
+    const contentDiv = document.getElementById('study-content');
+    
+    // If plan is an object (JSON), try to extract content, otherwise use it as string
+    let content = typeof plan === 'string' ? plan : (plan.content || JSON.stringify(plan, null, 2));
+    
+    // Clean up markdown if present
+    content = content.replace(/```html/g, '').replace(/```/g, '');
+    
+    contentDiv.innerHTML = content;
+    resultDiv.classList.remove('hidden');
+}
+
 // Utility Functions
 function showLoading(show) {
     const overlay = document.getElementById('loading-overlay');
@@ -364,14 +649,32 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-function incrementStat(statId, count = 1) {
-    const statElement = document.getElementById(statId);
-    const currentValue = parseInt(statElement.textContent);
+async function incrementStat(stat, count = 1) {
+    const result = await chrome.storage.local.get(stat);
+    const currentValue = result[stat] || 0;
     const newValue = currentValue + count;
-    statElement.textContent = newValue;
+    await chrome.storage.local.set({ [stat]: newValue });
     
-    // Save to storage
-    chrome.storage.local.set({ [statId]: newValue });
+    // Update display
+    const element = document.getElementById(stat);
+    if (element) {
+        element.textContent = newValue;
+    }
+    
+    // Award XP based on activity
+    if (stat === 'problems-solved') {
+        addXP(10);
+        updateStreakDisplay();
+    } else if (stat === 'questions-practiced') {
+        addXP(5);
+    }
+    
+    // Send to background
+    chrome.runtime.sendMessage({
+        type: 'INCREMENT_STAT',
+        stat: stat,
+        count: count
+    });
 }
 
 function toggleAnswer(index) {
@@ -437,23 +740,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Start Interview Mode
+// Start Interview Mode - Open Config
 document.getElementById('start-interview-mode').addEventListener('click', () => {
     if (!window.interviewerMode) {
         showNotification('Interviewer mode is loading...', 'info');
         return;
     }
     
-    // Show interview configuration dialog
+    // Show config modal
+    document.getElementById('interview-config-modal').classList.remove('hidden');
+});
+
+// Cancel Interview Config
+document.getElementById('cancel-interview-config').addEventListener('click', () => {
+    document.getElementById('interview-config-modal').classList.add('hidden');
+});
+
+// Start Interview from Config
+document.getElementById('start-interview-config').addEventListener('click', () => {
+    const type = document.getElementById('config-type').value;
+    const role = document.getElementById('config-role').value;
+    const level = document.getElementById('config-level').value;
+    const company = document.getElementById('config-company').value;
+    
     const config = {
-        type: 'dsa',
-        role: 'Software Engineer',
-        level: 'mid',
-        company: '',
+        type,
+        role,
+        level,
+        company,
         duration: 30,
         questionCount: 5
     };
     
+    // Hide modal
+    document.getElementById('interview-config-modal').classList.add('hidden');
+    
+    // Start interview
     window.interviewerMode.startInterview(config);
     showNotification('Interview started! Good luck!', 'success');
 });

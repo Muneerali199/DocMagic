@@ -1,4 +1,3 @@
-import { createRoute } from '@/lib/supabase/server';
 import { type SupabaseClient } from '@supabase/supabase-js';
 
 export async function checkSubscription(supabase: any, userId: string) {

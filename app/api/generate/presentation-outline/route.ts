@@ -1,19 +1,18 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const { NextResponse } = require('next/server');
+import { NextResponse } from 'next/server';
 import { generatePresentationOutline } from '@/lib/gemini';
 import { 
   generatePresentationText, 
-  generateImageDescriptions, 
   generateChartData 
 } from '@/lib/mistral';
-import { searchImages } from '@/lib/unsplash';
+
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, pageCount = 8, useGemini = true } = body;
+    const { prompt, pageCount = 8, useGemini = true, outlineOnly = false } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -35,55 +34,82 @@ export async function POST(request: Request) {
     }
     
     console.log(`✅ Generated ${outlines.length} slides`);
-    console.log('🎨 Step 2: Generating image descriptions with Mistral AI...');
+
+    // If outlineOnly is requested, return here without generating images/charts
+    if (outlineOnly) {
+      console.log('🚀 Returning outline only as requested');
+      return NextResponse.json({ 
+        outlines: outlines,
+        stats: {
+          totalSlides: outlines.length,
+          withImages: 0,
+          withCharts: 0,
+        }
+      });
+    }
+
+    console.log('🎨 Step 2: Generating images with FLUX AI...');
     
-    // Step 2: Generate image descriptions with Mistral AI
-    const imageDescriptions = await generateImageDescriptions(outlines, prompt);
+    // Step 2: Generate images with FLUX (skip Mistral)
+    const { generatePresentationImages } = await import('@/lib/flux-image-generator');
+    const { getEnhancedImagePrompt } = await import('@/lib/presentation-styles');
     
-    console.log(`✅ Generated ${imageDescriptions.length} image descriptions`);
+    // Create enhanced image prompts from slide content
+    const imagePrompts = outlines.map((outline: any) => {
+      const slideType = outline.type || 'content';
+      const title = outline.title || '';
+      const content = outline.content || outline.bulletPoints?.join(', ') || '';
+      
+      // Create detailed, contextual prompt for stunning images
+      let basePrompt = '';
+      
+      if (slideType === 'title' || slideType === 'cover') {
+        basePrompt = `Stunning hero image for presentation titled "${title}", ${prompt}, inspiring and professional`;
+      } else if (slideType === 'conclusion' || slideType === 'summary') {
+        basePrompt = `Inspiring conclusion image for "${title}", uplifting and motivational, ${prompt}`;
+      } else {
+        basePrompt = `Professional visual representation of "${title}", ${content.substring(0, 80)}, ${prompt}`;
+      }
+      
+      // Enhance with style-specific keywords
+      return getEnhancedImagePrompt(basePrompt, 'modern');
+    });
+    
+    // Generate all images with FLUX (using 512x512 - smaller, faster)
+    const imageUrls = await generatePresentationImages(imagePrompts, "512x512");
+    
+    console.log(`✅ Generated ${imageUrls.length} images with FLUX`);
     console.log('📊 Step 3: Generating chart data with Mistral AI...');
     
-    // Step 3: Generate chart data with Mistral AI
-    const chartDataList = await generateChartData(outlines, prompt);
+    // Step 3: Generate chart data with Mistral AI (keep this for now)
+    let chartDataList = [];
+    try {
+      chartDataList = await generateChartData(outlines, prompt);
+      console.log(`✅ Generated ${chartDataList.length} charts`);
+    } catch (error) {
+      console.error('Error generating charts:', error);
+      console.log('⚠️ Skipping chart generation due to rate limit');
+    }
     
-    console.log(`✅ Generated ${chartDataList.length} charts`);
-    console.log('🖼️ Step 4: Fetching real images from Unsplash...');
+    console.log('✨ Step 4: Combining slides with images and charts...');
     
-    // Step 4: Fetch actual images from Unsplash based on descriptions
-    const enhancedOutlines = await Promise.all(
-      outlines.map(async (outline: any, index: number) => {
-        // Find matching image description
-        const imageDesc = imageDescriptions.find(img => img.slideNumber === index + 1);
-        
-        // Find matching chart data
-        const chartData = chartDataList.find(chart => chart.slideNumber === index + 1);
-        
-        // Fetch image if we have a description
-        let imageUrl = '';
-        if (imageDesc && imageDesc.searchQuery) {
-          try {
-            const images = await searchImages(imageDesc.searchQuery, 1);
-            if (images && images.length > 0) {
-              imageUrl = images[0].urls.regular;
-            }
-          } catch (error) {
-            console.error(`Error fetching image for slide ${index + 1}:`, error);
-          }
-        }
-        
-        return {
-          ...outline,
-          imageQuery: imageDesc?.searchQuery || '',
-          imageDescription: imageDesc?.description || '',
-          imageUrl: imageUrl || `https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1080&fit=crop&q=80`,
-          chartData: chartData || null,
-          bullets: outline.bulletPoints || outline.bullets || [],
-        };
-      })
-    );
+    // Step 4: Combine everything
+    const enhancedOutlines = outlines.map((outline: any, index: number) => {
+      const chartData = chartDataList.find((chart: any) => chart.slideNumber === index + 1);
+      
+      return {
+        ...outline,
+        image: imageUrls[index] || `https://placehold.co/512x512/EEE/31343C?text=Slide+${index + 1}`,
+        imageQuery: imagePrompts[index],
+        imageDescription: `AI-generated image for ${outline.title}`,
+        imageUrl: imageUrls[index] || `https://placehold.co/512x512/EEE/31343C?text=Slide+${index + 1}`,
+        chartData: chartData || null,
+        bullets: outline.bulletPoints || outline.bullets || [],
+      };
+    });
     
     console.log('✨ Step 5: Presentation enhancement complete!');
-    console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageDescriptions.length} images, ${chartDataList.length} charts`);
+    console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
     return NextResponse.json({ 
       outlines: enhancedOutlines,

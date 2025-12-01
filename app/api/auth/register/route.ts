@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const sanitizedName = sanitizeInput(name);
     const sanitizedEmail = sanitizeInput(email);
 
-    const supabase = createRoute();
+    const supabase = await createRoute();
 
     // Sign up with Supabase Auth (no email confirmation required)
     const { data, error } = await supabase.auth.signUp({

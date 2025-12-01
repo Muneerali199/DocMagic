@@ -28,10 +28,15 @@
     "https://leetcode.com/*",
     "https://www.hackerrank.com/*",
     "https://codeforces.com/*",
-    "https://www.geeksforgeeks.org/*"
+    "https://www.geeksforgeeks.org/*",
+    "https://www.linkedin.com/*",
+    "https://www.indeed.com/*",
+    "https://wellfound.com/*",
+    "https://www.glassdoor.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -39,7 +44,11 @@
         "https://leetcode.com/*",
         "https://www.hackerrank.com/*",
         "https://codeforces.com/*",
-        "https://www.geeksforgeeks.org/*"
+        "https://www.geeksforgeeks.org/*",
+        "https://www.linkedin.com/*",
+        "https://www.indeed.com/*",
+        "https://wellfound.com/*",
+        "https://www.glassdoor.com/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"]

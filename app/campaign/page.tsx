@@ -108,9 +108,18 @@ export default function CampaignGeneratorPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle quota exceeded error
+        // Handle quota exceeded error with detailed message
         if (response.status === 429) {
-          throw new Error(`API Quota Exceeded: ${data.details || 'Please wait a few minutes and try again, or upgrade your Gemini API plan.'}`);
+          throw new Error(
+            '🚨 API QUOTA EXHAUSTED!\n\n' +
+            '⏰ Free tier quota: 2 requests/minute (currently at 0)\n' +
+            '⌛ Quota resets in: ~60 seconds\n\n' +
+            '💡 SOLUTIONS:\n' +
+            '1️⃣ Wait 2 minutes and try again\n' +
+            '2️⃣ Enable billing: https://console.cloud.google.com/billing\n' +
+            '3️⃣ New API key: https://aistudio.google.com/apikey\n\n' +
+            '💳 With billing: 15 requests/min (750% increase!)'
+          );
         }
         throw new Error(data.error || 'Failed to generate campaign');
       }

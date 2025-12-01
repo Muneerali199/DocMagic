@@ -1,8 +1,8 @@
 // DocMagic Smart AI Extension - Background Service Worker
 // Supports multiple AI providers, MCP server, voice, and interviewer mode
 
-// Import MCP Server (will be loaded as module)
-let mcpServer = null;
+// Import MCP Server
+import { mcpServer } from './mcp-server.js';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -28,6 +28,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         
         // Initialize storage
         chrome.storage.local.set({
+            'gemini_api_key': 'AIzaSyCDs-mjox5cYtg1c5GeDhJp-hhoTEi6Cl0',
             'problems-solved': 0,
             'questions-practiced': 0,
             'interview_sessions': [],

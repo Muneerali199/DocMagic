@@ -1,54 +1,69 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
-// Email validation schema with consistent regex
+const TRUSTED_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'yahoo.com',
+  'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me',
+  'zoho.com', 'mail.com', 'gmx.com', 'yandex.com', 'tutanota.com'
+];
+
+const isValidEmailDomain = (email: string): boolean => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return false;
+  
+  if (TRUSTED_EMAIL_DOMAINS.includes(domain)) return true;
+  
+  if (domain.endsWith('.edu') || domain.endsWith('.ac.uk') || domain.endsWith('.edu.au') || 
+      domain.endsWith('.edu.cn') || domain.endsWith('.edu.in')) return true;
+  
+  if (/^\d+@qq\.com$/.test(email) || /^\d{10,}@/.test(email)) return false;
+  
+  return false;
+};
+
 export const emailSchema = z
   .string()
   .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email address')
-  .max(254, 'Email address is too long');
+  .max(254, 'Email address is too long')
+  .refine(isValidEmailDomain, {
+    message: 'Please use a valid email from a recognized provider (Gmail, Outlook, Yahoo, etc.)'
+  });
 
-// Password validation schema
 export const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password must be less than 128 characters')
   .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number');
 
-// Name validation schema (relaxed for resume generation)
 export const nameSchema = z
   .string()
   .min(1, 'Name is required')
   .max(100, 'Name must be less than 100 characters')
   .regex(/^[a-zA-Z0-9\s.'-]+$/, 'Name contains invalid characters');
 
-// Registration schema
 export const registrationSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
 });
 
-// Resume generation schema
 export const resumeGenerationSchema = z.object({
   prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(5000, 'Prompt too long'),
   name: nameSchema,
   email: emailSchema,
 });
 
-// Presentation generation schema
 export const presentationGenerationSchema = z.object({
   topic: z.string().min(3, 'Topic must be at least 3 characters').max(200, 'Topic too long'),
   slides: z.number().min(1).max(50, 'Maximum 50 slides allowed'),
   style: z.enum(['professional', 'creative', 'minimal', 'corporate']).optional(),
 });
 
-// Letter generation schema
 export const letterGenerationSchema = z.object({
   type: z.enum(['cover', 'recommendation', 'resignation', 'complaint', 'thank-you']),
   recipient: nameSchema,
   content: z.string().min(50, 'Content must be at least 50 characters').max(3000, 'Content too long'),
 });
 
-// Sanitize HTML input to prevent XSS
 export function sanitizeHtml(input: string): string {
   return input
     .replace(/</g, '&lt;')
@@ -58,42 +73,29 @@ export function sanitizeHtml(input: string): string {
     .replace(/\//g, '&#x2F;');
 }
 
-// Sanitize user input for database storage
 export function sanitizeInput(input: string): string {
-  return input.trim().slice(0, 10000); // Limit length and trim whitespace
+  return input.trim().slice(0, 10000);
 }
 
-// Validate and sanitize request body
 export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
-  
   if (!result.success) {
-    throw new Error(`Validation failed: ${result.error.errors.map(e => e.message).join(', ')}`);
+    throw new Error('Validation failed: ' + result.error.errors.map(e => e.message).join(', '));
   }
-  
   return result.data;
 }
 
-// Check for common SQL injection patterns (improved to reduce false positives)
 export function detectSqlInjection(input: string): boolean {
-  // Only detect actual SQL injection attempts, not common words
   const sqlPatterns = [
-    // SQL commands with special characters (actual injection attempts)
     /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC)\b.*['";])/i,
-    // Union-based injection
     /(\bUNION\s+(ALL\s+)?SELECT\b)/i,
-    // Comment-based injection
     /(;--|\/\*|\*\/|--\s|#)/,
-    // Hex-based injection
     /(0x[0-9a-f]+)/i,
-    // Boolean-based blind injection (more specific pattern)
     /(\'\s*(OR|AND)\s*\'\s*=\s*\')|(\'\s*(OR|AND)\s*\d+\s*=\s*\d+)/i,
   ];
-  
   return sqlPatterns.some(pattern => pattern.test(input));
 }
 
-// Rate limiting key generator
 export function generateRateLimitKey(ip: string, endpoint: string): string {
-  return `${ip}:${endpoint}`;
+  return ip + ':' + endpoint;
 }

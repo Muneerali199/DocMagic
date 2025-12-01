@@ -469,8 +469,6 @@ const mcpServer = new MCPServer();
 mcpServer.start();
 
 // Export for external use
-if (typeof window !== 'undefined') {
-    window.mcpServer = mcpServer;
-}
+export { mcpServer, MCPServer };
 
 console.log('🚀 MCP Server module loaded');

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const supabase = createRoute();
+  const supabase = await createRoute();
   
   // Get the current user session
   const { data: { session } } = await supabase.auth.getSession();

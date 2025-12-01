@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -23,12 +23,41 @@ import {
   Loader2,
   MousePointer2,
   Fingerprint,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
+// Email domain validation function
+const validateEmailDomain = (email: string) => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return { isValid: false, message: '' };
+
+  const TRUSTED_DOMAINS = [
+    'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'yahoo.com',
+    'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me',
+    'zoho.com', 'mail.com', 'gmx.com', 'yandex.com', 'tutanota.com'
+  ];
+
+  if (TRUSTED_DOMAINS.includes(domain)) {
+    return { isValid: true, message: 'Trusted email provider' };
+  }
+
+  if (domain.endsWith('.edu') || domain.endsWith('.ac.uk') || domain.endsWith('.edu.au') || 
+      domain.endsWith('.edu.cn') || domain.endsWith('.edu.in')) {
+    return { isValid: true, message: 'Educational email' };
+  }
+
+  if (/^\d+@qq\.com$/.test(email) || /^\d{10,}@/.test(email)) {
+    return { isValid: false, message: 'Please use a valid email (not all numbers)' };
+  }
+
+  return { isValid: false, message: 'Please use Gmail, Outlook, Yahoo or another recognized email provider' };
+};
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailValidation, setEmailValidation] = useState({ isValid: false, message: '' });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -57,6 +86,15 @@ export default function Register() {
     };
     setPasswordStrength(calculateStrength(password));
   }, [password]);
+
+  // Email validation effect
+  useEffect(() => {
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailValidation(validateEmailDomain(email));
+    } else {
+      setEmailValidation({ isValid: false, message: '' });
+    }
+  }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +134,7 @@ export default function Register() {
       }
 
       toast({
-        title: "Account created successfully! ✨",
+        title: "Account created successfully! âœ¨",
         description: result.message || "You can now sign in with your credentials.",
       });
 

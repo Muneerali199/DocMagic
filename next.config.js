@@ -9,7 +9,9 @@ const nextConfig = {
       'bxiieunzrcdbxqadapcl.supabase.co',
       'images.unsplash.com',
       'images.pexels.com',
-      'cdn.pixabay.com'
+      'cdn.pixabay.com',
+      'pictures-storage.storage.eu-north1.nebius.cloud',
+      'placehold.co'
     ],
     remotePatterns: [
       {
@@ -27,6 +29,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.nebius.cloud',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
       },
     ],
   },
@@ -47,7 +57,7 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://generativelanguage.googleapis.com; frame-src https://js.stripe.com; object-src 'none'; base-uri 'self';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com; frame-src https://js.stripe.com; object-src 'none'; base-uri 'self';"
           }
         ]
       }

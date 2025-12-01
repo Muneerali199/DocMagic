@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generatePresentation } from '@/lib/gemini';
+import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
 import { createRoute } from '@/lib/supabase/server';
 import { checkUsageLimit, trackUsage } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
   try {
     // ✅ AUTHENTICATION CHECK
-    const supabase = createRoute();
+    const supabase = await createRoute();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { prompt, pageCount = 8 } = body;
+    const { prompt, pageCount = 8, template } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -42,8 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate presentation
-    const slides = await generatePresentation({ prompt, pageCount });
+    // Generate presentation outline first
+    const outlines = await generatePresentationOutline({ prompt, pageCount });
+
+    // Generate full presentation with visuals
+    const slides = await generatePresentation({ outlines, prompt, template });
 
     // ✅ TRACK USAGE
     // We'll track once the presentation is successfully saved

@@ -17,7 +17,25 @@ export async function POST(request: Request) {
 
     const token = authHeader.replace('Bearer ', '');
 
-    // Create Supabase client with the token
+    // Custom fetch with timeout
+    const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      try {
+        const response = await fetch(input, {
+          ...init,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    };
+
+    // Create Supabase client with the token and custom fetch
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,6 +44,7 @@ export async function POST(request: Request) {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          fetch: customFetch
         },
       }
     );

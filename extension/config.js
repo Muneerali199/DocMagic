@@ -45,6 +45,11 @@ const CONFIG = {
         '.problems_problem_content__Xm_eO',
         '.problem-description'
       ]
+    },
+    linkedin: {
+      name: 'LinkedIn',
+      titleSelectors: ['.text-heading-xlarge', '.pv-text-details__left-panel h1'],
+      descriptionSelectors: ['.pv-about__summary-text', '.display-flex .ph5']
     }
   }
 };

@@ -18,6 +18,20 @@
     --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
+[data-theme="dark"] {
+    --primary: #60A5FA;
+    --secondary: #34D399;
+    --accent: #FBBF24;
+    --danger: #F87171;
+    --text: #F3F4F6;
+    --text-light: #9CA3AF;
+    --bg: #111827;
+    --bg-secondary: #1F2937;
+    --border: #374151;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
 body {
     width: 420px;
     min-height: 500px;
@@ -563,4 +577,278 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-light);
+}
+
+/* Feature Controls */
+.feature-controls {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.btn-feature {
+    flex: 1;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.btn-feature:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.btn-feature:active {
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Enhanced Result Cards */
+.result {
+    animation: fadeIn 0.4s ease;
+}
+
+/* Hover Effects */
+.action-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.action-card:hover::before {
+    left: 100%;
+}
+
+/* Progress Bar */
+.xp-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.xp-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transition: width 0.5s ease;
+}
+
+/* Enhanced Dark Mode */
+[data-theme="dark"] .action-card {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .solution-content {
+    background: var(--bg-secondary);
+    color: var(--text);
+}
+
+[data-theme="dark"] .loading-overlay {
+    background: rgba(17, 24, 39, 0.95);
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 2px solid var(--border);
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+[data-theme="dark"] .stat-card {
+    background: var(--bg-secondary);
+}
+
+/* Company Cards */
+.company-card {
+    background: white;
+    padding: 1rem;
+    border: 2px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.company-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .company-card {
+    background: var(--bg-secondary);
+}
+
+/* Readiness Bar */
+.readiness-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.readiness-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger), var(--accent), var(--secondary));
+    transition: width 0.5s ease;
+}
+
+/* Insights */
+.insight-item {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.insight-item.positive {
+    border-left-color: var(--secondary);
+}
+
+.insight-item.improvement {
+    border-left-color: var(--accent);
+}
+
+[data-theme="dark"] .insight-item {
+    background: var(--bg-secondary);
+}
+
+/* Recommendation Cards */
+.recommendation-card {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border);
+}
+
+.recommendation-card.high {
+    border-left: 4px solid var(--danger);
+}
+
+.recommendation-card.medium {
+    border-left: 4px solid var(--accent);
+}
+
+[data-theme="dark"] .recommendation-card {
+    background: var(--bg-secondary);
+}
+
+/* Snippet Cards */
+.snippet-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.snippet-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+}
+
+.snippet-card.mastered {
+    border-left: 4px solid var(--secondary);
+}
+
+[data-theme="dark"] .snippet-card {
+    background: var(--bg-secondary);
+}
+
+/* Tabs Enhancement */
+.tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab {
+    white-space: nowrap;
+    min-width: fit-content;
 }

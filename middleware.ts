@@ -39,6 +39,37 @@ function rateLimit(ip: string, endpoint: string): boolean {
   return true;
 }
 
+// Custom fetch with timeout
+const createFetchWithTimeout = (timeoutMs: number = 30000) => {
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(input, {
+        ...init,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.error('Request timeout in middleware:', { url: input, timeout: timeoutMs });
+        throw new Error(`Request timeout after ${timeoutMs}ms`);
+      }
+      
+      if (error.code === 'UND_ERR_CONNECT_TIMEOUT' || error.message?.includes('Connect Timeout Error')) {
+        console.error('Connection timeout in middleware:', error);
+        throw new Error('Unable to connect to authentication service');
+      }
+      
+      throw error;
+    }
+  };
+};
+
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next();
   
@@ -66,10 +97,17 @@ export async function middleware(req: NextRequest) {
           });
         },
       },
+      global: {
+        fetch: createFetchWithTimeout(30000), // 30 second timeout
+      },
     }
   );
   
-  await supabase.auth.getSession(); // This refreshes the auth cookies!
+  try {
+    await supabase.auth.getSession(); // This refreshes the auth cookies!
+  } catch (error) {
+    console.error('Session refresh error in middleware:', error);
+  }
   
   // Get client IP for rate limiting
   const ip = req.ip || req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';

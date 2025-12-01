@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const { NextResponse } = require('next/server');
+import { NextResponse } from 'next/server';
 import { generateResume } from '@/lib/gemini';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
@@ -19,7 +19,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create Supabase client with the access token
+    // Custom fetch with timeout
+    const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      try {
+        const response = await fetch(input, {
+          ...init,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    };
+
+    // Create Supabase client with the access token and custom fetch
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,7 +45,8 @@ export async function POST(request: Request) {
         global: {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          fetch: customFetch
         }
       }
     );

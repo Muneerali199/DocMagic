@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,6 +66,10 @@ export function MobileResumeBuilder({ templateId }: MobileResumeBuilderProps) {
   const [publishedUrl, setPublishedUrl] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("modern");
+  const [scale, setScale] = useState(1);
+  const isMobile = useIsMobile(); // Automatically detect mobile
+  const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
 
@@ -135,6 +141,32 @@ export function MobileResumeBuilder({ templateId }: MobileResumeBuilderProps) {
       }
     }
   }, [templateId, toast]);
+
+  // Calculate scale for fit-to-screen
+  useEffect(() => {
+    const calculateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        // A4 width in pixels (approx 794px) plus padding (32px on each side)
+        const resumeWidth = 794;
+        const padding = 64; // Total horizontal padding
+        const availableWidth = containerWidth - padding;
+        const newScale = Math.min(availableWidth / resumeWidth, 1);
+        setScale(Math.max(newScale, 0.5)); // Minimum scale of 0.5 for readability
+      }
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, [currentStep]);
+
+  // Automatically switch to mobile view mode on mobile devices
+  useEffect(() => {
+    if (isMobile && viewMode !== 'mobile') {
+      setViewMode('mobile');
+    }
+  }, [isMobile, viewMode]);
 
   // Get auth token
   const getAuthToken = async () => {
@@ -1247,15 +1279,95 @@ Certified AWS Solutions Architect
 
 
                   {/* Resume Preview */}
-                  <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-8 shadow-lg">
-                    <ResumePreview 
-                      ref={resumePreviewRef}
-                      resume={resumeData} 
-                      template={selectedTemplate}
-                      showControls={false}
-                      isCV={isCV}
-                    />
-                  </div>
+                  {/* View Mode Toggle - Only show on desktop/tablet */}
+                  {!isMobile && (
+                    <div className="flex justify-end px-1 mb-2">
+                      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
+                        <Button
+                          variant={viewMode === 'mobile' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => {
+                            setViewMode('mobile');
+                            setScale(1);
+                          }}
+                          className="h-7 text-xs whitespace-nowrap"
+                        >
+                          📱 Mobile View
+                        </Button>
+                        <Button
+                          variant={viewMode === 'fit' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setViewMode('fit')}
+                          className="h-7 text-xs whitespace-nowrap"
+                        >
+                          📄 Fit to Screen
+                        </Button>
+                        <Button
+                          variant={viewMode === 'actual' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setViewMode('actual')}
+                          className="h-7 text-xs whitespace-nowrap"
+                        >
+                          🔍 Actual Size
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resume Preview Container */}
+                  {viewMode === 'mobile' ? (
+                    // Mobile Read Mode - Simple, fully responsive, no constraints
+                    <div 
+                      className="w-full bg-white rounded-lg shadow-2xl border border-gray-200" 
+                      style={{ 
+                        maxWidth: '100%', 
+                        overflow: 'visible',
+                        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)'
+                      }}
+                    >
+                      <ResumePreview 
+                        ref={resumePreviewRef}
+                        resume={resumeData} 
+                        template={selectedTemplate}
+                        showControls={false}
+                        isCV={isCV}
+                        layoutMode='responsive'
+                        viewType='mobile'
+                      />
+                    </div>
+                  ) : (
+                    // PDF Preview or Full Size - with scaling/scrolling
+                    <div 
+                      ref={containerRef}
+                      className={`bg-white rounded-lg border border-gray-200 shadow-lg transition-all duration-300 ${
+                        viewMode === 'fit' ? 'overflow-hidden' : 'overflow-auto'
+                      }`}
+                      style={{
+                        height: viewMode === 'fit' 
+                          ? 'auto'
+                          : '600px',
+                        maxHeight: viewMode === 'fit' ? '80vh' : 'none'
+                      }}
+                    >
+                      <div 
+                        style={{
+                          transform: viewMode === 'fit' ? `scale(${scale})` : 'none',
+                          transformOrigin: 'top left',
+                          width: viewMode === 'fit' ? '210mm' : 'auto',
+                        }}
+                      >
+                        <ResumePreview 
+                          ref={resumePreviewRef}
+                          resume={resumeData} 
+                          template={selectedTemplate}
+                          showControls={false}
+                          isCV={isCV}
+                          layoutMode={viewMode === 'fit' ? 'fixed' : 'responsive'}
+                          viewType='print'
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Download & Edit Buttons */}
                   <div className="flex flex-col sm:flex-row gap-4">

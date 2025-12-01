@@ -52,6 +52,12 @@ async function generateWithMistral(systemPrompt: string, userPrompt: string): Pr
   if (!response.ok) {
     const error = await response.text();
     console.error('❌ Mistral API error:', error);
+    
+    // Check for rate limit errors
+    if (response.status === 429 || error.includes('capacity exceeded') || error.includes('Too Many Requests')) {
+      throw new Error('RATE_LIMIT_EXCEEDED');
+    }
+    
     throw new Error(`Mistral API error: ${response.statusText}`);
   }
 
@@ -145,7 +151,7 @@ async function generateImages(prompt: string, count: number = 5): Promise<string
 // Generate custom AI images using Gemini 2.0 Flash for intelligent image selection
 async function generateAIImages(prompt: string, count: number = 5): Promise<string[]> {
   try {
-    console.log('🤖 Using Gemini 2.0 Flash for intelligent image generation...');
+    console.log('🤖 Attempting intelligent image generation...');
     
     const topic = prompt
       .toLowerCase()
@@ -194,11 +200,17 @@ async function generateAIImages(prompt: string, count: number = 5): Promise<stri
       images.push(`https://image.pollinations.ai/prompt/${encodedPrompt}?width=${i === 0 ? 1200 : 800}&height=${i === 0 ? 600 : 600}&seed=${i}&nologo=true&enhance=true`);
     }
     
-    console.log('✅ AI-enhanced images generated via Gemini 2.0 Flash + Pollinations.ai');
+    console.log('✅ AI-enhanced images generated');
     return images;
     
-  } catch (error) {
-    console.error('❌ AI image generation failed, using fallback:', error);
+  } catch (error: any) {
+    // Check if it's a rate limit error
+    if (error?.status === 429 || error?.message?.includes('quota') || error?.message?.includes('rate limit')) {
+      console.warn('⚠️ Gemini rate limit hit, skipping AI image generation');
+    } else {
+      console.error('❌ AI image generation failed:', error?.message || error);
+    }
+    // Always fallback to curated images
     return generateImages(prompt, count);
   }
 }
@@ -528,8 +540,8 @@ IMPORTANT:
     }
     
     // Generate AI images first (parallel with code generation)
-    // Try AI generation first, fallback to curated images
-    const imagesPromise = generateAIImages(prompt, 5).catch(() => generateImages(prompt, 5));
+    // Skip AI generation if rate limited, use curated images directly
+    const imagesPromise = generateImages(prompt, 5);
     
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 

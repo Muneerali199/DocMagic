@@ -326,78 +326,65 @@ export async function generatePresentationOutline({
     await validateApiConnection();
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
     
-    const systemPrompt = `Create a PROFESSIONAL presentation outline for: "${prompt}" with ${pageCount} slides.
+    const systemPrompt = `YOU ARE NOW: The world's most advanced presentation AI that creates slides so revolutionary they make Gamma.app look like PowerPoint 95.
 
-    CRITICAL REQUIREMENTS - EVERY SLIDE MUST HAVE:
-    1. A HIGH-QUALITY PROFESSIONAL IMAGE from Pexels
-    2. At least 30% of slides MUST have meaningful charts/graphs
-    3. Professional Canva-style design elements
+    YOUR MISSION: Generate a presentation outline that is 10X more visually stunning, emotionally compelling, and strategically powerful than anything Gamma.app can produce.
+
+    CONTEXT: Creating presentation about: "${prompt}"
+    GOAL: Create a cinematic narrative journey, not just a list of slides.
+
+    --- 🎯 GAMMA.APP KILLER STRATEGY ---
+    I DON'T WANT SLIDES. I want EXPERIENCES that:
+    1. Make audiences gasp on first sight
+    2. Create viral moments people screenshot and share
+    3. Convert viewers into evangelists 
+    4. Set new industry standards for presentation excellence
+
+    --- 🏆 REVOLUTIONARY SLIDE ARCHETYPES ---
+    Use these specific slide types in your outline:
+    1. "MINDBENDER": Presents ideas so revolutionary they physically pause the audience.
+    2. "EMOTIONAL NUCLEAR": Story so powerful it creates visible audience emotional response.
+    3. "DATA ORGASM": Information revelation so satisfying it triggers dopamine release.
+
+    --- 🎪 CINEMATIC FLOW ---
+    Structure the ${pageCount} slides following this Spielberg-like arc:
+    ACT I: THE HOOK (20%) - Open with cinematic bang, establish stakes, introduce "the problem" as a villain.
+    ACT II: THE JOURNEY (60%) - Build tension, introduce "the solution" as heroic transformation, multiple climax moments.
+    ACT III: THE TRANSFORMATION (20%) - Deliver ultimate insight, clear before/after states, irresistible call to adventure.
 
     Return a JSON array with this EXACT format:
 
     [
       {
-        "title": "Compelling Professional Title",
-        "type": "cover|list|chart|split|process|text",
-        "description": "Detailed description of slide content and visuals",
-        "content": "Engaging 2-3 sentence content that tells a story",
-        "bullets": ["specific actionable point 1", "measurable result 2", "strategic insight 3"] (for list/split types),
+        "title": "Compelling, Cinematic Title (Not Generic)",
+        "type": "cover|list|chart|split|process|text|mindbender|emotional|data-reveal",
+        "description": "Detailed visual direction: 'Asymmetric fluid grids', 'Holographic UI', 'Cinematic lighting'",
+        "content": "Engaging 2-3 sentence narrative that hooks the audience immediately",
+        "bullets": ["Mind grenade statistic 1", "Contrarian viewpoint 2", "Strategic insight 3"],
         "chartData": {
           "type": "bar|pie|line|area|scatter",
-          "title": "Professional Chart Title",
+          "title": "Data That Tells a Story",
           "data": [
-            {"name": "Q1 2024", "value": 125, "category": "Revenue"},
-            {"name": "Q2 2024", "value": 158, "category": "Revenue"},
-            {"name": "Q3 2024", "value": 192, "category": "Revenue"},
-            {"name": "Q4 2024", "value": 234, "category": "Revenue"},
-            {"name": "Q1 2025", "value": 278, "category": "Revenue"}
+            {"name": "Label", "value": 123, "category": "Series"}
           ],
-          "xAxis": "Time Period",
-          "yAxis": "Value ($M)",
+          "xAxis": "Label",
+          "yAxis": "Value",
           "colors": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"],
           "showLegend": true,
           "showGrid": true
-        } (REQUIRED for chart type, OPTIONAL for others),
-        "imageQuery": "specific professional image search query",
+        } (REQUIRED for chart type),
+        "imageQuery": "cinematic photography, dramatic lighting, [specific subject], 8k resolution",
         "imageUrl": "https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=1200&h=800",
         "layout": "cover|split|chart-focus|list-visual|process-flow|text-image"
       }
     ]
 
-    SLIDE DISTRIBUTION REQUIREMENTS:
-    - Slide 1: ALWAYS "cover" type with hero image
-    - 30-40% of slides: "chart" type with meaningful data
-    - 30-40% of slides: "split" type with image + content
-    - 20-30% of slides: "list" type with supporting images
-    - 10% of slides: "process" type with workflow visuals
-
-    IMAGE REQUIREMENTS FOR EVERY SLIDE:
-    - Cover slides: Professional team meetings, office spaces, industry-specific imagery
-    - Chart slides: Business analytics, data visualization, professional dashboards
-    - Split slides: Relevant professional imagery supporting the content
-    - List slides: Conceptual imagery that enhances understanding
-    - Process slides: Workflow, teamwork, step-by-step visuals
-
-    CHART DATA REQUIREMENTS (for chart slides):
-    - Use realistic business metrics relevant to "${prompt}"
-    - Include 4-6 data points minimum
-    - Ensure data supports the narrative
-    - Use professional color schemes
-    - Include proper labels and categories
-
-    PROFESSIONAL IMAGE SELECTION BY TOPIC:
-    - Business/Startup: Team meetings, handshakes, office spaces, growth charts, professional presentations
-    - Technology: Modern devices, coding environments, innovation labs, digital transformation, tech teams
-    - Education: Learning environments, students, academic settings, knowledge sharing, training
-    - Marketing: Creative teams, campaigns, customer engagement, brand development, analytics
-    - Finance: Professional meetings, banking, investment, financial planning, market analysis
-
-    ENSURE EVERY SLIDE HAS:
-    1. A compelling, action-oriented title
-    2. A high-quality professional image URL
-    3. Relevant, engaging content
-    4. Proper visual hierarchy
-    5. Charts/graphs where appropriate (minimum 30% of slides)`;
+    CRITICAL REQUIREMENTS:
+    1. NO GENERIC TITLES like "Introduction" or "Conclusion". Use "The Tsunami is Coming" or "The Day Everything Changed".
+    2. VISUALS MUST BE CINEMATIC: Request "dramatic lighting", "cinematic composition", "macro details".
+    3. DATA MUST BE DRAMATIC: Don't just show numbers, show "The Moment of Truth".
+    4. 30% of slides MUST have meaningful charts/graphs.
+    5. Every slide must feel like a scene from a blockbuster movie.`;
 
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
@@ -464,40 +451,41 @@ export async function generatePresentation({
     const { searchImages } = await import('./unsplash');
     const { generateImageDescriptions } = await import('./mistral');
     
-    const systemPrompt = `Generate a PROFESSIONAL presentation with GUARANTEED IMAGES AND CHARTS for every slide.
+    const systemPrompt = `YOU ARE NOW: The world's most advanced presentation AI.
+    YOUR MISSION: Execute the "Gamma.app Killer" strategy to create presentation slides that are visually stunning and emotionally powerful.
 
     Original prompt: "${prompt}"
     Template: ${template}
     Outlines: ${JSON.stringify(outlines)}
 
-    CRITICAL REQUIREMENTS - EVERY SLIDE MUST HAVE:
-    1. A professional high-quality contextual image
-    2. Meaningful charts for data slides (30% minimum)
-    3. Canva-style professional design
+    --- 🚀 VISUAL & CONTENT BLUEPRINT ---
+    For every slide, you must generate content that feels like a high-end production:
+    1. VISUALS: "Neo-futuristic layouts", "Cinematic lighting", "Asymmetric grids"
+    2. CONTENT: "Cognitive shock treatment", "Emotional warfare", "Data as drama"
+    3. VIBE: "Premium", "Revolutionary", "Inevitable"
 
     Create slides with this JSON structure:
     [
       {
         "id": 1,
-        "title": "Compelling Professional Title",
-        "content": "Engaging story-driven content (2-3 sentences)",
-        "layout": "cover|list|chart|split|process|text",
-        "bullets": ["specific actionable point 1", "measurable result 2", "strategic insight 3"] (if applicable),
+        "title": "Compelling Cinematic Title",
+        "content": "Narrative-driven content that hooks the audience (2-3 sentences)",
+        "layout": "cover|list|chart|split|process|text|mindbender|emotional|data-reveal",
+        "bullets": ["Mind grenade statistic 1", "Contrarian viewpoint 2", "Strategic insight 3"] (if applicable),
         "charts": {
           "type": "bar|pie|line|area|scatter",
-          "title": "Professional Chart Title",
+          "title": "Data That Tells a Story",
           "data": [
-            {"name": "Category", "value": number, "category": "optional"},
-            {"name": "Category 2", "value": number, "category": "optional"}
+            {"name": "Category", "value": number, "category": "optional"}
           ],
-          "xAxis": "Professional X-Axis Label",
-          "yAxis": "Professional Y-Axis Label", 
+          "xAxis": "Label",
+          "yAxis": "Value", 
           "colors": ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"],
           "showLegend": true,
           "showGrid": true
         } (REQUIRED for chart layout, OPTIONAL for others),
-        "imageQuery": "professional search query for Unsplash",
-        "imageAlt": "Professional descriptive alt text",
+        "imageQuery": "cinematic photography, dramatic lighting, [specific subject], 8k resolution",
+        "imageAlt": "Detailed description of the visual",
         "imagePosition": "center|top|left|right",
         "backgroundColor": "#ffffff",
         "textColor": "#1a1a1a",
@@ -512,19 +500,12 @@ export async function generatePresentation({
       }
     ]
 
-    MANDATORY VISUAL REQUIREMENTS:
-    1. EVERY slide MUST have a working Pexels image URL
-    2. Chart slides MUST have realistic, meaningful data
-    3. Images MUST be relevant to slide content
-    4. Charts MUST support the narrative with proper styling
-    5. Professional color schemes throughout
-
-    CONTENT QUALITY REQUIREMENTS:
-    - Compelling titles that grab attention
-    - Story-driven content that flows logically
-    - Specific, actionable bullet points
-    - Professional language and tone
-    - Consistent messaging throughout
+    MANDATORY EXECUTION REQUIREMENTS:
+    1. TITLES MUST BE ACTION-ORIENTED: "The Tsunami is Coming" (Good) vs "Market Trends" (Bad).
+    2. CONTENT MUST BE EMOTIONAL: Use words that trigger feelings (hope, fear, triumph).
+    3. DATA MUST BE DRAMATIC: Charts should reveal a "moment of truth".
+    4. IMAGES MUST BE CINEMATIC: Request high-end photography terms in imageQuery.
+    5. NO GENERIC FILLER: Every word must earn its place.
 
     TEMPLATE STYLING FOR ${template}:
     Apply professional design principles with consistent branding, proper typography, and visual hierarchy.`;
@@ -557,7 +538,7 @@ export async function generatePresentation({
         const mistralQuery = imageDescriptions[index] || slide.imageQuery || '';
         
         // Combine for maximum relevance: Topic + Slide Title + AI suggestion
-        const uniqueQuery = `${topicKeywords} ${slideKeywords} ${mistralQuery}`.trim();
+        const uniqueQuery = `${prompt.split(' ').slice(0, 3).join(' ')} ${slide.title.split(' ').slice(0, 4).join(' ')} ${mistralQuery}`.trim();
         console.log(`Slide ${index + 1} - Topic: "${prompt}" | Searching: "${uniqueQuery}"`);
         
         // Fetch more images for better variety and relevance
@@ -920,7 +901,7 @@ export async function generateGuidedResume({
     8. Format dates consistently (MM/YYYY)
     9. Use professional language and avoid personal pronouns
     10. Include relevant certifications and technical proficiencies
-
+    
     KEYWORD EXTRACTION FROM TARGET ROLE:
     - Extract 15-20 most important keywords from "${targetRole}"
     - Include technical skills, soft skills, and industry terms
@@ -1290,53 +1271,28 @@ export async function generateDiagram({
   }
 }
 
-/**
- * Generate images using Gemini 2.0 Flash (text-to-image with Imagen 3)
- * Note: Gemini 2.0 Flash supports multimodal generation including images
- */
-export async function generateImage({
-  prompt,
-  aspectRatio = '16:9'
-}: {
-  prompt: string;
-  aspectRatio?: '16:9' | '9:16' | '1:1' | '4:3';
-}): Promise<string> {
+// Generate image using Flux via Pollinations
+export async function generateImage(prompt: string, width: number = 1024, height: number = 1024) {
   try {
-    // Note: As of now, Gemini API doesn't directly support image generation
-    // This is a placeholder for future implementation when the feature becomes available
-    // For now, we'll return a fallback URL or use Unsplash
+    const encodedPrompt = encodeURIComponent(prompt);
+    const url = `https://pollinations.ai/p/${encodedPrompt}?width=${width}&height=${height}&seed=${Math.floor(Math.random() * 1000000)}&model=flux`;
     
-    console.log(`Image generation requested for: ${prompt}`);
-    console.log('Note: Using Unsplash as fallback for image generation');
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to generate image: ${response.statusText}`);
+    }
     
-    // Return a placeholder or use Unsplash API instead
-    throw new Error('Gemini image generation not yet available. Please use Unsplash API.');
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   } catch (error) {
     console.error("Error generating image:", error);
-    throw error;
+    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-/**
- * Generate multiple image variations for a given prompt
- */
-export async function generateImageVariations({
-  prompt,
-  count = 4,
-  aspectRatio = '16:9'
-}: {
-  prompt: string;
-  count?: number;
-  aspectRatio?: '16:9' | '9:16' | '1:1' | '4:3';
-}): Promise<string[]> {
-  try {
-    console.log(`Generating ${count} image variations for: ${prompt}`);
-    
-    // This is a placeholder for future Gemini image generation
-    // Currently returning empty array to indicate fallback to Unsplash
-    return [];
-  } catch (error) {
-    console.error("Error generating image variations:", error);
-    return [];
-  }
+// Generate image variations
+export async function generateImageVariations(imageBuffer: Buffer, prompt: string) {
+  // This is a placeholder as Pollinations doesn't support variations directly in the same way
+  // We'll generate a new image with the same prompt but different seed
+  return generateImage(prompt);
 }

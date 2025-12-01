@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CanvaTemplateGallery } from "@/components/templates/canva-template-gallery";
-import { ResumeTemplateGallery } from "@/components/templates/resume-template-gallery";
+import { ResumeTemplateGalleryNew } from "@/components/templates/resume-template-gallery-new";
 import { Template } from "@/types/templates";
 import { useToast } from "@/hooks/use-toast";
 import { SiteHeader } from "@/components/site-header";
@@ -174,17 +173,28 @@ export default function TemplatesPage() {
             </div>
           </div>
 
-          {/* Resume Template Gallery - Talentelse Style */}
+          {/* Resume Template Gallery - NEW EDITABLE TEMPLATES */}
           <div className="rounded-3xl shadow-xl border-2 p-6 sm:p-8 lg:p-10" style={{ backgroundColor: '#FFFFFF', borderColor: '#D4A574' }}>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2" style={{ color: '#211C1C' }}>
-                Resume Templates
-              </h2>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold" style={{ color: '#211C1C' }}>
+                    Editable Resume Templates
+                  </h2>
+                  <p className="text-sm text-green-600 font-semibold flex items-center gap-1">
+                    <Sparkles className="w-4 h-4" />
+                    All templates are fully editable!
+                  </p>
+                </div>
+              </div>
               <p className="text-lg" style={{ color: '#6B5C4C' }}>
-                Professional, ATS-friendly resume templates. Download and customize in minutes.
+                Professional, job-specific resume templates. Click any template to start editing instantly.
               </p>
             </div>
-            <ResumeTemplateGallery />
+            <ResumeTemplateGalleryNew />
           </div>
 
           {/* Bottom CTA */}

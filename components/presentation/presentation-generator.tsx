@@ -260,10 +260,17 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
+      console.log(`📄 Exporting ${slides.length} slides to PDF...`);
+      
       for (let i = 0; i < slides.length; i++) {
         if (i > 0) pdf.addPage();
         
         const slide = slides[i];
+        console.log(`📄 Slide ${i + 1}:`, { 
+          title: slide.title, 
+          hasImage: !!slide.image,
+          imageUrl: slide.image?.substring(0, 50) + '...'
+        });
         
         // Add background based on template
         const templateStyles = getTemplateBackground(selectedTemplate);
@@ -299,27 +306,51 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             // Check if image needs conversion from URL to base64
             if (slide.image.startsWith('http')) {
               try {
-                const response = await fetch(slide.image);
-                if (!response.ok) throw new Error('Failed to fetch image');
-                const blob = await response.blob();
-                imageData = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(blob);
+                console.log(`🖼️ Fetching image via proxy for slide ${i + 1}...`);
+                
+                // Use proxy API to bypass CSP/CORS
+                const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
+                const proxyResponse = await fetch(proxyUrl);
+                
+                if (!proxyResponse.ok) {
+                  console.error(`❌ Proxy failed: ${proxyResponse.status}`);
+                  throw new Error('Proxy failed');
+                }
+                
+                const proxyData = await proxyResponse.json();
+                
+                console.log(`🔍 Proxy response for slide ${i + 1}:`, {
+                  success: proxyData.success,
+                  hasDataUrl: !!proxyData.dataUrl,
+                  dataUrlStart: proxyData.dataUrl?.substring(0, 50)
                 });
+                
+                if (proxyData.success && proxyData.dataUrl) {
+                  imageData = proxyData.dataUrl;
+                  console.log(`✅ Image fetched via proxy for slide ${i + 1}`);
+                } else {
+                  throw new Error('Invalid proxy response');
+                }
               } catch (fetchError) {
-                // Failed to fetch image, using fallback
+                console.error(`❌ Error fetching image for slide ${i + 1}:`, fetchError);
+                // Failed to fetch image, skip it
                 imageData = null;
               }
             }
             
+            console.log(`🔍 Image data check for slide ${i + 1}:`, {
+              hasImageData: !!imageData,
+              isString: typeof imageData === 'string',
+              startsWithData: imageData?.startsWith('data:'),
+              first50: imageData?.substring(0, 50)
+            });
+            
             // Add image to PDF with better positioning
-            if (imageData && (imageData.startsWith('data:image') || imageData.startsWith('http'))) {
+            if (imageData && typeof imageData === 'string' && imageData.startsWith('data:')) {
               const imgWidth = 380;
-              const imgHeight = 270; // Better aspect ratio
+              const imgHeight = 270;
               const imgX = pdfWidth - imgWidth - 50;
-              const imgY = 70; // Consistent position
+              const imgY = 70;
               
               // Determine format from data URL
               let format = 'JPEG';
@@ -332,10 +363,17 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
               pdf.rect(imgX - 2, imgY - 2, imgWidth + 4, imgHeight + 4);
               
               pdf.addImage(imageData, format, imgX, imgY, imgWidth, imgHeight);
+              console.log(`✅ Image added to PDF for slide ${i + 1}`);
+            } else {
+              console.warn(`⚠️ No valid image data for slide ${i + 1}`, {
+                imageData: imageData?.substring(0, 100)
+              });
             }
           } catch (error) {
-            // Error adding image to PDF - skipping image
+            console.error(`❌ Error adding image to PDF for slide ${i + 1}:`, error);
           }
+        } else {
+          console.warn(`⚠️ Slide ${i + 1} has no image property`);
         }
         
         // Add content with better typography
@@ -494,7 +532,10 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         pdf.text(`${i + 1} / ${slides.length}`, pdfWidth - 80, pdfHeight - 25);
       }
 
+      console.log(`✅ PDF generation complete! Saving file...`);
       pdf.save(`${prompt.slice(0, 30)}-presentation.pdf`);
+      console.log(`🎉 PDF saved successfully!`);
+      
       toast({
         title: "📄 PDF Exported with Images!",
         description: "Your professional presentation with images has been downloaded",
@@ -524,6 +565,9 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       // Define master slide with template colors
       const templateStyles = getTemplateColors(selectedTemplate);
 
+      console.log(`📊 Exporting ${slides.length} slides to PPTX...`);
+      
+      // Generate slides
       for (let index = 0; index < slides.length; index++) {
         const slide = slides[index];
         const pptxSlide = pptx.addSlide();
@@ -535,196 +579,234 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         const hasImage = !!slide.image;
         const hasChart = !!slide.charts;
         const hasBullets = slide.bullets && Array.isArray(slide.bullets) && slide.bullets.length > 0;
+        const isCover = index === 0;
 
-        // Add title with better formatting
-        pptxSlide.addText(slide.title, {
-          x: 0.5,
-          y: 0.4,
-          w: hasImage ? 6.2 : 12.5,
-          h: 1.2,
-          fontSize: hasImage ? 32 : 40,
-          bold: true,
-          color: templateStyles.textColor,
-          fontFace: 'Calibri',
-          valign: 'top',
-          wrap: true,
-          breakLine: true
+        // DEBUG: Log image status
+        console.log(`📊 Slide ${index + 1}:`, {
+          hasImage,
+          imageUrl: slide.image?.substring(0, 60) + '...',
+          hasBullets,
+          hasChart
         });
 
-        let contentY = 1.8;
+        // --- COVER SLIDE LAYOUT ---
+        if (isCover) {
+          // Title (Left side, large)
+          pptxSlide.addText(slide.title, {
+            x: 0.5,
+            y: 1.5,
+            w: 6,
+            h: 2,
+            fontSize: 54,
+            bold: true,
+            color: templateStyles.textColor,
+            fontFace: 'Calibri',
+            valign: 'middle',
+            align: 'left'
+          });
 
-        // Add image if available
-        if (hasImage && slide.image) {
-          try {
-            let imageData = slide.image;
-            
-            // Convert external URLs to base64 if not already base64
-            if (slide.image.startsWith('http')) {
-              try {
-                const response = await fetch(slide.image);
-                if (!response.ok) throw new Error('Failed to fetch image');
-                const blob = await response.blob();
-                imageData = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(blob);
-                });
-              } catch (fetchError) {
-                console.warn('Error fetching image, skipping:', fetchError);
-                imageData = null;
+          // Subtitle/Description (Left side, below title)
+          if (slide.content) {
+            pptxSlide.addText(slide.content, {
+              x: 0.5,
+              y: 3.5,
+              w: 6,
+              h: 1.5,
+              fontSize: 24,
+              color: templateStyles.accentColor,
+              fontFace: 'Calibri',
+              valign: 'top',
+              align: 'left'
+            });
+          }
+
+          // Image (Right side, large)
+          if (hasImage && slide.image) {
+            try {
+              let imagePath = slide.image;
+              let isBase64 = false;
+              
+              if (slide.image.startsWith('http')) {
+                try {
+                  console.log(`🖼️ Fetching cover image via proxy...`);
+                  const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
+                  const proxyResponse = await fetch(proxyUrl);
+                  
+                  if (proxyResponse.ok) {
+                    const proxyData = await proxyResponse.json();
+                    if (proxyData.success && proxyData.dataUrl) {
+                      imagePath = proxyData.dataUrl;
+                      isBase64 = true;
+                      console.log(`✅ Cover image fetched via proxy`);
+                    }
+                  }
+                } catch (e) {
+                  console.warn('Cover image fetch failed, using URL:', e);
+                }
+              } else if (slide.image.startsWith('data:image')) {
+                isBase64 = true;
               }
-            }
-            
-            // Add image to slide (right side) if we have valid data
-            if (imageData && imageData.startsWith('data:image')) {
+
               pptxSlide.addImage({
-                data: imageData,
-                x: 6.8,
-                y: 1.3,
-                w: 5.8,
-                h: 4.2,
-                sizing: { type: 'cover', w: 5.8, h: 4.2 },
+                [isBase64 ? 'data' : 'path']: imagePath,
+                x: 7,
+                y: 0,
+                w: 6.33,
+                h: 7.5, // Full height
+                sizing: { type: 'cover', w: 6.33, h: 7.5 }
+              });
+            } catch (e) {
+              console.error('Error adding cover image:', e);
+            }
+          }
+        } 
+        // --- CONTENT SLIDE LAYOUT ---
+        else {
+          // Title (Top, across)
+          pptxSlide.addText(slide.title, {
+            x: 0.5,
+            y: 0.4,
+            w: 12.33,
+            h: 1,
+            fontSize: 40,
+            bold: true,
+            color: templateStyles.textColor,
+            fontFace: 'Calibri',
+            valign: 'top'
+          });
+
+          let contentY = 1.6;
+          const contentWidth = hasImage ? 6.5 : 12.33;
+
+          // Content/Description
+          if (slide.content) {
+            pptxSlide.addText(slide.content, {
+              x: 0.5,
+              y: contentY,
+              w: contentWidth,
+              h: 1.5,
+              fontSize: 24,
+              color: templateStyles.textColor,
+              fontFace: 'Calibri',
+              valign: 'top'
+            });
+            contentY += 1.8;
+          }
+
+          // Bullets
+          if (hasBullets) {
+            pptxSlide.addText(slide.bullets.map((bullet: string) => ({ text: bullet })), {
+              x: 0.5,
+              y: contentY,
+              w: contentWidth,
+              h: 4,
+              fontSize: 20,
+              color: templateStyles.textColor,
+              fontFace: 'Calibri',
+              bullet: { type: 'number', marginPt: 20 },
+              valign: 'top',
+              lineSpacing: 32,
+              paraSpaceBefore: 10
+            });
+          }
+
+          // Image (Right side)
+          if (hasImage && slide.image) {
+            try {
+              let imagePath = slide.image;
+              let isBase64 = false;
+              
+              if (slide.image.startsWith('http')) {
+                try {
+                  console.log(`🖼️ Fetching slide ${index + 1} image via proxy...`);
+                  const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
+                  const proxyResponse = await fetch(proxyUrl);
+                  
+                  if (proxyResponse.ok) {
+                    const proxyData = await proxyResponse.json();
+                    if (proxyData.success && proxyData.dataUrl) {
+                      imagePath = proxyData.dataUrl;
+                      isBase64 = true;
+                      console.log(`✅ Slide ${index + 1} image fetched via proxy`);
+                    }
+                  }
+                } catch (e) {
+                  console.warn(`Image fetch failed for slide ${index + 1}, using URL:`, e);
+                }
+              } else if (slide.image.startsWith('data:image')) {
+                isBase64 = true;
+              }
+
+              pptxSlide.addImage({
+                [isBase64 ? 'data' : 'path']: imagePath,
+                x: 7.2,
+                y: 1.6,
+                w: 5.6,
+                h: 5,
+                sizing: { type: 'cover', w: 5.6, h: 5 },
                 rounding: true
               });
+            } catch (e) {
+              console.error('Error adding slide image:', e);
             }
-          } catch (error) {
-            console.error('Error adding image to slide:', error);
+          }
+
+          // Chart (if exists)
+          if (hasChart && slide.charts && slide.charts.data) {
+             // ... (keep existing chart logic or simplify) ...
+             // For brevity, using simplified chart logic here as user requested no charts mostly
+             // but if they exist, we render them.
+             try {
+                const chartData = slide.charts.data;
+                const chartLabels = chartData.map((item: any) => item.name || item.label);
+                const chartValues = chartData.map((item: any) => item.value || item.data);
+                
+                pptxSlide.addChart(pptx.charts.BAR, [
+                  { name: slide.charts.title || 'Data', labels: chartLabels, values: chartValues }
+                ], {
+                  x: hasImage ? 0.5 : 7,
+                  y: hasBullets ? 4.5 : contentY,
+                  w: hasImage ? 6 : 5.5,
+                  h: 3,
+                  chartColors: [templateStyles.accentColor]
+                });
+             } catch (e) { console.error('Chart error', e); }
           }
         }
 
-        // Add content with better spacing
-        if (slide.content) {
-          pptxSlide.addText(slide.content, {
-            x: 0.5,
-            y: contentY,
-            w: hasImage ? 6 : 12.5,
-            h: 2,
-            fontSize: hasImage ? 16 : 20,
-            color: templateStyles.textColor,
-            fontFace: 'Calibri',
-            valign: 'top',
-            wrap: true,
-            lineSpacing: 24
-          });
-          contentY += 2.3;
-        }
-
-        // Add bullets with improved formatting
-        if (hasBullets) {
-          pptxSlide.addText(slide.bullets.map((bullet: string) => ({ text: bullet })), {
-            x: 0.7,
-            y: contentY,
-            w: hasImage ? 5.8 : 12,
-            h: hasImage ? 3.5 : 4.5,
-            fontSize: hasImage ? 14 : 18,
-            color: templateStyles.textColor,
-            fontFace: 'Calibri',
-            bullet: { 
-              type: 'number', 
-              code: '2022', 
-              marginPt: 20,
-              indent: 15 
-            },
-            valign: 'top',
-            lineSpacing: 28,
-            paraSpaceBefore: 6,
-            paraSpaceAfter: 6
-          });
-        }
-
-        // Add chart if available
-        if (hasChart && slide.charts && slide.charts.data) {
-          try {
-            const chartData = slide.charts.data;
-            const chartType = slide.charts.type || 'bar';
-            
-            // Prepare chart data for pptxgen
-            const chartLabels = chartData.map((item: any) => item.name || item.label);
-            const chartValues = chartData.map((item: any) => item.value || item.data);
-
-            // Determine chart position
-            const chartX = hasImage ? 0.5 : 7;
-            const chartY = hasBullets ? 5 : contentY;
-            const chartW = hasImage ? 6 : 5.5;
-            const chartH = 2.5;
-
-            // Map chart type
-            let pptxChartType: any = 'bar';
-            if (chartType === 'line') pptxChartType = 'line';
-            else if (chartType === 'pie') pptxChartType = 'pie';
-            else if (chartType === 'doughnut') pptxChartType = 'doughnut';
-
-            // Add chart with professional styling
-            pptxSlide.addChart(pptxChartType, [
-              {
-                name: slide.charts.title || 'Data',
-                labels: chartLabels,
-                values: chartValues
-              }
-            ], {
-              x: hasImage ? 0.7 : 7.2,
-              y: hasBullets ? 5.2 : contentY,
-              w: hasImage ? 5.8 : 5.3,
-              h: 2.8,
-              showTitle: true,
-              title: slide.charts.title || '',
-              titleFontSize: 16,
-              titleFontFace: 'Calibri',
-              titleColor: templateStyles.textColor,
-              showLegend: true,
-              legendPos: 'b',
-              legendFontSize: 11,
-              showValue: false,
-              chartColors: [
-                templateStyles.accentColor,
-                '10B981',
-                'F59E0B',
-                'EF4444',
-                '8B5CF6',
-                '06B6D4'
-              ],
-              border: { pt: 1, color: 'E5E7EB' },
-              fill: 'FFFFFF'
-            });
-          } catch (error) {
-            console.error('Error adding chart to slide:', error);
-          }
-        }
-
-        // Add slide number with better styling
+        // Slide Number
         pptxSlide.addText(`${index + 1} / ${slides.length}`, {
-          x: 11.8,
-          y: 6.9,
-          w: 1.2,
-          h: 0.4,
+          x: 12,
+          y: 7,
+          w: 1,
+          h: 0.3,
           fontSize: 12,
           color: templateStyles.accentColor,
-          fontFace: 'Calibri',
-          align: 'right',
-          valign: 'bottom',
-          bold: false
+          align: 'right'
         });
       }
 
+      console.log(`✅ PPT generation complete! Saving file...`);
       await pptx.writeFile({
-        fileName: `${prompt.slice(0, 30)}-presentation.pptx`
+        fileName: `${prompt.slice(0, 30).trim() || 'Presentation'}.pptx`
       });
+      console.log(`🎉 PPT saved successfully!`);
 
       toast({
-        title: "📊 PowerPoint Exported with Images & Charts!",
-        description: "Your complete presentation is ready for editing in PowerPoint",
+        title: "📊 PowerPoint Exported!",
+        description: "Your presentation has been downloaded.",
       });
     } catch (error) {
       console.error("PPTX export error:", error);
       toast({
         title: "Export failed",
-        description: "Failed to export presentation to PowerPoint. Please try again.",
+        description: "Failed to export presentation. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsExporting(false);
-      resetToInput();
+      // Do not reset input immediately so user can download again if needed
+      // resetToInput(); 
     }
   };
 

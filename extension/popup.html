@@ -12,11 +12,12 @@
         <header class="header">
             <div class="logo">
                 <span class="logo-icon">📚</span>
-                <h1>DocMagic Prep</h1>
+                <h1>DocMagic Prep <span style="font-size: 0.6em; background: #F59E0B; color: white; padding: 2px 6px; border-radius: 4px; vertical-align: middle;">PRO</span></h1>
             </div>
             <div class="tagline">AI-Powered Interview Assistant</div>
             <div class="api-status">
-                <span id="api-key-status">⚠️ API Key Not Set</span>
+                <span id="streak-badge" style="margin-right: 8px; display: none;">🔥 <span id="streak-count">0</span> Day Streak</span>
+                <span id="level-badge" style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; display: none;">Level <span id="user-level">1</span></span>
             </div>
         </header>
 
@@ -30,6 +31,9 @@
         
         <!-- Voice & Interviewer Mode Controls -->
         <div class="feature-controls">
+            <button id="toggle-theme" class="btn-feature" title="Toggle Dark Mode">
+                <span id="theme-icon">🌙</span>
+            </button>
             <button id="toggle-voice" class="btn-feature" title="Toggle Voice Mode">
                 <span id="voice-icon">🎤</span>
                 <span id="voice-status">Voice Off</span>
@@ -42,9 +46,13 @@
 
         <!-- Tab Navigation -->
         <nav class="tabs">
-            <button class="tab active" data-tab="dsa">DSA Problems</button>
-            <button class="tab" data-tab="interview">Interview Prep</button>
-            <button class="tab" data-tab="resume">Resume Tips</button>
+            <button class="tab active" data-tab="dsa">DSA</button>
+            <button class="tab" data-tab="interview">Interview</button>
+            <button class="tab" data-tab="resume">Resume</button>
+            <button class="tab" data-tab="study">Study</button>
+            <button class="tab" data-tab="snippets">📚 Snippets</button>
+            <button class="tab" data-tab="analytics">📊 Stats</button>
+            <button class="tab" data-tab="company">🏢 FAANG</button>
         </nav>
 
         <!-- DSA Tab -->
@@ -177,6 +185,226 @@
             </div>
         </div>
 
+        <!-- Study Plans Tab -->
+        <div id="study-tab" class="tab-content">
+            <div class="section">
+                <h2>📅 AI Study Planner</h2>
+                <p class="description">Generate a personalized study plan to reach your goals</p>
+                
+                <div class="input-group">
+                    <label for="study-goal">Your Goal:</label>
+                    <input type="text" id="study-goal" placeholder="e.g., Crack Google Interview, Learn React, Master DP">
+                </div>
+
+                <div class="input-group">
+                    <label for="study-duration">Duration (Weeks):</label>
+                    <select id="study-duration">
+                        <option value="4">4 Weeks (1 Month)</option>
+                        <option value="8">8 Weeks (2 Months)</option>
+                        <option value="12">12 Weeks (3 Months)</option>
+                        <option value="24">24 Weeks (6 Months)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="study-hours">Hours per Week:</label>
+                    <select id="study-hours">
+                        <option value="5">5-10 Hours</option>
+                        <option value="10">10-20 Hours</option>
+                        <option value="20">20+ Hours</option>
+                    </select>
+                </div>
+
+                <button id="generate-plan" class="btn btn-primary">
+                    <span class="btn-icon">📅</span>
+                    Generate Study Plan
+                </button>
+
+                <div id="study-result" class="result hidden">
+                    <h3>Your Study Plan:</h3>
+                    <div id="study-content" class="solution-content"></div>
+                    <button id="copy-plan" class="btn btn-secondary">
+                        <span class="btn-icon">📋</span>
+                        Copy Plan
+                    </button>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Snippets Tab -->
+        <div id="snippets-tab" class="tab-content">
+            <div class="section">
+                <h2>📚 Code Snippet Library</h2>
+                <p class="description">Save and review important solutions with spaced repetition</p>
+                
+                <div class="quick-actions">
+                    <button class="action-card" id="save-current-snippet">
+                        <span class="action-icon">💾</span>
+                        <h3>Save Snippet</h3>
+                        <p>Save current solution</p>
+                    </button>
+                    
+                    <button class="action-card" id="review-snippets">
+                        <span class="action-icon">🔄</span>
+                        <h3>Review Due</h3>
+                        <p id="due-count">0 snippets</p>
+                    </button>
+                    
+                    <button class="action-card" id="browse-snippets">
+                        <span class="action-icon">📖</span>
+                        <h3>Browse All</h3>
+                        <p id="total-snippets">0 saved</p>
+                    </button>
+                    
+                    <button class="action-card" id="snippet-stats">
+                        <span class="action-icon">📈</span>
+                        <h3>Mastered</h3>
+                        <p id="mastered-count">0 problems</p>
+                    </button>
+                </div>
+
+                <div id="snippet-list" class="result hidden">
+                    <h3>Your Snippets:</h3>
+                    <div id="snippet-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics-tab" class="tab-content">
+            <div class="section">
+                <h2>📊 Progress Analytics</h2>
+                <p class="description">Track your learning journey with detailed insights</p>
+                
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="weekly-problems">0</div>
+                        <div class="stat-label">This Week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="monthly-problems">0</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-days">0</div>
+                        <div class="stat-label">Active Days</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avg-per-day">0</div>
+                        <div class="stat-label">Avg/Day</div>
+                    </div>
+                </div>
+
+                <div id="insights-section" style="margin-top: 1rem;">
+                    <h3>💡 Insights</h3>
+                    <div id="insights-content"></div>
+                </div>
+
+                <div id="recommendations-section" style="margin-top: 1rem;">
+                    <h3>🎯 Recommendations</h3>
+                    <div id="recommendations-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Prep Tab -->
+        <div id="company-tab" class="tab-content">
+            <div class="section">
+                <h2>🏢 FAANG Interview Prep</h2>
+                <p class="description">Company-specific preparation for top tech companies</p>
+                
+                <div class="company-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin: 1rem 0;">
+                    <button class="company-card" data-company="google">
+                        <span style="font-size: 2rem;">🔍</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Google</div>
+                        <div class="readiness-bar" data-company="google"></div>
+                    </button>
+                    
+                    <button class="company-card" data-company="amazon">
+                        <span style="font-size: 2rem;">📦</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Amazon</div>
+                        <div class="readiness-bar" data-company="amazon"></div>
+                    </button>
+                    
+                    <button class="company-card" data-company="microsoft">
+                        <span style="font-size: 2rem;">🪟</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Microsoft</div>
+                        <div class="readiness-bar" data-company="microsoft"></div>
+                    </button>
+                    
+                    <button class="company-card" data-company="meta">
+                        <span style="font-size: 2rem;">👥</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Meta</div>
+                        <div class="readiness-bar" data-company="meta"></div>
+                    </button>
+                    
+                    <button class="company-card" data-company="apple">
+                        <span style="font-size: 2rem;">🍎</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Apple</div>
+                        <div class="readiness-bar" data-company="apple"></div>
+                    </button>
+                    
+                    <button class="company-card" data-company="netflix">
+                        <span style="font-size: 2rem;">🎬</span>
+                        <div style="font-weight: 600; margin-top: 0.5rem;">Netflix</div>
+                        <div class="readiness-bar" data-company="netflix"></div>
+                    </button>
+                </div>
+
+                <div id="company-details" class="result hidden">
+                    <h3 id="company-name"></h3>
+                    <div id="company-info"></div>
+                    <button id="generate-company-plan" class="btn btn-primary" style="margin-top: 1rem;">
+                        <span class="btn-icon">📅</span>
+                        Generate Study Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interview Config Modal -->
+        <div id="interview-config-modal" class="loading-overlay hidden">
+            <div class="container" style="max-width: 350px; background: var(--bg); padding: 20px; border-radius: 10px; height: auto;">
+                <h2>🎯 Setup Interview</h2>
+                <p class="description">Configure your mock interview session</p>
+                
+                <div class="input-group">
+                    <label for="config-type">Interview Type:</label>
+                    <select id="config-type">
+                        <option value="dsa">DSA Problem Solving</option>
+                        <option value="technical">Technical Knowledge</option>
+                        <option value="behavioral">Behavioral</option>
+                        <option value="system_design">System Design</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="config-role">Target Role:</label>
+                    <input type="text" id="config-role" value="Software Engineer">
+                </div>
+
+                <div class="input-group">
+                    <label for="config-level">Level:</label>
+                    <select id="config-level">
+                        <option value="entry">Entry Level</option>
+                        <option value="mid" selected>Mid Level</option>
+                        <option value="senior">Senior Level</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="config-company">Target Company (Optional):</label>
+                    <input type="text" id="config-company" placeholder="e.g. Google">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button id="cancel-interview-config" class="btn btn-secondary">Cancel</button>
+                    <button id="start-interview-config" class="btn btn-primary">Start Interview</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Footer -->
         <footer class="footer">
             <div class="stats">
@@ -206,6 +434,9 @@
     <script src="voice-handler.js"></script>
     <script src="interviewer-mode.js"></script>
     <script src="mcp-server.js"></script>
+    <script src="snippet-library.js"></script>
+    <script src="analytics-dashboard.js"></script>
+    <script src="company-prep.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

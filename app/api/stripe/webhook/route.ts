@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     const session = event.data.object as any;
-    const supabase = createRoute();
+    const supabase = await createRoute();
 
     // Validate event types we handle
     const allowedEventTypes = [

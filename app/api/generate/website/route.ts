@@ -49,6 +49,28 @@ export async function POST(request: Request) {
       templateId
     });
 
+    // Save to database
+    try {
+      const { createRoute } = await import('@/lib/supabase/server');
+      const supabase = await createRoute();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase.from('websites').insert({
+          user_id: user.id,
+          title: prompt.substring(0, 100),
+          style,
+          html: websiteCode.html,
+          css: websiteCode.css,
+          javascript: websiteCode.javascript,
+          assets: websiteCode.assets
+        });
+      }
+    } catch (dbError) {
+      console.error('Error saving website to database:', dbError);
+      // Don't fail the request if database save fails
+    }
+
     return NextResponse.json({
       success: true,
       ...websiteCode

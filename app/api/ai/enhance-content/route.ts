@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Build context-aware prompt
     const systemPrompt = `You are an expert design and content enhancement assistant. You help users improve their ${documentType} documents.
@@ -55,8 +55,9 @@ Keep responses concise, practical, and easy to implement. Use bullet points for 
     console.error('Error in AI enhancement:', error);
     
     // Return fallback response
+    // Return fallback response
     return NextResponse.json({
-      response: generateFallbackResponse(body?.prompt || ''),
+      response: generateFallbackResponse(''),
       enhancements: null,
       timestamp: new Date().toISOString()
     });

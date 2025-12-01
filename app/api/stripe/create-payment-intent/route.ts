@@ -12,7 +12,7 @@ type RequestData = {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Get the current user session
     const { data: { session } } = await supabase.auth.getSession();
