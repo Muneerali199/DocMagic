@@ -2349,40 +2349,120 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: {
             </div>
           )}
 
-          {/* AI Generated Image Display - Prominent visible image */}
+          {/* Smart AI Image Layout - Positions image based on slide type and content */}
           {hasImage && (
-            <div className="mt-8 mb-8 flex justify-center">
-              <div 
-                className="relative rounded-2xl overflow-hidden shadow-2xl border-2 group/image transition-all hover:scale-[1.02] hover:shadow-3xl"
-                style={{ 
-                  borderColor: `${theme.colors.accent}40`,
-                  maxWidth: '90%'
-                }}
-              >
-                {/* Image glow effect */}
-                <div 
-                  className="absolute -inset-1 rounded-2xl blur-xl opacity-30 group-hover/image:opacity-50 transition-opacity"
-                  style={{ backgroundColor: theme.colors.accent }}
-                />
-                <img 
-                  src={slide.imageUrl} 
-                  alt={slide.title}
-                  className="relative z-10 w-full h-auto max-h-[400px] object-cover rounded-2xl"
-                  style={{ minHeight: '200px' }}
-                />
-                {/* Image type badge */}
-                <div 
-                  className="absolute bottom-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md"
-                  style={{ 
-                    backgroundColor: `${theme.colors.background}80`,
-                    color: textColor,
-                    border: `1px solid ${theme.colors.accent}40`
-                  }}
-                >
-                  ✨ AI Generated
+            (() => {
+              // Determine the best layout based on slide type and content
+              const hasBullets = slide.bullets && slide.bullets.length > 0;
+              const hasContent = slide.content && slide.content.length > 50;
+              const isImageFocused = slide.type === 'image' || slide.type === 'visual' || slide.type === 'photo';
+              const isContentHeavy = hasBullets || hasStats || hasComparison || hasTimeline || hasMockup || hasChart;
+              
+              // Layout types: 'full', 'split-left', 'split-right', 'top', 'bottom', 'background-accent'
+              let layout = 'full';
+              if (isHero) layout = 'background-accent';
+              else if (isImageFocused) layout = 'full';
+              else if (isContentHeavy) layout = 'split-right';
+              else if (hasContent && !hasBullets) layout = 'split-left';
+              else layout = 'top';
+
+              // Full width prominent image
+              if (layout === 'full') {
+                return (
+                  <div className="mt-8 mb-8 flex justify-center w-full">
+                    <div 
+                      className="relative rounded-3xl overflow-hidden shadow-2xl border-2 group/image transition-all hover:scale-[1.01] w-full max-w-4xl"
+                      style={{ borderColor: `${theme.colors.accent}30` }}
+                    >
+                      <div 
+                        className="absolute -inset-2 rounded-3xl blur-2xl opacity-20 group-hover/image:opacity-40 transition-opacity"
+                        style={{ backgroundColor: theme.colors.accent }}
+                      />
+                      <img 
+                        src={slide.imageUrl} 
+                        alt={slide.title}
+                        className="relative z-10 w-full h-auto object-cover rounded-3xl"
+                        style={{ maxHeight: '450px', minHeight: '250px' }}
+                      />
+                      <div 
+                        className="absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md flex items-center gap-1.5"
+                        style={{ 
+                          backgroundColor: `${theme.colors.background}90`,
+                          color: textColor,
+                          border: `1px solid ${theme.colors.accent}40`
+                        }}
+                      >
+                        <Wand2 className="w-3 h-3" style={{ color: theme.colors.accent }} />
+                        AI Generated
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Hero/Cover - Accent background with image overlay
+              if (layout === 'background-accent') {
+                return (
+                  <div className="absolute inset-0 z-0">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ 
+                        backgroundImage: `url(${slide.imageUrl})`,
+                        opacity: 0.15
+                      }}
+                    />
+                    <div 
+                      className="absolute inset-0"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${theme.colors.background}ee 0%, ${theme.colors.background}aa 50%, ${theme.colors.accent}30 100%)`
+                      }}
+                    />
+                  </div>
+                );
+              }
+
+              // Split layout - Image on right, content on left
+              if (layout === 'split-right') {
+                return null; // Will be rendered in the split layout section below
+              }
+
+              // Split layout - Image on left
+              if (layout === 'split-left') {
+                return null; // Will be rendered in the split layout section below
+              }
+
+              // Top position (default)
+              return (
+                <div className="mt-6 mb-8 flex justify-center">
+                  <div 
+                    className="relative rounded-2xl overflow-hidden shadow-xl border group/image transition-all hover:scale-[1.02] max-w-2xl"
+                    style={{ borderColor: `${theme.colors.accent}25` }}
+                  >
+                    <div 
+                      className="absolute -inset-1 rounded-2xl blur-xl opacity-20 group-hover/image:opacity-35 transition-opacity"
+                      style={{ backgroundColor: theme.colors.accent }}
+                    />
+                    <img 
+                      src={slide.imageUrl} 
+                      alt={slide.title}
+                      className="relative z-10 w-full h-auto object-cover rounded-2xl"
+                      style={{ maxHeight: '350px', minHeight: '180px' }}
+                    />
+                    <div 
+                      className="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md flex items-center gap-1"
+                      style={{ 
+                        backgroundColor: `${theme.colors.background}85`,
+                        color: textColor,
+                        border: `1px solid ${theme.colors.accent}30`
+                      }}
+                    >
+                      <Wand2 className="w-2.5 h-2.5" style={{ color: theme.colors.accent }} />
+                      AI
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()
           )}
 
           {/* Content */}
@@ -2398,8 +2478,82 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: {
             </p>
           )}
 
-          {/* Bullets with Premium Glassmorphism and Animations */}
-          {slide.bullets && slide.bullets.length > 0 && !isFlowchart && (
+          {/* Bullets with Image - Smart Split Layout */}
+          {slide.bullets && slide.bullets.length > 0 && !isFlowchart && hasImage && !isHero && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 items-start">
+              {/* Bullets Column */}
+              <div className="space-y-4 order-2 lg:order-1">
+                {slide.bullets.map((bullet, idx) => {
+                  const parsed = parseIconBullet(bullet);
+                  const IconComp = parsed.IconComponent;
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      className="flex items-start gap-3 glass-card rounded-xl p-4 transition-all group/item hover:scale-[1.02] hover-lift"
+                      style={{ 
+                        animationDelay: `${idx * 0.1}s`,
+                        borderColor: `${theme.colors.accent}20`,
+                        backgroundColor: `${theme.colors.background}20`,
+                        color: textColor
+                      }}
+                    >
+                      <div 
+                        className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center group-hover/item:scale-110 transition-all shadow-md"
+                        style={{ 
+                          backgroundColor: `${theme.colors.accent}20`,
+                          border: `1.5px solid ${theme.colors.accent}40`,
+                          color: theme.colors.accent
+                        }}
+                      >
+                        {IconComp ? (
+                          <IconComp className="w-5 h-5" color={theme.colors.accent} />
+                        ) : (
+                          <span className="text-sm font-bold" style={{ color: theme.colors.accent }}>{idx + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <span className="text-base leading-relaxed font-medium">{parsed.text}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Image Column */}
+              <div className="order-1 lg:order-2">
+                <div 
+                  className="relative rounded-2xl overflow-hidden shadow-xl border group/image transition-all hover:scale-[1.01] sticky top-8"
+                  style={{ borderColor: `${theme.colors.accent}25` }}
+                >
+                  <div 
+                    className="absolute -inset-1 rounded-2xl blur-xl opacity-20 group-hover/image:opacity-35 transition-opacity"
+                    style={{ backgroundColor: theme.colors.accent }}
+                  />
+                  <img 
+                    src={slide.imageUrl} 
+                    alt={slide.title}
+                    className="relative z-10 w-full h-auto object-cover rounded-2xl"
+                    style={{ maxHeight: '400px', minHeight: '200px' }}
+                  />
+                  <div 
+                    className="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md flex items-center gap-1"
+                    style={{ 
+                      backgroundColor: `${theme.colors.background}85`,
+                      color: textColor,
+                      border: `1px solid ${theme.colors.accent}30`
+                    }}
+                  >
+                    <Wand2 className="w-2.5 h-2.5" style={{ color: theme.colors.accent }} />
+                    AI
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bullets WITHOUT Image - Original Layout */}
+          {slide.bullets && slide.bullets.length > 0 && !isFlowchart && (!hasImage || isHero) && (
             <div className="grid gap-4 mt-10">
               {slide.bullets.map((bullet, idx) => {
                 const parsed = parseIconBullet(bullet);
