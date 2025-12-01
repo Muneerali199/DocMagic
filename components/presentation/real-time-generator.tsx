@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useStreamingPresentation } from '@/hooks/useStreamingPresentation';
-import { exportPresentation } from '@/lib/presentation-export';
+import { exportPremiumPresentation } from '@/lib/premium-presentation-export';
 import { 
   Loader2, 
   Sparkles, 
@@ -34,8 +34,7 @@ import {
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
 import { ThemePreview } from './theme-preview';
 import { OutlineEditor } from './outline-editor';
-import { ProFeatureCard, ProStatCard, ProLogo, ProIconGrid } from './pro-icons';
-import { getIconComponent as getProIcon, PremiumIcons } from './premium-visuals';
+import { getProIcon, ProFeatureCard, ProStatCard, ProLogo, ProIconGrid } from './pro-icons';
 
 // Circuit Pattern Component (inline for now)
 const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -600,12 +599,19 @@ export default function RealTimeGenerator() {
         return;
       }
 
-      await exportPresentation(slideElements, topic || 'presentation', {
-        format,
-        includeSlideNumbers: true
-      }, slides, currentTheme);
+      await exportPremiumPresentation(
+        slideElements,
+        slides,
+        topic || 'presentation',
+        currentTheme,
+        {
+          format,
+          quality: 'high',
+          preserveGradients: true
+        }
+      );
       
-      console.log(`✅ Exported as ${format.toUpperCase()}`);
+      console.log(`✅ Premium exported as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Export error:', error);
       alert(`Failed to export as ${format.toUpperCase()}. Please try again.`);
