@@ -34,6 +34,21 @@ import {
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
 import { ThemePreview } from './theme-preview';
 import { OutlineEditor } from './outline-editor';
+import { ProFeatureCard, ProStatCard, ProLogo, ProIconGrid } from './pro-icons';
+import { getIconComponent as getProIcon, PremiumIcons } from './premium-visuals';
+
+// Circuit Pattern Component (inline for now)
+const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <defs>
+      <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="10" cy="10" r="1" fill={color} opacity="0.3" />
+        <path d="M0 10h8M12 10h8M10 0v8M10 12v8" stroke={color} strokeWidth="0.5" opacity="0.2" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#circuit)" />
+  </svg>
+);
 
 interface Slide {
   slideNumber: number;
@@ -1663,25 +1678,32 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
   };
 
   // Parse icon from bullet text like "<Icon:Zap> Fast Performance"
-  const parseIconBullet = (text: string) => {
+  // Returns { IconComponent: React.FC | null, text: string, iconName: string }
+  const parseIconBullet = (text: string): { IconComponent: React.FC<{className?: string; color?: string}> | null; text: string; iconName: string } => {
     const iconMatch = text.match(/<Icon:(\w+)>/);
     if (iconMatch) {
       const iconName = iconMatch[1];
       const cleanText = text.replace(/<Icon:\w+>\s*/, '');
-      const iconMap: Record<string, string> = {
-        'Zap': '⚡', 'Shield': '🛡️', 'Users': '👥', 'Globe': '🌍', 'Target': '🎯',
-        'Rocket': '🚀', 'Heart': '❤️', 'Star': '⭐', 'Check': '✓', 'TrendUp': '📈',
-        'Clock': '⏰', 'Lock': '🔒', 'Award': '🏆', 'Lightbulb': '💡', 'BarChart': '📊',
-        'DollarSign': '💰', 'Smartphone': '📱', 'Cloud': '☁️', 'Code': '💻', 'Palette': '🎨'
-      };
-      return { icon: iconMap[iconName] || '•', text: cleanText };
+      const IconComponent = getProIcon(iconName);
+      return { IconComponent, text: cleanText, iconName };
     }
-    // Check for emoji at start
-    const emojiMatch = text.match(/^([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✓|•)\s*/u);
+    // Check for emoji at start - convert to icon if possible
+    const emojiMatch = text.match(/^([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✓|•|⚡|🛡️|👥|🌍|🎯|🚀|❤️|⭐|📈|⏰|🔒|🏆|💡|📊|💰|📱|☁️|💻|🎨)\s*/u);
     if (emojiMatch) {
-      return { icon: emojiMatch[1], text: text.substring(emojiMatch[0].length) };
+      const emoji = emojiMatch[1];
+      const cleanText = text.substring(emojiMatch[0].length);
+      // Map common emojis to icon names
+      const emojiToIcon: Record<string, string> = {
+        '⚡': 'Zap', '🛡️': 'Shield', '👥': 'Users', '🌍': 'Globe', '🎯': 'Target',
+        '🚀': 'Rocket', '❤️': 'Heart', '⭐': 'Star', '✓': 'Check', '📈': 'TrendUp',
+        '⏰': 'Clock', '🔒': 'Lock', '🏆': 'Award', '💡': 'Lightbulb', '📊': 'BarChart',
+        '💰': 'DollarSign', '📱': 'Smartphone', '☁️': 'Cloud', '💻': 'Code', '🎨': 'Palette'
+      };
+      const iconName = emojiToIcon[emoji] || 'Check';
+      const IconComponent = getProIcon(iconName);
+      return { IconComponent, text: cleanText, iconName };
     }
-    return { icon: '•', text };
+    return { IconComponent: null, text, iconName: '' };
   };
 
   // Import color contrast utility
@@ -1731,15 +1753,26 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
           />
         )}
 
-        {/* Decorative Background Elements - use theme-aware colors */}
+        {/* Premium Decorative Background Elements with Animations */}
         <div 
-          className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" 
-          style={{ backgroundColor: `${theme.colors.accent}15` }}
+          className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 float-animation" 
+          style={{ backgroundColor: `${theme.colors.accent}20` }}
         />
         <div 
-          className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" 
-          style={{ backgroundColor: `${textColor}10` }}
+          className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 float-animation" 
+          style={{ backgroundColor: `${textColor}15`, animationDelay: '2s' }}
         />
+        {/* Morphing accent shape */}
+        <div 
+          className="absolute top-1/4 left-1/4 w-32 h-32 morph-shape opacity-10"
+          style={{ backgroundColor: theme.colors.accent }}
+        />
+        {/* Circuit pattern for tech slides */}
+        {(slide.type === 'data-viz' || slide.type === 'stats' || slide.type === 'mockup') && (
+          <div className="absolute inset-0 opacity-5">
+            <CircuitPattern color={theme.colors.accent} />
+          </div>
+        )}
         
         {/* Slide Number Badge */}
         <div 
@@ -1858,33 +1891,77 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             </div>
           )}
 
-          {/* Stats Grid - Beautiful KPI Cards */}
+          {/* Stats Grid - Premium Glassmorphism KPI Cards with Animations */}
           {slide.stats && slide.stats.length > 0 && (
             <div className={`grid gap-6 mt-10 ${slide.stats.length === 2 ? 'grid-cols-2' : slide.stats.length === 3 ? 'grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
-              {slide.stats.map((stat, idx) => (
-                <div 
-                  key={idx}
-                  className="relative backdrop-blur-md rounded-2xl p-8 border text-center transition-all hover:scale-105 hover:shadow-xl group overflow-hidden"
-                  style={{ 
-                    borderColor: `${textColor}20`,
-                    backgroundColor: `${theme.colors.background}30`
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 group-hover:to-black/10 transition-all" />
-                  <div className="relative z-10">
-                    <div 
-                      className="text-5xl md:text-6xl font-black mb-3 tracking-tight"
-                      style={{ color: theme.colors.accent }}
-                    >
-                      {stat.value}
+              {slide.stats.map((stat, idx) => {
+                // Assign different icons based on index or stat type
+                const statIcons = ['TrendUp', 'Users', 'DollarSign', 'Award', 'Target', 'Clock', 'Star', 'Rocket'];
+                const iconName = statIcons[idx % statIcons.length];
+                const IconComp = getProIcon(iconName);
+                // Parse percentage value for animated bar
+                const numericValue = parseInt(stat.value.replace(/[^0-9]/g, '')) || 0;
+                const isPercentage = stat.value.includes('%');
+                
+                return (
+                  <div 
+                    key={idx}
+                    className="relative glass-card rounded-2xl p-8 text-center transition-all hover:scale-105 hover:shadow-2xl group overflow-hidden hover-lift scale-bounce"
+                    style={{ 
+                      animationDelay: `${idx * 0.1}s`,
+                      borderColor: `${theme.colors.accent}30`,
+                      backgroundColor: `${theme.colors.background}30`
+                    }}
+                  >
+                    {/* Shimmer effect on hover */}
+                    <div className="absolute inset-0 shine-effect opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent" />
+                    <div className="relative z-10">
+                      {/* Icon with pulse glow */}
+                      {IconComp && (
+                        <div 
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:pulse-glow transition-all"
+                          style={{ 
+                            backgroundColor: `${theme.colors.accent}25`,
+                            border: `2px solid ${theme.colors.accent}40`,
+                            color: theme.colors.accent
+                          }}
+                        >
+                          <IconComp className="w-8 h-8" color={theme.colors.accent} />
+                        </div>
+                      )}
+                      <div 
+                        className="text-5xl md:text-6xl font-black mb-3 tracking-tight gradient-text-animated"
+                        style={{ 
+                          background: `linear-gradient(135deg, ${theme.colors.accent}, ${theme.colors.foreground})`,
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
+                      >
+                        {stat.value}
+                      </div>
+                      <div className="text-lg font-semibold opacity-90" style={{ color: textColor }}>{stat.label}</div>
+                      {/* Animated progress bar for percentages */}
+                      {isPercentage && numericValue <= 100 && (
+                        <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${textColor}20` }}>
+                          <div 
+                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                            style={{ 
+                              width: `${numericValue}%`,
+                              backgroundColor: theme.colors.accent,
+                              boxShadow: `0 0 10px ${theme.colors.accent}`
+                            }}
+                          />
+                        </div>
+                      )}
+                      {stat.context && (
+                        <div className="text-sm mt-3 opacity-60" style={{ color: textColor }}>{stat.context}</div>
+                      )}
                     </div>
-                    <div className="text-lg font-semibold opacity-90" style={{ color: textColor }}>{stat.label}</div>
-                    {stat.context && (
-                      <div className="text-sm mt-2 opacity-60" style={{ color: textColor }}>{stat.context}</div>
-                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -1938,30 +2015,49 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             </div>
           )}
 
-          {/* Timeline View */}
+          {/* Timeline View - Premium Animated Version */}
           {slide.timeline && slide.timeline.length > 0 && (
             <div className="mt-10 relative">
-              <div 
-                className="absolute left-8 top-0 bottom-0 w-1 rounded-full"
-                style={{ backgroundColor: `${theme.colors.accent}40` }}
-              />
+              {/* Animated flowing line */}
+              <div className="absolute left-8 top-0 bottom-0 w-1 rounded-full overflow-hidden" style={{ backgroundColor: `${theme.colors.accent}20` }}>
+                <div 
+                  className="w-full h-full rounded-full"
+                  style={{ 
+                    background: `linear-gradient(180deg, ${theme.colors.accent}, transparent, ${theme.colors.accent})`,
+                    backgroundSize: '100% 200%',
+                    animation: 'gradient-shift 3s ease infinite'
+                  }}
+                />
+              </div>
               <div className="space-y-8">
                 {slide.timeline.map((item, idx) => (
-                  <div key={idx} className="flex gap-6 items-start relative">
+                  <div 
+                    key={idx} 
+                    className="flex gap-6 items-start relative scale-bounce"
+                    style={{ animationDelay: `${idx * 0.15}s` }}
+                  >
+                    {/* Pulsing node */}
                     <div 
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-lg shrink-0"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-lg shrink-0 relative"
                       style={{ backgroundColor: theme.colors.accent, color: '#fff' }}
                     >
-                      {item.date}
+                      <div 
+                        className="absolute inset-0 rounded-full animate-ping opacity-30"
+                        style={{ backgroundColor: theme.colors.accent }}
+                      />
+                      <span className="relative z-10">{item.date}</span>
                     </div>
                     <div 
-                      className="flex-1 backdrop-blur-md rounded-2xl p-6 border"
+                      className="flex-1 glass-card rounded-2xl p-6 hover-lift shimmer-border"
                       style={{ 
-                        borderColor: `${textColor}20`,
+                        borderColor: `${theme.colors.accent}30`,
                         backgroundColor: `${theme.colors.background}30`
                       }}
                     >
-                      <h5 className="text-xl font-bold mb-2" style={{ color: textColor }}>{item.title}</h5>
+                      <h5 className="text-xl font-bold mb-2 flex items-center gap-2" style={{ color: textColor }}>
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.colors.accent }} />
+                        {item.title}
+                      </h5>
                       {item.description && (
                         <p className="text-base opacity-80" style={{ color: textColor }}>{item.description}</p>
                       )}
@@ -2126,22 +2222,40 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             </div>
           )}
 
-          {/* Icons Grid */}
+          {/* Icons Grid with Professional SVG Icons */}
           {slide.icons && slide.icons.length > 0 && (
             <div className={`grid gap-6 mt-10 ${slide.icons.length <= 3 ? 'grid-cols-3' : slide.icons.length === 4 ? 'grid-cols-4' : 'grid-cols-3 md:grid-cols-6'}`}>
-              {slide.icons.map((item, idx) => (
-                <div 
-                  key={idx}
-                  className="flex flex-col items-center gap-4 p-6 rounded-2xl border backdrop-blur-md transition-all hover:scale-105"
-                  style={{ 
-                    borderColor: `${textColor}20`,
-                    backgroundColor: `${theme.colors.background}30`
-                  }}
-                >
-                  <span className="text-5xl">{item.icon}</span>
-                  <span className="text-sm font-medium text-center" style={{ color: textColor }}>{item.label}</span>
-                </div>
-              ))}
+              {slide.icons.map((item, idx) => {
+                // Try to get SVG icon from the icon name or emoji
+                const iconName = typeof item.icon === 'string' ? item.icon.replace(/[^\w]/g, '') : '';
+                const IconComp = getProIcon(iconName) || getProIcon('Star');
+                
+                return (
+                  <div 
+                    key={idx}
+                    className="flex flex-col items-center gap-4 p-6 rounded-2xl border backdrop-blur-md transition-all hover:scale-105 group"
+                    style={{ 
+                      borderColor: `${textColor}20`,
+                      backgroundColor: `${theme.colors.background}30`
+                    }}
+                  >
+                    <div 
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
+                      style={{ 
+                        backgroundColor: `${theme.colors.accent}20`,
+                        border: `2px solid ${theme.colors.accent}40`
+                      }}
+                    >
+                      {IconComp ? (
+                        <IconComp className="w-8 h-8" color={theme.colors.accent} />
+                      ) : (
+                        <span className="text-4xl">{item.icon}</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-semibold text-center" style={{ color: textColor }}>{item.label}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -2190,28 +2304,54 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate }: {
             </p>
           )}
 
-          {/* Bullets with enhanced styling */}
+          {/* Bullets with Premium Glassmorphism and Animations */}
           {slide.bullets && slide.bullets.length > 0 && !isFlowchart && (
             <div className="grid gap-4 mt-10">
-              {slide.bullets.map((bullet, idx) => (
-                <div 
-                  key={idx} 
-                  className="flex items-start gap-4 backdrop-blur-sm rounded-2xl p-6 transition-all group/item border"
-                  style={{ 
-                    borderColor: `${textColor}20`,
-                    backgroundColor: `${theme.colors.background}20`,
-                    color: textColor
-                  }}
-                >
+              {slide.bullets.map((bullet, idx) => {
+                const parsed = parseIconBullet(bullet);
+                const IconComp = parsed.IconComponent;
+                
+                return (
                   <div 
-                    className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold group-hover/item:scale-110 transition-transform"
-                    style={{ backgroundColor: `${textColor}20`, color: textColor }}
+                    key={idx} 
+                    className="flex items-start gap-4 glass-card rounded-2xl p-6 transition-all group/item hover:scale-[1.02] hover-lift scale-bounce"
+                    style={{ 
+                      animationDelay: `${idx * 0.1}s`,
+                      borderColor: `${theme.colors.accent}25`,
+                      backgroundColor: `${theme.colors.background}25`,
+                      color: textColor
+                    }}
                   >
-                    {idx + 1}
+                    {/* Icon with glow effect */}
+                    <div 
+                      className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover/item:scale-110 group-hover/item:pulse-glow transition-all shadow-lg relative overflow-hidden"
+                      style={{ 
+                        backgroundColor: `${theme.colors.accent}25`,
+                        border: `2px solid ${theme.colors.accent}50`,
+                        color: theme.colors.accent
+                      }}
+                    >
+                      {/* Inner glow */}
+                      <div 
+                        className="absolute inset-0 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                        style={{ 
+                          background: `radial-gradient(circle, ${theme.colors.accent}40 0%, transparent 70%)`
+                        }}
+                      />
+                      {IconComp ? (
+                        <IconComp className="w-7 h-7 relative z-10" color={theme.colors.accent} />
+                      ) : (
+                        <span className="text-xl font-bold relative z-10" style={{ color: theme.colors.accent }}>{idx + 1}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 pt-2">
+                      <span className="text-xl md:text-2xl font-medium leading-relaxed opacity-95" style={{ color: textColor }}>
+                        {parsed.text}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-xl md:text-2xl font-medium leading-relaxed flex-1 opacity-95" style={{ color: textColor }}>{bullet}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
