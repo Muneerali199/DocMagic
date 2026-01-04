@@ -70,11 +70,11 @@ export async function POST(request: Request) {
         user_id: user.id,
         title: title || 'Untitled Resume',
         type: 'resume',
-        prompt: prompt || 'Resume generated',
         content: {
           resumeData: content,
           template,
-          isPublic
+          isPublic,
+          prompt: prompt || 'Resume generated'
         }
       })
       .select()

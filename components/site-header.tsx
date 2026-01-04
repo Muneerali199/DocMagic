@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   File as FileIcon,
   FileText,
@@ -16,6 +16,8 @@ import {
   Workflow,
   User,
   History,
+  Coins,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,8 @@ import { PWAInstallButton } from "@/components/pwa-install-button";
 import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { UpgradeModal, useCredits } from "@/components/upgrade-modal";
 import {
   Sheet,
   SheetContent,
@@ -38,6 +42,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
@@ -47,6 +52,8 @@ export function SiteHeader() {
   const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
 
   const handleSignOut = async () => {
     await signOut();
@@ -56,6 +63,14 @@ export function SiteHeader() {
   const handleNavClick = () => {
     setIsSheetOpen(false);
   };
+
+  // Refetch credits when user changes
+  useEffect(() => {
+    if (user) {
+      refetchCredits();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full nav-professional">
@@ -266,6 +281,29 @@ export function SiteHeader() {
           {/* Theme Toggle - Simple version for testing */}
           <SimpleThemeToggle />
 
+          {/* Credits Badge - Desktop Only */}
+          {user && !creditsLoading && credits && (
+            <TooltipWithShortcut content={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUpgradeModalOpen(true)}
+                className={cn(
+                  "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
+                  credits.creditsRemaining < 3
+                    ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
+                    : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+                )}
+              >
+                <Coins className="h-3.5 w-3.5" />
+                <span className="text-xs font-semibold">{credits.creditsRemaining}</span>
+                {credits.tier !== 'free' && (
+                  <Crown className="h-3 w-3 text-yellow-500" />
+                )}
+              </Button>
+            </TooltipWithShortcut>
+          )}
+
           {/* Desktop User Menu */}
           {loading ? (
             <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse hidden md:flex"></div>
@@ -329,6 +367,28 @@ export function SiteHeader() {
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Credits & Upgrade Section */}
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {credits ? (
+                    <div className="flex items-center justify-between">
+                      <span>Credits: {credits.creditsRemaining}/{credits.creditsTotal}</span>
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {credits.tier}
+                      </Badge>
+                    </div>
+                  ) : (
+                    <span>Loading credits...</span>
+                  )}
+                </div>
+                <DropdownMenuItem
+                  onClick={() => setUpgradeModalOpen(true)}
+                  className="cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                >
+                  <Crown className="mr-2 h-4 w-4 text-yellow-500" />
+                  <span className="font-medium">Upgrade Plan</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
                   className="hover:bg-red-50 hover:text-red-600 cursor-pointer"
@@ -352,6 +412,13 @@ export function SiteHeader() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        creditsInfo={credits}
+      />
     </header>
   );
 }
@@ -370,12 +437,6 @@ const navItems = [
     tooltip: "Generate stunning slide presentations instantly",
   },
   {
-    href: "/cv",
-    label: "CV",
-    icon: <FileText className="h-4 w-4" />,
-    tooltip: "Build comprehensive curriculum vitae for academic positions",
-  },
-  {
     href: "/letter",
     label: "Letter",
     icon: <MailIcon className="h-4 w-4" />,
@@ -391,13 +452,7 @@ const navItems = [
     href: "/dashboard/history",
     label: "History",
     icon: <History className="h-4 w-4" />,
-    tooltip: "View all your created content",
-  },
-  {
-    href: "/templates",
-    label: "Templates",
-    icon: <FileText className="h-4 w-4" />,
-    tooltip: "Browse and manage document templates",
+    tooltip: "View all your created documents with previews",
   },
   {
     href: "/pricing",

@@ -1,6 +1,6 @@
 "use client";
 import { SiteHeader } from "@/components/site-header";
-import { LetterGenerator } from "@/components/letter/letter-generator";
+import { LetterDashboard } from "@/components/letter/letter-dashboard";
 import { Sparkles, Mail, Zap, Star, Wand2, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LetterGeneratorSkeleton } from "@/components/ui/skeleton";
@@ -113,7 +113,7 @@ export default function LetterPage() {
             </div>
 
             <div className="relative z-10">
-              {isLoading ? <LetterGeneratorSkeleton /> : <LetterGenerator />}
+              {isLoading ? <LetterGeneratorSkeleton /> : <LetterDashboard />}
             </div>
           </div>
 

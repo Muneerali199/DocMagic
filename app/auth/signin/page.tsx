@@ -310,6 +310,23 @@ export default function SignIn() {
                 </div>
               </div>
 
+              {/* Forgot Password Link */}
+              <div
+                className={`text-right transition-all duration-500 delay-450 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
+              >
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:underline inline-flex items-center gap-1 group"
+                >
+                  <span>Forgot your password?</span>
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
+                </Link>
+              </div>
+
               {/* Enhanced submit button */}
               <div
                 className={`transition-all duration-500 delay-500 ${

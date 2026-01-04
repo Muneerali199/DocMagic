@@ -884,8 +884,8 @@ export function PresentationPreview({
     <div 
       id="presentation-container" 
       className={cn(
-        "relative h-full min-h-[500px] sm:min-h-[600px]",
-        isFullscreen && "fixed inset-0 z-50 bg-black"
+        "relative w-full aspect-video",
+        isFullscreen && "fixed inset-0 z-50 bg-black aspect-auto"
       )}
     >
       {/* Controls */}

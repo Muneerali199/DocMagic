@@ -81,6 +81,22 @@ export interface ResumePreviewRef {
 
 export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   ({ resume, template, onChange, showControls = false, isCV = false, layoutMode = 'responsive', viewType = 'print', enableEditing = false }, ref) => {
+  
+  // Handle null/undefined resume
+  const safeResume = resume || {
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    summary: "",
+    experience: [],
+    education: [],
+    skills: { technical: [], programming: [], tools: [], soft: [] },
+    projects: [],
+    certifications: [],
+    languages: []
+  };
+  
   const currentTemplate = RESUME_TEMPLATES.find(t => t.id === template) || RESUME_TEMPLATES[0];
   const primaryColor = currentTemplate.colorScheme[0];
   const secondaryColor = currentTemplate.colorScheme[2] || currentTemplate.colorScheme[0];
@@ -90,23 +106,23 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const [editableResume, setEditableResume] = useState<ResumeData>({
-    ...resume,
-    phone: resume.phone?.toString() || "",
-    experience: resume.experience?.map(exp => ({
+    ...safeResume,
+    phone: safeResume.phone?.toString() || "",
+    experience: safeResume.experience?.map(exp => ({
       ...exp,
       description: exp.description?.map(d => d || "") || []
     })) || [],
-    education: resume.education?.map(edu => ({
+    education: safeResume.education?.map(edu => ({
       ...edu,
       date: edu.date || ""
     })) || [],
-    skills: resume.skills || {
+    skills: safeResume.skills || {
       technical: [],
       programming: [],
       tools: [],
       soft: []
     },
-    projects: resume.projects?.map(proj => ({
+    projects: safeResume.projects?.map(proj => ({
       ...proj,
       name: proj.name || "",
       description: proj.description || "",
@@ -281,8 +297,8 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       const fileName = isCV 
-        ? `${resume.name?.replace(/\s+/g, '-').toLowerCase() || 'cv'}-cv.pdf`
-        : `${resume.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.pdf`;
+        ? `${safeResume.name?.replace(/\s+/g, '-').toLowerCase() || 'cv'}-cv.pdf`
+        : `${safeResume.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.pdf`;
       
       pdf.save(fileName);
       
@@ -312,7 +328,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       // Header - Name and Contact
       sections.push(
         new Paragraph({
-          text: resume.name || "Your Name",
+          text: safeResume.name || "Your Name",
           heading: HeadingLevel.TITLE,
           alignment: AlignmentType.CENTER,
           spacing: { after: 200 },
@@ -321,12 +337,12 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       
       // Contact Info
       const contactInfo = [
-        resume.email,
-        resume.phone?.toString(),
-        resume.location,
-        resume.linkedin,
-        resume.github,
-        resume.website
+        safeResume.email,
+        safeResume.phone?.toString(),
+        safeResume.location,
+        safeResume.linkedin,
+        safeResume.github,
+        safeResume.website
       ].filter(Boolean).join(' | ');
       
       if (contactInfo) {
@@ -340,7 +356,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       // Summary
-      if (resume.summary) {
+      if (safeResume.summary) {
         sections.push(
           new Paragraph({
             text: "SUMMARY",
@@ -348,14 +364,14 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             spacing: { before: 200, after: 200 },
           }),
           new Paragraph({
-            text: resume.summary,
+            text: safeResume.summary,
             spacing: { after: 400 },
           })
         );
       }
       
       // Experience
-      if (resume.experience && resume.experience.length > 0) {
+      if (safeResume.experience && safeResume.experience.length > 0) {
         sections.push(
           new Paragraph({
             text: "WORK EXPERIENCE",
@@ -364,7 +380,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           })
         );
         
-        resume.experience.forEach((exp) => {
+        safeResume.experience.forEach((exp) => {
           sections.push(
             new Paragraph({
               children: [
@@ -398,7 +414,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       // Education
-      if (resume.education && resume.education.length > 0) {
+      if (safeResume.education && safeResume.education.length > 0) {
         sections.push(
           new Paragraph({
             text: "EDUCATION",
@@ -407,7 +423,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           })
         );
         
-        resume.education.forEach((edu) => {
+        safeResume.education.forEach((edu) => {
           sections.push(
             new Paragraph({
               children: [
@@ -428,7 +444,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       // Skills
-      if (resume.skills) {
+      if (safeResume.skills) {
         sections.push(
           new Paragraph({
             text: "SKILLS",
@@ -437,37 +453,37 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           })
         );
         
-        if (resume.skills.technical && resume.skills.technical.length > 0) {
+        if (safeResume.skills.technical && safeResume.skills.technical.length > 0) {
           sections.push(
             new Paragraph({
-              text: `Technical Skills: ${resume.skills.technical.join(', ')}`,
+              text: `Technical Skills: ${safeResume.skills.technical.join(', ')}`,
               spacing: { after: 100 },
             })
           );
         }
         
-        if (resume.skills.programming && resume.skills.programming.length > 0) {
+        if (safeResume.skills.programming && safeResume.skills.programming.length > 0) {
           sections.push(
             new Paragraph({
-              text: `Programming: ${resume.skills.programming.join(', ')}`,
+              text: `Programming: ${safeResume.skills.programming.join(', ')}`,
               spacing: { after: 100 },
             })
           );
         }
         
-        if (resume.skills.tools && resume.skills.tools.length > 0) {
+        if (safeResume.skills.tools && safeResume.skills.tools.length > 0) {
           sections.push(
             new Paragraph({
-              text: `Tools: ${resume.skills.tools.join(', ')}`,
+              text: `Tools: ${safeResume.skills.tools.join(', ')}`,
               spacing: { after: 100 },
             })
           );
         }
         
-        if (resume.skills.soft && resume.skills.soft.length > 0) {
+        if (safeResume.skills.soft && safeResume.skills.soft.length > 0) {
           sections.push(
             new Paragraph({
-              text: `Soft Skills: ${resume.skills.soft.join(', ')}`,
+              text: `Soft Skills: ${safeResume.skills.soft.join(', ')}`,
               spacing: { after: 200 },
             })
           );
@@ -475,7 +491,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       // Projects
-      if (resume.projects && resume.projects.length > 0) {
+      if (safeResume.projects && safeResume.projects.length > 0) {
         sections.push(
           new Paragraph({
             text: "PROJECTS",
@@ -484,7 +500,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           })
         );
         
-        resume.projects.forEach((project) => {
+        safeResume.projects.forEach((project) => {
           sections.push(
             new Paragraph({
               children: [
@@ -510,7 +526,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       }
       
       // Certifications
-      if (resume.certifications && resume.certifications.length > 0) {
+      if (safeResume.certifications && safeResume.certifications.length > 0) {
         sections.push(
           new Paragraph({
             text: "CERTIFICATIONS",
@@ -519,7 +535,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           })
         );
         
-        resume.certifications.forEach((cert) => {
+        safeResume.certifications.forEach((cert) => {
           sections.push(
             new Paragraph({
               children: [
@@ -546,8 +562,8 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       // Generate and save
       const blob = await Packer.toBlob(doc);
       const fileName = isCV 
-        ? `${resume.name?.replace(/\s+/g, '-').toLowerCase() || 'cv'}-cv.docx`
-        : `${resume.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.docx`;
+        ? `${safeResume.name?.replace(/\s+/g, '-').toLowerCase() || 'cv'}-cv.docx`
+        : `${safeResume.name?.replace(/\s+/g, '-').toLowerCase() || 'resume'}.docx`;
       
       saveAs(blob, fileName);
       
@@ -612,52 +628,52 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           ) : (
             <>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 print:text-2xl" style={{ color: primaryColor }}>
-                {resume.name || "Your Name"}
+                {safeResume.name || "Your Name"}
               </h1>
               <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-2 print:text-xs" style={{ color: '#4b5563' }}>
-                {resume.email && (
+                {safeResume.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="h-3 w-3" />
-                    <span>{resume.email}</span>
+                    <span>{safeResume.email}</span>
                   </div>
                 )}
-                {resume.phone && (
+                {safeResume.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
-                    <span>{resume.phone.toString()}</span>
+                    <span>{safeResume.phone.toString()}</span>
                   </div>
                 )}
-                {resume.location && (
+                {safeResume.location && (
                   <div className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    <span>{resume.location}</span>
+                    <span>{safeResume.location}</span>
                   </div>
                 )}
               </div>
               
               {/* Professional Links */}
-              {(resume.linkedin || resume.github || resume.website || resume.portfolio) && (
+              {(safeResume.linkedin || safeResume.github || safeResume.website || safeResume.portfolio) && (
                 <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-3 print:text-xs" style={{ color: '#4b5563' }}>
-                  {resume.linkedin && (
-                    <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
+                  {safeResume.linkedin && (
+                    <a href={safeResume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
                       <Linkedin className="h-3 w-3" />
                       <span>LinkedIn</span>
                     </a>
                   )}
-                  {resume.github && (
-                    <a href={resume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-700 hover:underline">
+                  {safeResume.github && (
+                    <a href={safeResume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-700 hover:underline">
                       <Github className="h-3 w-3" />
                       <span>GitHub</span>
                     </a>
                   )}
-                  {resume.website && (
-                    <a href={resume.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:underline">
+                  {safeResume.website && (
+                    <a href={safeResume.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:underline">
                       <Globe className="h-3 w-3" />
                       <span>Website</span>
                     </a>
                   )}
-                  {resume.portfolio && (
-                    <a href={resume.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-purple-600 hover:underline">
+                  {safeResume.portfolio && (
+                    <a href={safeResume.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-purple-600 hover:underline">
                       <Globe className="h-3 w-3" />
                       <span>Portfolio</span>
                     </a>
@@ -669,7 +685,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         </div>
 
         {/* Summary Section */}
-        {(editableResume.summary || resume.summary) && (
+        {(editableResume.summary || safeResume.summary) && (
           <div className="mb-4 sm:mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Professional Summary
@@ -683,20 +699,20 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               />
             ) : (
               <p className="text-sm text-gray-700 leading-relaxed print:text-xs" style={{ color: '#374151' }}>
-                {resume.summary}
+                {safeResume.summary}
               </p>
             )}
           </div>
         )}
 
         {/* Experience Section */}
-        {(editableResume.experience?.length || resume.experience?.length) ? (
+        {(editableResume.experience?.length || safeResume.experience?.length) ? (
           <div className="mb-4 sm:mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Work Experience
             </h2>
             <div className="space-y-4">
-              {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+              {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
                 <div key={i} className="border-l-2 border-gray-200 pl-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
@@ -779,13 +795,13 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         ) : null}
 
         {/* Education Section */}
-        {(editableResume.education?.length || resume.education?.length) ? (
+        {(editableResume.education?.length || safeResume.education?.length) ? (
           <div className="mb-4 sm:mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Education
             </h2>
             <div className="space-y-3">
-              {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+              {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
                 <div key={i} className="flex justify-between items-start">
                   <div className="flex-1">
                     {isEditing ? (
@@ -874,7 +890,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         ) : null}
 
         {/* Skills Section */}
-        {(editableResume.skills || resume.skills) && (
+        {(editableResume.skills || safeResume.skills) && (
           <div className="mb-4 sm:mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Skills
@@ -897,7 +913,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               </div>
             ) : (
               <div className="space-y-3">
-                {Object.entries(resume.skills || {}).map(([category, skillList]) => (
+                {Object.entries(safeResume.skills || {}).map(([category, skillList]) => (
                   skillList && (skillList as string[]).length > 0 ? (
                     <div key={category}>
                       <h3 className="font-medium text-gray-700 capitalize text-sm mb-1 print:text-xs" style={{ color: '#374151' }}>{category}</h3>
@@ -921,7 +937,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         )}
 
         {/* Projects Section */}
-        {(editableResume.projects?.length || resume.projects?.length) ? (
+        {(editableResume.projects?.length || safeResume.projects?.length) ? (
           <div className="mb-4 sm:mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Projects
@@ -972,7 +988,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               </div>
             ) : (
               <div className="space-y-3">
-                {resume.projects?.map((project, i) => (
+                {safeResume.projects?.map((project, i) => (
                   <div key={i} className="border-l-2 border-gray-200 pl-4">
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: primaryColor }}>
@@ -1015,7 +1031,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         ) : null}
 
         {/* Certifications Section */}
-        {(editableResume.certifications?.length || resume.certifications?.length) ? (
+        {(editableResume.certifications?.length || safeResume.certifications?.length) ? (
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
               Certifications
@@ -1063,7 +1079,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               </div>
             ) : (
               <div className="space-y-3">
-                {resume.certifications?.map((cert, i) => (
+                {safeResume.certifications?.map((cert, i) => (
                   <div key={i} className="flex justify-between items-start">
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: '#1f2937' }}>
@@ -1091,22 +1107,22 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         ) : null}
 
         {/* ATS Score Section (only shown in preview, not editable) */}
-        {resume.atsScore && !isEditing && (
+        {safeResume.atsScore && !isEditing && (
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                resume.atsScore >= 90 ? 'bg-green-500' : 
-                resume.atsScore >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                safeResume.atsScore >= 90 ? 'bg-green-500' : 
+                safeResume.atsScore >= 70 ? 'bg-yellow-500' : 'bg-red-500'
               }`}>
-                {resume.atsScore}
+                {safeResume.atsScore}
               </div>
               <h3 className="font-medium text-gray-700">ATS Optimization Score</h3>
             </div>
             
-            {resume.keywordOptimization && (
+            {safeResume.keywordOptimization && (
               <div className="text-xs text-gray-600">
-                <p>Optimized for: {resume.keywordOptimization.targetKeywords?.join(', ')}</p>
-                <p>Keyword density: {resume.keywordOptimization.density}</p>
+                <p>Optimized for: {safeResume.keywordOptimization.targetKeywords?.join(', ')}</p>
+                <p>Keyword density: {safeResume.keywordOptimization.density}</p>
               </div>
             )}
           </div>
@@ -1149,22 +1165,22 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                   onClick={() => {
                     setEditableResume({
                       ...resume,
-                      phone: resume.phone?.toString() || "",
-                      experience: resume.experience?.map(exp => ({
+                      phone: safeResume.phone?.toString() || "",
+                      experience: safeResume.experience?.map(exp => ({
                         ...exp,
                         description: exp.description?.map(d => d || "") || []
                       })) || [],
-                      education: resume.education?.map(edu => ({
+                      education: safeResume.education?.map(edu => ({
                         ...edu,
                         date: edu.date || ""
                       })) || [],
-                      skills: resume.skills || {
+                      skills: safeResume.skills || {
                         technical: [],
                         programming: [],
                         tools: [],
                         soft: []
                       },
-                      projects: resume.projects?.map(proj => ({
+                      projects: safeResume.projects?.map(proj => ({
                         ...proj,
                         name: proj.name || "",
                         description: proj.description || "",
@@ -1387,7 +1403,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                   wordBreak: viewType === 'mobile' ? 'break-word' : 'normal',
                 }}
               >
-                {resume.name || "YOUR NAME"}
+                {safeResume.name || "YOUR NAME"}
               </h1>
               
               {/* Contact Info - Single Line with Separators */}
@@ -1399,46 +1415,46 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                   gap: viewType === 'mobile' ? '6px' : undefined 
                 }}
               >
-                {resume.github && (
+                {safeResume.github && (
                   <>
-                    <a href={resume.github} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                    <a href={safeResume.github} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
                       <Github className="h-3 w-3" />
-                      <span>github.com/{resume.github.split('/').pop()}</span>
+                      <span>github.com/{safeResume.github.split('/').pop()}</span>
                     </a>
                     <span className="text-gray-400">|</span>
                   </>
                 )}
-                {resume.linkedin && (
+                {safeResume.linkedin && (
                   <>
-                    <a href={resume.linkedin} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                    <a href={safeResume.linkedin} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
                       <Linkedin className="h-3 w-3" />
-                      <span>linkedin.com/in/{resume.linkedin.split('/').pop()}</span>
+                      <span>linkedin.com/in/{safeResume.linkedin.split('/').pop()}</span>
                     </a>
                     <span className="text-gray-400">|</span>
                   </>
                 )}
-                {resume.website && (
+                {safeResume.website && (
                   <>
-                    <a href={resume.website} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                    <a href={safeResume.website} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
                       <Globe className="h-3 w-3" />
-                      <span>{resume.website.replace(/^https?:\/\//, '')}</span>
+                      <span>{safeResume.website.replace(/^https?:\/\//, '')}</span>
                     </a>
                     <span className="text-gray-400">|</span>
                   </>
                 )}
-                {resume.email && (
+                {safeResume.email && (
                   <>
-                    <a href={`mailto:${resume.email}`} className="hover:underline flex items-center gap-1">
+                    <a href={`mailto:${safeResume.email}`} className="hover:underline flex items-center gap-1">
                       <Mail className="h-3 w-3" />
-                      <span>{resume.email}</span>
+                      <span>{safeResume.email}</span>
                     </a>
-                    {resume.phone && <span className="text-gray-400">|</span>}
+                    {safeResume.phone && <span className="text-gray-400">|</span>}
                   </>
                 )}
-                {resume.phone && (
-                  <a href={`tel:${resume.phone}`} className="hover:underline flex items-center gap-1">
+                {safeResume.phone && (
+                  <a href={`tel:${safeResume.phone}`} className="hover:underline flex items-center gap-1">
                     <Phone className="h-3 w-3" />
-                    <span>{resume.phone.toString()}</span>
+                    <span>{safeResume.phone.toString()}</span>
                   </a>
                 )}
               </div>
@@ -1447,7 +1463,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         </div>
 
         {/* Summary Section */}
-        {(editableResume.summary || resume.summary) && (
+        {(editableResume.summary || safeResume.summary) && (
           <div className="mb-6">
             <h2 className={`font-bold uppercase ${viewType === 'mobile' ? 'text-xl mb-4 mt-6' : 'text-xl mb-4'}`} style={{ fontSize: viewType === 'mobile' ? '20px' : '14pt', borderBottom: '1px solid #000', paddingBottom: viewType === 'mobile' ? '6px' : '4pt', color: '#000000', marginTop: viewType === 'mobile' ? '24px' : undefined }}>
               SUMMARY
@@ -1460,7 +1476,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 className="text-sm text-gray-700 leading-relaxed print:text-xs"
               />
             ) : (
-              <p className="text-justify leading-relaxed" style={{ fontSize: viewType === 'mobile' ? '15px' : '11pt', color: '#000000', lineHeight: viewType === 'mobile' ? '1.7' : undefined }}>{resume.summary}</p>
+              <p className="text-justify leading-relaxed" style={{ fontSize: viewType === 'mobile' ? '15px' : '11pt', color: '#000000', lineHeight: viewType === 'mobile' ? '1.7' : undefined }}>{safeResume.summary}</p>
             )}
           </div>
         )}
@@ -1775,10 +1791,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 </>
               ) : (
                 <>
-                  {resume.email && <div className="flex items-center gap-2 break-all"><Mail className="w-3 h-3 shrink-0" /> {resume.email}</div>}
-                  {resume.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3 shrink-0" /> {resume.phone}</div>}
-                  {resume.location && <div className="flex items-center gap-2"><MapPin className="w-3 h-3 shrink-0" /> {resume.location}</div>}
-                  {resume.linkedin && <div className="flex items-center gap-2 break-all"><Linkedin className="w-3 h-3 shrink-0" /> LinkedIn</div>}
+                  {safeResume.email && <div className="flex items-center gap-2 break-all"><Mail className="w-3 h-3 shrink-0" /> {safeResume.email}</div>}
+                  {safeResume.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3 shrink-0" /> {safeResume.phone}</div>}
+                  {safeResume.location && <div className="flex items-center gap-2"><MapPin className="w-3 h-3 shrink-0" /> {safeResume.location}</div>}
+                  {safeResume.linkedin && <div className="flex items-center gap-2 break-all"><Linkedin className="w-3 h-3 shrink-0" /> LinkedIn</div>}
                 </>
               )}
             </div>
@@ -1788,7 +1804,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <div className="mb-8">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-1">Education</h3>
             <div className="space-y-4">
-              {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+              {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
                 <div key={i}>
                   <div className="font-bold text-slate-800 text-sm">{edu.institution}</div>
                   <div className="text-slate-600 text-xs">{edu.degree}</div>
@@ -1802,7 +1818,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 border-b border-slate-200 pb-1">Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {(isEditing ? editableResume.skills?.technical : resume.skills?.technical)?.map((skill, i) => (
+              {(isEditing ? editableResume.skills?.technical : safeResume.skills?.technical)?.map((skill, i) => (
                 <span key={i} className="bg-white border border-slate-200 px-2 py-1 rounded text-xs text-slate-700">{skill}</span>
               ))}
             </div>
@@ -1816,12 +1832,12 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             {isEditing ? (
               <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-4xl font-bold text-slate-900 mb-2" />
             ) : (
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">{resume.name}</h1>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">{safeResume.name}</h1>
             )}
             {isEditing ? (
               <EditableText value={editableResume.summary || ""} onChange={v => updateField(["summary"], v)} multiline className="text-slate-600 leading-relaxed w-full" />
             ) : (
-              <p className="text-slate-600 leading-relaxed">{resume.summary}</p>
+              <p className="text-slate-600 leading-relaxed">{safeResume.summary}</p>
             )}
           </div>
 
@@ -1831,7 +1847,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               <Briefcase className="w-5 h-5" style={{ color: primaryColor }} /> Experience
             </h2>
             <div className="space-y-6">
-              {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+              {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
                 <div key={i} className="relative pl-4 border-l-2" style={{ borderColor: accentColor }}>
                   <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }}></div>
                   <div className="flex justify-between items-baseline mb-1">
@@ -1855,7 +1871,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               <Code className="w-5 h-5" style={{ color: primaryColor }} /> Projects
             </h2>
             <div className="grid gap-4">
-              {(isEditing ? editableResume.projects : resume.projects)?.map((proj, i) => (
+              {(isEditing ? editableResume.projects : safeResume.projects)?.map((proj, i) => (
                 <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                   <div className="font-bold text-slate-800 mb-1">{proj.name}</div>
                   <p className="text-sm text-slate-600 mb-2">{proj.description}</p>
@@ -1884,23 +1900,23 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             {isEditing ? (
               <EditableText value={editableResume.name || ""} onChange={(v) => updateField(["name"], v)} className="text-xl font-bold text-white" />
             ) : (
-              <h1 className="text-xl font-bold break-words">{resume.name}</h1>
+              <h1 className="text-xl font-bold break-words">{safeResume.name}</h1>
             )}
           </div>
 
           {/* Contact */}
           <div className="mb-6 text-xs space-y-2">
             <h2 className="text-sm font-bold uppercase mb-3" style={{ color: accentColor }}>Contact</h2>
-            {resume.email && <div className="flex items-start gap-2"><Mail className="w-3 h-3 mt-0.5 shrink-0" /><span className="break-all">{resume.email}</span></div>}
-            {resume.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3 shrink-0" />{resume.phone}</div>}
-            {resume.location && <div className="flex items-start gap-2"><MapPin className="w-3 h-3 mt-0.5 shrink-0" /><span>{resume.location}</span></div>}
+            {safeResume.email && <div className="flex items-start gap-2"><Mail className="w-3 h-3 mt-0.5 shrink-0" /><span className="break-all">{safeResume.email}</span></div>}
+            {safeResume.phone && <div className="flex items-center gap-2"><Phone className="w-3 h-3 shrink-0" />{safeResume.phone}</div>}
+            {safeResume.location && <div className="flex items-start gap-2"><MapPin className="w-3 h-3 mt-0.5 shrink-0" /><span>{safeResume.location}</span></div>}
           </div>
 
           {/* Education */}
           <div className="mb-6">
             <h2 className="text-sm font-bold uppercase mb-3" style={{ color: accentColor }}>Education</h2>
             <div className="text-xs space-y-3">
-              {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+              {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
                 <div key={i}>
                   <div className="font-bold">{edu.institution}</div>
                   <div className="opacity-90">{edu.degree}</div>
@@ -1915,16 +1931,16 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <div>
             <h2 className="text-sm font-bold uppercase mb-3" style={{ color: accentColor }}>Skills</h2>
             <div className="text-xs space-y-2">
-              {resume.skills?.programming && (
+              {safeResume.skills?.programming && (
                 <div>
                   <div className="font-semibold mb-1">Programming</div>
-                  <div className="opacity-90">{resume.skills.programming.join(" • ")}</div>
+                  <div className="opacity-90">{safeResume.skills.programming.join(" • ")}</div>
                 </div>
               )}
-              {resume.skills?.technical && (
+              {safeResume.skills?.technical && (
                 <div>
                   <div className="font-semibold mb-1">Technologies</div>
-                  <div className="opacity-90">{resume.skills.technical.join(" • ")}</div>
+                  <div className="opacity-90">{safeResume.skills.technical.join(" • ")}</div>
                 </div>
               )}
             </div>
@@ -1934,10 +1950,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* RIGHT COLUMN - Content */}
         <div className="w-[65%] p-6">
           {/* Summary */}
-          {resume.summary && (
+          {safeResume.summary && (
             <div className="mb-6">
               <h2 className="text-sm font-bold uppercase mb-2 pb-1 border-b-2" style={{ borderColor: primaryColor }}>Profile</h2>
-              <p className="text-xs text-gray-700 leading-relaxed">{resume.summary}</p>
+              <p className="text-xs text-gray-700 leading-relaxed">{safeResume.summary}</p>
             </div>
           )}
 
@@ -1945,7 +1961,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <div className="mb-6">
             <h2 className="text-sm font-bold uppercase mb-3 pb-1 border-b-2" style={{ borderColor: primaryColor }}>Experience</h2>
             <div className="space-y-4">
-              {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+              {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
                 <div key={i}>
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="font-bold text-sm">{exp.title}</h3>
@@ -1961,11 +1977,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           </div>
 
           {/* Projects */}
-          {resume.projects && resume.projects.length > 0 && (
+          {safeResume.projects && safeResume.projects.length > 0 && (
             <div>
               <h2 className="text-sm font-bold uppercase mb-3 pb-1 border-b-2" style={{ borderColor: primaryColor }}>Projects</h2>
               <div className="space-y-3">
-                {(isEditing ? editableResume.projects : resume.projects)?.map((proj, i) => (
+                {(isEditing ? editableResume.projects : safeResume.projects)?.map((proj, i) => (
                   <div key={i}>
                     <h3 className="font-bold text-xs">{proj.name}</h3>
                     <p className="text-xs text-gray-700">{proj.description}</p>
@@ -1995,24 +2011,24 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           {isEditing ? (
             <EditableText value={editableResume.name || ""} onChange={(v) => updateField(["name"], v)} className="text-3xl font-bold mb-2" />
           ) : (
-            <h1 className="text-3xl font-bold mb-2">{resume.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{safeResume.name}</h1>
           )}
           <div className="text-sm space-x-3">
-            {resume.email} • {resume.phone} • {resume.location}
+            {safeResume.email} • {safeResume.phone} • {safeResume.location}
           </div>
-          {(resume.linkedin || resume.github) && (
+          {(safeResume.linkedin || safeResume.github) && (
             <div className="text-sm space-x-3 mt-1">
-              {resume.linkedin && <span>{resume.linkedin}</span>}
-              {resume.github && <span>• {resume.github}</span>}
+              {safeResume.linkedin && <span>{safeResume.linkedin}</span>}
+              {safeResume.github && <span>• {safeResume.github}</span>}
             </div>
           )}
         </div>
 
         {/* Professional Summary */}
-        {resume.summary && (
+        {safeResume.summary && (
           <div className="mb-5">
             <h2 className="text-base font-bold uppercase border-b border-black mb-2">Summary</h2>
-            <p className="text-sm leading-relaxed">{resume.summary}</p>
+            <p className="text-sm leading-relaxed">{safeResume.summary}</p>
           </div>
         )}
 
@@ -2020,7 +2036,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-5">
           <h2 className="text-base font-bold uppercase border-b border-black mb-3">Professional Experience</h2>
           <div className="space-y-4">
-            {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+            {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
               <div key={i}>
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-bold text-sm">{exp.title}</h3>
@@ -2038,7 +2054,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Education */}
         <div className="mb-5">
           <h2 className="text-base font-bold uppercase border-b border-black mb-3">Education</h2>
-          {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+          {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
             <div key={i} className="mb-2">
               <div className="flex justify-between">
                 <div>
@@ -2056,9 +2072,9 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div>
           <h2 className="text-base font-bold uppercase border-b border-black mb-2">Skills</h2>
           <div className="text-sm">
-            {resume.skills?.technical && <div className="mb-1"><span className="font-semibold">Technical:</span> {resume.skills.technical.join(", ")}</div>}
-            {resume.skills?.programming && <div className="mb-1"><span className="font-semibold">Programming:</span> {resume.skills.programming.join(", ")}</div>}
-            {resume.skills?.tools && <div><span className="font-semibold">Tools:</span> {resume.skills.tools.join(", ")}</div>}
+            {safeResume.skills?.technical && <div className="mb-1"><span className="font-semibold">Technical:</span> {safeResume.skills.technical.join(", ")}</div>}
+            {safeResume.skills?.programming && <div className="mb-1"><span className="font-semibold">Programming:</span> {safeResume.skills.programming.join(", ")}</div>}
+            {safeResume.skills?.tools && <div><span className="font-semibold">Tools:</span> {safeResume.skills.tools.join(", ")}</div>}
           </div>
         </div>
       </div>
@@ -2073,14 +2089,14 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           {isEditing ? (
             <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-3xl font-bold text-center mb-2" />
           ) : (
-            <h1 className="text-3xl font-bold mb-2">{resume.name}</h1>
+            <h1 className="text-3xl font-bold mb-2">{safeResume.name}</h1>
           )}
           <div className="text-sm flex justify-center gap-4 flex-wrap">
-            <span>{resume.email}</span>
+            <span>{safeResume.email}</span>
             <span>•</span>
-            <span>{resume.phone}</span>
+            <span>{safeResume.phone}</span>
             <span>•</span>
-            <span>{resume.location}</span>
+            <span>{safeResume.location}</span>
           </div>
         </div>
 
@@ -2088,7 +2104,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-6">
           <h2 className="text-lg font-bold uppercase border-b mb-3" style={{ borderColor: primaryColor, color: primaryColor }}>Education</h2>
           <div className="space-y-3">
-            {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+            {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
               <div key={i} className="flex justify-between">
                 <div>
                   <div className="font-bold">{edu.institution}</div>
@@ -2107,7 +2123,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-6">
           <h2 className="text-lg font-bold uppercase border-b mb-3" style={{ borderColor: primaryColor, color: primaryColor }}>Experience</h2>
           <div className="space-y-4">
-            {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+            {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
               <div key={i}>
                 <div className="flex justify-between mb-1">
                   <div className="font-bold">{exp.company}</div>
@@ -2132,7 +2148,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <h2 className="text-lg font-bold uppercase border-b mb-3" style={{ borderColor: primaryColor, color: primaryColor }}>Skills</h2>
           <div className="text-sm">
             <span className="font-bold">Technical: </span>
-            {resume.skills?.technical?.join(", ")}
+            {safeResume.skills?.technical?.join(", ")}
           </div>
         </div>
       </div>
@@ -2147,13 +2163,13 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           {isEditing ? (
             <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-4xl md:text-5xl font-bold mb-4 text-white" />
           ) : (
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{resume.name}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{safeResume.name}</h1>
           )}
-          <div className="text-lg mb-6" style={{ color: 'rgba(255,255,255,0.8)' }}>{resume.experience?.[0]?.title || "Professional"}</div>
+          <div className="text-lg mb-6" style={{ color: 'rgba(255,255,255,0.8)' }}>{safeResume.experience?.[0]?.title || "Professional"}</div>
           <div className="flex flex-wrap gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {resume.email}</div>
-            <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {resume.phone}</div>
-            <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {resume.location}</div>
+            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {safeResume.email}</div>
+            <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {safeResume.phone}</div>
+            <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {safeResume.location}</div>
           </div>
         </div>
 
@@ -2165,7 +2181,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: primaryColor }}>
                 <span className="w-8 h-1 block" style={{ backgroundColor: secondaryColor }}></span> PROFILE
               </h2>
-              <p className="text-gray-600 leading-relaxed">{resume.summary}</p>
+              <p className="text-gray-600 leading-relaxed">{safeResume.summary}</p>
             </section>
 
             {/* Experience */}
@@ -2174,7 +2190,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 <span className="w-8 h-1 block" style={{ backgroundColor: secondaryColor }}></span> EXPERIENCE
               </h2>
               <div className="space-y-8">
-                {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+                {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
                   <div key={i} className="relative pl-8 border-l-2" style={{ borderColor: accentColor }}>
                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-white" style={{ backgroundColor: secondaryColor }}></div>
                     <h3 className="font-bold text-gray-900 text-lg">{exp.title}</h3>
@@ -2192,7 +2208,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             <section>
               <h2 className="text-xl font-bold mb-4" style={{ color: primaryColor }}>EDUCATION</h2>
               <div className="space-y-4">
-                {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+                {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
                   <div key={i} className="p-4 rounded-lg" style={{ backgroundColor: accentColor }}>
                     <div className="font-bold text-gray-900">{edu.institution}</div>
                     <div className="text-sm" style={{ color: secondaryColor }}>{edu.degree}</div>
@@ -2206,7 +2222,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             <section>
               <h2 className="text-xl font-bold mb-4" style={{ color: primaryColor }}>SKILLS</h2>
               <div className="flex flex-wrap gap-2">
-                {(isEditing ? editableResume.skills?.technical : resume.skills?.technical)?.map((skill, i) => (
+                {(isEditing ? editableResume.skills?.technical : safeResume.skills?.technical)?.map((skill, i) => (
                   <span key={i} className="bg-white border px-3 py-1 rounded-full text-sm font-medium shadow-sm" style={{ borderColor: accentColor, color: secondaryColor }}>
                     {skill}
                   </span>
@@ -2229,12 +2245,12 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               {isEditing ? (
                 <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2" />
               ) : (
-                <h1 className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2" style={{ color: primaryColor }}>{resume.name}</h1>
+                <h1 className="text-4xl font-bold uppercase tracking-tight text-gray-900 mb-2" style={{ color: primaryColor }}>{safeResume.name}</h1>
               )}
               {isEditing ? (
                 <EditableText value={editableResume.summary || ""} onChange={v => updateField(["summary"], v)} multiline className="text-gray-600 max-w-xl" />
               ) : (
-                <p className="text-gray-600 max-w-xl">{resume.summary}</p>
+                <p className="text-gray-600 max-w-xl">{safeResume.summary}</p>
               )}
             </div>
             <div className="text-right text-sm space-y-1">
@@ -2248,11 +2264,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 </>
               ) : (
                 <>
-                  {resume.email && <div className="flex items-center justify-end gap-2">{resume.email} <Mail className="w-3 h-3" /></div>}
-                  {resume.phone && <div className="flex items-center justify-end gap-2">{resume.phone} <Phone className="w-3 h-3" /></div>}
-                  {resume.location && <div className="flex items-center justify-end gap-2">{resume.location} <MapPin className="w-3 h-3" /></div>}
-                  {resume.linkedin && <div className="flex items-center justify-end gap-2">LinkedIn <Linkedin className="w-3 h-3" /></div>}
-                  {resume.github && <div className="flex items-center justify-end gap-2">GitHub <Github className="w-3 h-3" /></div>}
+                  {safeResume.email && <div className="flex items-center justify-end gap-2">{safeResume.email} <Mail className="w-3 h-3" /></div>}
+                  {safeResume.phone && <div className="flex items-center justify-end gap-2">{safeResume.phone} <Phone className="w-3 h-3" /></div>}
+                  {safeResume.location && <div className="flex items-center justify-end gap-2">{safeResume.location} <MapPin className="w-3 h-3" /></div>}
+                  {safeResume.linkedin && <div className="flex items-center justify-end gap-2">LinkedIn <Linkedin className="w-3 h-3" /></div>}
+                  {safeResume.github && <div className="flex items-center justify-end gap-2">GitHub <Github className="w-3 h-3" /></div>}
                 </>
               )}
             </div>
@@ -2264,13 +2280,13 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           <h2 className="text-sm font-bold uppercase tracking-widest mb-3 border-b pb-1" style={{ color: secondaryColor, borderColor: accentColor }}>Technical Skills</h2>
           <div className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
             <div className="font-semibold text-gray-700">Languages:</div>
-            <div>{isEditing ? editableResume.skills?.programming?.join(", ") : resume.skills?.programming?.join(", ")}</div>
+            <div>{isEditing ? editableResume.skills?.programming?.join(", ") : safeResume.skills?.programming?.join(", ")}</div>
             
             <div className="font-semibold text-gray-700">Technologies:</div>
-            <div>{isEditing ? editableResume.skills?.technical?.join(", ") : resume.skills?.technical?.join(", ")}</div>
+            <div>{isEditing ? editableResume.skills?.technical?.join(", ") : safeResume.skills?.technical?.join(", ")}</div>
             
             <div className="font-semibold text-gray-700">Tools:</div>
-            <div>{isEditing ? editableResume.skills?.tools?.join(", ") : resume.skills?.tools?.join(", ")}</div>
+            <div>{isEditing ? editableResume.skills?.tools?.join(", ") : safeResume.skills?.tools?.join(", ")}</div>
           </div>
         </div>
 
@@ -2278,7 +2294,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-8">
           <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b pb-1" style={{ color: secondaryColor, borderColor: accentColor }}>Experience</h2>
           <div className="space-y-6">
-            {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+            {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
               <div key={i}>
                 <div className="flex justify-between items-baseline mb-1">
                   <h3 className="font-bold text-lg text-gray-900">{exp.title}</h3>
@@ -2302,7 +2318,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-8">
           <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b pb-1" style={{ color: secondaryColor, borderColor: accentColor }}>Projects</h2>
           <div className="space-y-4">
-            {(isEditing ? editableResume.projects : resume.projects)?.map((proj, i) => (
+            {(isEditing ? editableResume.projects : safeResume.projects)?.map((proj, i) => (
               <div key={i}>
                 <div className="flex justify-between items-baseline mb-1">
                   <h3 className="font-bold text-base text-gray-900">{proj.name}</h3>
@@ -2323,7 +2339,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div>
           <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b pb-1" style={{ color: secondaryColor, borderColor: accentColor }}>Education</h2>
           <div className="space-y-4">
-            {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+            {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
               <div key={i} className="flex justify-between">
                 <div>
                   <div className="font-bold text-gray-900">{edu.institution}</div>
@@ -2349,7 +2365,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
           {isEditing ? (
             <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-2xl font-bold text-center uppercase" />
           ) : (
-            <h1 className="text-2xl font-bold uppercase">{resume.name}</h1>
+            <h1 className="text-2xl font-bold uppercase">{safeResume.name}</h1>
           )}
         </div>
 
@@ -2367,7 +2383,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             </div>
           ) : (
             <div>
-              {resume.email} | {resume.phone} | {resume.linkedin} | {resume.github}
+              {safeResume.email} | {safeResume.phone} | {safeResume.linkedin} | {safeResume.github}
             </div>
           )}
         </div>
@@ -2376,7 +2392,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-4">
           <h2 className="text-sm font-bold uppercase mb-2 border-b border-black">Education</h2>
           <div className="space-y-2">
-            {(isEditing ? editableResume.education : resume.education)?.map((edu, i) => (
+            {(isEditing ? editableResume.education : safeResume.education)?.map((edu, i) => (
               <div key={i} className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <div className="flex justify-between text-xs">
                   <div className="flex-1">
@@ -2425,7 +2441,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-4">
           <h2 className="text-sm font-bold uppercase mb-2 border-b border-black">Experience</h2>
           <div className="space-y-3">
-            {(isEditing ? editableResume.experience : resume.experience)?.map((exp, i) => (
+            {(isEditing ? editableResume.experience : safeResume.experience)?.map((exp, i) => (
               <div key={i} className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <div className="flex justify-between text-xs">
                   <div className="flex-1">
@@ -2471,7 +2487,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-4">
           <h2 className="text-sm font-bold uppercase mb-2 border-b border-black">Projects</h2>
           <div className="space-y-2">
-            {(isEditing ? editableResume.projects : resume.projects)?.map((proj, i) => (
+            {(isEditing ? editableResume.projects : safeResume.projects)?.map((proj, i) => (
               <div key={i} className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <div className="text-xs">
                   {isEditing ? (
@@ -2521,33 +2537,33 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <div className="mb-4">
           <h2 className="text-sm font-bold uppercase mb-2 border-b border-black">Technical Skills</h2>
           <div className="text-xs space-y-1">
-            {(isEditing || resume.skills?.programming) && (
+            {(isEditing || safeResume.skills?.programming) && (
               <div className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <span className="font-semibold">Languages:</span>{" "}
                 {isEditing ? (
                   <EditableText value={editableResume.skills?.programming?.join(", ") || ""} onChange={v => updateField(["skills", "programming"], v.split(",").map(s => s.trim()))} />
                 ) : (
-                  resume.skills?.programming?.join(", ")
+                  safeResume.skills?.programming?.join(", ")
                 )}
               </div>
             )}
-            {(isEditing || resume.skills?.technical) && (
+            {(isEditing || safeResume.skills?.technical) && (
               <div className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <span className="font-semibold">Technologies:</span>{" "}
                 {isEditing ? (
                   <EditableText value={editableResume.skills?.technical?.join(", ") || ""} onChange={v => updateField(["skills", "technical"], v.split(",").map(s => s.trim()))} />
                 ) : (
-                  resume.skills?.technical?.join(", ")
+                  safeResume.skills?.technical?.join(", ")
                 )}
               </div>
             )}
-            {(isEditing || resume.skills?.tools) && (
+            {(isEditing || safeResume.skills?.tools) && (
               <div className={isEditing ? "border border-dashed border-blue-300 p-2 rounded hover:bg-blue-50" : ""}>
                 <span className="font-semibold">Tools:</span>{" "}
                 {isEditing ? (
                   <EditableText value={editableResume.skills?.tools?.join(", ") || ""} onChange={v => updateField(["skills", "tools"], v.split(",").map(s => s.trim()))} />
                 ) : (
-                  resume.skills?.tools?.join(", ")
+                  safeResume.skills?.tools?.join(", ")
                 )}
               </div>
             )}
@@ -2555,11 +2571,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         </div>
 
         {/* Achievements/Certifications */}
-        {(isEditing || (resume.certifications && resume.certifications.length > 0)) && (
+        {(isEditing || (safeResume.certifications && safeResume.certifications.length > 0)) && (
           <div>
             <h2 className="text-sm font-bold uppercase mb-2 border-b border-black">Achievements & Certifications</h2>
             <ul className="list-disc ml-4 text-xs space-y-0.5">
-              {(isEditing ? editableResume.certifications : resume.certifications)?.map((cert, i) => (
+              {(isEditing ? editableResume.certifications : safeResume.certifications)?.map((cert, i) => (
                 <li key={i} className={isEditing ? "border border-dashed border-blue-300 p-1 rounded hover:bg-blue-50" : ""}>
                   {isEditing ? (
                     <>

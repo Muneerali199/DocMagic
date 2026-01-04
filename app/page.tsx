@@ -1,5 +1,4 @@
 import { SiteHeader } from "@/components/site-header";
-import { SponsorBanner } from "@/components/sponsor-banner";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
@@ -41,7 +40,6 @@ export default async function Home() {
 
   return (
     <div id="top" className="min-h-screen flex flex-col">
-      <SponsorBanner />
       <SiteHeader />
       <main className="flex-1">
         <HeroSection />

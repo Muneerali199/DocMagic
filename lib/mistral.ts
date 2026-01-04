@@ -330,3 +330,309 @@ Provide variety in:
     return [];
   }
 }
+
+/**
+ * Generate professional letter using Mistral AI
+ */
+export async function generateLetterWithMistral({ 
+  prompt, 
+  fromName, 
+  fromAddress, 
+  toName, 
+  toAddress, 
+  letterType 
+}: { 
+  prompt: string;
+  fromName: string;
+  fromAddress?: string;
+  toName: string;
+  toAddress?: string;
+  letterType: string;
+}) {
+  if (!mistral) {
+    throw new Error('Mistral client not initialized - MISTRAL_API_KEY is not set');
+  }
+
+  try {
+    const systemPrompt = `You are an expert professional letter writer. Create a ${letterType} letter from ${fromName} to ${toName}.
+
+LETTER REQUEST: ${prompt}
+
+LETTER TYPE: ${letterType}
+FROM: ${fromName}${fromAddress ? `, ${fromAddress}` : ''}
+TO: ${toName}${toAddress ? `, ${toAddress}` : ''}
+
+Generate a professional letter in JSON format:
+{
+  "from": {
+    "name": "${fromName}",
+    "address": "${fromAddress || ''}"
+  },
+  "to": {
+    "name": "${toName}",
+    "address": "${toAddress || ''}"
+  },
+  "date": "Current date in Month Day, Year format",
+  "subject": "Clear, concise subject line",
+  "content": "Full letter content with proper formatting, paragraphs, salutation, body, and closing"
+}
+
+LETTER TYPE GUIDELINES:
+- Cover Letter: Highlight relevant skills/experience for job applications. Include strong opening, relevant achievements, and call to action.
+- Business Letter: Formal tone, clear purpose, professional structure.
+- Thank You Letter: Express sincere gratitude with specific details about what you're thankful for.
+- Recommendation Letter: Highlight strengths, achievements, and qualities of the person being recommended.
+- Complaint Letter: Professional tone, clear description of issue, proposed resolution.
+- Resignation Letter: Professional, positive tone, clear last day, brief reason if appropriate.
+- Invitation Letter: Warm tone, clear event details, RSVP information.
+- Apology Letter: Sincere acknowledgment, responsibility, solution/prevention.
+
+REQUIREMENTS:
+1. Proper business letter format with salutation and closing
+2. Professional, clear, and grammatically correct
+3. Relevant to the specific request and letter type
+4. Appropriate length and detail level
+
+Return ONLY valid JSON.`;
+
+    const response = await mistral.chat.complete({
+      model: 'mistral-large-latest',
+      messages: [{ role: 'user', content: systemPrompt }],
+      temperature: 0.7,
+      maxTokens: 2000,
+    });
+
+    let content = response.choices?.[0]?.message?.content || '{}';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
+    
+    // Extract JSON from markdown if present
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const letterData = JSON.parse(jsonMatch[0]);
+      
+      return {
+        from: {
+          name: letterData.from?.name || fromName,
+          address: letterData.from?.address || fromAddress || ""
+        },
+        to: {
+          name: letterData.to?.name || toName,
+          address: letterData.to?.address || toAddress || ""
+        },
+        date: letterData.date || new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        subject: letterData.subject || "Re: " + prompt.substring(0, 30) + "...",
+        content: letterData.content || letterData.letter || "Letter content not available."
+      };
+    }
+    
+    throw new Error('Failed to parse letter response');
+  } catch (error) {
+    console.error('Error generating letter with Mistral:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generate diagram using Mistral AI with Mermaid syntax
+ */
+export async function generateDiagramWithMistral({ 
+  prompt, 
+  diagramType = 'flowchart' 
+}: { 
+  prompt: string; 
+  diagramType?: string;
+}) {
+  if (!mistral) {
+    throw new Error('Mistral client not initialized - MISTRAL_API_KEY is not set');
+  }
+
+  try {
+    const systemPrompt = `You are an expert diagram designer. Generate a professional ${diagramType} diagram using Mermaid syntax.
+
+USER REQUEST: ${prompt}
+DIAGRAM TYPE: ${diagramType}
+
+Return ONLY valid JSON:
+{
+  "type": "${diagramType}",
+  "title": "Descriptive title for the diagram",
+  "description": "Brief explanation of what the diagram shows",
+  "code": "Valid Mermaid syntax code",
+  "suggestions": [
+    "Improvement suggestion 1",
+    "Enhancement suggestion 2"
+  ]
+}
+
+MERMAID SYNTAX GUIDELINES:
+
+For FLOWCHART:
+- Use "flowchart TD" (top-down) or "flowchart LR" (left-right)
+- Nodes: A[Rectangle], B{Diamond/Decision}, C((Circle)), D>Flag]
+- Connections: A --> B, A -.-> B (dotted), A ==> B (thick)
+- Labels: A -->|Yes| B, A -->|No| C
+
+For SEQUENCE DIAGRAM:
+- Use "sequenceDiagram"
+- participant A as Alice
+- A->>B: Message
+- A-->>B: Response (dotted)
+- activate A / deactivate A
+
+For CLASS DIAGRAM:
+- Use "classDiagram"
+- class Animal { +String name +makeSound() }
+- Animal <|-- Dog (inheritance)
+
+For ER DIAGRAM:
+- Use "erDiagram"
+- CUSTOMER ||--o{ ORDER : places
+- CUSTOMER { string name string email }
+
+For STATE DIAGRAM:
+- Use "stateDiagram-v2"
+- [*] --> State1
+- State1 --> State2
+
+For GANTT CHART:
+- Use "gantt"
+- dateFormat YYYY-MM-DD
+- section Section Name
+- Task Name :done, a1, 2024-01-01, 30d
+
+For PIE CHART:
+- Use "pie title Chart Title"
+- "Label" : value
+
+For MINDMAP:
+- Use "mindmap"
+- root((Central Idea))
+
+For TIMELINE:
+- Use "timeline"
+- title Timeline Title
+- 2024 : Event Description
+
+REQUIREMENTS:
+1. Generate syntactically correct Mermaid code
+2. Make it relevant to the user's request
+3. Use clear, professional naming
+4. Ensure visual clarity and logic`;
+
+    const response = await mistral.chat.complete({
+      model: 'mistral-large-latest',
+      messages: [{ role: 'user', content: systemPrompt }],
+      temperature: 0.7,
+      maxTokens: 2000,
+    });
+
+    let content = response.choices?.[0]?.message?.content || '{}';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    
+    throw new Error('Failed to parse diagram response');
+  } catch (error) {
+    console.error('Error generating diagram with Mistral:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generate cover letter tailored to a job description using Mistral AI
+ */
+export async function generateCoverLetterFromJob({ 
+  jobDescription, 
+  jobUrl,
+  fromName, 
+  fromEmail,
+  fromAddress,
+  skills,
+  experience 
+}: { 
+  jobDescription: string;
+  jobUrl?: string;
+  fromName: string;
+  fromEmail?: string;
+  fromAddress?: string;
+  skills?: string[];
+  experience?: string;
+}) {
+  if (!mistral) {
+    throw new Error('Mistral client not initialized - MISTRAL_API_KEY is not set');
+  }
+
+  try {
+    const systemPrompt = `You are an expert career coach and cover letter writer. Create a compelling, ATS-optimized cover letter.
+
+JOB DESCRIPTION:
+${jobDescription}
+
+APPLICANT INFO:
+Name: ${fromName}
+Email: ${fromEmail || 'Not provided'}
+Address: ${fromAddress || 'Not provided'}
+${skills ? `Key Skills: ${skills.join(', ')}` : ''}
+${experience ? `Experience Summary: ${experience}` : ''}
+
+Generate a tailored cover letter in JSON format:
+{
+  "from": {
+    "name": "${fromName}",
+    "email": "${fromEmail || ''}",
+    "address": "${fromAddress || ''}"
+  },
+  "to": {
+    "name": "Hiring Manager",
+    "company": "Extracted company name from job description",
+    "address": ""
+  },
+  "date": "Current date",
+  "subject": "Application for [Job Title]",
+  "content": "Full cover letter content",
+  "keywordMatch": ["list", "of", "matched", "keywords"],
+  "tips": ["Improvement tip 1", "Tip 2"]
+}
+
+COVER LETTER REQUIREMENTS:
+1. Strong opening hook that grabs attention
+2. Match applicant skills to job requirements
+3. Include specific achievements with metrics where possible
+4. Show company research and genuine interest
+5. Clear call to action in closing
+6. Professional but personable tone
+7. ATS-friendly formatting
+
+Return ONLY valid JSON.`;
+
+    const response = await mistral.chat.complete({
+      model: 'mistral-large-latest',
+      messages: [{ role: 'user', content: systemPrompt }],
+      temperature: 0.7,
+      maxTokens: 2500,
+    });
+
+    let content = response.choices?.[0]?.message?.content || '{}';
+    if (Array.isArray(content)) content = content.join('');
+    if (typeof content !== 'string') content = String(content);
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    
+    throw new Error('Failed to parse cover letter response');
+  } catch (error) {
+    console.error('Error generating cover letter with Mistral:', error);
+    throw error;
+  }
+}

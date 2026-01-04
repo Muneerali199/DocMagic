@@ -118,6 +118,31 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       const data = await response.json();
       setResumeData(data);
 
+      // Auto-save resume to history
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          await fetch('/api/resumes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              title: `${data.name || name}'s Resume`,
+              content: data,
+              template: selectedTemplate,
+              prompt: prompt || `Resume for ${data.name || name}`,
+              isPublic: false
+            }),
+          });
+          console.log('✅ Resume saved to history');
+        }
+      } catch (saveError) {
+        console.error('Failed to auto-save resume:', saveError);
+        // Don't show error to user - resume was still generated successfully
+      }
+
       toast({
         title: "Resume generated! ✨",
         description: "Your tailored resume is ready to preview and download",

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Zap, Users, Crown, Building2 } from 'lucide-react';
+import { Check, Zap, Users, Crown, Building2, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,25 +9,37 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { TIER_LIMITS, ACTION_COSTS } from '@/lib/credits-service';
 
 const features = {
+  free: [
+    `${TIER_LIMITS.free} credits per month`,
+    'Basic templates',
+    'PDF export only',
+    'Community support',
+  ],
   individual: [
-    'Unlimited presentations',
-    'Unlimited resumes & CVs',
-    'Unlimited letters',
-    'AI-powered generation',
-    'Premium templates',
+    `${TIER_LIMITS.basic} credits per month`,
+    'All premium templates',
     'Export to PDF/PPTX/DOCX',
     'Priority support',
     'No watermarks',
+    'Credit rollover (up to 20)',
+  ],
+  pro: [
+    `${TIER_LIMITS.pro} credits per month`,
+    'Everything in Individual',
+    'API access',
+    'Advanced analytics',
+    'Priority AI processing',
+    'Credit rollover (up to 50)',
   ],
   organization: [
-    'Everything in Individual',
+    'Unlimited credits',
+    'Everything in Pro',
     'Unlimited team members',
     'Team collaboration',
     'Brand customization',
-    'Advanced analytics',
-    'API access',
     'Dedicated support',
     'Custom templates',
     'SSO integration',
@@ -61,17 +73,12 @@ export default function PricingPlans() {
       billing_period: 'monthly',
       price: 0,
       stripe_price_id: '',
-      features: [
-        '3 documents per month',
-        'Basic templates',
-        'PDF export only',
-        'Community support',
-      ],
+      features: features.free,
     },
     {
       id: '2',
-      name: 'Individual',
-      description: 'Perfect for individuals and freelancers',
+      name: 'Basic',
+      description: 'For regular document creation',
       plan_type: 'individual',
       billing_period: billingPeriod,
       price: billingPeriod === 'monthly' ? 9.99 : 95.88,
@@ -79,11 +86,23 @@ export default function PricingPlans() {
         ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_INDIVIDUAL_MONTHLY || '')
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_INDIVIDUAL_YEARLY || ''),
       features: features.individual,
-      popular: true,
     },
     {
       id: '3',
-      name: 'Organization',
+      name: 'Pro',
+      description: 'For power users and professionals',
+      plan_type: 'individual',
+      billing_period: billingPeriod,
+      price: billingPeriod === 'monthly' ? 19.99 : 191.88,
+      stripe_price_id: billingPeriod === 'monthly' 
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_MONTHLY || '')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_YEARLY || ''),
+      features: features.pro,
+      popular: true,
+    },
+    {
+      id: '4',
+      name: 'Enterprise',
       description: 'For teams and organizations',
       plan_type: 'organization',
       billing_period: billingPeriod,
@@ -169,7 +188,7 @@ export default function PricingPlans() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto px-4 sm:px-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto px-4 sm:px-0">
         {plans.map((plan) => (
           <Card 
             key={plan.id} 
@@ -238,6 +257,67 @@ export default function PricingPlans() {
             </CardFooter>
           </Card>
         ))}
+      </div>
+
+      {/* Credit Costs Info */}
+      <div className="mt-12 max-w-3xl mx-auto px-4 sm:px-0">
+        <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200/50 dark:border-blue-800/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Coins className="w-5 h-5 text-yellow-500" />
+              How Credits Work
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Each document type uses a different amount of credits. Credits reset monthly on your billing date.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">📄</span>
+                <div>
+                  <p className="text-sm font-medium">Resume</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.resume} credit</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">📊</span>
+                <div>
+                  <p className="text-sm font-medium">Presentation</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.presentation} credit/slide</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">📐</span>
+                <div>
+                  <p className="text-sm font-medium">Diagram</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.diagram} credits</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">✉️</span>
+                <div>
+                  <p className="text-sm font-medium">Letter</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.letter} credits</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">📝</span>
+                <div>
+                  <p className="text-sm font-medium">Cover Letter</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.cover_letter} credits</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                <span className="text-lg">🎯</span>
+                <div>
+                  <p className="text-sm font-medium">ATS Check</p>
+                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.ats_check} credits</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Payment Methods Section */}

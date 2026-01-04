@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { generatePresentationOutline } from '@/lib/gemini';
 import { 
   generatePresentationText, 
   generateChartData 
@@ -73,7 +72,7 @@ Make content professional, engaging, and visually focused.`
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, pageCount = 8, useGemini = true, outlineOnly = false } = body;
+    const { prompt, pageCount = 8, outlineOnly = false } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -84,18 +83,14 @@ export async function POST(request: Request) {
 
     console.log('📝 Step 1: Generating slide text content...');
     
-    // Step 1: Generate text content with fallback
+    // Step 1: Generate text content - Use Mistral first, then Nebius fallback
     let outlines;
     try {
-      if (useGemini) {
-        console.log('Using Gemini 2.0 Flash for text generation');
-        outlines = await generatePresentationOutline({ prompt, pageCount });
-      } else {
-        console.log('Using Mistral Large for text generation');
-        outlines = await generatePresentationText(prompt, pageCount);
-      }
-    } catch (geminiError: any) {
-      console.error('⚠️ Gemini failed:', geminiError.message);
+      console.log('Using Mistral Large for text generation');
+      outlines = await generatePresentationText(prompt, pageCount);
+      console.log('✅ Generated with Mistral');
+    } catch (mistralError: any) {
+      console.error('⚠️ Mistral failed:', mistralError.message);
       console.log('🔄 Falling back to Nebius/Qwen...');
       outlines = await generateWithNebius(prompt, pageCount);
     }

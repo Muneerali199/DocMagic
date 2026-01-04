@@ -2,9 +2,92 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { generateResume } from '@/lib/gemini';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS } from '@/lib/credits-service';
+
+// Service role client for credit operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Mistral-based resume generation as fallback
+async function generateResumeWithMistral({ prompt, name, email }: { prompt: string; name: string; email: string }) {
+  const systemPrompt = `You are an expert ATS-optimized resume writer. Create a professional resume based on this requirement: "${prompt}".
+
+The candidate's name is: ${name}
+The candidate's email is: ${email}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "name": "${name}",
+  "email": "${email}",
+  "phone": "+1 (555) 123-4567",
+  "location": "City, State",
+  "summary": "Professional summary with 3-4 sentences highlighting key expertise and achievements",
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "location": "City, State",
+      "date": "01/2020 - Present",
+      "description": ["• Achievement with quantified impact", "• Another achievement"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name",
+      "institution": "University Name",
+      "location": "City, State",
+      "date": "05/2020"
+    }
+  ],
+  "skills": {
+    "technical": ["Skill1", "Skill2", "Skill3"],
+    "soft": ["Communication", "Leadership", "Problem Solving"]
+  },
+  "projects": [],
+  "certifications": []
+}
+
+Create realistic, relevant content based on the job description. Use action verbs and quantifiable achievements.`;
+
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'mistral-small-latest',
+      messages: [
+        { role: 'user', content: systemPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 3000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Mistral API error:', errorText);
+    throw new Error(`Mistral API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content || '';
+  
+  // Parse JSON from response
+  const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+  
+  if (!jsonMatch) {
+    throw new Error('No JSON found in Mistral response');
+  }
+  
+  return JSON.parse(jsonMatch[0]);
+}
 
 export async function POST(request: Request) {
   try {
@@ -62,6 +145,55 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check user credits
+    const creditCost = ACTION_COSTS.resume;
+    
+    // Get or create user credits
+    let { data: userCredits, error: creditsError } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if user has enough credits
+    const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
+    
+    if (creditsRemaining < creditCost) {
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${creditCost} credits to generate a resume. You have ${creditsRemaining} credits remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining
+        },
+        { status: 402 }
+      );
+    }
+
     // Validate request body exists
     let rawBody;
     try {
@@ -101,12 +233,94 @@ export async function POST(request: Request) {
     const sanitizedName = sanitizeInput(name);
     const sanitizedEmail = sanitizeInput(email);
 
-    // Generate resume
-    const resume = await generateResume({ 
-      prompt: sanitizedPrompt, 
-      name: sanitizedName, 
-      email: sanitizedEmail
-    });
+    // Generate resume with Mistral
+    let resume;
+    try {
+      console.log('🚀 Generating resume with Mistral...');
+      resume = await generateResumeWithMistral({ 
+        prompt: sanitizedPrompt, 
+        name: sanitizedName, 
+        email: sanitizedEmail
+      });
+      console.log('✅ Resume generated with Mistral');
+    } catch (mistralError: any) {
+      console.error('❌ Mistral failed:', mistralError.message);
+      throw new Error('Unable to generate resume. Please try again later.');
+    }
+    
+    // Deduct credits after successful generation
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits!.credits_used + creditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+      // Don't fail the request, just log the error
+    } else {
+      // Log the usage
+      await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'resume',
+          credits_used: creditCost,
+          metadata: { prompt_length: sanitizedPrompt.length }
+        });
+      
+      console.log(`💳 Deducted ${creditCost} credits for resume generation`);
+    }
+    
+    // Save resume to documents table for history
+    const resumeTitle = resume.name ? `${resume.name}'s Resume` : 'Untitled Resume';
+    
+    try {
+      // First try to save to documents table
+      const { data: savedDoc, error: docError } = await supabaseAdmin
+        .from('documents')
+        .insert({
+          user_id: user.id,
+          type: 'resume',
+          title: resumeTitle,
+          content: { resumeData: resume, prompt: sanitizedPrompt },
+        })
+        .select()
+        .single();
+      
+      if (docError) {
+        console.error('Failed to save to documents table:', docError);
+        
+        // Fallback: Try saving to resumes table
+        const { error: resumeError } = await supabaseAdmin
+          .from('resumes')
+          .insert({
+            user_id: user.id,
+            title: resumeTitle,
+            personal_info: {
+              name: resume.name,
+              email: resume.email,
+              phone: resume.phone,
+              location: resume.location,
+            },
+            content: resume,
+            template: 'deedy-resume',
+          });
+        
+        if (resumeError) {
+          console.error('Failed to save to resumes table:', resumeError);
+        } else {
+          console.log('📄 Resume saved to resumes table');
+        }
+      } else {
+        console.log('📄 Resume saved to documents table:', savedDoc?.id);
+      }
+    } catch (saveError) {
+      console.error('Error saving resume:', saveError);
+      // Don't fail the request if saving fails
+    }
     
     return NextResponse.json(resume, { status: 200 });
 

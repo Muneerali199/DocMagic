@@ -10,6 +10,7 @@ function ResumeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const templateId = searchParams?.get('template') || null;
+  const resumeId = searchParams?.get('id') || null;
 
   useEffect(() => {
     // Simulate loading
@@ -24,7 +25,7 @@ function ResumeContent() {
           <ResumeGeneratorSkeleton />
         </div>
       ) : (
-        <MobileResumeBuilder templateId={templateId} />
+        <MobileResumeBuilder templateId={templateId} resumeId={resumeId} />
       )}
     </CreateDocumentGuard>
   );

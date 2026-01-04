@@ -2,13 +2,44 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { generateLetter } from '@/lib/gemini';
+import { generateLetterWithMistral, generateCoverLetterFromJob } from '@/lib/mistral';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { prompt, fromName, fromAddress, toName, toAddress, letterType } = body;
+    const { 
+      prompt, 
+      fromName, 
+      fromAddress, 
+      toName, 
+      toAddress, 
+      letterType,
+      // For job-based cover letter generation
+      jobDescription,
+      jobUrl,
+      fromEmail,
+      skills,
+      experience
+    } = body;
 
+    // Check if this is a job-based cover letter request
+    if (jobDescription && fromName) {
+      console.log('📝 Generating cover letter from job description with Mistral...');
+      
+      const coverLetter = await generateCoverLetterFromJob({
+        jobDescription,
+        jobUrl,
+        fromName,
+        fromEmail,
+        fromAddress,
+        skills,
+        experience
+      });
+      
+      return NextResponse.json(coverLetter);
+    }
+
+    // Standard letter generation
     if (!prompt || !fromName || !toName || !letterType) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -16,7 +47,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const letter = await generateLetter({
+    console.log(`📝 Generating ${letterType} letter with Mistral...`);
+
+    const letter = await generateLetterWithMistral({
       prompt,
       fromName,
       fromAddress,
@@ -44,11 +77,12 @@ export async function POST(request: Request) {
       content: letter.content || letter.letter || "Letter content not available."
     };
     
+    console.log('✅ Letter generated successfully with Mistral');
     return NextResponse.json(formattedResponse);
   } catch (error) {
     console.error('Error generating letter:', error);
     return NextResponse.json(
-      { error: 'Failed to generate letter' },
+      { error: 'Failed to generate letter', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

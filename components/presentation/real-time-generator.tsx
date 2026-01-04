@@ -1457,10 +1457,10 @@ export default function RealTimeGenerator() {
               </div>
             )}
 
-            <div ref={slideContainerRef} className="space-y-12">
+            <div ref={slideContainerRef} className="space-y-6 sm:space-y-8 md:space-y-12">
               {slides.length === 0 && isStreaming && (
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                  <Loader2 className="w-16 h-16 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
+                  <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
                   <h3 className="text-2xl font-bold professional-heading mb-2">Generating Your Presentation</h3>
                   <p className="text-muted-foreground">Creating slides based on your outline...</p>
                 </div>
@@ -1498,7 +1498,7 @@ export default function RealTimeGenerator() {
               
               {isStreaming && currentSlideText && slides.length > 0 && (
                 <div className="animate-pulse">
-                  <div className="bg-card rounded-3xl p-12 min-h-[500px] flex flex-col items-center justify-center border border-border shadow-xl">
+                  <div className="bg-card rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 aspect-video flex flex-col items-center justify-center border border-border shadow-xl">
                     <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-6">
                       <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
                     </div>
@@ -1804,7 +1804,7 @@ function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage }: {
       )}
       
       <div 
-        className={`${getGradientClass(slide.design?.background)} p-12 md:p-16 min-h-[600px] flex items-center justify-center relative overflow-hidden`}
+        className={`${getGradientClass(slide.design?.background)} p-6 sm:p-8 md:p-12 lg:p-16 aspect-video flex items-center justify-center relative overflow-hidden`}
         style={{ 
           color: textColor,
           backgroundColor: theme.colors.background // Ensure background color is set

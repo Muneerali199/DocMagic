@@ -270,3 +270,64 @@ export const RESUME_TEMPLATE_RENDERERS = {
   'deedy-resume': DeedyTemplate,
   'black-white-professional': BlackWhiteProfessionalTemplate,
 };
+
+// Template metadata for the selector
+const TEMPLATE_OPTIONS = [
+  {
+    id: 'deedy-resume',
+    name: 'Deedy Resume',
+    description: 'Modern two-column design with clean typography',
+    preview: '📄',
+  },
+  {
+    id: 'black-white-professional',
+    name: 'Professional B&W',
+    description: 'Classic black and white professional style',
+    preview: '📋',
+  },
+];
+
+// ResumeTemplates selector component
+interface ResumeTemplatesProps {
+  selectedTemplate: string;
+  onSelectTemplate: (templateId: string) => void;
+  onEditTemplate?: () => void;
+  onDownloadTemplate?: () => void;
+}
+
+export const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({
+  selectedTemplate,
+  onSelectTemplate,
+}) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold mb-4">Choose a Template</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {TEMPLATE_OPTIONS.map((template) => (
+          <button
+            key={template.id}
+            onClick={() => onSelectTemplate(template.id)}
+            className={`p-4 rounded-xl border-2 transition-all duration-200 text-left hover:scale-[1.02] ${
+              selectedTemplate === template.id
+                ? 'border-yellow-400 bg-yellow-400/10 shadow-lg'
+                : 'border-gray-200 dark:border-gray-700 hover:border-yellow-400/50'
+            }`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">{template.preview}</span>
+              <div>
+                <p className="font-semibold">{template.name}</p>
+                <p className="text-xs text-muted-foreground">{template.description}</p>
+              </div>
+            </div>
+            {selectedTemplate === template.id && (
+              <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mt-2">
+                ✓ Selected
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
