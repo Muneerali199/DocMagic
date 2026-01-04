@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { WebsiteBuilder } from "@/components/website/website-builder";
+import { WebsiteBuilderClient } from "./client";
 
 export const metadata: Metadata = {
   title: "AI Website Builder | DocMagic",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function WebsiteBuilderPage() {
-  return <WebsiteBuilder />;
+  return <WebsiteBuilderClient />;
 }

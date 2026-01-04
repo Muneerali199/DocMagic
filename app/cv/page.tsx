@@ -1,5 +1,7 @@
+"use client";
 import { SiteHeader } from "@/components/site-header";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
+import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, FileText, Zap, Star, Wand2, Award } from "lucide-react";
 
 export default function CVPage() {
@@ -80,7 +82,9 @@ export default function CVPage() {
             </div>
             
             <div className="relative z-10">
-              <ResumeGenerator />
+              <CreateDocumentGuard>
+                <ResumeGenerator />
+              </CreateDocumentGuard>
             </div>
           </div>
 

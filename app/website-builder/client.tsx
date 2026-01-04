@@ -1,9 +1,10 @@
 "use client";
-import RealTimeGenerator from '@/components/presentation/real-time-generator';
+
+import { WebsiteBuilder } from "@/components/website/website-builder";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { SiteHeader } from "@/components/site-header";
 
-export default function PresentationPage() {
+export function WebsiteBuilderClient() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background elements */}
@@ -14,7 +15,7 @@ export default function PresentationPage() {
       <SiteHeader />
       <main className="flex-1 relative z-10">
         <CreateDocumentGuard>
-          <RealTimeGenerator />
+          <WebsiteBuilder />
         </CreateDocumentGuard>
       </main>
     </div>

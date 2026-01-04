@@ -1,6 +1,7 @@
 "use client";
 import { SiteHeader } from "@/components/site-header";
 import { DiagramGenerator } from "@/components/diagram/diagram-generator";
+import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, Workflow, Zap, Star, Wand2, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DiagramGeneratorSkeleton } from "@/components/ui/skeleton";
@@ -116,11 +117,13 @@ export default function DiagramPage() {
             </div>
 
             <div className="relative z-10">
-              {isLoading ? (
-                <DiagramGeneratorSkeleton />
-              ) : (
-                <DiagramGenerator />
-              )}
+              <CreateDocumentGuard>
+                {isLoading ? (
+                  <DiagramGeneratorSkeleton />
+                ) : (
+                  <DiagramGenerator />
+                )}
+              </CreateDocumentGuard>
             </div>
           </div>
 

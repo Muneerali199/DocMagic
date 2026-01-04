@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CreateDocumentGuard } from '@/components/ui/auth-guard';
+import { SiteHeader } from '@/components/site-header';
 import { 
   Sparkles, 
   Download, 
@@ -151,13 +153,21 @@ export default function CampaignGeneratorPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Sparkles className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            AI Campaign Generator
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute inset-0 mesh-gradient opacity-20"></div>
+      <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-15 top-20 -left-24"></div>
+      
+      <SiteHeader />
+      <main className="flex-1 relative z-10">
+        <CreateDocumentGuard>
+          <div className="container mx-auto py-8 px-4 max-w-7xl">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Sparkles className="h-8 w-8 text-primary" />
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                  AI Campaign Generator
           </h1>
         </div>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -372,6 +382,9 @@ export default function CampaignGeneratorPage() {
           ))}
         </div>
       )}
+          </div>
+        </CreateDocumentGuard>
+      </main>
     </div>
   );
 }
