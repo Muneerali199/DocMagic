@@ -11,15 +11,25 @@ import {
   List, 
   BarChart3, 
   Image as ImageIcon, 
+  Users, 
+  Zap,
+  Sparkles,
   ArrowRight,
+  CheckCircle,
   Brain,
+  Target,
+  TrendingUp,
+  Eye,
+  PieChart,
+  LineChart,
+  Activity,
   Camera,
+  Palette,
   Edit3,
   Save,
   X,
   Plus,
-  Trash2,
-  Sparkles
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
 
@@ -118,6 +128,19 @@ export function SlideOutlinePreview({ outlines, onOutlinesUpdate, editable = tru
     }
   };
 
+  const getChartIcon = (chartType: string) => {
+    switch (chartType) {
+      case 'pie':
+        return <PieChart className="h-3 w-3" />;
+      case 'line':
+        return <LineChart className="h-3 w-3" />;
+      case 'area':
+        return <Activity className="h-3 w-3" />;
+      default:
+        return <BarChart3 className="h-3 w-3" />;
+    }
+  };
+
   const getSlideTypeLabel = (type: string) => {
     switch (type) {
       case 'cover':
@@ -154,8 +177,83 @@ export function SlideOutlinePreview({ outlines, onOutlinesUpdate, editable = tru
     }
   };
 
+  const getAIInsights = () => {
+    const chartSlides = outlines.filter(o => o.type === 'chart').length;
+    const listSlides = outlines.filter(o => o.type === 'list').length;
+    const splitSlides = outlines.filter(o => o.type === 'split').length;
+    const imageSlides = outlines.filter(o => o.imageUrl || o.imageQuery).length;
+    
+    const insights = [];
+    
+    if (chartSlides > 0) {
+      insights.push(`${chartSlides} professional chart${chartSlides > 1 ? 's' : ''} for data impact`);
+    }
+    if (listSlides > 0) {
+      insights.push(`${listSlides} structured content slide${listSlides > 1 ? 's' : ''} for clarity`);
+    }
+    if (splitSlides > 0) {
+      insights.push(`${splitSlides} visual layout${splitSlides > 1 ? 's' : ''} for engagement`);
+    }
+    if (imageSlides > 0) {
+      insights.push(`${imageSlides} high-quality image${imageSlides > 1 ? 's' : ''} from Pexels`);
+    }
+    
+    return insights;
+  };
+
   return (
     <div className="space-y-6">
+      {/* AI Analysis Summary */}
+      <Card className="glass-effect border-yellow-400/20 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 shimmer opacity-10"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="h-5 w-5 text-yellow-500" />
+            <h3 className="font-semibold bolt-gradient-text">AI Analysis Results</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 glass-effect rounded-xl hover:scale-105 transition-transform">
+              <div className="bolt-gradient-text text-3xl font-bold">{outlines.length}</div>
+              <div className="text-sm text-muted-foreground">Professional Slides</div>
+            </div>
+            <div className="text-center p-4 glass-effect rounded-xl hover:scale-105 transition-transform">
+              <div className="bolt-gradient-text text-3xl font-bold">
+                {new Set(outlines.map(o => o.type)).size}
+              </div>
+              <div className="text-sm text-muted-foreground">Layout Types</div>
+            </div>
+            <div className="text-center p-4 glass-effect rounded-xl hover:scale-105 transition-transform">
+              <div className="bolt-gradient-text text-3xl font-bold">
+                {outlines.filter(o => o.imageUrl || o.imageQuery).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Pro Images</div>
+            </div>
+            <div className="text-center p-4 glass-effect rounded-xl hover:scale-105 transition-transform">
+              <div className="bolt-gradient-text text-3xl font-bold">
+                {outlines.filter(o => o.chartData).length}
+              </div>
+              <div className="text-sm text-muted-foreground">Data Charts</div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium">AI Quality Insights:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {getAIInsights().map((insight, index) => (
+                <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 hover:scale-105 transition-transform">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  {insight}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+
       {/* Slide Outline Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {editedOutlines.map((outline, index) => (
@@ -310,6 +408,16 @@ export function SlideOutlinePreview({ outlines, onOutlinesUpdate, editable = tru
                     </div>
                   )}
 
+                  {/* Chart preview */}
+                  {outline.chartData && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {getChartIcon(outline.chartData.type)}
+                      <span className="font-medium">
+                        {outline.chartData.type} chart ({outline.chartData.data?.length || 0} data points)
+                      </span>
+                    </div>
+                  )}
+
                   {/* Image preview */}
                   {(outline.imageUrl || outline.imageQuery) && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -343,6 +451,54 @@ export function SlideOutlinePreview({ outlines, onOutlinesUpdate, editable = tru
           </Card>
         ))}
       </div>
+
+      {/* Flow Visualization */}
+      <Card className="glass-effect border-yellow-400/20 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 shimmer opacity-10"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="h-5 w-5 text-yellow-500" />
+            <h3 className="font-semibold">AI-Optimized Presentation Flow</h3>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            {outlines.map((outline, index) => (
+              <div key={index} className="flex items-center">
+                <div className="glass-effect px-4 py-3 rounded-xl text-sm font-medium hover:scale-105 transition-transform flex items-center gap-2 border border-yellow-400/20">
+                  {getSlideIcon(outline.type)}
+                  <span className="max-w-[140px] truncate">{outline.title}</span>
+                  {outline.chartData && (
+                    <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200 ml-1">
+                      Chart
+                    </Badge>
+                  )}
+                  {(outline.imageUrl || outline.imageQuery) && (
+                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 ml-1">
+                      Image
+                    </Badge>
+                  )}
+                </div>
+                {index < outlines.length - 1 && (
+                  <ArrowRight className="h-4 w-4 text-muted-foreground mx-2" />
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="glass-effect p-4 rounded-xl bg-green-50/50 border border-green-200">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-green-800 mb-1">Professional Quality Guaranteed</p>
+                <p className="text-sm text-green-700">
+                  AI has optimized your presentation with Canva-style design, high-quality Pexels images, 
+                  meaningful data visualizations, and logical content flow for maximum audience engagement.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
