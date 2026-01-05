@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MobileSlideViewer } from "@/components/presentation/mobile-slide-viewer";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Loader2, 
   Sparkles, 
@@ -44,6 +45,7 @@ export function MobilePresentationGenerator() {
   const [slides, setSlides] = useState<any[]>([]);
   const [showSlideViewer, setShowSlideViewer] = useState(false);
   const { toast } = useToast();
+  const supabase = createClient();
 
   const MAX_FREE_PAGES = 8;
 
@@ -158,13 +160,52 @@ export function MobilePresentationGenerator() {
 
     setIsGenerating(true);
     try {
+      // Get authentication token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to create presentations.",
+          variant: "destructive",
+        });
+        setIsGenerating(false);
+        return;
+      }
+
       const response = await fetch('/api/generate/presentation-outline', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ prompt, pageCount }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate outlines');
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Handle specific error codes
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to create presentations.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (response.status === 402) {
+          toast({
+            title: "Not Enough Credits",
+            description: errorData.message || "You need more credits to generate this presentation.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to generate outlines');
+      }
 
       const data = await response.json();
       setSlideOutlines(data.outlines);
@@ -175,10 +216,10 @@ export function MobilePresentationGenerator() {
         title: "✅ Structure Created!",
         description: `Generated ${data.outlines.length} slide outlines`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Generation failed",
-        description: "Please try again",
+        description: error.message || "Could not generate slide outlines. Please try again.",
         variant: "destructive",
       });
     } finally {
