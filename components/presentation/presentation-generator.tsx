@@ -170,6 +170,16 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       if (!response.ok) {
         const errorData = await response.json();
         
+        // Handle authentication errors
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to create presentations.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         // Handle credit/payment errors
         if (response.status === 402) {
           const creditWord = errorData.creditsRequired === 1 ? 'credit' : 'credits';

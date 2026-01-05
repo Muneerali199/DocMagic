@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStreamingPresentation } from '@/hooks/useStreamingPresentation';
 import { exportPremiumPresentation } from '@/lib/premium-presentation-export';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Loader2, 
   Sparkles, 
@@ -110,6 +111,7 @@ type OutlineMode = 'card-by-card' | 'freeform';
 export default function RealTimeGenerator() {
   const [view, setView] = useState<ViewState>('dashboard');
   const [generationMode, setGenerationMode] = useState('presentation');
+  const supabase = createClient();
   
   // Settings
   const [slideCount, setSlideCount] = useState(8);
@@ -465,10 +467,22 @@ export default function RealTimeGenerator() {
     setIsGeneratingOutline(true);
     
     try {
+      // Get authentication token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        alert('Please sign in to create presentations.');
+        setIsGeneratingOutline(false);
+        return;
+      }
+
       console.log('📡 Calling /api/generate/presentation-outline...');
       const response = await fetch('/api/generate/presentation-outline', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ 
           prompt: topic, 
           pageCount: slideCount,
@@ -479,7 +493,19 @@ export default function RealTimeGenerator() {
       console.log('📡 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`API returned ${response.status}`);
+        const errorData = await response.json();
+        
+        if (response.status === 401) {
+          alert('Authentication required. Please sign in to create presentations.');
+          return;
+        }
+        
+        if (response.status === 402) {
+          alert(errorData.message || 'Not enough credits. Please upgrade your plan.');
+          return;
+        }
+        
+        throw new Error(errorData.error || `API returned ${response.status}`);
       }
       
       const data = await response.json();
@@ -680,21 +706,47 @@ export default function RealTimeGenerator() {
         // AI mode: use pasted text as prompt to generate outline
         setTopic(pastedText.substring(0, 200)); // Set truncated version as topic
         
+        // Get authentication token
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          alert('Please sign in to create presentations.');
+          setIsGeneratingOutline(false);
+          return;
+        }
+
         const response = await fetch('/api/generate/presentation-outline', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify({
-            topic: pastedText,
-            audience,
-            slideCount: Math.min(12, Math.max(4, Math.ceil(pastedText.length / 200)))
+            prompt: pastedText,
+            pageCount: Math.min(12, Math.max(4, Math.ceil(pastedText.length / 200))),
+            outlineOnly: true
           })
         });
         
-        if (!response.ok) throw new Error('Failed to generate outline');
+        if (!response.ok) {
+          const errorData = await response.json();
+          
+          if (response.status === 401) {
+            alert('Authentication required. Please sign in to create presentations.');
+            return;
+          }
+          
+          if (response.status === 402) {
+            alert(errorData.message || 'Not enough credits. Please upgrade your plan.');
+            return;
+          }
+          
+          throw new Error(errorData.error || 'Failed to generate outline');
+        }
         
         const data = await response.json();
-        setOutline(data.outline || []);
-        setSlideCount(data.outline?.length || 8);
+        setOutline(data.outlines || []);
+        setSlideCount(data.outlines?.length || 8);
         setView('outline-review');
       }
     } catch (error) {
