@@ -7,6 +7,94 @@ import {
   generateChartData 
 } from '@/lib/mistral';
 import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+/**
+ * Helper to create a filler slide with contextual content
+ * 
+ * This function is called when the AI generates fewer slides than requested,
+ * padding the presentation to reach the correct slide count. It intelligently
+ * determines the slide type based on position and context.
+ * 
+ * @param slideNumber - The 1-based index of the slide being created
+ * @param totalCount - The total number of slides in the presentation
+ * @param topic - The presentation topic for contextual content generation
+ * @returns A slide object with type, title, content, and bullet points
+ * 
+ * Slide type logic:
+ * - First slide (1): 'title' - Main presentation title
+ * - Last slide: 'conclusion' - Summary and wrap-up
+ * - Middle slide (for decks > 2 slides): 'chart' - Data visualization
+ * - All others: 'content' - Regular content slides
+ */
+function createFillerSlide(slideNumber: number, totalCount: number, topic: string) {
+  const isFirst = slideNumber === 1;
+  const isLast = slideNumber === totalCount;
+
+  // For very small decks (1-2 slides), we intentionally do not create a chart slide.
+  let chartPosition: number | null = null;
+  if (totalCount > 2) {
+    const middlePosition = Math.ceil(totalCount / 2);
+    chartPosition = Math.min(
+      Math.max(middlePosition, 2),
+      totalCount - 1
+    );
+  }
+  const isChartPosition =
+    !isFirst && !isLast && chartPosition !== null && slideNumber === chartPosition;
+
+  let type: 'title' | 'content' | 'conclusion' | 'chart';
+  if (isFirst) {
+    type = 'title';
+  } else if (isLast) {
+    type = 'conclusion';
+  } else if (isChartPosition) {
+    type = 'chart';
+  } else {
+    type = 'content';
+  }
+
+  let title: string;
+  let content: string;
+
+  switch (type) {
+    case 'title':
+      title = topic;
+      content = `Overview of ${topic}`;
+      break;
+    case 'conclusion':
+      title = 'Summary';
+      content = `Key takeaways and next steps for ${topic}`;
+      break;
+    case 'chart':
+      title = `Key Data for ${topic}`;
+      content = `Visual representation of important metrics or trends related to ${topic}`;
+      break;
+    default:
+      title = `Additional Point ${slideNumber}`;
+      content = `Additional information related to ${topic}`;
+      break;
+  }
+
+  return {
+    slideNumber,
+    type,
+    title,
+    content,
+    bulletPoints: [
+      'Supporting detail',
+      'Further explanation',
+      'Key takeaway'
+    ],
+    notes: ''
+  };
+}
 
 // Fallback to Nebius/Qwen when Gemini fails
 const nebiusClient = new OpenAI({
@@ -52,25 +140,67 @@ Make content professional, engaging, and visually focused.`
   const jsonMatch = content.match(/\[[\s\S]*\]/);
   if (jsonMatch) {
     try {
-      return JSON.parse(jsonMatch[0]);
+      const parsedSlides = JSON.parse(jsonMatch[0]);
+      
+      // Ensure we have the correct number of slides
+      if (parsedSlides.length !== pageCount) {
+        console.warn(`⚠️ Nebius generated ${parsedSlides.length} slides instead of ${pageCount}. Adjusting...`);
+        
+        // If too many slides, trim to pageCount
+        if (parsedSlides.length > pageCount) {
+          return parsedSlides.slice(0, pageCount);
+        }
+        
+        // If too few slides, generate filler slides based on topic
+        while (parsedSlides.length < pageCount) {
+          parsedSlides.push(createFillerSlide(parsedSlides.length + 1, pageCount, prompt));
+        }
+      }
+      
+      return parsedSlides;
     } catch (e) {
       console.error('Failed to parse Nebius response:', e);
     }
   }
   
-  // Fallback: create basic slides
-  return Array.from({ length: pageCount }, (_, i) => ({
-    slideNumber: i + 1,
-    type: i === 0 ? 'title' : i === pageCount - 1 ? 'conclusion' : 'content',
-    title: i === 0 ? prompt : `Slide ${i + 1}`,
-    content: 'Content for this slide',
-    bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
-  }));
+  // Fallback: create basic slides with exact pageCount using helper
+  return Array.from({ length: pageCount }, (_, i) => {
+    if (i === 0) {
+      return {
+        slideNumber: 1,
+        type: 'title',
+        title: prompt,
+        content: 'Content for this slide',
+        bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
+      };
+    }
+    return createFillerSlide(i + 1, pageCount, prompt);
+  });
 }
 
 
 export async function POST(request: Request) {
   try {
+    // ✅ AUTHENTICATION CHECK
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { prompt, pageCount = 8, outlineOnly = false } = body;
 
@@ -81,18 +211,115 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate pageCount to prevent invalid or abusive credit calculations
+    const validatedPageCount = Number(pageCount);
+    if (
+      !Number.isInteger(validatedPageCount) ||
+      validatedPageCount < 1 ||
+      validatedPageCount > 100
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
+        { status: 400 }
+      );
+    }
+
+    // Get or create user credits
+    let { data: userCredits } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits, error: updateError } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      } else if (updatedCredits) {
+        userCredits = updatedCredits;
+      } else {
+        console.error('Credits reset did not return an updated record, applying local reset instead');
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      }
+    }
+
+    // Check if user has enough credits - use validated page count for calculation
+    const creditsPerSlide = ACTION_COSTS.presentation;
+    const estimatedCreditCost = validatedPageCount * creditsPerSlide;
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    
+    if (creditsRemaining < estimatedCreditCost) {
+      const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
+      const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining,
+          creditsRequired: estimatedCreditCost
+        },
+        { status: 402 }
+      );
+    }
+
     console.log('📝 Step 1: Generating slide text content...');
     
     // Step 1: Generate text content - Use Mistral first, then Nebius fallback
     let outlines;
     try {
       console.log('Using Mistral Large for text generation');
-      outlines = await generatePresentationText(prompt, pageCount);
+      outlines = await generatePresentationText(prompt, validatedPageCount);
       console.log('✅ Generated with Mistral');
     } catch (mistralError: any) {
       console.error('⚠️ Mistral failed:', mistralError.message);
       console.log('🔄 Falling back to Nebius/Qwen...');
-      outlines = await generateWithNebius(prompt, pageCount);
+      outlines = await generateWithNebius(prompt, validatedPageCount);
     }
     
     console.log(`✅ Generated ${outlines.length} slides`);
@@ -173,12 +400,53 @@ export async function POST(request: Request) {
     console.log('✨ Step 5: Presentation enhancement complete!');
     console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
+    // ✅ DEDUCT CREDITS based on actual slides generated
+    const actualCreditCost = enhancedOutlines.length * creditsPerSlide;
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits.credits_used + actualCreditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+      // Don't fail the request, just log the error
+    } else {
+      // Log the usage
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'presentation',
+          credits_used: actualCreditCost,
+          metadata: { 
+            pageCount: enhancedOutlines.length,
+            prompt_length: prompt.length 
+          }
+        });
+      
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
+      }
+      
+      console.log(`💳 Deducted ${actualCreditCost} credits for ${enhancedOutlines.length}-slide presentation`);
+    }
+    
     return NextResponse.json({ 
       outlines: enhancedOutlines,
       stats: {
         totalSlides: enhancedOutlines.length,
         withImages: enhancedOutlines.filter((o: any) => o.imageUrl).length,
         withCharts: enhancedOutlines.filter((o: any) => o.chartData).length,
+      },
+      credits: {
+        used: actualCreditCost,
+        remaining: calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used + actualCreditCost
+        )
       }
     });
   } catch (error) {

@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -163,7 +163,8 @@ export async function POST(request: Request) {
           user_id: user.id,
           tier: 'free',
           credits_total: TIER_LIMITS.free,
-          credits_used: 0
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
         })
         .select()
         .single();
@@ -178,8 +179,40 @@ export async function POST(request: Request) {
       userCredits = newCredits;
     }
 
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits, error: updateError } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      } else if (updatedCredits) {
+        userCredits = updatedCredits;
+      } else {
+        console.error('Credits reset did not return an updated record, applying local reset instead');
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      }
+    }
+
     // Check if user has enough credits
-    const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
     if (creditsRemaining < creditCost) {
       return NextResponse.json(

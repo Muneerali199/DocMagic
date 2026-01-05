@@ -26,6 +26,28 @@ export interface ChartData {
 }
 
 /**
+ * Helper to generate a filler slide with a consistent structure
+ * 
+ * This function is called when the Mistral AI generates fewer slides than requested,
+ * padding the presentation to reach the correct slide count.
+ * 
+ * @param slideNumber - The 1-based index of the slide being created
+ * @param pageCount - The total number of slides expected in the presentation
+ * @param topic - The presentation topic for contextual content generation
+ * @returns A slide object with slideNumber, title, type, bulletPoints, content, and notes
+ */
+function createMistralFillerSlide(slideNumber: number, pageCount: number, topic: string) {
+  return {
+    slideNumber,
+    title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
+    type: slideNumber === pageCount ? 'conclusion' : 'content',
+    bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],
+    content: `Additional information related to ${topic}`,
+    notes: 'Speaker notes',
+  };
+}
+
+/**
  * Generate image descriptions for presentation slides using Mistral AI
  */
 export async function generateImageDescriptions(
@@ -242,7 +264,7 @@ Return ONLY a JSON array with this structure:
 [
   {
     "title": "Engaging Title",
-    "layout": "cover|split|list|chart|quote",
+    "type": "title|content|conclusion|chart",
     "bulletPoints": ["Key point 1", "Key point 2", "Key point 3"],
     "content": "Optional paragraph content",
     "notes": "Speaker notes"
@@ -252,7 +274,7 @@ Return ONLY a JSON array with this structure:
 Guidelines:
 - Use professional, clear language
 - Make bullet points concise and impactful
-- Mix different layouts for visual variety
+- Mix different types for visual variety
 - Ensure logical flow between slides`;
 
     const response = await mistral.chat.complete({
@@ -267,7 +289,24 @@ Guidelines:
     if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsedSlides = JSON.parse(jsonMatch[0]);
+      
+      // Ensure we have the correct number of slides
+      if (parsedSlides.length !== pageCount) {
+        console.warn(`⚠️ AI generated ${parsedSlides.length} slides instead of ${pageCount}. Adjusting...`);
+        
+        // If too many slides, trim to pageCount
+        if (parsedSlides.length > pageCount) {
+          return parsedSlides.slice(0, pageCount);
+        }
+        
+        // If too few slides, generate filler slides based on topic using helper
+        while (parsedSlides.length < pageCount) {
+          parsedSlides.push(createMistralFillerSlide(parsedSlides.length + 1, pageCount, topic));
+        }
+      }
+      
+      return parsedSlides;
     }
     return [];
   } catch (error) {

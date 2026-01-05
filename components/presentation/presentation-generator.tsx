@@ -146,16 +146,43 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
     setIsGenerating(true);
 
     try {
+      // Get authentication token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to create presentations.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const response = await fetch('/api/generate/presentation-outline', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ prompt, pageCount }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate outline');
+        const errorData = await response.json();
+        
+        // Handle credit/payment errors
+        if (response.status === 402) {
+          const creditWord = errorData.creditsRequired === 1 ? 'credit' : 'credits';
+          const slideWord = pageCount === 1 ? 'slide' : 'slides';
+          toast({
+            title: "Not Enough Credits",
+            description: errorData.message || `You need ${errorData.creditsRequired} ${creditWord} for a ${pageCount}-${slideWord} presentation. Please upgrade your plan.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to generate outline');
       }
 
       const data = await response.json();
@@ -166,10 +193,10 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         title: "🎯 AI Outline Created!",
         description: `${data.outlines.length} slides intelligently structured with professional images and charts. Choose your style!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to generate outline. Please try again.",
+        description: error.message || "Failed to generate outline. Please try again.",
         variant: "destructive",
       });
     } finally {
