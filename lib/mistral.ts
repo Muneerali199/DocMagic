@@ -27,6 +27,14 @@ export interface ChartData {
 
 /**
  * Helper to generate a filler slide with a consistent structure
+ * 
+ * This function is called when the Mistral AI generates fewer slides than requested,
+ * padding the presentation to reach the correct slide count.
+ * 
+ * @param slideNumber - The 1-based index of the slide being created
+ * @param pageCount - The total number of slides expected in the presentation
+ * @param topic - The presentation topic for contextual content generation
+ * @returns A slide object with slideNumber, title, type, bulletPoints, content, and notes
  */
 function createMistralFillerSlide(slideNumber: number, pageCount: number, topic: string) {
   return {

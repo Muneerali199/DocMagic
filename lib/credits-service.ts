@@ -81,19 +81,32 @@ export function getActionCostDescription(action: ActionType): string {
   return `${cost} credit${cost > 1 ? 's' : ''}`;
 }
 
-// Helper to calculate credit reset date
+/**
+ * Calculate the date when credits should be reset (30 days from now)
+ * @returns ISO 8601 formatted date string for credit reset
+ */
 export function getCreditsResetDate(): string {
   const resetDate = new Date();
   resetDate.setDate(resetDate.getDate() + CREDIT_RESET_DAYS);
   return resetDate.toISOString();
 }
 
-// Helper to check if credits need to be reset
+/**
+ * Check if credits need to be reset based on reset date
+ * @param resetDate - The scheduled reset date (ISO string or Date object)
+ * @returns true if the reset date has passed, false otherwise
+ */
 export function shouldResetCredits(resetDate: string | Date): boolean {
   return new Date(resetDate) < new Date();
 }
 
-// Helper to calculate remaining credits
+/**
+ * Calculate remaining credits, ensuring result is never negative
+ * @param creditsTotal - Total credits available for the user
+ * @param creditsUsed - Credits already consumed
+ * @returns Remaining credits (0 or positive integer)
+ */
 export function calculateRemainingCredits(creditsTotal: number, creditsUsed: number): number {
-  return creditsTotal - creditsUsed;
+  const remaining = creditsTotal - creditsUsed;
+  return remaining < 0 ? 0 : remaining;
 }

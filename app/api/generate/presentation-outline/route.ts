@@ -15,19 +15,39 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Helper to create a filler slide with contextual content
+/**
+ * Helper to create a filler slide with contextual content
+ * 
+ * This function is called when the AI generates fewer slides than requested,
+ * padding the presentation to reach the correct slide count. It intelligently
+ * determines the slide type based on position and context.
+ * 
+ * @param slideNumber - The 1-based index of the slide being created
+ * @param totalCount - The total number of slides in the presentation
+ * @param topic - The presentation topic for contextual content generation
+ * @returns A slide object with type, title, content, and bullet points
+ * 
+ * Slide type logic:
+ * - First slide (1): 'title' - Main presentation title
+ * - Last slide: 'conclusion' - Summary and wrap-up
+ * - Middle slide (for decks > 2 slides): 'chart' - Data visualization
+ * - All others: 'content' - Regular content slides
+ */
 function createFillerSlide(slideNumber: number, totalCount: number, topic: string) {
   const isFirst = slideNumber === 1;
   const isLast = slideNumber === totalCount;
 
-  // Choose a reasonable default position for a chart slide:
-  // use the middle slide, but ensure it's not the first or last.
-  const middlePosition = Math.ceil(totalCount / 2);
-  const chartPosition = Math.min(
-    Math.max(middlePosition, 2),
-    Math.max(totalCount - 1, 2)
-  );
-  const isChartPosition = !isFirst && !isLast && slideNumber === chartPosition;
+  // For very small decks (1-2 slides), we intentionally do not create a chart slide.
+  let chartPosition: number | null = null;
+  if (totalCount > 2) {
+    const middlePosition = Math.ceil(totalCount / 2);
+    chartPosition = Math.min(
+      Math.max(middlePosition, 2),
+      totalCount - 1
+    );
+  }
+  const isChartPosition =
+    !isFirst && !isLast && chartPosition !== null && slideNumber === chartPosition;
 
   let type: 'title' | 'content' | 'conclusion' | 'chart';
   if (isFirst) {
@@ -71,7 +91,8 @@ function createFillerSlide(slideNumber: number, totalCount: number, topic: strin
       'Supporting detail',
       'Further explanation',
       'Key takeaway'
-    ]
+    ],
+    notes: ''
   };
 }
 
@@ -191,18 +212,17 @@ export async function POST(request: Request) {
     }
 
     // Validate pageCount to prevent invalid or abusive credit calculations
-    const normalizedPageCount = Number(pageCount);
+    const validatedPageCount = Number(pageCount);
     if (
-      !Number.isInteger(normalizedPageCount) ||
-      normalizedPageCount < 1 ||
-      normalizedPageCount > 100
+      !Number.isInteger(validatedPageCount) ||
+      validatedPageCount < 1 ||
+      validatedPageCount > 100
     ) {
       return NextResponse.json(
         { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
         { status: 400 }
       );
     }
-    const validatedPageCount = normalizedPageCount;
 
     // Get or create user credits
     let { data: userCredits } = await supabaseAdmin
@@ -399,7 +419,7 @@ export async function POST(request: Request) {
         .from('credit_usage_log')
         .insert({
           user_id: user.id,
-          action_type: 'presentation',
+          action: 'presentation',
           credits_used: actualCreditCost,
           metadata: { 
             pageCount: enhancedOutlines.length,
@@ -423,7 +443,10 @@ export async function POST(request: Request) {
       },
       credits: {
         used: actualCreditCost,
-        remaining: creditsRemaining - actualCreditCost
+        remaining: calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used + actualCreditCost
+        )
       }
     });
   } catch (error) {
