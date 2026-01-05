@@ -59,13 +59,37 @@ Make content professional, engaging, and visually focused.`
   const jsonMatch = content.match(/\[[\s\S]*\]/);
   if (jsonMatch) {
     try {
-      return JSON.parse(jsonMatch[0]);
+      const parsedSlides = JSON.parse(jsonMatch[0]);
+      
+      // Ensure we have the correct number of slides
+      if (parsedSlides.length !== pageCount) {
+        console.warn(`⚠️ Nebius generated ${parsedSlides.length} slides instead of ${pageCount}. Adjusting...`);
+        
+        // If too many slides, trim to pageCount
+        if (parsedSlides.length > pageCount) {
+          return parsedSlides.slice(0, pageCount);
+        }
+        
+        // If too few slides, generate filler slides
+        while (parsedSlides.length < pageCount) {
+          const slideNumber = parsedSlides.length + 1;
+          parsedSlides.push({
+            slideNumber,
+            type: 'content',
+            title: `Slide ${slideNumber}`,
+            content: 'Content for this slide',
+            bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
+          });
+        }
+      }
+      
+      return parsedSlides;
     } catch (e) {
       console.error('Failed to parse Nebius response:', e);
     }
   }
   
-  // Fallback: create basic slides
+  // Fallback: create basic slides with exact pageCount
   return Array.from({ length: pageCount }, (_, i) => ({
     slideNumber: i + 1,
     type: i === 0 ? 'title' : i === pageCount - 1 ? 'conclusion' : 'content',

@@ -267,7 +267,31 @@ Guidelines:
     if (typeof content !== 'string') content = String(content);
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      const parsedSlides = JSON.parse(jsonMatch[0]);
+      
+      // Ensure we have the correct number of slides
+      if (parsedSlides.length !== pageCount) {
+        console.warn(`⚠️ AI generated ${parsedSlides.length} slides instead of ${pageCount}. Adjusting...`);
+        
+        // If too many slides, trim to pageCount
+        if (parsedSlides.length > pageCount) {
+          return parsedSlides.slice(0, pageCount);
+        }
+        
+        // If too few slides, generate filler slides
+        while (parsedSlides.length < pageCount) {
+          const slideNumber = parsedSlides.length + 1;
+          parsedSlides.push({
+            title: `Slide ${slideNumber}`,
+            layout: 'content',
+            bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3'],
+            content: 'Additional content for this slide',
+            notes: 'Speaker notes'
+          });
+        }
+      }
+      
+      return parsedSlides;
     }
     return [];
   } catch (error) {
