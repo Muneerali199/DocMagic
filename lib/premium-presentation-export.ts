@@ -173,8 +173,25 @@ export async function exportPremiumPNG(
     clone.style.transform = 'none';
     clone.style.animation = 'none';
     
-    // Hide UI elements that shouldn't be in export
-    hideExportUIElements(clone);
+    // Hide UI elements that shouldn't be in export - using basic inline hiding
+    const hideUIElements = (el: HTMLElement) => {
+      // Hide edit buttons and controls
+      const controlElements = el.querySelectorAll('button, [class*="edit"], [class*="control"]');
+      controlElements.forEach(elem => {
+        (elem as HTMLElement).style.display = 'none';
+      });
+      
+      // Hide slide number badges
+      const allDivs = el.querySelectorAll('div');
+      allDivs.forEach(div => {
+        const text = (div as HTMLElement).innerText?.trim();
+        if (text && /^SLIDE\s*\d+$/i.test(text)) {
+          (div as HTMLElement).style.display = 'none';
+        }
+      });
+    };
+    
+    hideUIElements(clone);
     
     // Temporarily append to get computed styles
     document.body.appendChild(clone);
@@ -193,7 +210,7 @@ export async function exportPremiumPNG(
           // Hide UI elements in the cloned document
           const clonedElement = clonedDoc.body.querySelector('[data-slide-card]') || clonedDoc.body.firstElementChild;
           if (clonedElement) {
-            hideExportUIElements(clonedElement as HTMLElement);
+            hideUIElements(clonedElement as HTMLElement);
             (clonedElement as HTMLElement).style.backdropFilter = 'none';
           }
           
