@@ -242,7 +242,7 @@ Return ONLY a JSON array with this structure:
 [
   {
     "title": "Engaging Title",
-    "type": "cover|content|conclusion|chart|split",
+    "type": "title|content|conclusion|chart",
     "bulletPoints": ["Key point 1", "Key point 2", "Key point 3"],
     "content": "Optional paragraph content",
     "notes": "Speaker notes"

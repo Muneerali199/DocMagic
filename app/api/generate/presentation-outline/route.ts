@@ -15,6 +15,17 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Helper to create a filler slide with contextual content
+function createFillerSlide(slideNumber: number, totalCount: number, topic: string) {
+  return {
+    slideNumber,
+    type: slideNumber === totalCount ? 'conclusion' : 'content',
+    title: slideNumber === totalCount ? 'Summary' : `Additional Point ${slideNumber}`,
+    content: `Additional information related to ${topic}`,
+    bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway']
+  };
+}
+
 // Fallback to Nebius/Qwen when Gemini fails
 const nebiusClient = new OpenAI({
   baseURL: 'https://api.tokenfactory.nebius.com/v1/',
@@ -72,14 +83,7 @@ Make content professional, engaging, and visually focused.`
         
         // If too few slides, generate filler slides based on topic
         while (parsedSlides.length < pageCount) {
-          const slideNumber = parsedSlides.length + 1;
-          parsedSlides.push({
-            slideNumber,
-            type: slideNumber === pageCount ? 'conclusion' : 'content',
-            title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
-            content: `Additional information related to ${prompt}`,
-            bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway']
-          });
+          parsedSlides.push(createFillerSlide(parsedSlides.length + 1, pageCount, prompt));
         }
       }
       
@@ -89,14 +93,19 @@ Make content professional, engaging, and visually focused.`
     }
   }
   
-  // Fallback: create basic slides with exact pageCount
-  return Array.from({ length: pageCount }, (_, i) => ({
-    slideNumber: i + 1,
-    type: i === 0 ? 'title' : i === pageCount - 1 ? 'conclusion' : 'content',
-    title: i === 0 ? prompt : `Slide ${i + 1}`,
-    content: 'Content for this slide',
-    bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
-  }));
+  // Fallback: create basic slides with exact pageCount using helper
+  return Array.from({ length: pageCount }, (_, i) => {
+    if (i === 0) {
+      return {
+        slideNumber: 1,
+        type: 'title',
+        title: prompt,
+        content: 'Content for this slide',
+        bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
+      };
+    }
+    return createFillerSlide(i + 1, pageCount, prompt);
+  });
 }
 
 
