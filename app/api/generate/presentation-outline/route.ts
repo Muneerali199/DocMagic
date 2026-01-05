@@ -8,7 +8,7 @@ import {
 } from '@/lib/mistral';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -194,7 +194,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user has enough credits
-    const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
     if (creditsRemaining < creditCost) {
       const creditWord = creditCost === 1 ? 'credit' : 'credits';

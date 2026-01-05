@@ -92,3 +92,8 @@ export function getCreditsResetDate(): string {
 export function shouldResetCredits(resetDate: string | Date): boolean {
   return new Date(resetDate) < new Date();
 }
+
+// Helper to calculate remaining credits
+export function calculateRemainingCredits(creditsTotal: number, creditsUsed: number): number {
+  return creditsTotal - creditsUsed;
+}
