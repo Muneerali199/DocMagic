@@ -173,9 +173,11 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         
         // Handle credit/payment errors
         if (response.status === 402) {
+          const creditWord = errorData.creditsRequired === 1 ? 'credit' : 'credits';
+          const slideWord = pageCount === 1 ? 'slide' : 'slides';
           toast({
             title: "Not Enough Credits",
-            description: errorData.message || `You need ${errorData.creditsRequired} credits for a ${pageCount}-slide presentation. Please upgrade your plan.`,
+            description: errorData.message || `You need ${errorData.creditsRequired} ${creditWord} for a ${pageCount}-${slideWord} presentation. Please upgrade your plan.`,
             variant: "destructive",
           });
           return;

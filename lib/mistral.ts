@@ -282,6 +282,7 @@ Guidelines:
         while (parsedSlides.length < pageCount) {
           const slideNumber = parsedSlides.length + 1;
           parsedSlides.push({
+            slideNumber,
             title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
             type: slideNumber === pageCount ? 'conclusion' : 'content',
             bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],

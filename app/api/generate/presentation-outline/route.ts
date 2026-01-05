@@ -133,7 +133,8 @@ export async function POST(request: Request) {
     }
 
     // ✅ CREDIT CHECK - Calculate cost based on number of slides
-    const creditCost = pageCount * ACTION_COSTS.presentation; // 1 credit per slide
+    const creditsPerSlide = ACTION_COSTS.presentation;
+    const creditCost = pageCount * creditsPerSlide;
     
     // Get or create user credits
     let { data: userCredits, error: creditsError } = await supabaseAdmin
@@ -187,10 +188,12 @@ export async function POST(request: Request) {
     const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
     
     if (creditsRemaining < creditCost) {
+      const creditWord = creditCost === 1 ? 'credit' : 'credits';
+      const slideWord = pageCount === 1 ? 'slide' : 'slides';
       return NextResponse.json(
         { 
           error: 'Not enough credits',
-          message: `You need ${creditCost} credits to generate a ${pageCount}-slide presentation. You have ${creditsRemaining} credits remaining.`,
+          message: `You need ${creditCost} ${creditWord} to generate a ${pageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
           needsUpgrade: true,
           currentTier: userCredits.tier,
           creditsRemaining,
