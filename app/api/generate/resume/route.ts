@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -163,7 +163,8 @@ export async function POST(request: Request) {
           user_id: user.id,
           tier: 'free',
           credits_total: TIER_LIMITS.free,
-          credits_used: 0
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
         })
         .select()
         .single();
@@ -178,8 +179,25 @@ export async function POST(request: Request) {
       userCredits = newCredits;
     }
 
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const { data: updatedCredits } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate(),
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedCredits) {
+        userCredits = updatedCredits;
+      }
+    }
+
     // Check if user has enough credits
-    const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
     if (creditsRemaining < creditCost) {
       return NextResponse.json(
