@@ -7,6 +7,13 @@ import {
   generateChartData 
 } from '@/lib/mistral';
 import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS } from '@/lib/credits-service';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Fallback to Nebius/Qwen when Gemini fails
 const nebiusClient = new OpenAI({
@@ -71,6 +78,26 @@ Make content professional, engaging, and visually focused.`
 
 export async function POST(request: Request) {
   try {
+    // ✅ AUTHENTICATION CHECK
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { prompt, pageCount = 8, outlineOnly = false } = body;
 
@@ -78,6 +105,80 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Missing prompt' },
         { status: 400 }
+      );
+    }
+
+    // ✅ CREDIT CHECK - Calculate cost based on number of slides
+    const creditCost = pageCount * ACTION_COSTS.presentation; // 1 credit per slide
+    
+    // Get or create user credits
+    let { data: userCredits, error: creditsError } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const resetDate = new Date();
+      resetDate.setDate(resetDate.getDate() + 30);
+      
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0,
+          credits_reset_at: resetDate.toISOString()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if credits need reset
+    if (userCredits && new Date(userCredits.credits_reset_at) < new Date()) {
+      const resetDate = new Date();
+      resetDate.setDate(resetDate.getDate() + 30);
+
+      const { data: updatedCredits } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetDate.toISOString(),
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedCredits) {
+        userCredits = updatedCredits;
+      }
+    }
+
+    // Check if user has enough credits
+    const creditsRemaining = userCredits.credits_total - userCredits.credits_used;
+    
+    if (creditsRemaining < creditCost) {
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${creditCost} credits to generate a ${pageCount}-slide presentation. You have ${creditsRemaining} credits remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining,
+          creditsRequired: creditCost
+        },
+        { status: 402 }
       );
     }
 
@@ -173,12 +274,45 @@ export async function POST(request: Request) {
     console.log('✨ Step 5: Presentation enhancement complete!');
     console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
+    // ✅ DEDUCT CREDITS after successful generation
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits.credits_used + creditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+      // Don't fail the request, just log the error
+    } else {
+      // Log the usage
+      await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action_type: 'presentation',
+          credits_used: creditCost,
+          metadata: { 
+            pageCount: enhancedOutlines.length,
+            prompt_length: prompt.length 
+          }
+        });
+      
+      console.log(`💳 Deducted ${creditCost} credits for ${enhancedOutlines.length}-slide presentation`);
+    }
+    
     return NextResponse.json({ 
       outlines: enhancedOutlines,
       stats: {
         totalSlides: enhancedOutlines.length,
         withImages: enhancedOutlines.filter((o: any) => o.imageUrl).length,
         withCharts: enhancedOutlines.filter((o: any) => o.chartData).length,
+      },
+      credits: {
+        used: creditCost,
+        remaining: creditsRemaining - creditCost
       }
     });
   } catch (error) {
