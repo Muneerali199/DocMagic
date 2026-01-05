@@ -226,13 +226,6 @@ export function MobilePresentationGenerator() {
       setIsGenerating(false);
     }
   };
-        description: "Please try again",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const generateFullPresentation = async () => {
     setIsGenerating(true);
