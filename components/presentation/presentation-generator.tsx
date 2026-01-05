@@ -579,6 +579,130 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
     }
   };
 
+  const exportToPNG = async () => {
+    if (!slides.length) return;
+    setIsExporting(true);
+
+    try {
+      toast({
+        title: "🖼️ Exporting to PNG...",
+        description: `Capturing ${slides.length} slide${slides.length > 1 ? 's' : ''}. Please wait...`,
+      });
+
+      // Get the presentation preview container
+      const presentationPreview = document.getElementById('presentation-preview');
+      if (!presentationPreview) {
+        throw new Error('Presentation preview not found');
+      }
+
+      // Use JSZip for multiple slides
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      // Store the current slide index to restore later
+      const currentSlideIndex = 0; // We'll query the active slide from the preview
+
+      // Function to wait for slide to render
+      const waitForSlideRender = () => new Promise(resolve => setTimeout(resolve, 500));
+
+      // Get all slide indicator buttons to click through slides
+      const slideIndicators = presentationPreview.querySelectorAll('button[class*="rounded-full"]');
+      
+      if (slideIndicators.length >= slides.length) {
+        // Capture each slide by clicking through the indicators
+        for (let i = 0; i < slides.length; i++) {
+          // Click the slide indicator to switch to this slide
+          const indicator = slideIndicators[i] as HTMLButtonElement;
+          indicator.click();
+          
+          // Wait for the slide to render
+          await waitForSlideRender();
+          
+          // Find the slide content container
+          const slideContainer = presentationPreview.querySelector('[id="presentation-container"]');
+          if (!slideContainer) continue;
+          
+          // Capture the slide
+          const canvas = await html2canvas(slideContainer as HTMLElement, {
+            scale: 2,
+            backgroundColor: null,
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            imageTimeout: 15000,
+          });
+
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b!), 'image/png', 1.0);
+          });
+
+          zip.file(`${prompt.slice(0, 30).trim() || 'presentation'}-slide-${i + 1}.png`, blob);
+        }
+      } else {
+        // Fallback: capture current view only
+        const presentationContainer = document.getElementById('presentation-container');
+        if (!presentationContainer) {
+          throw new Error('Presentation container not found');
+        }
+
+        const canvas = await html2canvas(presentationContainer, {
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          imageTimeout: 15000,
+        });
+
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((b) => resolve(b!), 'image/png', 1.0);
+        });
+
+        zip.file(`${prompt.slice(0, 30).trim() || 'presentation'}-slide.png`, blob);
+      }
+
+      // Download the result
+      if (slides.length === 1) {
+        // Single slide - download directly
+        const files = Object.keys(zip.files);
+        if (files.length > 0) {
+          const blob = await zip.files[files[0]].async('blob');
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${prompt.slice(0, 30).trim() || 'presentation'}-slide.png`;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      } else {
+        // Multiple slides - download as ZIP
+        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const url = URL.createObjectURL(zipBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${prompt.slice(0, 30).trim() || 'presentation'}-slides.zip`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toast({
+        title: "✅ PNG Export Complete!",
+        description: slides.length > 1 
+          ? `${slides.length} slides exported as PNG images in a ZIP file`
+          : "Slide exported as PNG image",
+      });
+    } catch (error) {
+      console.error('PNG export error:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export presentation to PNG. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const exportToPPTX = async () => {
     if (!slides.length) return;
     setIsExporting(true);
@@ -1639,6 +1763,19 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             )}
             
             <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={exportToPNG}
+                disabled={isExporting}
+                variant="outline"
+                className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+              >
+                {isExporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                PNG
+              </Button>
               <Button
                 onClick={exportToPDF}
                 disabled={isExporting}
