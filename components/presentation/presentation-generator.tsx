@@ -599,9 +599,6 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
-      // Store the current slide index to restore later
-      const currentSlideIndex = 0; // We'll query the active slide from the preview
-
       // Function to wait for slide to render
       const waitForSlideRender = () => new Promise(resolve => setTimeout(resolve, 500));
 
