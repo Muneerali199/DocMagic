@@ -181,18 +181,33 @@ export async function POST(request: Request) {
 
     // Check if credits need reset
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const { data: updatedCredits } = await supabaseAdmin
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits, error: updateError } = await supabaseAdmin
         .from('user_credits')
         .update({
           credits_used: 0,
-          credits_reset_at: getCreditsResetDate(),
+          credits_reset_at: resetAt,
         })
         .eq('user_id', user.id)
         .select()
         .single();
 
-      if (updatedCredits) {
+      if (updateError) {
+        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      } else if (updatedCredits) {
         userCredits = updatedCredits;
+      } else {
+        console.error('Credits reset did not return an updated record, applying local reset instead');
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
       }
     }
 

@@ -190,12 +190,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // ✅ CREDIT CHECK - Calculate cost based on number of slides
-    const creditsPerSlide = ACTION_COSTS.presentation;
-    const creditCost = pageCount * creditsPerSlide;
-    
+    // Validate pageCount to prevent invalid or abusive credit calculations
+    const normalizedPageCount = Number(pageCount);
+    if (
+      !Number.isInteger(normalizedPageCount) ||
+      normalizedPageCount < 1 ||
+      normalizedPageCount > 100
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
+        { status: 400 }
+      );
+    }
+    const validatedPageCount = normalizedPageCount;
+
     // Get or create user credits
-    let { data: userCredits, error: creditsError } = await supabaseAdmin
+    let { data: userCredits } = await supabaseAdmin
       .from('user_credits')
       .select('*')
       .eq('user_id', user.id)
@@ -227,35 +237,52 @@ export async function POST(request: Request) {
 
     // Check if credits need reset
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const { data: updatedCredits } = await supabaseAdmin
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits, error: updateError } = await supabaseAdmin
         .from('user_credits')
         .update({
           credits_used: 0,
-          credits_reset_at: getCreditsResetDate(),
+          credits_reset_at: resetAt,
         })
         .eq('user_id', user.id)
         .select()
         .single();
 
-      if (updatedCredits) {
+      if (updateError) {
+        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
+      } else if (updatedCredits) {
         userCredits = updatedCredits;
+      } else {
+        console.error('Credits reset did not return an updated record, applying local reset instead');
+        userCredits = {
+          ...userCredits,
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        };
       }
     }
 
-    // Check if user has enough credits
+    // Check if user has enough credits - use validated page count for calculation
+    const creditsPerSlide = ACTION_COSTS.presentation;
+    const estimatedCreditCost = validatedPageCount * creditsPerSlide;
     const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
-    if (creditsRemaining < creditCost) {
-      const creditWord = creditCost === 1 ? 'credit' : 'credits';
-      const slideWord = pageCount === 1 ? 'slide' : 'slides';
+    if (creditsRemaining < estimatedCreditCost) {
+      const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
+      const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
       return NextResponse.json(
         { 
           error: 'Not enough credits',
-          message: `You need ${creditCost} ${creditWord} to generate a ${pageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
+          message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
           needsUpgrade: true,
           currentTier: userCredits.tier,
           creditsRemaining,
-          creditsRequired: creditCost
+          creditsRequired: estimatedCreditCost
         },
         { status: 402 }
       );
@@ -267,12 +294,12 @@ export async function POST(request: Request) {
     let outlines;
     try {
       console.log('Using Mistral Large for text generation');
-      outlines = await generatePresentationText(prompt, pageCount);
+      outlines = await generatePresentationText(prompt, validatedPageCount);
       console.log('✅ Generated with Mistral');
     } catch (mistralError: any) {
       console.error('⚠️ Mistral failed:', mistralError.message);
       console.log('🔄 Falling back to Nebius/Qwen...');
-      outlines = await generateWithNebius(prompt, pageCount);
+      outlines = await generateWithNebius(prompt, validatedPageCount);
     }
     
     console.log(`✅ Generated ${outlines.length} slides`);
@@ -353,11 +380,12 @@ export async function POST(request: Request) {
     console.log('✨ Step 5: Presentation enhancement complete!');
     console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
-    // ✅ DEDUCT CREDITS after successful generation
+    // ✅ DEDUCT CREDITS based on actual slides generated
+    const actualCreditCost = enhancedOutlines.length * creditsPerSlide;
     const { error: updateError } = await supabaseAdmin
       .from('user_credits')
       .update({ 
-        credits_used: userCredits.credits_used + creditCost,
+        credits_used: userCredits.credits_used + actualCreditCost,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
@@ -372,7 +400,7 @@ export async function POST(request: Request) {
         .insert({
           user_id: user.id,
           action_type: 'presentation',
-          credits_used: creditCost,
+          credits_used: actualCreditCost,
           metadata: { 
             pageCount: enhancedOutlines.length,
             prompt_length: prompt.length 
@@ -383,7 +411,7 @@ export async function POST(request: Request) {
         console.error('Failed to log credit usage:', logError);
       }
       
-      console.log(`💳 Deducted ${creditCost} credits for ${enhancedOutlines.length}-slide presentation`);
+      console.log(`💳 Deducted ${actualCreditCost} credits for ${enhancedOutlines.length}-slide presentation`);
     }
     
     return NextResponse.json({ 
@@ -394,8 +422,8 @@ export async function POST(request: Request) {
         withCharts: enhancedOutlines.filter((o: any) => o.chartData).length,
       },
       credits: {
-        used: creditCost,
-        remaining: creditsRemaining - creditCost
+        used: actualCreditCost,
+        remaining: creditsRemaining - actualCreditCost
       }
     });
   } catch (error) {

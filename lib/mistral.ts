@@ -26,6 +26,20 @@ export interface ChartData {
 }
 
 /**
+ * Helper to generate a filler slide with a consistent structure
+ */
+function createMistralFillerSlide(slideNumber: number, pageCount: number, topic: string) {
+  return {
+    slideNumber,
+    title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
+    type: slideNumber === pageCount ? 'conclusion' : 'content',
+    bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],
+    content: `Additional information related to ${topic}`,
+    notes: 'Speaker notes',
+  };
+}
+
+/**
  * Generate image descriptions for presentation slides using Mistral AI
  */
 export async function generateImageDescriptions(
@@ -278,17 +292,9 @@ Guidelines:
           return parsedSlides.slice(0, pageCount);
         }
         
-        // If too few slides, generate filler slides based on topic
+        // If too few slides, generate filler slides based on topic using helper
         while (parsedSlides.length < pageCount) {
-          const slideNumber = parsedSlides.length + 1;
-          parsedSlides.push({
-            slideNumber,
-            title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
-            type: slideNumber === pageCount ? 'conclusion' : 'content',
-            bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],
-            content: `Additional information related to ${topic}`,
-            notes: 'Speaker notes'
-          });
+          parsedSlides.push(createMistralFillerSlide(parsedSlides.length + 1, pageCount, topic));
         }
       }
       

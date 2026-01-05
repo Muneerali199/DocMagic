@@ -155,7 +155,6 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
           description: "Please sign in to create presentations.",
           variant: "destructive",
         });
-        setIsGenerating(false);
         return;
       }
 
