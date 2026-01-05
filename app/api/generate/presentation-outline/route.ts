@@ -8,22 +8,12 @@ import {
 } from '@/lib/mistral';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits } from '@/lib/credits-service';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// Credit system constants
-const CREDIT_RESET_DAYS = 30;
-
-// Helper function to calculate credit reset date
-function getCreditsResetDate(): string {
-  const resetDate = new Date();
-  resetDate.setDate(resetDate.getDate() + CREDIT_RESET_DAYS);
-  return resetDate.toISOString();
-}
 
 // Fallback to Nebius/Qwen when Gemini fails
 const nebiusClient = new OpenAI({
@@ -177,7 +167,7 @@ export async function POST(request: Request) {
     }
 
     // Check if credits need reset
-    if (userCredits && new Date(userCredits.credits_reset_at) < new Date()) {
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
       const { data: updatedCredits } = await supabaseAdmin
         .from('user_credits')
         .update({

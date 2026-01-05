@@ -242,7 +242,7 @@ Return ONLY a JSON array with this structure:
 [
   {
     "title": "Engaging Title",
-    "layout": "cover|split|list|chart|quote",
+    "type": "cover|content|conclusion|chart|split",
     "bulletPoints": ["Key point 1", "Key point 2", "Key point 3"],
     "content": "Optional paragraph content",
     "notes": "Speaker notes"
@@ -252,7 +252,7 @@ Return ONLY a JSON array with this structure:
 Guidelines:
 - Use professional, clear language
 - Make bullet points concise and impactful
-- Mix different layouts for visual variety
+- Mix different types for visual variety
 - Ensure logical flow between slides`;
 
     const response = await mistral.chat.complete({
@@ -283,7 +283,7 @@ Guidelines:
           const slideNumber = parsedSlides.length + 1;
           parsedSlides.push({
             title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
-            layout: slideNumber === pageCount ? 'cover' : 'content',
+            type: slideNumber === pageCount ? 'conclusion' : 'content',
             bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],
             content: `Additional information related to ${topic}`,
             notes: 'Speaker notes'

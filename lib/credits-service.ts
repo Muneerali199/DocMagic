@@ -4,6 +4,9 @@
 export type Tier = 'free' | 'basic' | 'pro' | 'enterprise';
 export type ActionType = 'resume' | 'presentation' | 'diagram' | 'letter' | 'ats_check' | 'cover_letter';
 
+// Credit reset period in days
+export const CREDIT_RESET_DAYS = 30;
+
 // Credit limits by tier
 export const TIER_LIMITS: Record<Tier, number> = {
   free: 20,
@@ -76,4 +79,16 @@ export function canPerformAction(
 export function getActionCostDescription(action: ActionType): string {
   const cost = ACTION_COSTS[action];
   return `${cost} credit${cost > 1 ? 's' : ''}`;
+}
+
+// Helper to calculate credit reset date
+export function getCreditsResetDate(): string {
+  const resetDate = new Date();
+  resetDate.setDate(resetDate.getDate() + CREDIT_RESET_DAYS);
+  return resetDate.toISOString();
+}
+
+// Helper to check if credits need to be reset
+export function shouldResetCredits(resetDate: string | Date): boolean {
+  return new Date(resetDate) < new Date();
 }
