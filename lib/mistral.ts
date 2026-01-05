@@ -278,14 +278,14 @@ Guidelines:
           return parsedSlides.slice(0, pageCount);
         }
         
-        // If too few slides, generate filler slides
+        // If too few slides, generate filler slides based on topic
         while (parsedSlides.length < pageCount) {
           const slideNumber = parsedSlides.length + 1;
           parsedSlides.push({
-            title: `Slide ${slideNumber}`,
-            layout: 'content',
-            bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3'],
-            content: 'Additional content for this slide',
+            title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
+            layout: slideNumber === pageCount ? 'cover' : 'content',
+            bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway'],
+            content: `Additional information related to ${topic}`,
             notes: 'Speaker notes'
           });
         }

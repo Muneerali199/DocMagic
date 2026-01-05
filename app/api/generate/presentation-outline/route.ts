@@ -15,6 +15,16 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Credit system constants
+const CREDIT_RESET_DAYS = 30;
+
+// Helper function to calculate credit reset date
+function getCreditsResetDate(): string {
+  const resetDate = new Date();
+  resetDate.setDate(resetDate.getDate() + CREDIT_RESET_DAYS);
+  return resetDate.toISOString();
+}
+
 // Fallback to Nebius/Qwen when Gemini fails
 const nebiusClient = new OpenAI({
   baseURL: 'https://api.tokenfactory.nebius.com/v1/',
@@ -70,15 +80,15 @@ Make content professional, engaging, and visually focused.`
           return parsedSlides.slice(0, pageCount);
         }
         
-        // If too few slides, generate filler slides
+        // If too few slides, generate filler slides based on topic
         while (parsedSlides.length < pageCount) {
           const slideNumber = parsedSlides.length + 1;
           parsedSlides.push({
             slideNumber,
-            type: 'content',
-            title: `Slide ${slideNumber}`,
-            content: 'Content for this slide',
-            bulletPoints: ['Key point 1', 'Key point 2', 'Key point 3']
+            type: slideNumber === pageCount ? 'conclusion' : 'content',
+            title: slideNumber === pageCount ? 'Summary' : `Additional Point ${slideNumber}`,
+            content: `Additional information related to ${prompt}`,
+            bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway']
           });
         }
       }
@@ -144,9 +154,6 @@ export async function POST(request: Request) {
 
     // If no credits record exists, create one
     if (!userCredits) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
-      
       const { data: newCredits, error: insertError } = await supabaseAdmin
         .from('user_credits')
         .insert({
@@ -154,7 +161,7 @@ export async function POST(request: Request) {
           tier: 'free',
           credits_total: TIER_LIMITS.free,
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString()
+          credits_reset_at: getCreditsResetDate()
         })
         .select()
         .single();
@@ -171,14 +178,11 @@ export async function POST(request: Request) {
 
     // Check if credits need reset
     if (userCredits && new Date(userCredits.credits_reset_at) < new Date()) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
-
       const { data: updatedCredits } = await supabaseAdmin
         .from('user_credits')
         .update({
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString(),
+          credits_reset_at: getCreditsResetDate(),
         })
         .eq('user_id', user.id)
         .select()
@@ -312,7 +316,7 @@ export async function POST(request: Request) {
       // Don't fail the request, just log the error
     } else {
       // Log the usage
-      await supabaseAdmin
+      const { error: logError } = await supabaseAdmin
         .from('credit_usage_log')
         .insert({
           user_id: user.id,
@@ -323,6 +327,10 @@ export async function POST(request: Request) {
             prompt_length: prompt.length 
           }
         });
+      
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
+      }
       
       console.log(`💳 Deducted ${creditCost} credits for ${enhancedOutlines.length}-slide presentation`);
     }
