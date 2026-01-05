@@ -17,12 +17,61 @@ const supabaseAdmin = createClient(
 
 // Helper to create a filler slide with contextual content
 function createFillerSlide(slideNumber: number, totalCount: number, topic: string) {
+  const isFirst = slideNumber === 1;
+  const isLast = slideNumber === totalCount;
+
+  // Choose a reasonable default position for a chart slide:
+  // use the middle slide, but ensure it's not the first or last.
+  const middlePosition = Math.ceil(totalCount / 2);
+  const chartPosition = Math.min(
+    Math.max(middlePosition, 2),
+    Math.max(totalCount - 1, 2)
+  );
+  const isChartPosition = !isFirst && !isLast && slideNumber === chartPosition;
+
+  let type: 'title' | 'content' | 'conclusion' | 'chart';
+  if (isFirst) {
+    type = 'title';
+  } else if (isLast) {
+    type = 'conclusion';
+  } else if (isChartPosition) {
+    type = 'chart';
+  } else {
+    type = 'content';
+  }
+
+  let title: string;
+  let content: string;
+
+  switch (type) {
+    case 'title':
+      title = topic;
+      content = `Overview of ${topic}`;
+      break;
+    case 'conclusion':
+      title = 'Summary';
+      content = `Key takeaways and next steps for ${topic}`;
+      break;
+    case 'chart':
+      title = `Key Data for ${topic}`;
+      content = `Visual representation of important metrics or trends related to ${topic}`;
+      break;
+    default:
+      title = `Additional Point ${slideNumber}`;
+      content = `Additional information related to ${topic}`;
+      break;
+  }
+
   return {
     slideNumber,
-    type: slideNumber === totalCount ? 'conclusion' : 'content',
-    title: slideNumber === totalCount ? 'Summary' : `Additional Point ${slideNumber}`,
-    content: `Additional information related to ${topic}`,
-    bulletPoints: ['Supporting detail', 'Further explanation', 'Key takeaway']
+    type,
+    title,
+    content,
+    bulletPoints: [
+      'Supporting detail',
+      'Further explanation',
+      'Key takeaway'
+    ]
   };
 }
 
