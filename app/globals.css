@@ -222,6 +222,9 @@
     .mesh-gradient-alt {
         background: radial-gradient( at 20% 30%, hsla(195, 60%, 50%, 0.3) 0px, transparent 50%), radial-gradient(at 70% 10%, hsla(45, 70%, 55%, 0.3) 0px, transparent 50%), radial-gradient(at 10% 70%, hsla(160, 50%, 45%, 0.3) 0px, transparent 50%), radial-gradient(at 90% 60%, hsla(280, 60%, 55%, 0.3) 0px, transparent 50%), radial-gradient(at 30% 90%, hsla(220, 70%, 60%, 0.3) 0px, transparent 50%);
         animation: mesh-float 15s ease-in-out infinite reverse;
+        /* GPU acceleration for smooth animations */
+        will-change: transform;
+        transform: translateZ(0);
     }
     .floating-orb {
         position: absolute;
@@ -2193,7 +2196,7 @@ html {
 /* Optimize main scroll container */
 body {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
 }
 
 
@@ -2525,9 +2528,7 @@ section,
 /* Smooth transitions for interactive elements */
 a,
 button,
-[role="button"],
-.hover-lift,
-.professional-card {
+[role="button"] {
     /* Hardware acceleration for smooth interactions */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
@@ -2536,11 +2537,9 @@ button,
 }
 
 /* Optimize heavy gradient backgrounds */
-.glass-effect,
-.mesh-gradient,
-.mesh-gradient-alt {
+.glass-effect {
     /* Composite on GPU */
-    will-change: transform, opacity;
+    will-change: opacity;
     transform: translateZ(0);
 }
 
