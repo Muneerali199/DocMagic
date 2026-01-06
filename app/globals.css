@@ -105,6 +105,9 @@
         -moz-osx-font-smoothing: grayscale;
         scroll-behavior: smooth;
         overflow-x: hidden;
+        /* Enhanced scroll performance */
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
     /* Optimize font loading */
     @font-face {
@@ -212,16 +215,26 @@
     .mesh-gradient {
         background: radial-gradient( at 40% 20%, hsla(220, 70%, 60%, 0.4) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(195, 60%, 50%, 0.3) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(45, 70%, 55%, 0.3) 0px, transparent 50%), radial-gradient(at 80% 50%, hsla(160, 50%, 45%, 0.3) 0px, transparent 50%), radial-gradient(at 0% 100%, hsla(280, 60%, 55%, 0.3) 0px, transparent 50%), radial-gradient( at 80% 100%, hsla(210, 70%, 50%, 0.4) 0px, transparent 50%);
         animation: mesh-float 12s ease-in-out infinite;
+        /* GPU acceleration for smooth animations */
+        will-change: transform;
+        transform: translateZ(0);
     }
     .mesh-gradient-alt {
         background: radial-gradient( at 20% 30%, hsla(195, 60%, 50%, 0.3) 0px, transparent 50%), radial-gradient(at 70% 10%, hsla(45, 70%, 55%, 0.3) 0px, transparent 50%), radial-gradient(at 10% 70%, hsla(160, 50%, 45%, 0.3) 0px, transparent 50%), radial-gradient(at 90% 60%, hsla(280, 60%, 55%, 0.3) 0px, transparent 50%), radial-gradient(at 30% 90%, hsla(220, 70%, 60%, 0.3) 0px, transparent 50%);
         animation: mesh-float 15s ease-in-out infinite reverse;
+        /* GPU acceleration for smooth animations */
+        will-change: transform;
+        transform: translateZ(0);
     }
     .floating-orb {
         position: absolute;
         border-radius: 50%;
         filter: blur(1px);
         animation: float 6s ease-in-out infinite;
+        /* GPU acceleration */
+        will-change: transform;
+        transform: translateZ(0);
+        backface-visibility: hidden;
     }
     .floating-orb:nth-child(1) {
         animation-delay: 0s;
@@ -259,9 +272,12 @@
     /* Enhanced hover effects */
     .hover-lift {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* GPU acceleration */
+        will-change: transform;
+        transform: translateZ(0);
     }
     .hover-lift:hover {
-        transform: translateY(-4px);
+        transform: translateY(-4px) translateZ(0);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
     /* Professional Gradient Borders */
@@ -284,6 +300,9 @@
     .card-coral {
         background: linear-gradient( 135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%);
         border: 1px solid rgba(245, 158, 11, 0.15);
+        /* Performance optimization */
+        contain: layout style;
+        will-change: transform, opacity;
     }
     .dark .card-coral {
         background: linear-gradient( 135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%);
@@ -292,6 +311,9 @@
     .card-mint {
         background: linear-gradient( 135deg, rgba(5, 150, 105, 0.08) 0%, rgba(4, 120, 87, 0.04) 100%);
         border: 1px solid rgba(5, 150, 105, 0.15);
+        /* Performance optimization */
+        contain: layout style;
+        will-change: transform, opacity;
     }
     .dark .card-mint {
         background: linear-gradient( 135deg, rgba(5, 150, 105, 0.15) 0%, rgba(4, 120, 87, 0.08) 100%);
@@ -300,6 +322,9 @@
     .card-sky {
         background: linear-gradient( 135deg, rgba(37, 99, 235, 0.08) 0%, rgba(29, 78, 216, 0.04) 100%);
         border: 1px solid rgba(37, 99, 235, 0.15);
+        /* Performance optimization */
+        contain: layout style;
+        will-change: transform, opacity;
     }
     .dark .badge-bg {
         background: linear-gradient( to right, #5c6062, #1e40af);
@@ -312,6 +337,9 @@
     .card-lavender {
         background: linear-gradient( 135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
         border: 1px solid rgba(124, 58, 237, 0.15);
+        /* Performance optimization */
+        contain: layout style;
+        will-change: transform, opacity;
     }
     .dark .card-lavender {
         background: linear-gradient( 135deg, rgba(124, 58, 237, 0.15) 0%, rgba(109, 40, 217, 0.08) 100%);
@@ -384,6 +412,10 @@
         padding: 1.5rem;
         transition: all 0.3s ease;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        /* Performance optimizations */
+        contain: layout style paint;
+        will-change: transform;
+        transform: translateZ(0);
     }
     .dark .professional-card {
         background: hsl(var(--card));
@@ -391,7 +423,7 @@
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
     .professional-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-2px) translateZ(0);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         border-color: rgba(37, 99, 235, 0.3);
     }
@@ -677,11 +709,11 @@
 @keyframes mesh-float {
     0%,
     100% {
-        transform: translateY(0px) scale(1);
+        transform: translate3d(0, 0, 0) scale(1);
         opacity: 0.6;
     }
     50% {
-        transform: translateY(-10px) scale(1.02);
+        transform: translate3d(0, -10px, 0) scale(1.02);
         opacity: 0.8;
     }
 }
@@ -768,22 +800,22 @@
 @keyframes fade-in-up {
     0% {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translate3d(0, 30px, 0);
     }
     100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
 @keyframes fade-in-down {
     0% {
         opacity: 0;
-        transform: translateY(-30px);
+        transform: translate3d(0, -30px, 0);
     }
     100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
@@ -2155,11 +2187,13 @@ img {
 }
 
 
-/* Smooth scroll behavior */
+/* Smooth scroll behavior with performance optimizations */
 
 html {
     scroll-behavior: smooth;
 }
+
+/* Smooth scrolling is handled by html and body above */
 
 
 /* Animation utilities */
@@ -2447,3 +2481,106 @@ html {
 .shimmer-border {
     animation: shimmer-border 2s ease-in-out infinite;
 }
+
+/* ============================================
+   SCROLL PERFORMANCE OPTIMIZATIONS
+   Enhanced smoothness for better UX
+   ============================================ */
+
+/* Optimize scroll containers */
+.scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize main scrollable areas */
+main,
+section,
+.scroll-container {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize animated elements during scroll */
+.animate-pulse,
+.animate-bounce,
+.animate-spin,
+.animate-slide-in-left,
+.animate-slide-in-right,
+.animate-scale-in,
+.animate-bounce-in,
+.animate-float-gentle,
+.animate-glow-pulse,
+.animate-text-glow,
+.animate-blob,
+.animate-infinite-scroll,
+.animate-fade-in-up,
+.animate-fade-in-down {
+    /* GPU acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Smooth transitions for interactive elements */
+a,
+button,
+[role="button"] {
+    /* Hardware acceleration for smooth interactions */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Optimize heavy gradient backgrounds */
+.glass-effect {
+    /* Composite on GPU */
+    will-change: opacity;
+    transform: translateZ(0);
+}
+
+/* Reduce jank on hover animations */
+.group:hover {
+    /* Minimize paint operations */
+    contain: layout style;
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+    /* Reduce animation complexity on mobile */
+    .floating-orb {
+        animation-duration: 10s;
+        opacity: 0.5;
+    }
+    
+    .mesh-gradient,
+    .mesh-gradient-alt {
+        animation-duration: 10s;
+        opacity: 0.5;
+    }
+}
+
+/* Smooth scrolling for users who haven't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+    main,
+    section {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Section-specific optimizations */
+section {
+    /* Isolate layout recalculations */
+    contain: layout;
+}
+
+/* Optimize card grids - using specific selectors */
+.grid,
+.mobile-grid {
+    /* Better grid performance */
+    contain: layout style;
+}
+
+/* ============================================
+   END SCROLL PERFORMANCE OPTIMIZATIONS
+   ============================================ */
