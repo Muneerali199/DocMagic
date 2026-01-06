@@ -2193,11 +2193,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Optimize main scroll container */
-body {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-}
+/* Smooth scrolling is handled by html and body above */
 
 
 /* Animation utilities */
@@ -2566,7 +2562,6 @@ button,
 
 /* Smooth scrolling for users who haven't requested reduced motion */
 @media (prefers-reduced-motion: no-preference) {
-    html,
     main,
     section {
         scroll-behavior: smooth;
