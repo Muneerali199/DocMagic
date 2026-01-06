@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         slides,
         credits: {
           used: actualCreditCost,
-          remaining: creditsRemaining - actualCreditCost
+          remaining: 0
         },
         warning: 'Credits could not be deducted. Please contact support.'
       });
@@ -171,7 +171,10 @@ export async function POST(request: NextRequest) {
         slides,
         credits: {
           used: actualCreditCost,
-          remaining: creditsRemaining - actualCreditCost
+          remaining: calculateRemainingCredits(
+            currentCredits.credits_total,
+            currentCredits.credits_used
+          )
         },
         warning: 'Credits could not be deducted. Please contact support.'
       });
