@@ -2188,9 +2188,6 @@ img {
 
 html {
     scroll-behavior: smooth;
-    /* Hardware acceleration for smooth scrolling */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
 }
 
 /* Optimize main scroll container */
@@ -2505,11 +2502,20 @@ section,
 }
 
 /* Optimize animated elements during scroll */
-[class*="animate-"],
-[class*="animation-"],
 .animate-pulse,
 .animate-bounce,
-.animate-spin {
+.animate-spin,
+.animate-slide-in-left,
+.animate-slide-in-right,
+.animate-scale-in,
+.animate-bounce-in,
+.animate-float-gentle,
+.animate-glow-pulse,
+.animate-text-glow,
+.animate-blob,
+.animate-infinite-scroll,
+.animate-fade-in-up,
+.animate-fade-in-down {
     /* GPU acceleration */
     will-change: transform;
     transform: translateZ(0);
@@ -2557,14 +2563,14 @@ button,
         animation-duration: 10s;
         opacity: 0.5;
     }
-    
-    /* Simplify animations on low-end devices */
-    @media (prefers-reduced-motion: no-preference) {
-        html,
-        main,
-        section {
-            scroll-behavior: smooth;
-        }
+}
+
+/* Smooth scrolling for users who haven't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+    html,
+    main,
+    section {
+        scroll-behavior: smooth;
     }
 }
 
@@ -2574,8 +2580,9 @@ section {
     contain: layout;
 }
 
-/* Optimize card grids */
-[class*="grid"] {
+/* Optimize card grids - using specific selectors */
+.grid,
+.mobile-grid {
     /* Better grid performance */
     contain: layout style;
 }
