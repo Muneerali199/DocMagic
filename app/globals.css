@@ -2193,9 +2193,8 @@ html {
     transform: translateZ(0);
 }
 
-/* Optimize scroll containers */
-* {
-    /* Better scroll performance */
+/* Optimize main scroll container */
+body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
 }
@@ -2498,11 +2497,11 @@ html {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Passive event listeners hint for better scroll performance */
-* {
-    /* Prevent layout shift during scroll */
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+/* Optimize main scrollable areas */
+main,
+section,
+.scroll-container {
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Optimize animated elements during scroll */
@@ -2548,26 +2547,24 @@ button,
 /* Performance optimizations for mobile */
 @media (max-width: 768px) {
     /* Reduce animation complexity on mobile */
-    .floating-orb,
+    .floating-orb {
+        animation-duration: 10s;
+        opacity: 0.5;
+    }
+    
     .mesh-gradient,
     .mesh-gradient-alt {
-        animation-duration: 10s !important;
-        opacity: 0.5 !important;
+        animation-duration: 10s;
+        opacity: 0.5;
     }
     
     /* Simplify animations on low-end devices */
     @media (prefers-reduced-motion: no-preference) {
-        * {
+        html,
+        main,
+        section {
             scroll-behavior: smooth;
         }
-    }
-}
-
-/* Optimize for high refresh rate displays */
-@media (min-resolution: 120dpi) {
-    * {
-        /* Better frame pacing */
-        transform: translateZ(0);
     }
 }
 
