@@ -12,6 +12,15 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
+    // ✅ CHECK API KEY FIRST - fail fast if service is misconfigured
+    if (!MISTRAL_API_KEY) {
+      console.error('MISTRAL_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI service is not properly configured. Please contact support.' },
+        { status: 503 }
+      );
+    }
+
     // ✅ AUTHENTICATION CHECK
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
@@ -38,15 +47,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Resume text is required and must be at least 20 characters' },
         { status: 400 }
-      );
-    }
-
-    // Check if API key is configured
-    if (!MISTRAL_API_KEY) {
-      console.error('MISTRAL_API_KEY is not configured');
-      return NextResponse.json(
-        { error: 'AI service is not properly configured. Please contact support.' },
-        { status: 503 }
       );
     }
 

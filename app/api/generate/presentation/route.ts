@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prompt, pageCount = 8, template } = body;
 
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Missing prompt' },
+        { error: 'Missing or invalid prompt' },
         { status: 400 }
       );
     }
