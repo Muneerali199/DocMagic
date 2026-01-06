@@ -3,32 +3,34 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
-import { createRoute } from '@/lib/supabase/server';
-import { checkUsageLimit, trackUsage } from '@/lib/auth/middleware';
+import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+
+// Service role client for credit operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
     // ✅ AUTHENTICATION CHECK
-    const supabase = await createRoute();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in to create presentations.' },
         { status: 401 }
       );
     }
 
-    // ✅ USAGE LIMIT CHECK
-    const usageCheck = await checkUsageLimit(supabase, user.id, 'presentation');
-    if (!usageCheck.allowed) {
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
       return NextResponse.json(
-        { 
-          error: usageCheck.message || 'Monthly limit reached. Please upgrade your plan.',
-          limit: usageCheck.limit,
-          current: usageCheck.current_usage
-        },
-        { status: 403 }
+        { error: 'Authentication required. Please sign in to create presentations.' },
+        { status: 401 }
       );
     }
 
@@ -42,23 +44,133 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate pageCount
+    const validatedPageCount = Number(pageCount);
+    if (
+      !Number.isInteger(validatedPageCount) ||
+      validatedPageCount < 1 ||
+      validatedPageCount > 100
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
+        { status: 400 }
+      );
+    }
+
+    // Get or create user credits
+    let { data: userCredits } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedCredits) {
+        userCredits = updatedCredits;
+      }
+    }
+
+    // Check if user has enough credits - use validated page count
+    const creditsPerSlide = ACTION_COSTS.presentation;
+    const estimatedCreditCost = validatedPageCount * creditsPerSlide;
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    
+    if (creditsRemaining < estimatedCreditCost) {
+      const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
+      const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining,
+          creditsRequired: estimatedCreditCost
+        },
+        { status: 402 }
+      );
+    }
+
     // Generate presentation outline first
-    const outlines = await generatePresentationOutline({ prompt, pageCount });
+    const outlines = await generatePresentationOutline({ prompt, pageCount: validatedPageCount });
 
     // Generate full presentation with visuals
     const slides = await generatePresentation({ outlines, prompt, template });
 
-    // ✅ TRACK USAGE
-    // We'll track once the presentation is successfully saved
-    // For now, track generation
-    await trackUsage(supabase, user.id, 'presentation', 'generated', 'create');
+    // ✅ DEDUCT CREDITS based on actual slides generated
+    const actualCreditCost = slides.length * creditsPerSlide;
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits.credits_used + actualCreditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+      // Don't fail the request, just log the error
+    } else {
+      // Log the usage
+      await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'presentation',
+          credits_used: actualCreditCost,
+          metadata: { 
+            pageCount: slides.length,
+            prompt_length: prompt.length 
+          }
+        });
+      
+      console.log(`💳 Deducted ${actualCreditCost} credits for ${slides.length}-slide presentation`);
+    }
 
     return NextResponse.json({
       slides,
-      usage: {
-        current: usageCheck.current_usage + 1,
-        limit: usageCheck.limit,
-        remaining: usageCheck.remaining - 1
+      credits: {
+        used: actualCreditCost,
+        remaining: calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used + actualCreditCost
+        )
       }
     });
   } catch (error) {

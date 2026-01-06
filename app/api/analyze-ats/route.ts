@@ -1,15 +1,111 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || 'uigxEfcnKHPP1wvBkiAjQC0yqSB6a1iQ';
 
+// Service role client for credit operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export async function POST(request: Request) {
   try {
+    // ✅ AUTHENTICATION CHECK
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in to analyze resumes.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in to analyze resumes.' },
+        { status: 401 }
+      );
+    }
+
     const { resumeText, jobDescription } = await request.json();
 
     if (!resumeText || resumeText.trim().length < 20) {
       return NextResponse.json(
         { error: 'Resume text is required and must be at least 20 characters' },
         { status: 400 }
+      );
+    }
+
+    // Check user credits
+    const creditCost = ACTION_COSTS.ats_check;
+    
+    // Get or create user credits
+    let { data: userCredits } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedCredits) {
+        userCredits = updatedCredits;
+      }
+    }
+
+    // Check if user has enough credits
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    
+    if (creditsRemaining < creditCost) {
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${creditCost} credits to analyze a resume. You have ${creditsRemaining} credits remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining
+        },
+        { status: 402 }
       );
     }
 
@@ -140,6 +236,30 @@ ${resumeText}`;
         keywords_found: [],
         keywords_missing: ['action verbs', 'metrics', 'achievements']
       };
+    }
+
+    // ✅ DEDUCT CREDITS after successful analysis
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits.credits_used + creditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+    } else {
+      await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'ats_check',
+          credits_used: creditCost,
+          metadata: { has_job_description: !!jobDescription, resume_length: resumeText.length }
+        });
+      
+      console.log(`💳 Deducted ${creditCost} credits for ATS analysis`);
     }
 
     return NextResponse.json(analysisResult);
