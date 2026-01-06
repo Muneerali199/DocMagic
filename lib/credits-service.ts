@@ -4,8 +4,8 @@
 export type Tier = 'free' | 'basic' | 'pro' | 'enterprise';
 export type ActionType = 'resume' | 'presentation' | 'diagram' | 'letter' | 'ats_check' | 'cover_letter';
 
-// Credit reset period in days
-export const CREDIT_RESET_DAYS = 30;
+// Credit reset period - Monthly on the 1st of each month
+export const CREDIT_RESET_PERIOD = 'monthly';
 
 // Credit limits by tier
 export const TIER_LIMITS: Record<Tier, number> = {
@@ -82,12 +82,19 @@ export function getActionCostDescription(action: ActionType): string {
 }
 
 /**
- * Calculate the date when credits should be reset (30 days from now)
+ * Calculate the date when credits should be reset (1st day of next month)
+ * Credits reset monthly on the 1st at 00:00:00 UTC
  * @returns ISO 8601 formatted date string for credit reset
  */
 export function getCreditsResetDate(): string {
-  const resetDate = new Date();
-  resetDate.setDate(resetDate.getDate() + CREDIT_RESET_DAYS);
+  const now = new Date();
+  // Get the first day of next month at 00:00:00 UTC
+  const resetDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1, // Next month
+    1, // 1st day
+    0, 0, 0, 0 // 00:00:00
+  ));
   return resetDate.toISOString();
 }
 

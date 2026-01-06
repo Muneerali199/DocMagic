@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+
+// Service role client for credit operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: Request) {
   try {
@@ -46,8 +53,100 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check user credits
+    const creditCost = ACTION_COSTS.ats_check;
+    
+    // Get or create user credits
+    let { data: userCredits } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no credits record exists, create one
+    if (!userCredits) {
+      const { data: newCredits, error: insertError } = await supabaseAdmin
+        .from('user_credits')
+        .insert({
+          user_id: user.id,
+          tier: 'free',
+          credits_total: TIER_LIMITS.free,
+          credits_used: 0,
+          credits_reset_at: getCreditsResetDate()
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Failed to create credits record:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to initialize credits' },
+          { status: 500 }
+        );
+      }
+      userCredits = newCredits;
+    }
+
+    // Check if credits need reset
+    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
+      const resetAt = getCreditsResetDate();
+      const { data: updatedCredits } = await supabaseAdmin
+        .from('user_credits')
+        .update({
+          credits_used: 0,
+          credits_reset_at: resetAt,
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (updatedCredits) {
+        userCredits = updatedCredits;
+      }
+    }
+
+    // Check if user has enough credits
+    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    
+    if (creditsRemaining < creditCost) {
+      return NextResponse.json(
+        { 
+          error: 'Not enough credits',
+          message: `You need ${creditCost} credits to calculate ATS score. You have ${creditsRemaining} credits remaining.`,
+          needsUpgrade: true,
+          currentTier: userCredits.tier,
+          creditsRemaining
+        },
+        { status: 402 }
+      );
+    }
+
     // Calculate ATS score
     const atsAnalysis = await calculateATSScore(resumeData, jobDescription);
+
+    // ✅ DEDUCT CREDITS after successful analysis
+    const { error: updateError } = await supabaseAdmin
+      .from('user_credits')
+      .update({ 
+        credits_used: userCredits.credits_used + creditCost,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Failed to deduct credits:', updateError);
+    } else {
+      await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'ats_check',
+          credits_used: creditCost,
+          metadata: { has_job_description: !!jobDescription }
+        });
+      
+      console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
+    }
 
     return NextResponse.json({ atsAnalysis });
   } catch (error: any) {
