@@ -135,17 +135,46 @@ export async function POST(request: NextRequest) {
 
     // ✅ DEDUCT CREDITS based on actual slides generated
     const actualCreditCost = slides.length * creditsPerSlide;
+    
+    // Refetch user credits to avoid race conditions with resets
+    const { data: currentCredits } = await supabaseAdmin
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!currentCredits) {
+      console.error('User credits not found after generation');
+      // Return success but log error - user already got their content
+      return NextResponse.json({
+        slides,
+        credits: {
+          used: actualCreditCost,
+          remaining: creditsRemaining - actualCreditCost
+        },
+        warning: 'Credits could not be deducted. Please contact support.'
+      });
+    }
+    
     const { error: updateError } = await supabaseAdmin
       .from('user_credits')
       .update({ 
-        credits_used: userCredits.credits_used + actualCreditCost,
+        credits_used: currentCredits.credits_used + actualCreditCost,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
 
     if (updateError) {
       console.error('Failed to deduct credits:', updateError);
-      // Don't fail the request, just log the error
+      // Return success but log error - user already got their content
+      return NextResponse.json({
+        slides,
+        credits: {
+          used: actualCreditCost,
+          remaining: creditsRemaining - actualCreditCost
+        },
+        warning: 'Credits could not be deducted. Please contact support.'
+      });
     } else {
       // Log the usage
       await supabaseAdmin
@@ -168,8 +197,8 @@ export async function POST(request: NextRequest) {
       credits: {
         used: actualCreditCost,
         remaining: calculateRemainingCredits(
-          userCredits.credits_total,
-          userCredits.credits_used + actualCreditCost
+          currentCredits.credits_total,
+          currentCredits.credits_used + actualCreditCost
         )
       }
     });

@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     } = body;
 
     // Determine which action type to use for credit calculation
+    // Cover letters require both job description and sender name to be present
     const isCoverLetter = jobDescription && fromName;
     const actionType = isCoverLetter ? 'cover_letter' : 'letter';
     

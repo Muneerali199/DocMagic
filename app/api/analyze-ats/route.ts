@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
 
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || 'uigxEfcnKHPP1wvBkiAjQC0yqSB6a1iQ';
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -38,6 +38,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Resume text is required and must be at least 20 characters' },
         { status: 400 }
+      );
+    }
+
+    // Check if API key is configured
+    if (!MISTRAL_API_KEY) {
+      console.error('MISTRAL_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI service is not properly configured. Please contact support.' },
+        { status: 503 }
       );
     }
 
