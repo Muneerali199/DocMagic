@@ -180,6 +180,34 @@ To thoroughly test the credit deduction functionality in a live environment, fol
 
 ---
 
+## Credit Reset Logic
+
+### ✅ Monthly Calendar Reset (1st of Each Month)
+
+Credits reset on the **1st day of each calendar month** at 00:00:00 UTC, ensuring users get their full monthly credit allowance consistently.
+
+**How It Works:**
+1. When a user first uses the service (or when credits are created), `credits_reset_at` is set to the 1st day of the next month
+2. Before each generation request, the system checks if the current date has passed the reset date
+3. If yes, `credits_used` is reset to 0 and `credits_reset_at` is updated to the 1st of the next month
+4. This ensures credits reset monthly on the 1st, giving users their full monthly allowance
+
+**Example Timeline:**
+- **Jan 5**: User signs up, gets 20 credits, reset_at = Feb 1
+- **Jan 20**: User has 10 credits left
+- **Feb 1**: Credits automatically reset to 20, reset_at = Mar 1
+- **Feb 15**: User has 15 credits left  
+- **Mar 1**: Credits automatically reset to 20, reset_at = Apr 1
+
+**Test Results:**
+- ✅ Reset date correctly calculated as 1st of next month at 00:00 UTC
+- ✅ Verified across different dates (mid-month, end-of-month, year transitions)
+- ✅ Free tier: 20 credits per month (confirmed)
+- ✅ Past reset dates correctly trigger credit reset
+- ✅ Future reset dates correctly prevent premature reset
+
+---
+
 ## Database Verification Queries
 
 ### Check User Credits

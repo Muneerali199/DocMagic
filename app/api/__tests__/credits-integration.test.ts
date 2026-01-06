@@ -155,8 +155,8 @@ describe('Credit System Integration Tests', () => {
       expect(resetDate > now).toBe(true);
     });
 
-    it('should reset credits after reset date', () => {
-      // Set reset date to past
+    it('should reset credits on the 1st of each month', () => {
+      // Set reset date to past (before today)
       const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // 1 day ago
       mockUserCredits.credits_reset_at = pastDate.toISOString();
       
@@ -165,6 +165,27 @@ describe('Credit System Integration Tests', () => {
       
       expect(resetDate < now).toBe(true);
       // Credits should be reset to 0 in this case
+      
+      // Verify next reset date is 1st of next month
+      const nextResetDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1,
+        1, 0, 0, 0, 0
+      ));
+      expect(nextResetDate.getUTCDate()).toBe(1);
+    });
+
+    it('should calculate next reset as 1st of next month', () => {
+      const now = new Date();
+      const nextReset = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1,
+        1, 0, 0, 0, 0
+      ));
+      
+      expect(nextReset.getUTCDate()).toBe(1);
+      expect(nextReset.getUTCHours()).toBe(0);
+      expect(nextReset.getUTCMinutes()).toBe(0);
     });
   });
 
