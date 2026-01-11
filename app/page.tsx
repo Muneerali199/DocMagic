@@ -30,12 +30,23 @@ import {
   Trophy,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
 
 export default async function Home() {
-  const supabase = createServerComponentClient({ cookies });
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
   const { data: { session } } = await supabase.auth.getSession();
 
   return (
@@ -61,14 +72,14 @@ export default async function Home() {
                 <span className="text-sm font-semibold bolt-gradient-text">AI-Powered Document Creation</span>
                 <Wand2 className="h-5 w-5 text-purple-500 animate-bounce" />
               </div>
-              
+
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
                 <span className="block mb-2">Create Professional Documents</span>
                 <span className="bolt-gradient-text">In Seconds, Not Hours</span>
               </h2>
-              
+
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
-                Transform your ideas into stunning documents with our advanced AI. From resumes to presentations, 
+                Transform your ideas into stunning documents with our advanced AI. From resumes to presentations,
                 experience the magic of instant professional creation.
               </p>
 

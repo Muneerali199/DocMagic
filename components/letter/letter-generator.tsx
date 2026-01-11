@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,6 +19,7 @@ import { Loader2, Sparkles, Mail as MailIcon, Download, User, MapPin, FileText, 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { createClient } from "@/lib/supabase/client";
 
 export function LetterGenerator() {
   const [prompt, setPrompt] = useState("");
@@ -38,6 +39,7 @@ export function LetterGenerator() {
   const [emailContent, setEmailContent] = useState("");
   const [fromEmail, setFromEmail] = useState("");
   const { toast } = useToast();
+  const supabase = createClient();
 
   // Email validation function
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -64,10 +66,15 @@ export function LetterGenerator() {
     setIsGenerating(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('DEBUG: Generating letter, Session User:', session?.user?.email);
+      console.log('DEBUG: Access Token Present:', !!session?.access_token);
+
       const response = await fetch('/api/generate/letter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           prompt,
@@ -308,8 +315,8 @@ ${letterData.content || ''}
                 Letter Type
               </Label>
               <Select value={letterType} onValueChange={setLetterType}>
-                <SelectTrigger 
-                  id="letterType" 
+                <SelectTrigger
+                  id="letterType"
                   className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                 >
                   <SelectValue placeholder="Select letter type" />
@@ -331,10 +338,10 @@ ${letterData.content || ''}
                   <User className="h-4 w-4 text-muted-foreground" />
                   From (Name)
                 </Label>
-                <Input 
-                  id="fromName" 
-                  placeholder="Your Name" 
-                  value={fromName} 
+                <Input
+                  id="fromName"
+                  placeholder="Your Name"
+                  value={fromName}
                   onChange={(e) => setFromName(e.target.value)}
                   className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                   disabled={isGenerating}
@@ -346,10 +353,10 @@ ${letterData.content || ''}
                   <User className="h-4 w-4 text-muted-foreground" />
                   To (Name)
                 </Label>
-                <Input 
-                  id="toName" 
-                  placeholder="Recipient Name" 
-                  value={toName} 
+                <Input
+                  id="toName"
+                  placeholder="Recipient Name"
+                  value={toName}
                   onChange={(e) => setToName(e.target.value)}
                   className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                   disabled={isGenerating}
@@ -363,10 +370,10 @@ ${letterData.content || ''}
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   From (Address)
                 </Label>
-                <Input 
-                  id="fromAddress" 
-                  placeholder="Your Address (Optional)" 
-                  value={fromAddress} 
+                <Input
+                  id="fromAddress"
+                  placeholder="Your Address (Optional)"
+                  value={fromAddress}
                   onChange={(e) => setFromAddress(e.target.value)}
                   className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                   disabled={isGenerating}
@@ -378,10 +385,10 @@ ${letterData.content || ''}
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   To (Address)
                 </Label>
-                <Input 
-                  id="toAddress" 
-                  placeholder="Recipient Address (Optional)" 
-                  value={toAddress} 
+                <Input
+                  id="toAddress"
+                  placeholder="Recipient Address (Optional)"
+                  value={toAddress}
                   onChange={(e) => setToAddress(e.target.value)}
                   className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                   disabled={isGenerating}
@@ -394,11 +401,11 @@ ${letterData.content || ''}
                 <MailIcon className="h-4 w-4 text-muted-foreground" />
                 Your Email (For Sending)
               </Label>
-              <Input 
-                id="fromEmail" 
+              <Input
+                id="fromEmail"
                 type="email"
-                placeholder="your.email@example.com (Optional)" 
-                value={fromEmail} 
+                placeholder="your.email@example.com (Optional)"
+                value={fromEmail}
                 onChange={(e) => setFromEmail(e.target.value)}
                 className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                 disabled={isGenerating}
@@ -425,9 +432,9 @@ ${letterData.content || ''}
             </div>
 
             {/* Generate Button */}
-            <Button 
-              onClick={generateLetter} 
-              disabled={isGenerating || !prompt.trim() || !fromName.trim() || !toName.trim()} 
+            <Button
+              onClick={generateLetter}
+              disabled={isGenerating || !prompt.trim() || !fromName.trim() || !toName.trim()}
               className="w-full bolt-gradient text-white font-semibold py-3 rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden"
             >
               <div className="flex items-center justify-center gap-2 relative z-10">
@@ -459,8 +466,8 @@ ${letterData.content || ''}
                 Letter Options
               </h3>
               <div className="flex flex-wrap gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   onClick={exportToPDF}
                   disabled={isExporting}
@@ -472,8 +479,8 @@ ${letterData.content || ''}
                   )}
                   Download PDF
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   onClick={copyToClipboard}
                   disabled={isCopying}
@@ -485,8 +492,8 @@ ${letterData.content || ''}
                   )}
                   Copy to Clipboard
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   onClick={openSendEmailDialog}
                 >
@@ -526,15 +533,15 @@ ${letterData.content || ''}
                   </div>
                   <div>
                     <p className="text-muted-foreground font-medium">
-                      {isGenerating 
+                      {isGenerating
                         ? "Creating your letter with AI magic..."
                         : "Your letter preview will appear here"}
                     </p>
                     {isGenerating && (
                       <div className="flex items-center justify-center gap-2 mt-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
                     )}
                   </div>
@@ -569,11 +576,10 @@ ${letterData.content || ''}
                 placeholder="recipient@example.com"
                 value={emailTo}
                 onChange={(e) => setEmailTo(e.target.value)}
-                className={`${
-                  emailTo && !isValidEmail(emailTo) && emailTo.length > 0
-                    ? "border-red-400 focus:border-red-500"
-                    : ""
-                }`}
+                className={`${emailTo && !isValidEmail(emailTo) && emailTo.length > 0
+                  ? "border-red-400 focus:border-red-500"
+                  : ""
+                  }`}
                 required
               />
               {emailTo && emailTo.length > 0 && !isValidEmail(emailTo) && (
@@ -611,8 +617,8 @@ ${letterData.content || ''}
             <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={sendEmail} 
+            <Button
+              onClick={sendEmail}
               disabled={isSending || !emailTo}
               className="bolt-gradient text-white"
             >
