@@ -259,10 +259,18 @@ ${letterData.content || ''}
       if (!element) throw new Error('Letter preview element not found');
 
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // Increased scale for better quality
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        letterRendering: true, // Fix for squished text
+        onclone: (clonedDoc) => {
+          // Ensure the cloned element has proper font rendering
+          const clonedElement = clonedDoc.getElementById('letter-preview');
+          if (clonedElement) {
+            clonedElement.style.fontVariantLigatures = 'no-common-ligatures';
+          }
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
