@@ -290,22 +290,22 @@ Guidelines:
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const parsedSlides = JSON.parse(jsonMatch[0]);
-      
+
       // Ensure we have the correct number of slides
       if (parsedSlides.length !== pageCount) {
         console.warn(`⚠️ AI generated ${parsedSlides.length} slides instead of ${pageCount}. Adjusting...`);
-        
+
         // If too many slides, trim to pageCount
         if (parsedSlides.length > pageCount) {
           return parsedSlides.slice(0, pageCount);
         }
-        
+
         // If too few slides, generate filler slides based on topic using helper
         while (parsedSlides.length < pageCount) {
           parsedSlides.push(createMistralFillerSlide(parsedSlides.length + 1, pageCount, topic));
         }
       }
-      
+
       return parsedSlides;
     }
     return [];
@@ -373,14 +373,14 @@ Provide variety in:
 /**
  * Generate professional letter using Mistral AI
  */
-export async function generateLetterWithMistral({ 
-  prompt, 
-  fromName, 
-  fromAddress, 
-  toName, 
-  toAddress, 
-  letterType 
-}: { 
+export async function generateLetterWithMistral({
+  prompt,
+  fromName,
+  fromAddress,
+  toName,
+  toAddress,
+  letterType
+}: {
   prompt: string;
   fromName: string;
   fromAddress?: string;
@@ -432,6 +432,9 @@ REQUIREMENTS:
 3. Relevant to the specific request and letter type
 4. Appropriate length and detail level
 
+4. Appropriate length and detail level
+5. FORMATTING: Use Markdown formatting strictly within the content field. Use **bold** for key skills and achievements. Use bullet points * at the start of lines for lists.
+
 Return ONLY valid JSON.`;
 
     const response = await mistral.chat.complete({
@@ -444,12 +447,12 @@ Return ONLY valid JSON.`;
     let content = response.choices?.[0]?.message?.content || '{}';
     if (Array.isArray(content)) content = content.join('');
     if (typeof content !== 'string') content = String(content);
-    
+
     // Extract JSON from markdown if present
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const letterData = JSON.parse(jsonMatch[0]);
-      
+
       return {
         from: {
           name: letterData.from?.name || fromName,
@@ -468,7 +471,7 @@ Return ONLY valid JSON.`;
         content: letterData.content || letterData.letter || "Letter content not available."
       };
     }
-    
+
     throw new Error('Failed to parse letter response');
   } catch (error) {
     console.error('Error generating letter with Mistral:', error);
@@ -479,11 +482,11 @@ Return ONLY valid JSON.`;
 /**
  * Generate diagram using Mistral AI with Mermaid syntax
  */
-export async function generateDiagramWithMistral({ 
-  prompt, 
-  diagramType = 'flowchart' 
-}: { 
-  prompt: string; 
+export async function generateDiagramWithMistral({
+  prompt,
+  diagramType = 'flowchart'
+}: {
+  prompt: string;
   diagramType?: string;
 }) {
   if (!mistral) {
@@ -573,12 +576,12 @@ REQUIREMENTS:
     let content = response.choices?.[0]?.message?.content || '{}';
     if (Array.isArray(content)) content = content.join('');
     if (typeof content !== 'string') content = String(content);
-    
+
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
+
     throw new Error('Failed to parse diagram response');
   } catch (error) {
     console.error('Error generating diagram with Mistral:', error);
@@ -589,15 +592,15 @@ REQUIREMENTS:
 /**
  * Generate cover letter tailored to a job description using Mistral AI
  */
-export async function generateCoverLetterFromJob({ 
-  jobDescription, 
+export async function generateCoverLetterFromJob({
+  jobDescription,
   jobUrl,
-  fromName, 
+  fromName,
   fromEmail,
   fromAddress,
   skills,
-  experience 
-}: { 
+  experience
+}: {
   jobDescription: string;
   jobUrl?: string;
   fromName: string;
@@ -651,6 +654,9 @@ COVER LETTER REQUIREMENTS:
 6. Professional but personable tone
 7. ATS-friendly formatting
 
+7. ATS-friendly formatting
+8. FORMATTING: Use Markdown formatting strictly within the content field. Use **bold** for key skills and achievements. Use bullet points * at the start of lines for lists.
+
 Return ONLY valid JSON.`;
 
     const response = await mistral.chat.complete({
@@ -663,12 +669,12 @@ Return ONLY valid JSON.`;
     let content = response.choices?.[0]?.message?.content || '{}';
     if (Array.isArray(content)) content = content.join('');
     if (typeof content !== 'string') content = String(content);
-    
+
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
+
     throw new Error('Failed to parse cover letter response');
   } catch (error) {
     console.error('Error generating cover letter with Mistral:', error);
