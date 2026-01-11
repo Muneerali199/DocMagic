@@ -41,8 +41,7 @@ import {
   Clock,
   Users
 } from "lucide-react";
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 
@@ -255,35 +254,23 @@ ${letterData.content || ''}
     setIsExporting(true);
 
     try {
-      const element = document.getElementById('letter-preview');
-      if (!element) throw new Error('Letter preview element not found');
+      // Import dynamically to avoid SSR issues if any
+      const { pdf } = await import('@react-pdf/renderer');
+      const { LetterPdf } = await import('@/components/letter/pdf-template');
 
-      const canvas = await html2canvas(element, {
-        scale: 3, // Increased scale for better quality
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        letterRendering: true, // Fix for squished text
-        onclone: (clonedDoc) => {
-          // Ensure the cloned element has proper font rendering
-          const clonedElement = clonedDoc.getElementById('letter-preview');
-          if (clonedElement) {
-            clonedElement.style.fontVariantLigatures = 'no-common-ligatures';
-          }
-        }
-      });
+      const blob = await pdf(<LetterPdf letter={letterData} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const sanitizedSubject = letterData.subject
+        ? letterData.subject.slice(0, 40).replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_')
+        : `${letterType}-letter-${Date.now()}`;
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-
-      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`${letterType}-letter.pdf`);
+      link.download = `${sanitizedSubject}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: "Letter exported!",

@@ -53,9 +53,8 @@ export function LetterPreview({ letter }: LetterPreviewProps) {
 
       {/* Letter Content */}
       {/* Letter Content */}
-      <div className="text-gray-800 leading-relaxed mobile-markdown">
+      <div className="text-gray-800 leading-relaxed mobile-markdown prose prose-sm max-w-none prose-headings:font-bold prose-p:mb-4 prose-ul:list-disc prose-ul:pl-4 prose-li:mb-1">
         <ReactMarkdown
-          className="prose prose-sm max-w-none prose-headings:font-bold prose-p:mb-4 prose-ul:list-disc prose-ul:pl-4 prose-li:mb-1"
           components={{
             p: ({ node, ...props }) => <p className="mb-4 whitespace-pre-wrap" {...props} />
           }}
