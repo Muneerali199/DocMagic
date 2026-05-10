@@ -4,7 +4,6 @@ import * as React from "react";
 import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,11 +30,19 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, React.ComponentPr
     );
   }
 
-  const handleToggle = () => {
-    // Cycle through: light -> dark -> system
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Simple toggle between light and dark if system is not preferred
+    // or cycle: system -> light -> dark -> system
+    if (theme === "system") {
+      setTheme("light");
+    } else if (theme === "light") {
+      setTheme("dark");
+    } else {
+      setTheme("system");
+    }
   };
 
   return (
@@ -50,41 +57,12 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, React.ComponentPr
       )}
       onClick={handleToggle}
       aria-label="Toggle theme"
+      type="button"
       {...props}
     >
-      <AnimatePresence mode="wait">
-        {theme === "light" ? (
-          <motion.div
-            key="light"
-            initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            transition={{ duration: 0.2, ease: "circOut" }}
-          >
-            <Sun className="h-[1.1rem] w-[1.1rem] text-amber-500" />
-          </motion.div>
-        ) : theme === "dark" ? (
-          <motion.div
-            key="dark"
-            initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            transition={{ duration: 0.2, ease: "circOut" }}
-          >
-            <Moon className="h-[1.1rem] w-[1.1rem] text-blue-400" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="system"
-            initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-            animate={{ opacity: 1, rotate: 0, scale: 1 }}
-            exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-            transition={{ duration: 0.2, ease: "circOut" }}
-          >
-            <Monitor className="h-[1.1rem] w-[1.1rem] text-muted-foreground" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {theme === "light" && <Sun className="h-[1.1rem] w-[1.1rem] text-amber-500" />}
+      {theme === "dark" && <Moon className="h-[1.1rem] w-[1.1rem] text-blue-400" />}
+      {theme === "system" && <Monitor className="h-[1.1rem] w-[1.1rem] text-muted-foreground" />}
       <span className="sr-only">Toggle theme</span>
     </Button>
   );

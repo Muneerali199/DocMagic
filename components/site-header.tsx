@@ -275,9 +275,7 @@ export function SiteHeader() {
             </TooltipWithShortcut>
 
             {/* Theme Toggle - Premium Resolved Version */}
-            <TooltipWithShortcut content={`Theme: ${theme || 'system'} (Click to cycle)`}>
-              <ThemeToggle />
-            </TooltipWithShortcut>
+            <ThemeToggle />
 
             {/* Credits Badge - Desktop Only */}
             {user && !creditsLoading && credits && (
