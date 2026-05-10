@@ -22,9 +22,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PWAInstallButton } from "@/components/pwa-install-button";
-import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +47,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-
 export function SiteHeader() {
   const pathname = usePathname();
+  const { theme } = useTheme();
   const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -274,8 +274,10 @@ export function SiteHeader() {
               <PWAInstallButton variant="ghost" size="sm" showText={false} />
             </TooltipWithShortcut>
 
-            {/* Theme Toggle - Simple version for testing */}
-            <SimpleThemeToggle />
+            {/* Theme Toggle - Premium Resolved Version */}
+            <TooltipWithShortcut content={`Theme: ${theme || 'system'} (Click to cycle)`}>
+              <ThemeToggle />
+            </TooltipWithShortcut>
 
             {/* Credits Badge - Desktop Only */}
             {user && !creditsLoading && credits && (
