@@ -7,10 +7,49 @@ import { useEffect, useState } from "react";
 import { DiagramGeneratorSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+  const { toast } = useToast();
+
+  const handleShare = async () => {
+    try {
+      const shareData = {
+        title: 'DraftDeckAI Diagram Studio',
+        text: 'Check out this AI Diagram Studio!',
+        url: window.location.href
+      };
+      
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied!",
+          description: "The link has been copied to your clipboard.",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
 
 export default function DiagramPage() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  
+              <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer hover:scale-105 transition-all group"
+            >
+              <Workflow className="h-4 w-4 text-yellow-500 group-hover:rotate-12 transition-transform" />
+              <span className="text-sm font-medium">Diagram Studio</span>
+              <Share2 className="h-4 w-4 text-blue-500 group-hover:scale-110 transition-transform" />
+            </Button>
+
 
   const handleShare = async () => {
     try {
