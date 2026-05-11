@@ -2,18 +2,13 @@ import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
-import { DocumentCard } from "@/components/document-card";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   File as FileIcon,
   FileText,
   Presentation as LayoutPresentation,
   Mail,
-  Github,
-  Twitter,
-  Linkedin,
   HelpCircle,
   BookOpen,
   Users,
@@ -21,50 +16,24 @@ import {
   Heart,
   Zap,
   Star,
-  ArrowDown,
   Wand2,
   Shield,
   Globe,
-  Coffee,
   ArrowRight,
   Trophy,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { ResumeGenerator } from "@/components/resume/resume-generator";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options?: any) {
-          // No-op in this read-only context
-        },
-        remove(name: string, options?: any) {
-          // No-op in this read-only context
-        },
-      },
-    }
-  );
-  const { data: { session } } = await supabase.auth.getSession();
-
+export default function Home() {
   return (
     <div id="top" className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1">
         <HeroSection />
-        {/* Enhanced AI-Powered Features Showcase */}
+
         <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
-          {/* Enhanced Background Elements - Matching other sections */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="mesh-gradient opacity-40"></div>
             <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
@@ -73,7 +42,6 @@ export default async function Home() {
           </div>
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-            {/* Enhanced Header */}
             <div className="text-center mb-12 sm:mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect border border-blue-200/30 mb-6 hover:scale-105 transition-transform duration-300">
                 <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
@@ -91,7 +59,6 @@ export default async function Home() {
                 experience the magic of instant professional creation.
               </p>
 
-              {/* Quick Stats */}
               <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8 mb-8">
                 <div className="text-center min-w-[90px] sm:min-w-[100px]">
                   <div className="text-2xl sm:text-3xl font-bold bolt-gradient-text">50K+</div>
@@ -108,9 +75,7 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Enhanced Core Features Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12">
-              {/* AI Resume Builder */}
               <TooltipWithShortcut content="Create ATS-optimized resumes with AI guidance and real-time optimization">
                 <Link
                   href="/resume"
@@ -135,7 +100,6 @@ export default async function Home() {
                 </Link>
               </TooltipWithShortcut>
 
-              {/* Presentation Generator */}
               <TooltipWithShortcut content="Create stunning presentations with AI-generated content, charts, and shareable links">
                 <Link
                   href="/presentation"
@@ -160,7 +124,6 @@ export default async function Home() {
                 </Link>
               </TooltipWithShortcut>
 
-              {/* Letter Composer */}
               <TooltipWithShortcut content="Draft professional letters and cover letters with perfect tone and formatting">
                 <Link
                   href="/letter"
@@ -185,7 +148,6 @@ export default async function Home() {
                 </Link>
               </TooltipWithShortcut>
 
-              {/* CV Generator */}
               <TooltipWithShortcut content="Build comprehensive academic CVs with research focus and detailed formatting">
                 <Link
                   href="/cv"
@@ -210,7 +172,6 @@ export default async function Home() {
                 </Link>
               </TooltipWithShortcut>
 
-              {/* Productivity Engine */}
               <TooltipWithShortcut content="Generate structured documents with AI - proposals, reports, research papers, and specs">
                 <Link
                   href="/documents"
@@ -236,7 +197,6 @@ export default async function Home() {
               </TooltipWithShortcut>
             </div>
 
-            {/* Secondary Features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
               <TooltipWithShortcut content="Access premium templates and manage your document library">
                 <Link
@@ -317,16 +277,19 @@ export default async function Home() {
               </TooltipWithShortcut>
             </div>
 
-            {/* Call to Action */}
             <div className="text-center mt-12">
-              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 cursor-pointer backdrop-blur-lg shadow-lg hover:shadow-blue-200/20">
+              <Link
+                href="/resume"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-full glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-lg hover:shadow-blue-200/20"
+              >
                 <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
                 <span className="text-lg font-semibold bolt-gradient-text">Ready to create your first document?</span>
-                <ArrowRight className="h-5 w-5 text-purple-500 group-hover:translate-x-1 transition-transform" />
-              </div>
+                <ArrowRight className="h-5 w-5 text-purple-500 transition-transform" />
+              </Link>
             </div>
           </div>
         </section>
+
         <FeaturesSection />
         <TestimonialsSection />
         <ScrollToTop />
