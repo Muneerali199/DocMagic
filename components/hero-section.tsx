@@ -106,7 +106,7 @@ export function HeroSection() {
               className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50 hover:from-red-700 hover:to-neutral-900 hover:scale-110 hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:z-20"
               aria-label="Watch Demo"
             >
-              <Link href="#how-it-works" className="flex items-center justify-center gap-3 sm:gap-4" tabIndex={0}>
+              <Link href="/documentation" className="flex items-center justify-center gap-3 sm:gap-4" tabIndex={0}>
                 <Star className="text-yellow-400 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-700 ease-in-out group-hover:fill-yellow-400 group-hover:rotate-[360deg]" aria-hidden="true" />
                 <span className="text-white font-extrabold">Watch Demo</span>
               </Link>
