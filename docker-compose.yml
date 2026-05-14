@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: draftdeckai-backend
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./backend:/app
+
+    restart: unless-stopped
+
+    environment:
+      PORT: 8080
