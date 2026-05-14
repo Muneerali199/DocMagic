@@ -40,9 +40,9 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     scrollRestoration: true,
-    workerThreads: true,
+    workerThreads: false,
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

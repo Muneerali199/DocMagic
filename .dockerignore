@@ -1,0 +1,15 @@
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+.git
+.vscode
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# But allow .env.example
+!.env.example
