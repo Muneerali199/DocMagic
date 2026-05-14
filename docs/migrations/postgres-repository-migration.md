@@ -33,3 +33,32 @@ A repository layer was introduced under:
 
 ```text
 lib/repositories/
+```
+
+---
+
+## Rollout Strategy
+
+### Phase 1
+- Introduce repository abstraction layer
+- Migrate critical credit-related handlers
+- Preserve existing Supabase schema compatibility
+
+### Phase 2
+- Expand repositories across remaining API routes
+- Remove remaining inline database access
+- Introduce centralized database service layer
+
+### Phase 3
+- Prepare PostgreSQL-native backend compatibility
+- Align repository contracts with future Go services
+- Introduce connection pooling and transactional services
+
+---
+
+## Validation Checklist
+
+- Existing schema remains unchanged
+- API response behavior remains backward compatible
+- Repository layer isolates Supabase-specific queries
+- Handlers avoid direct database access where possible

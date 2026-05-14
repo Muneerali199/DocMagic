@@ -155,48 +155,48 @@ export async function POST(request: Request) {
     const creditCost = ACTION_COSTS.resume;
 
     // Get or create user credits
-   let { data: userCredits } = await getUserCredits(user.id);
+    let userCredits = await getUserCredits(user.id);
          
 
     // If no credits record exists, create one
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await createUserCredits(user.id,TIER_LIMITS.free,getCreditsResetDate());
-  
+      try {
+            userCredits = await createUserCredits(
+              user.id,
+              TIER_LIMITS.free,
+              getCreditsResetDate()
+            );
+          } catch (error: any) {
+            console.error('Failed to create credits record:', error);
 
-      if (insertError) {
-        console.error('Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
+            return NextResponse.json(
+              { error: 'Failed to initialize credits' },
+              { status: 500 }
+            );
+          }
     }
 
     // Check if credits need reset
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits, error: updateError } = await resetUserCredits(user.id, resetAt);
-  
+        const resetAt = getCreditsResetDate();
 
-      if (updateError) {
-        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      } else if (updatedCredits) {
-        userCredits = updatedCredits;
-      } else {
-        console.error('Credits reset did not return an updated record, applying local reset instead');
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
+        try {
+          const updatedCredits = await resetUserCredits(user.id, resetAt);
+
+          userCredits = updatedCredits;
+        } catch (updateError: any) {
+          console.error(
+            'Failed to reset credits in database, applying local reset instead:',
+            updateError
+          );
+
+          userCredits = {
+            ...userCredits,
+            credits_used: 0,
+            credits_reset_at: resetAt,
+          };
+        }
       }
-    }
 
     // Check if user has enough credits
     const creditsRemaining = hasUnlimitedCredits

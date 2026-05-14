@@ -5,16 +5,36 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function getUserCredits(userId: string) {
-  return await supabaseAdmin
+export interface UserCredits {
+  user_id: string;
+  tier: string;
+  credits_total: number;
+  credits_used: number;
+  credits_reset_at: string;
+}
+
+export async function getUserCredits(
+  userId: string
+): Promise<UserCredits | null> {
+  const { data, error } = await supabaseAdmin
     .from('user_credits')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch user credits: ${error.message}`);
+  }
+
+  return data;
 }
 
-export async function createUserCredits(userId: string, creditsTotal: number, resetDate: string) {
-  return await supabaseAdmin
+export async function createUserCredits(
+  userId: string,
+  creditsTotal: number,
+  resetDate: string
+): Promise<UserCredits> {
+  const { data, error } = await supabaseAdmin
     .from('user_credits')
     .insert({
       user_id: userId,
@@ -25,10 +45,19 @@ export async function createUserCredits(userId: string, creditsTotal: number, re
     })
     .select()
     .single();
+
+  if (error) {
+    throw new Error(`Failed to create user credits: ${error.message}`);
+  }
+
+  return data;
 }
 
-export async function resetUserCredits(userId: string, resetDate: string) {
-  return await supabaseAdmin
+export async function resetUserCredits(
+  userId: string,
+  resetDate: string
+): Promise<UserCredits> {
+  const { data, error } = await supabaseAdmin
     .from('user_credits')
     .update({
       credits_used: 0,
@@ -37,4 +66,10 @@ export async function resetUserCredits(userId: string, resetDate: string) {
     .eq('user_id', userId)
     .select()
     .single();
+
+  if (error) {
+    throw new Error(`Failed to reset user credits: ${error.message}`);
+  }
+
+  return data;
 }
