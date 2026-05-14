@@ -16,6 +16,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # Ignore TS/ESLint errors during docker build to ensure it always creates an image
 RUN npm run build
 
+# Remove devDependencies to keep the production image small
+RUN npm prune --production
+
 FROM base AS runner
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1

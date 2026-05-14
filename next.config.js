@@ -40,9 +40,9 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: false,
+    optimizeCss: false, // disabled due to critters module error during docker build
     scrollRestoration: true,
-    workerThreads: false,
+    workerThreads: false, // disabled due to DataCloneError during static generation
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

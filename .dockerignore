@@ -6,6 +6,7 @@ README.md
 .next
 .git
 .vscode
+.env
 .env.*.local
 .env.local
 .env.development.local
