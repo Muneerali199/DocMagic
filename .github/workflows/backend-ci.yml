@@ -3,14 +3,14 @@ name: Backend CI
 on:
   pull_request:
     branches:
-      - backend-migration
+      - backend/go-migration
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
 
   push:
     branches:
-      - backend-migration
+      - backend/go-migration
 
 jobs:
   go-ci:
