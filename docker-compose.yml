@@ -6,8 +6,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
 
-    container_name: draftdeckai-backend
-
     ports:
       - "8080:8080"
 

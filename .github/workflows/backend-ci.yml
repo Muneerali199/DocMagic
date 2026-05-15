@@ -34,7 +34,7 @@ jobs:
       - name: Verify Go module files
         run: |
           go mod tidy
-          git diff --exit-code go.mod go.sum
+          git diff --exit-code backend/go.mod backend/go.sum
 
       - name: Download dependencies
         run: go mod download
