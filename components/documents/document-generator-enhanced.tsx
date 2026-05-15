@@ -13,6 +13,7 @@ import { generateOutlineAction, generateDocumentAction } from '@/app/actions/ai-
 import { approveOutline as approveOutlineFn } from '@/lib/documents/ai-generator';
 import { processContextFile, FileUploadResult } from '@/lib/documents/context-processor';
 import { exportDocument, ExportFormat } from '@/lib/documents/export';
+import { useDocumentAnalytics } from '@/hooks/use-document-analytics';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,10 @@ export function DocumentGeneratorEnhanced({ onDocumentCreated }: DocumentGenerat
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLatexMode, setIsLatexMode] = useState(false);
+  const [docId, setDocId] = useState<string | null>(null);
+
+  // Analytics tracking
+  useDocumentAnalytics(docId || undefined, 'generated');
   
   // Dashboard states
   const [topic, setTopic] = useState('');
@@ -214,7 +219,19 @@ export function DocumentGeneratorEnhanced({ onDocumentCreated }: DocumentGenerat
         toast.warning(`Document generated but not saved: ${errorData.error || 'Unknown error'}`);
       } else {
         const savedDoc = await saveResponse.json();
+        setDocId(savedDoc.id);
         toast.success('Document generated and saved!');
+
+        // Track engagement: generate/save
+        fetch('/api/analytics/track', {
+          method: 'POST',
+          body: JSON.stringify({
+            documentId: savedDoc.id,
+            type: 'engagement',
+            eventType: 'edit',
+            description: `Generated ${selectedType}: ${document.title}`
+          })
+        }).catch(console.error);
         
         // If LaTeX mode, we can also generate the .tex file directly or just let the editor handle it
         if (isLatexMode) {
@@ -252,6 +269,20 @@ export function DocumentGeneratorEnhanced({ onDocumentCreated }: DocumentGenerat
         includeVisuals: true,
         includeCitations: true,
       });
+
+      // Track engagement: export
+      if (docId) {
+        fetch('/api/analytics/track', {
+          method: 'POST',
+          body: JSON.stringify({
+            documentId: docId,
+            type: 'engagement',
+            eventType: 'download',
+            description: `Exported document as ${format.toUpperCase()}`
+          })
+        }).catch(console.error);
+      }
+
       toast.success(`Document exported as ${format.toUpperCase()}`);
     } catch (error) {
       toast.error('Failed to export document');

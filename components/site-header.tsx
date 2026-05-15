@@ -19,6 +19,7 @@ import {
   Coins,
   Crown,
   Gift,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -461,6 +462,12 @@ const navItems = [
     label: "History",
     icon: <History className="h-4 w-4" />,
     tooltip: "View all your created documents with previews",
+  },
+  {
+    href: "/dashboard/analytics",
+    label: "Analytics",
+    icon: <BarChart3 className="h-4 w-4" />,
+    tooltip: "Track document usage and engagement metrics",
   },
   {
     href: "/pricing",

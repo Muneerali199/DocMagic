@@ -24,6 +24,7 @@ import {
   Edit,
   Sparkles,
   FileCode,
+  BarChart3,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -744,20 +745,30 @@ export function HistoryDashboard() {
       <div className="flex-1 p-4 md:p-8 relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 shimmer">
-              <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium">Document History</span>
-              <Clock className="h-4 w-4 text-blue-500" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 shimmer">
+                <Sparkles className="h-4 w-4 text-yellow-500" />
+                <span className="text-sm font-medium">Document History</span>
+                <Clock className="h-4 w-4 text-blue-500" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                <span className="bolt-gradient-text">
+                  Your Created Documents
+                </span>
+              </h1>
+              <p className="text-muted-foreground">
+                View and manage all your created content in one place
+              </p>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              <span className="bolt-gradient-text">
-                Your Created Documents
-              </span>
-            </h1>
-            <p className="text-muted-foreground">
-              View and manage all your created content in one place
-            </p>
+            <Button 
+              onClick={() => router.push('/dashboard/analytics')}
+              variant="outline"
+              className="glass-effect border-primary/20 hover:border-primary/50 group h-12 px-6 rounded-xl transition-all hover:scale-105"
+            >
+              <BarChart3 className="h-5 w-5 mr-2 text-primary group-hover:rotate-12 transition-transform" />
+              <span className="font-bold">View Performance Insights</span>
+            </Button>
           </div>
 
           {/* Stats Cards */}
