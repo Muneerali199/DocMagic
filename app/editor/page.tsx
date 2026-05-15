@@ -105,7 +105,10 @@ function EditorContent() {
           toast.success(`Template "${template.title}" loaded! Start editing.`);
         }
       } catch (error) {
-        logger.error('Error loading content:', error);
+        logger.error(
+          'Error loading content:',
+           error instanceof Error ? error.message : String(error)
+      );
         toast.error('Failed to load content');
       } finally {
         setIsLoading(false);
