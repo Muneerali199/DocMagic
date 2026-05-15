@@ -80,7 +80,7 @@ function generateImprovements(analysis: any) {
 
 export async function POST(request: Request) {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://draftdeckai.com',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
