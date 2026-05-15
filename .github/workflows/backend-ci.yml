@@ -3,14 +3,16 @@ name: Backend CI
 on:
   pull_request:
     branches:
-      - backend/go-migration
+      - main
     paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
 
   push:
     branches:
-      - backend/go-migration
+      - main
+    paths:
+      - "backend/**"
 
 jobs:
   go-ci:
@@ -27,18 +29,20 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
 
-      - name: Verify dependencies
-        run: go mod tidy
+      - name: Verify Go module files
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
       - name: Download dependencies
         run: go mod download
 
-      - name: Run formatting check
+      - name: Check formatting
         run: test -z "$(gofmt -l .)"
 
-      - name: Run vet
+      - name: Run go vet
         run: go vet ./...
 
       - name: Run tests

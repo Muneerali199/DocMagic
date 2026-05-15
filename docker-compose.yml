@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   backend:
@@ -10,9 +10,6 @@ services:
 
     ports:
       - "8080:8080"
-
-    volumes:
-      - ./backend:/app
 
     restart: unless-stopped
 

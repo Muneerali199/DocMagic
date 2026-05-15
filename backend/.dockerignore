@@ -1,6 +1,7 @@
 .git
 .github
-vendor
+.env
+.env.*
 tmp
 bin
 *.log
