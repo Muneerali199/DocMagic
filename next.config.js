@@ -40,7 +40,7 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false, // Changed from true to prevent critters module error
     scrollRestoration: true,
     workerThreads: true,
   },
