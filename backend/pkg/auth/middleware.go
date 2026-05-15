@@ -27,8 +27,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 func RequireAuth() func(http.Handler) http.Handler {
 	jwtSecret := os.Getenv("SUPABASE_JWT_SECRET")
 	if jwtSecret == "" {
-		// Log a warning if the secret is missing during initialization
-		fmt.Println("WARNING: SUPABASE_JWT_SECRET environment variable is not set")
+		panic("SUPABASE_JWT_SECRET environment variable is not set")
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -53,7 +52,7 @@ func RequireAuth() func(http.Handler) http.Handler {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
-				return []byte(os.Getenv("SUPABASE_JWT_SECRET")), nil
+				return []byte(jwtSecret), nil
 			})
 
 			if err != nil || !token.Valid {
