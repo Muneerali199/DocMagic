@@ -1,14 +1,15 @@
 const isDevelopment = process.env.NODE_ENV === 'development';
+const isDebugEnabled = process.env.DEBUG === 'true';
 
 export const logger = {
   debug: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || isDebugEnabled) {
       console.log(...args);
     }
   },
 
   info: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || isDebugEnabled) {
       console.info(...args);
     }
   },
