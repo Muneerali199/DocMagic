@@ -81,7 +81,6 @@
     "@react-pdf/renderer": "^4.3.2",
     "@stripe/react-stripe-js": "^3.8.1",
     "@stripe/stripe-js": "^3.5.0",
-    "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
