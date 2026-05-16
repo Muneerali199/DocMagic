@@ -1,7 +1,8 @@
 import { NextResponse,NextRequest } from "next/server"
 
 export const requestID = (req:NextRequest)=>{
-    return req.headers.get("x-request-id") ?? crypto.randomUUID()
+    const existingId = req.headers.get("x-request-id")?.trim()
+    return existingId || crypto.randomUUID()
 }
 
 export const applyRequestID  = (req:NextRequest,res:NextResponse)=>{
