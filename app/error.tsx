@@ -39,7 +39,10 @@ export default function Error({
 
           <div className="bg-red-500/5 p-4 rounded-lg border border-red-500/10 mb-6">
             <p className="text-xs font-mono text-red-600 dark:text-red-400 break-words">
-              {error.message || "An unknown error occurred"}
+              {process.env.NODE_ENV === 'development' 
+                ? (error.message || "An unknown error occurred")
+                : "A system error occurred. Please try again or contact support if the issue persists."
+              }
             </p>
           </div>
 

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // Sanitize redirect URL: remove trailing slashes and ensure it's absolute
     const finalRedirectUrl = redirectUrl?.replace(/\/$/, '');
 
-    console.log('[Register] Attempting signup for:', sanitizedEmail);
+    console.log('[Register] Attempting signup...');
     console.log('[Register] Final Redirect URL:', finalRedirectUrl);
     console.log('[Register] Supabase URL starts with:', process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 15) + '...');
     
