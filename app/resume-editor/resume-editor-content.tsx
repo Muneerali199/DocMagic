@@ -113,7 +113,7 @@ export default function ResumeEditorContent() {
   const [resumeData, setResumeData] = useState(defaultResumeData);
 
   // Initialize analytics tracking
-  useDocumentAnalytics(resumeId || undefined, 'resume');
+  const { trackEvent } = useDocumentAnalytics(resumeId);
 
   // Save state
   const [isSaving, setIsSaving] = useState(false);
@@ -260,15 +260,7 @@ export default function ResumeEditorContent() {
         setResumeId(savedDoc.id);
         
         // Track engagement: save
-        fetch('/api/analytics/track', {
-          method: 'POST',
-          body: JSON.stringify({
-            documentId: savedDoc.id,
-            type: 'engagement',
-            eventType: 'edit',
-            description: `Updated resume: ${savedDoc.title}`
-          })
-        }).catch(console.error);
+        trackEvent('edit');
 
         toast.success(resumeId ? 'Resume updated successfully' : 'Resume saved successfully');
       }
@@ -317,17 +309,7 @@ export default function ResumeEditorContent() {
           toast.success('PDF downloaded successfully!');
           
           // Track engagement: download
-          if (resumeId) {
-            fetch('/api/analytics/track', {
-              method: 'POST',
-              body: JSON.stringify({
-                documentId: resumeId,
-                type: 'engagement',
-                eventType: 'download',
-                description: `Downloaded resume PDF: ${resumeData.name}`
-              })
-            }).catch(console.error);
-          }
+          trackEvent('download');
         } else {
           // JSON response (likely an error)
           const result = await response.json();

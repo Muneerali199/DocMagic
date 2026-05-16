@@ -80,7 +80,14 @@ SECURITY DEFINER
 AS $$
 DECLARE
   result JSONB;
+  owner_id UUID;
 BEGIN
+  -- Authorization check: Ensure the caller owns the document
+  SELECT user_id INTO owner_id FROM documents WHERE id = doc_id;
+  IF owner_id IS NULL OR owner_id != auth.uid() THEN
+    RAISE EXCEPTION 'Not authorized to access analytics for this document';
+  END IF;
+
   SELECT jsonb_build_object(
     'total_views', (SELECT count(*) FROM document_views WHERE document_id = doc_id),
     'unique_views', (SELECT count(DISTINCT viewer_ip_hash) FROM document_views WHERE document_id = doc_id),

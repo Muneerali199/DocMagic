@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/client';
  * Hook to automatically track document views and provide imperative event tracking
  */
 export function useDocumentAnalytics(documentId: string | null) {
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const viewIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
 
@@ -34,7 +35,7 @@ export function useDocumentAnalytics(documentId: string | null) {
     } catch (error) {
       console.error('Error tracking event:', error);
     }
-  }, [documentId, supabase]);
+  }, [documentId]);
 
   useEffect(() => {
     if (!documentId) return;
@@ -98,7 +99,7 @@ export function useDocumentAnalytics(documentId: string | null) {
         }
       }
     };
-  }, [documentId, supabase]);
+  }, [documentId]);
 
   return { trackEvent };
 }

@@ -13,7 +13,8 @@ export async function POST(request: Request) {
     }
 
     // Get IP for hashing (for unique view tracking without PII)
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
     const ipHash = createHash('sha256').update(ip).digest('hex');
 
     // Create Supabase client
@@ -58,7 +59,14 @@ export async function POST(request: Request) {
     } else if (eventType === 'duration') {
       const { viewId, duration } = body;
       if (!viewId) return NextResponse.json({ error: 'Missing viewId' }, { status: 400 });
-      const { error } = await analyticsService.updateViewDuration(supabase, viewId, duration);
+      
+      // Validate duration (must be a positive number and not unreasonably large)
+      const validDuration = Number(duration);
+      if (isNaN(validDuration) || validDuration < 0 || validDuration > 86400) { // Max 24 hours
+        return NextResponse.json({ error: 'Invalid duration' }, { status: 400 });
+      }
+      
+      const { error } = await analyticsService.updateViewDuration(supabase, viewId, validDuration);
       if (error) throw error;
       return NextResponse.json({ success: true });
     } else {

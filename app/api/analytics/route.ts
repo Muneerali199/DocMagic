@@ -44,13 +44,18 @@ export async function GET(request: Request) {
 
     const docIds = docs.map(d => d.id);
     
-    const [views, engagement] = await Promise.all([
-      supabase.from('document_views').select('id').in('document_id', docIds),
-      supabase.from('document_engagement').select('id, event_type').in('document_id', docIds)
+    const [viewsCount, downloadsCount] = await Promise.all([
+      supabase.from('document_views')
+        .select('*', { count: 'exact', head: true })
+        .in('document_id', docIds),
+      supabase.from('document_engagement')
+        .select('*', { count: 'exact', head: true })
+        .in('document_id', docIds)
+        .eq('event_type', 'download')
     ]);
 
-    const totalViews = views.data?.length || 0;
-    const totalDownloads = engagement.data?.filter(e => e.event_type === 'download').length || 0;
+    const totalViews = viewsCount.count || 0;
+    const totalDownloads = downloadsCount.count || 0;
 
     return NextResponse.json({
       total_documents: docs.length,

@@ -107,8 +107,14 @@ export class AnalyticsService {
       const referrersMap: Record<string, number> = {};
       referrersData?.forEach(r => {
         if (r.referrer) {
-          const domain = new URL(r.referrer).hostname;
-          referrersMap[domain] = (referrersMap[domain] || 0) + 1;
+          try {
+            const domain = new URL(r.referrer).hostname;
+            referrersMap[domain] = (referrersMap[domain] || 0) + 1;
+          } catch (e) {
+            // Use the full string if it's not a valid URL
+            const label = r.referrer.length > 30 ? r.referrer.substring(0, 27) + '...' : r.referrer;
+            referrersMap[label] = (referrersMap[label] || 0) + 1;
+          }
         }
       });
       const topReferrers = Object.entries(referrersMap)

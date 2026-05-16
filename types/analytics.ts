@@ -39,7 +39,7 @@ export interface TrendPoint {
 }
 
 export interface ActivityItem {
-  type: 'view' | 'edit' | 'download' | 'share' | 'feedback';
+  type: 'view' | 'edit' | 'download' | 'share' | 'feedback' | 'copy' | 'print';
   description: string;
   timestamp: string;
   actor_name?: string;
@@ -47,7 +47,7 @@ export interface ActivityItem {
 
 export interface Suggestion {
   id: string;
-  category: 'content' | 'engagement' | 'seo' | 'sharing';
+  category: 'content' | 'engagement' | 'seo' | 'sharing' | 'branding';
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
