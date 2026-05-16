@@ -113,22 +113,18 @@ export function validateEnvironmentVariables() {
   }
 }
 
+import { logger } from './logger';
+
 // Log security events
 export function logSecurityEvent(event: string, details: any, ip?: string) {
-  const timestamp = new Date().toISOString();
   const logEntry = {
-    timestamp,
     event,
     ip: ip || 'unknown',
     details,
   };
 
-  // In production, send to monitoring service
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('SECURITY_EVENT:', JSON.stringify(logEntry));
-  } else {
-    console.log('Security Event:', logEntry);
-  }
+  // The logger handles environment checks and structured JSON output
+  logger.warn(null, 'SECURITY_EVENT', logEntry);
 }
 
 // Check if request is from allowed origin
