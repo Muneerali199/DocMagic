@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
       const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
       return NextResponse.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
           needsUpgrade: true,
@@ -130,13 +131,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Atomically reserve the estimated credit cost BEFORE generation to
+    // prevent the TOCTOU race documented in issue #477. If the model returns
+    // fewer slides than requested we refund the difference below.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        estimatedCreditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     // Generate presentation outline first
-    const outlines = await generatePresentationOutline({ prompt, pageCount: validatedPageCount });
+    let outlines;
+    let slides;
+    try {
+      outlines = await generatePresentationOutline({ prompt, pageCount: validatedPageCount });
+      // Generate full presentation with visuals
+      slides = await generatePresentation({ outlines, prompt, template });
+    } catch (err) {
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
+      }
+      throw err;
+    }
 
-    // Generate full presentation with visuals
-    const slides = await generatePresentation({ outlines, prompt, template });
-
-    // ✅ DEDUCT CREDITS based on actual slides generated
     const actualCreditCost = slides.length * creditsPerSlide;
     if (hasUnlimitedCredits) {
       return NextResponse.json({
@@ -147,63 +174,32 @@ export async function POST(request: NextRequest) {
         }
       });
     }
-    
-    // Refetch user credits to avoid race conditions with resets
-    const { data: currentCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    
-    if (!currentCredits) {
-      console.error('User credits not found after generation');
-      // Return success but log error - user already got their content
-      return NextResponse.json({
-        slides,
-        credits: {
-          used: actualCreditCost,
-          remaining: 0
-        },
-        warning: 'Credits could not be deducted. Please contact support.'
-      });
-    }
-    
-    const { error: updateError } = await supabaseAdmin
-      .from('user_credits')
-      .update({ 
-        credits_used: currentCredits.credits_used + actualCreditCost,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
 
-    if (updateError) {
-      console.error('Failed to deduct credits:', updateError);
-      // Return success but log error - user already got their content
-      return NextResponse.json({
-        slides,
-        credits: {
-          used: actualCreditCost,
-          remaining: calculateRemainingCredits(
-            currentCredits.credits_total,
-            currentCredits.credits_used
-          )
-        },
-        warning: 'Credits could not be deducted. Please contact support.'
+    // If fewer slides were generated than reserved, refund the difference.
+    const overReserved = estimatedCreditCost - actualCreditCost;
+    if (overReserved > 0) {
+      const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
+      if (!refunded) {
+        console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+      }
+    }
+
+    // Log the actual usage now that generation succeeded.
+    const { error: logError } = await supabaseAdmin
+      .from('credit_usage_log')
+      .insert({
+        user_id: user.id,
+        action: 'presentation',
+        credits_used: actualCreditCost,
+        metadata: {
+          pageCount: slides.length,
+          prompt_length: prompt.length
+        }
       });
+
+    if (logError) {
+      console.error('Failed to log credit usage:', logError);
     } else {
-      // Log the usage
-      await supabaseAdmin
-        .from('credit_usage_log')
-        .insert({
-          user_id: user.id,
-          action: 'presentation',
-          credits_used: actualCreditCost,
-          metadata: { 
-            pageCount: slides.length,
-            prompt_length: prompt.length 
-          }
-        });
-      
       console.log(`💳 Deducted ${actualCreditCost} credits for ${slides.length}-slide presentation`);
     }
 
@@ -212,8 +208,8 @@ export async function POST(request: NextRequest) {
       credits: {
         used: actualCreditCost,
         remaining: calculateRemainingCredits(
-          currentCredits.credits_total,
-          currentCredits.credits_used + actualCreditCost
+          userCredits.credits_total,
+          userCredits.credits_used - overReserved
         )
       }
     });

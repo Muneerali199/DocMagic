@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -273,6 +274,26 @@ export async function POST(request: Request) {
     const sanitizedName = sanitizeInput(name);
     const sanitizedEmail = sanitizeInput(email);
 
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477. If a concurrent request beat
+    // us to the row, the optimistic-lock update returns no row and we
+    // respond 402 so the client can refresh and see real balance.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits!.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits!.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     // Generate resume with Mistral
     let resume;
     try {
@@ -285,33 +306,27 @@ export async function POST(request: Request) {
       console.log('✅ Resume generated with Mistral');
     } catch (mistralError: any) {
       console.error('❌ Mistral failed:', mistralError.message);
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       throw new Error('Unable to generate resume. Please try again later.');
     }
 
-    // Deduct credits after successful generation
+    // Log usage only after the AI call succeeded. Credits were already
+    // deducted atomically above.
     if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: userCredits!.credits_used + creditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'resume',
+          credits_used: creditCost,
+          metadata: { prompt_length: sanitizedPrompt.length }
+        });
 
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
-        // Don't fail the request, just log the error
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
       } else {
-        // Log the usage
-        await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: 'resume',
-            credits_used: creditCost,
-            metadata: { prompt_length: sanitizedPrompt.length }
-          });
-
         console.log(`💳 Deducted ${creditCost} credits for resume generation`);
       }
     }

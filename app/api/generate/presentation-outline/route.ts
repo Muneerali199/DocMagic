@@ -9,6 +9,7 @@ import {
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -343,7 +344,7 @@ export async function POST(request: Request) {
       const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
       const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
       return NextResponse.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
           needsUpgrade: true,
@@ -355,35 +356,61 @@ export async function POST(request: Request) {
       );
     }
 
+    // Atomically reserve the estimated credit cost BEFORE generation to
+    // prevent the TOCTOU race documented in issue #477. We refund any
+    // over-reservation later if the model returns fewer slides.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        estimatedCreditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     console.log('📝 Step 1: Generating slide text content...');
-    
+
     // Step 1: Generate text content - Use Mistral first, then Nebius fallback
     let outlines;
-    const nebiusFirst = selectedModel !== 'meta-llama/Meta-Llama-3.1-70B-Instruct';
-    if (nebiusFirst) {
-      console.log(`Using Nebius model for outline generation: ${selectedModel}`);
-      outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
-    } else {
-      try {
-        console.log('Using Mistral Large for text generation');
-        outlines = await generatePresentationText(prompt, validatedPageCount, {
-          language: settings?.language,
-          audience: settings?.audience,
-          tone: settings?.tone,
-          textDensity: settings?.textDensity,
-          purpose: settings?.purpose,
-        });
-
-        if (!outlines || outlines.length === 0) {
-          throw new Error('Mistral generated no content');
-        }
-
-        console.log('Generated with Mistral');
-      } catch (mistralError: any) {
-        console.error('Mistral failed:', mistralError.message);
-        console.log('Falling back to Nebius...');
+    try {
+      const nebiusFirst = selectedModel !== 'meta-llama/Meta-Llama-3.1-70B-Instruct';
+      if (nebiusFirst) {
+        console.log(`Using Nebius model for outline generation: ${selectedModel}`);
         outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
+      } else {
+        try {
+          console.log('Using Mistral Large for text generation');
+          outlines = await generatePresentationText(prompt, validatedPageCount, {
+            language: settings?.language,
+            audience: settings?.audience,
+            tone: settings?.tone,
+            textDensity: settings?.textDensity,
+            purpose: settings?.purpose,
+          });
+
+          if (!outlines || outlines.length === 0) {
+            throw new Error('Mistral generated no content');
+          }
+
+          console.log('Generated with Mistral');
+        } catch (mistralError: any) {
+          console.error('Mistral failed:', mistralError.message);
+          console.log('Falling back to Nebius...');
+          outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
+        }
       }
+    } catch (err) {
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
+      }
+      throw err;
     }
     
     console.log(`✅ Generated ${outlines.length} slides`);
@@ -464,43 +491,41 @@ export async function POST(request: Request) {
     console.log('✨ Step 5: Presentation enhancement complete!');
     console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
-    // ✅ DEDUCT CREDITS based on actual slides generated
+    // Credits were reserved at estimatedCreditCost. If the model returned
+    // fewer slides, refund the difference now and log the actual cost.
     const actualCreditCost = enhancedOutlines.length * creditsPerSlide;
+    let creditsUsedAfter = userCredits.credits_used;
     if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({ 
-          credits_used: userCredits.credits_used + actualCreditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
-        // Don't fail the request, just log the error
-      } else {
-        // Log the usage
-        const { error: logError } = await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: 'presentation',
-            credits_used: actualCreditCost,
-            metadata: { 
-              pageCount: enhancedOutlines.length,
-              prompt_length: prompt.length 
-            }
-          });
-        
-        if (logError) {
-          console.error('Failed to log credit usage:', logError);
+      const overReserved = estimatedCreditCost - actualCreditCost;
+      if (overReserved > 0) {
+        const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
+        if (!refunded) {
+          console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+        } else {
+          creditsUsedAfter -= overReserved;
         }
-        
+      }
+
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'presentation',
+          credits_used: actualCreditCost,
+          metadata: {
+            pageCount: enhancedOutlines.length,
+            prompt_length: prompt.length
+          }
+        });
+
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
+      } else {
         console.log(`💳 Deducted ${actualCreditCost} credits for ${enhancedOutlines.length}-slide presentation`);
       }
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       outlines: enhancedOutlines,
       stats: {
         totalSlides: enhancedOutlines.length,
@@ -513,7 +538,7 @@ export async function POST(request: Request) {
           ? Number.MAX_SAFE_INTEGER
           : calculateRemainingCredits(
             userCredits.credits_total,
-            userCredits.credits_used + actualCreditCost
+            creditsUsedAfter
           )
       }
     });

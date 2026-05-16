@@ -452,25 +452,28 @@ export const Button: React.FC<ButtonProps> = ({
 };
 ```
 
-### 🗂️ **Route Hygiene**
+### 🗂️ **Repository Hygiene**
 
-> **⚠️ Do not commit backup, temporary, or alternate route files to the app tree.**
+> **⚠️ Do not commit backup, temporary, or stale artifacts to the repository.**
 
-Each route directory (e.g., `app/auth/signin/`, `app/settings/`) must contain only its **canonical** `page.tsx` (and supporting files like `layout.tsx`). Files with suffixes like `-backup`, `-temp`, `-old`, `-restored`, `.new`, or similar **must not** be committed.
+The repository should remain clean of non-canonical files. This helps reduce maintenance burden and ensures that new contributors aren't confused by stale artifacts.
 
-**Why?** Stale route variants increase maintenance burden, create routing confusion in Next.js, and risk shipping dead code to production.
+Guidelines:
+- **Avoid Route Backups**: Instead of keeping `page-old.tsx` or `layout.backup.tsx` in the `app/` directory, use Git's version history to retrieve older versions.
+- **Clean Temp Files**: Avoid committing files with suffixes like `.bak`, `.tmp`, or `-restored`.
+- **Active Source Only**: Ensure that only functional components and pages are tracked in the `app/` and `components/` directories.
 
 ```bash
-# ❌ Never commit these patterns
-page-backup.tsx
-page-temp.tsx
-page-old-backup.tsx
-route.new.ts
+# ❌ Avoid committing these patterns
+*.bak
+*.tmp
+component.old.tsx
+debug.log
 
-# ✅ Only canonical route files
+# ✅ Only canonical source files
 page.tsx
 layout.tsx
-route.ts
+component.tsx
 ```
 
 If you need to preserve work-in-progress locally, use `git stash` or keep drafts in a personal branch — not in the active source tree.
