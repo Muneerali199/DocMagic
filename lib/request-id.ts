@@ -1,12 +1,24 @@
-import { NextResponse,NextRequest } from "next/server"
+/**
+ * Extracts the request ID from headers or generates a new one if not present.
+ * This ensures every request has a traceable identifier.
+ */
+export function getRequestId(headers: Headers): string {
+  // Try common request ID headers
+  const requestId = 
+    headers.get('x-request-id') || 
+    headers.get('x-correlation-id') || 
+    headers.get('cf-ray') || // Cloudflare
+    crypto.randomUUID();
 
-export const requestID = (req:NextRequest)=>{
-    const existingId = req.headers.get("x-request-id")?.trim()
-    return existingId || crypto.randomUUID()
+  return requestId;
 }
 
-export const applyRequestID  = (req:NextRequest,res:NextResponse)=>{
-    const requestid = requestID(req)
-    res.headers.set("x-request-id",requestid)
-    return res
+/**
+ * Creates a standard set of headers including the request ID to propagate
+ * it to downstream services (like Supabase or AI APIs).
+ */
+export function getCorrelationHeaders(requestId: string): Record<string, string> {
+  return {
+    'x-request-id': requestId,
+  };
 }

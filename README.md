@@ -4,7 +4,7 @@
 
 ### AI-Powered Document Creation Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.30-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
@@ -71,8 +71,8 @@ cd Draftdeckai
 npm install
 
 # Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+cp .env.example .env.local
+# Edit .env.local with your API keys
 
 # Run development server
 npm run dev
@@ -82,7 +82,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
-Create a `.env` file with these variables:
+Create a `.env.local` file with these variables:
 
 ```env
 # Supabase (Required)
@@ -90,9 +90,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# AI Provider (Required - choose one)
-MISTRAL_API_KEY=your_mistral_api_key
-# OR
+# AI Provider (Required)
 GEMINI_API_KEY=your_gemini_api_key
 
 # Optional
@@ -106,7 +104,7 @@ STRIPE_SECRET_KEY=your_stripe_key
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 14 (App Router) |
+| **Framework** | Next.js 14.2 (App Router) |
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS, shadcn/ui |
 | **Database** | Supabase (PostgreSQL) |

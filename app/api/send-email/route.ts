@@ -5,7 +5,9 @@ import { emailSchema, sanitizeHtml, sanitizeInput } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { logSecurityEvent } from '@/lib/security';
-import {  requestID } from '@/lib/request-id';
+import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -67,8 +69,9 @@ const sendEmailSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const requestId = requestID(request)
-  console.log('[send-email]', requestId)
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
 
   const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
@@ -268,10 +271,13 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
     );
   } catch (error) {
+    incrementErrorCount();
     // Safe error responses: Do not leak raw provider/server internals in API responses.
     // Keep detailed errors only in server logs.
     console.error('Error sending email:', error);
     logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip, requestId }, ip);
+    log.error('Error sending email:', error);
+    logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip }, ip);
     
     return new Response(
       JSON.stringify({ error: 'Failed to send email. Please try again later.' }),
