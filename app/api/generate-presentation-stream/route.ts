@@ -281,3 +281,5 @@ Never include explanatory text, just the slide content.`,
   }
 }
 
+
+export const dynamic = 'force-dynamic';

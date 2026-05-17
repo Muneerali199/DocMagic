@@ -318,3 +318,5 @@ ${resumeText}`;
     );
   }
 }
+
+export const dynamic = 'force-dynamic';
