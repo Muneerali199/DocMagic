@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +25,8 @@ interface EditableResumeProps {
 export default function EditableResume({ data, onUpdate }: EditableResumeProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [enhancingPoint, setEnhancingPoint] = useState<string | null>(null);
+  const latestDataRef = useRef(data);
+  latestDataRef.current = data;
   
   const updateField = (field: keyof ResumeData, value: any) => {
     onUpdate({ ...data, [field]: value });
@@ -62,13 +64,14 @@ export default function EditableResume({ data, onUpdate }: EditableResumeProps) 
         throw new Error(result.error || 'Failed to enhance bullet point');
       }
 
-      const newExp = [...data.experience];
+      const latestData = latestDataRef.current;
+      const newExp = [...latestData.experience];
       newExp[experienceIndex] = {
         ...newExp[experienceIndex],
         points: [...newExp[experienceIndex].points],
       };
       newExp[experienceIndex].points[pointIndex] = result.enhancedBullet;
-      updateField('experience', newExp);
+      onUpdate({ ...latestData, experience: newExp });
       toast.success('Bullet point enhanced');
     } catch (error: any) {
       toast.error(error?.message || 'Failed to enhance bullet point');

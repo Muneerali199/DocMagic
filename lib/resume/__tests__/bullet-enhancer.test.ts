@@ -29,4 +29,8 @@ describe('resume bullet enhancer helpers', () => {
   it('rejects empty bullets', () => {
     expect(() => validateBulletInput('   ')).toThrow('cannot be empty');
   });
+
+  it('rejects bullets longer than 600 characters', () => {
+    expect(() => validateBulletInput('a'.repeat(601))).toThrow('600 characters');
+  });
 });
