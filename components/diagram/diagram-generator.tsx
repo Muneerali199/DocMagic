@@ -26,6 +26,7 @@ import {
   FileImage,
   Share2,
   Save,
+  History,
   Workflow,
   GitBranch,
   Database,
@@ -173,6 +174,17 @@ interface SavedDiagram {
   created_at: string;
 }
 
+interface DiagramVersion {
+  id: string;
+  version_number: number;
+  content: {
+    code?: string;
+    type?: string;
+  };
+  changes_summary: string;
+  created_at: string;
+}
+
 export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [previewDiagramCode, setPreviewDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
@@ -184,7 +196,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingDiagram, setIsSavingDiagram] = useState(false);
   const [isLoadingDiagrams, setIsLoadingDiagrams] = useState(false);
+  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
+  const [diagramVersions, setDiagramVersions] = useState<DiagramVersion[]>([]);
+  const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("editor");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -272,11 +287,47 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     }
   }, [supabase, toast]);
 
+  const loadDiagramVersions = useCallback(async (diagramId = currentDiagramId) => {
+    if (!diagramId) {
+      setDiagramVersions([]);
+      return;
+    }
+
+    setIsLoadingVersions(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('document_versions')
+        .select('id,version_number,content,changes_summary,created_at')
+        .eq('document_id', diagramId)
+        .order('version_number', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setDiagramVersions((data || []) as DiagramVersion[]);
+    } catch (error) {
+      console.error('Load versions error:', error);
+      toast({
+        title: "Load failed",
+        description: error instanceof Error ? error.message : "Failed to load diagram history. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingVersions(false);
+    }
+  }, [currentDiagramId, supabase, toast]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
 
     if (value === 'my-diagrams') {
       loadSavedDiagrams();
+    }
+
+    if (value === 'history') {
+      loadDiagramVersions();
     }
   };
 
@@ -292,16 +343,48 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
       const title = prompt.trim().slice(0, 50) || "Untitled Diagram";
 
-      const { error } = await supabase.from('diagrams').insert({
-        user_id: session.user.id,
-        title,
-        type: selectedDiagramType,
-        code: diagramCode,
-        prompt,
+      const { data: savedDiagram, error } = await supabase
+        .from('diagrams')
+        .insert({
+          user_id: session.user.id,
+          title,
+          type: selectedDiagramType,
+          code: diagramCode,
+          prompt,
+        })
+        .select('id')
+        .single();
+
+      if (error || !savedDiagram) {
+        throw error || new Error('Failed to save diagram');
+      }
+
+      setCurrentDiagramId(savedDiagram.id);
+
+      const { count, error: countError } = await supabase
+        .from('document_versions')
+        .select('id', { count: 'exact', head: true })
+        .eq('document_id', savedDiagram.id);
+
+      if (countError) {
+        throw countError;
+      }
+
+      const { error: versionError } = await supabase.from('document_versions').insert({
+        document_id: savedDiagram.id,
+        version_number: (count || 0) + 1,
+        content: {
+          code: diagramCode,
+          type: selectedDiagramType,
+        },
+        changes_summary: "Manual save",
+        created_by: session.user.id,
+        created_by_name: session.user.email || "Anonymous",
+        is_auto_save: false,
       });
 
-      if (error) {
-        throw error;
+      if (versionError) {
+        throw versionError;
       }
 
       toast({
@@ -311,6 +394,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
       if (activeTab === 'my-diagrams') {
         loadSavedDiagrams();
+      }
+
+      if (activeTab === 'history') {
+        loadDiagramVersions(savedDiagram.id);
       }
     } catch (error) {
       console.error('Save diagram error:', error);
@@ -328,9 +415,21 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     const type = diagram.type || "flowchart";
     const code = diagram.code || "";
 
+    setCurrentDiagramId(diagram.id);
     setSelectedDiagramType(type);
     setSelectedTemplate(type);
     setPrompt(diagram.prompt || "");
+    updateDiagramCode(code);
+    syncDiagramChange(code, type);
+    setActiveTab("editor");
+  };
+
+  const loadVersion = (version: DiagramVersion) => {
+    const type = version.content?.type || selectedDiagramType;
+    const code = version.content?.code || "";
+
+    setSelectedDiagramType(type);
+    setSelectedTemplate(type);
     updateDiagramCode(code);
     syncDiagramChange(code, type);
     setActiveTab("editor");
@@ -591,6 +690,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
               <Database className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">My Diagrams</span>
               <span className="sm:hidden">Saved</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              History
             </TabsTrigger>
           </TabsList>
         </div>
@@ -968,6 +1074,67 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     </div>
                     <div className="text-xs text-muted-foreground mt-2 capitalize">
                       {diagram.type || "diagram"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="pt-4 px-2 sm:px-0">
+          <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">History</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Load a saved version of the current diagram
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => loadDiagramVersions()}
+                disabled={isLoadingVersions || !currentDiagramId}
+                className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+              >
+                {isLoadingVersions ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <History className="mr-2 h-4 w-4" />
+                )}
+                Refresh
+              </Button>
+            </div>
+
+            {!currentDiagramId ? (
+              <div className="text-center py-10 text-sm text-muted-foreground">
+                Save or load a diagram to view history
+              </div>
+            ) : isLoadingVersions ? (
+              <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading history...
+              </div>
+            ) : diagramVersions.length === 0 ? (
+              <div className="text-center py-10 text-sm text-muted-foreground">
+                No versions yet
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {diagramVersions.map((version) => (
+                  <button
+                    key={version.id}
+                    onClick={() => loadVersion(version)}
+                    className="text-left glass-effect rounded-lg border border-yellow-400/20 p-4 hover:border-yellow-400/60 transition-colors"
+                  >
+                    <div className="font-medium text-sm">
+                      Version {version.version_number}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      {version.changes_summary}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      {new Date(version.created_at).toLocaleString()}
                     </div>
                   </button>
                 ))}
