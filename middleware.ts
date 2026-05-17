@@ -139,6 +139,10 @@ export function middleware(req: NextRequest) {
     const versionMatch = pathname.match(/^\/api\/(v\d+)(?:\/|$)/);
     r.headers.set('X-API-Version', versionMatch ? versionMatch[1] : 'v2');
 
+    // Security headers for API responses (OWASP A05)
+    r.headers.set('X-Content-Type-Options', 'nosniff');
+    r.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
+
     if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
       r.headers.set('X-Endpoint-Type', 'ai-generation');
     }
@@ -157,6 +161,7 @@ export function middleware(req: NextRequest) {
     r.headers.set('X-DNS-Prefetch-Control', 'on');
     r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
     r.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    r.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
 
     if (isDeploymentError(r)) {
       logError(pathname, 'Deployment error on page load', r.status, Date.now());

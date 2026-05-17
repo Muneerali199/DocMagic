@@ -46,9 +46,23 @@ function checkMem(): HR {
     : { status: 'healthy' };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const t = Date.now();
   try {
+    // Basic health response for unauthenticated monitoring (liveness probes, OWASP A01)
+    const isDetailed = request.headers.get('Authorization');
+
+    if (!isDetailed) {
+      return NextResponse.json(
+        { status: 'healthy', timestamp: new Date().toISOString() },
+        {
+          status: 200,
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+        }
+      );
+    }
+
+    // Extended health data for authenticated monitoring tools
     const [db, env, mem] = await Promise.all([
       checkDb(),
       Promise.resolve(checkEnv()),
@@ -62,6 +76,7 @@ export async function GET() {
       ? 'degraded'
       : 'healthy';
     if (overall !== 'healthy') logger.warn({ route: '/api/health' }, `Health: ${overall}`);
+
     return NextResponse.json(
       {
         status: overall,

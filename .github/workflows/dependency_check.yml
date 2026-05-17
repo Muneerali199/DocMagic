@@ -53,11 +53,13 @@ jobs:
           echo "Note: This is for information only and won't fail the build"
 
       - name: Audit dependencies for vulnerabilities
-        run: npm audit --audit-level=moderate || echo "Audit completed with warnings"
-        continue-on-error: true
+        run: |
+          echo "Running dependency vulnerability audit..."
+          npm audit --audit-level=critical
+        continue-on-error: false
 
-      - name: Check for security advisories
-        run: npm audit --audit-level=high --production || echo "Audit completed with warnings"
+      - name: Check for high-severity advisories in production dependencies
+        run: npm audit --audit-level=high --omit=dev
 
   test-and-build:
     runs-on: ubuntu-latest
