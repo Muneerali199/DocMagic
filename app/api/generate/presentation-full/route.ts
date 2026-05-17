@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { generateCodeDrivenPresentation } from '@/lib/qwen-code-presentation';
+import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -36,6 +39,10 @@ function normalizeThemeTokens(value: unknown): Record<string, string> | undefine
 }
 
 export async function POST(request: Request) {
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
+
   try {
     const body = await request.json();
     const {
@@ -52,8 +59,8 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Processing presentation with outline data...');
-    console.log(`Found ${outlines.length} slides with images`);
+    log.info('Processing presentation with outline data...');
+    log.info(`Found ${outlines.length} slides with images`);
 
     if (generationMode !== 'legacy' && !process.env.NEBIUS_API_KEY) {
       return NextResponse.json(
@@ -99,14 +106,14 @@ export async function POST(request: Request) {
           };
         });
 
-        console.log(`Generated ${slides.length} code-driven slides`);
+        log.info(`Generated ${slides.length} code-driven slides`);
         return NextResponse.json({
           slides,
           theme: codeDrivenDeck.theme,
           mode: 'code-driven'
         });
       } catch (codeDrivenError) {
-        console.error('Code-driven generation failed:', codeDrivenError);
+        log.error('Code-driven generation failed:', codeDrivenError);
         
         // Check for API configuration issues
         if (!process.env.NEBIUS_API_KEY) {
@@ -132,10 +139,11 @@ export async function POST(request: Request) {
 
     const slides = mapLegacySlides(outlines);
 
-    console.log(`Processed ${slides.length} slides with legacy transform`);
+    log.info(`Processed ${slides.length} slides with legacy transform`);
     return NextResponse.json({ slides, mode: 'legacy' });
   } catch (error) {
-    console.error('Error processing presentation:', error);
+    incrementErrorCount();
+    log.error('Error processing presentation:', error);
     return NextResponse.json(
       { error: 'Failed to process presentation' },
       { status: 500 }
