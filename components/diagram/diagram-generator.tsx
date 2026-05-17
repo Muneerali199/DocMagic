@@ -859,6 +859,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                         id="aiPrompt"
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
+                        aria-label="Describe Your Diagram"
                         placeholder={
                           selectedDiagramType === 'flowchart' 
                             ? "E.g., User login process with email verification and password reset options"
@@ -923,7 +924,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
                     <Button
                       onClick={generateDiagramFromPrompt}
-                      disabled={isGenerating}
+                      disabled={isGenerating || !prompt.trim()}
                       aria-label="Generate diagram from prompt"
                       className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                     >
@@ -986,7 +987,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   />
                   <Button
                     onClick={generateDiagramFromPrompt}
-                    disabled={isGenerating}
+                    disabled={isGenerating || !prompt.trim()}
                     aria-label="Generate diagram from prompt"
                     className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                   >
