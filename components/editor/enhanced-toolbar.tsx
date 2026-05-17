@@ -1,10 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import { fabric } from 'fabric';
+import { toPng } from 'html-to-image';
 import { useEditorStore } from '@/lib/editor-store';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { DiagramGenerator } from '@/components/diagram/diagram-generator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -26,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 import {
   // Selection & Navigation
   MousePointer2, Hand, ZoomIn, ZoomOut, Maximize2, Move,
@@ -81,6 +93,10 @@ export function EnhancedEditorToolbar() {
   const [fontFamily, setFontFamily] = useState('Inter');
   const [fillColor, setFillColor] = useState('#000000');
   const [strokeColor, setStrokeColor] = useState('#000000');
+  const [isDiagramDialogOpen, setIsDiagramDialogOpen] = useState(false);
+  const [isInsertingDiagram, setIsInsertingDiagram] = useState(false);
+  const diagramDialogRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   // Main Tool Categories
   const toolCategories = {
@@ -211,6 +227,77 @@ export function EnhancedEditorToolbar() {
     if (activeObject) {
       activeObject.set('fill', color);
       canvas.renderAll();
+    }
+  };
+
+  const handleInsertDiagram = async () => {
+    if (!canvas || !diagramDialogRef.current) {
+      toast({
+        title: 'Canvas unavailable',
+        description: 'Please wait for the editor canvas to finish loading.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const diagramElement = diagramDialogRef.current.querySelector('#mermaid-diagram') as HTMLElement | null;
+
+    if (!diagramElement) {
+      toast({
+        title: 'Diagram not ready',
+        description: 'Generate or preview a valid diagram before inserting it.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsInsertingDiagram(true);
+
+    try {
+      const dataUrl = await toPng(diagramElement, {
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+        pixelRatio: 2,
+        quality: 1,
+      });
+
+      fabric.Image.fromURL(dataUrl, (img) => {
+        const logicalWidth = canvas.getWidth() / canvas.getZoom();
+        const logicalHeight = canvas.getHeight() / canvas.getZoom();
+        const maxWidth = Math.min(720, logicalWidth * 0.6);
+        const maxHeight = Math.min(460, logicalHeight * 0.6);
+        const scale = Math.min(
+          maxWidth / (img.width || maxWidth),
+          maxHeight / (img.height || maxHeight),
+          1
+        );
+
+        img.set({
+          left: logicalWidth / 2 - ((img.width || 0) * scale) / 2,
+          top: logicalHeight / 2 - ((img.height || 0) * scale) / 2,
+          scaleX: scale,
+          scaleY: scale,
+          name: 'AI Diagram',
+        });
+
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
+        setIsDiagramDialogOpen(false);
+        toast({
+          title: 'Diagram inserted',
+          description: 'The diagram has been added to the canvas.',
+        });
+      });
+    } catch (error) {
+      console.error('Diagram insert error:', error);
+      toast({
+        title: 'Insert failed',
+        description: 'Failed to convert the diagram into an image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsInsertingDiagram(false);
     }
   };
 
@@ -549,6 +636,20 @@ export function EnhancedEditorToolbar() {
 
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDiagramDialogOpen(true)}
+                className="h-9 w-9 p-0 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+              >
+                <FileImage className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Insert Diagram</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                 <Wand2 className="w-4 h-4" />
               </Button>
@@ -681,6 +782,34 @@ export function EnhancedEditorToolbar() {
             />
           </div>
         </div>
+
+        <Dialog open={isDiagramDialogOpen} onOpenChange={setIsDiagramDialogOpen}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Insert Diagram</DialogTitle>
+              <DialogDescription>
+                Generate or edit a diagram, then insert the rendered preview into the canvas.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div ref={diagramDialogRef}>
+              <DiagramGenerator />
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsDiagramDialogOpen(false)}
+                disabled={isInsertingDiagram}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleInsertDiagram} disabled={isInsertingDiagram || !canvas}>
+                {isInsertingDiagram ? 'Inserting...' : 'Insert Diagram'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
