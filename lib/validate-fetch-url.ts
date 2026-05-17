@@ -8,7 +8,8 @@
 export const isPrivateUrl = (url: string): boolean => {
     try {
         const parsed = new URL(url);
-        const hostname = parsed.hostname.toLowerCase();
+        // Strip brackets from IPv6 literals (URL.hostname keeps them)
+        const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
         const protocol = parsed.protocol;
 
         // Block non-HTTP(S) protocols (e.g., file://, ftp://, gopher://)

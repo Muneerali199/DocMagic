@@ -10,14 +10,13 @@
 
 ## Executive Summary
 
-A comprehensive security audit was performed against the OWASP Top 10 (2021) framework. The codebase demonstrated a **strong security baseline** with existing protections for authentication, rate limiting, and input validation. This audit identified **8 actionable findings** mapped to specific OWASP categories and CWE identifiers, all of which have been **remediated in this PR**.
+A comprehensive security audit was performed against the OWASP Top 10 (2021) framework. The codebase demonstrated a **strong security baseline** with existing protections for authentication, rate limiting, and input validation. This audit identified **10 actionable findings** mapped to specific OWASP categories and CWE identifiers, all of which have been **remediated in this PR**.
 
 | Severity | Count | Status |
 |----------|-------|--------|
 | 🔴 Critical | 1 | ✅ Fixed |
 | 🟠 High | 4 | ✅ Fixed |
-| 🟡 Medium | 3 | ✅ Fixed |
-| 🟢 Low / Info | 3 | ✅ Fixed / Documented |
+| 🟡 Medium | 5 | ✅ Fixed |
 
 ---
 

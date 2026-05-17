@@ -38,6 +38,7 @@ jobs:
       # OWASP A06 - Vulnerable and Outdated Components
       - name: Dependency vulnerability audit (critical)
         run: |
+          set -o pipefail
           echo "=== OWASP A06: Dependency Vulnerability Scan ==="
           npm audit --audit-level=critical 2>&1 | tee audit-results.txt
           echo "Audit completed."
