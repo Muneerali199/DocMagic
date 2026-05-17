@@ -19,6 +19,11 @@ import {
   Coins,
   Crown,
   Gift,
+  Info,
+  Send,
+  Layout,
+  BookOpen,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -125,37 +130,59 @@ export function SiteHeader() {
                   {/* Navigation Items */}
                   <nav className="space-y-1">
                     {navItems.map((item) => (
-                      <SheetClose asChild key={item.href}>
-                        <Link
-                          href={item.href}
-                          onClick={handleNavClick}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
-                            pathname === item.href
-                              ? "bg-accent text-accent-foreground shadow-sm"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          <span
+                        <SheetClose asChild key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={handleNavClick}
                             className={cn(
-                              "transition-colors duration-200",
+                              "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
                               pathname === item.href
-                                ? "text-yellow-600"
-                                : "group-hover:text-yellow-500"
+                                ? "bg-accent text-accent-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
                             )}
                           >
-                            {item.icon}
-                          </span>
-                          <span className="font-medium">{item.label}</span>
-                          {pathname === item.href && (
-                            <div className="ml-auto">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            </div>
-                          )}
-                        </Link>
-                      </SheetClose>
-                    ))}
-                  </nav>
+                            <span
+                              className={cn(
+                                "transition-colors duration-200",
+                                pathname === item.href
+                                  ? "text-yellow-600"
+                                  : "group-hover:text-yellow-500"
+                              )}
+                            >
+                              {item.icon}
+                            </span>
+                            <span className="font-medium">{item.label}</span>
+                            {pathname === item.href && (
+                              <div className="ml-auto">
+                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                              </div>
+                            )}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    
+                      {/* Secondary Navigation */}
+                      <div className="mt-4 pt-4 border-t border-border/20">
+                        <div className="text-xs font-semibold text-muted-foreground mb-2 px-3">Resources</div>
+                        {secondaryNavItems.map((item) => (
+                          <SheetClose asChild key={item.href}>
+                            <Link
+                              href={item.href}
+                              onClick={handleNavClick}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <span className="text-muted-foreground group-hover:text-yellow-500">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </Link>
+                          </SheetClose>
+                        ))}
+                      </div>
+                    </nav>
 
                   {/* User Section in Mobile */}
                   {user && (
@@ -264,6 +291,31 @@ export function SiteHeader() {
                   </Link>
                 </TooltipWithShortcut>
               ))}
+              
+              {/* Secondary Navigation Dropdown */}
+              <DropdownMenu>
+                <TooltipWithShortcut content="More resources and information">
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-yellow-600 transition-colors"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipWithShortcut>
+                <DropdownMenuContent align="end" className="w-48">
+                  {secondaryNavItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
           </div>
 
@@ -457,6 +509,12 @@ const navItems = [
     tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
   },
   {
+    href: "/templates",
+    label: "Templates",
+    icon: <Layout className="h-4 w-4" />,
+    tooltip: "Browse and manage document templates",
+  },
+  {
     href: "/dashboard/history",
     label: "History",
     icon: <History className="h-4 w-4" />,
@@ -467,5 +525,26 @@ const navItems = [
     label: "Pricing",
     icon: <DollarSign className="h-4 w-4" />,
     tooltip: "View pricing plans and upgrade options",
+  },
+];
+
+const secondaryNavItems = [
+  {
+    href: "/about",
+    label: "About",
+    icon: <Info className="h-4 w-4" />,
+    tooltip: "Learn about DraftDeckAI",
+  },
+  {
+    href: "/contact",
+    label: "Contact",
+    icon: <Send className="h-4 w-4" />,
+    tooltip: "Get in touch with us",
+  },
+  {
+    href: "/documentation",
+    label: "Documentation",
+    icon: <BookOpen className="h-4 w-4" />,
+    tooltip: "Browse guides and documentation",
   },
 ];

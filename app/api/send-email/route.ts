@@ -1,11 +1,14 @@
 import { NextRequest } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { emailSchema, sanitizeHtml, sanitizeInput, sanitizeObject } from '@/lib/validation';
+import { emailSchema, sanitizeHtml, sanitizeInput } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
 import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -41,6 +44,10 @@ const sendEmailSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
+
   const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
   try {
@@ -117,22 +124,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use the reusable sanitizeObject helper for consistent sanitization across nested fields
-    const sanitizedBody = sanitizeObject({
-      fromName,
-      fromEmail,
-      subject,
-      content,
-      letterContent
-    });
-
-    const {
-      fromName: sanitizedFromName,
-      fromEmail: sanitizedFromEmail,
-      subject: sanitizedSubject,
-      content: sanitizedPersonalMessage,
-      letterContent: sanitizedLetterContent
-    } = sanitizedBody;
+    // Sanitize string contents to prevent XSS/injection attacks inside HTML email rendering
+    const sanitizedFromName = fromName ? sanitizeHtml(fromName) : '';
+    const sanitizedFromEmail = fromEmail ? sanitizeHtml(fromEmail) : '';
+    const sanitizedSubject = sanitizeHtml(subject);
+    const sanitizedPersonalMessage = content ? sanitizeHtml(content) : '';
+    
+    const sanitizedLetterContent = {
+      from: {
+        name: letterContent.from?.name ? sanitizeHtml(letterContent.from.name) : '',
+        address: letterContent.from?.address ? sanitizeHtml(letterContent.from.address) : '',
+      },
+      to: {
+        name: letterContent.to?.name ? sanitizeHtml(letterContent.to.name) : '',
+        address: letterContent.to?.address ? sanitizeHtml(letterContent.to.address) : '',
+      },
+      date: letterContent.date ? sanitizeHtml(letterContent.date) : '',
+      subject: letterContent.subject ? sanitizeHtml(letterContent.subject) : '',
+      content: letterContent.content ? sanitizeHtml(letterContent.content) : '',
+    };
 
     const hasFullSmtpConfig =
       !!process.env.EMAIL_HOST && !!process.env.EMAIL_USER && !!process.env.EMAIL_PASS;
@@ -234,9 +244,10 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    incrementErrorCount();
     // Safe error responses: Do not leak raw provider/server internals in API responses.
     // Keep detailed errors only in server logs.
-    console.error('Error sending email:', error);
+    log.error('Error sending email:', error);
     logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip }, ip);
     
     return new Response(

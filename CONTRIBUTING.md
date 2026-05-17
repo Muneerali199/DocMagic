@@ -42,10 +42,10 @@ Whether you're a seasoned developer, a design enthusiast, a documentation wizard
 
 ### 🛠️ **Tech Stack**
 
-- **Frontend**: Next.js 15 + React 18 + TypeScript
+- **Frontend**: Next.js 14.2 + React 18 + TypeScript
 - **Styling**: Tailwind CSS + Framer Motion
 - **Backend**: Supabase (PostgreSQL + Auth)
-- **AI**: Google Gemini AI
+- **AI**: Google Gemini AI (Primary), Mistral AI (Optional)
 - **Payments**: Stripe
 - **Deployment**: Netlify/Vercel
 
