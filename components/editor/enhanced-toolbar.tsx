@@ -639,6 +639,7 @@ export function EnhancedEditorToolbar() {
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label="Insert diagram"
                 onClick={() => setIsDiagramDialogOpen(true)}
                 className="h-9 w-9 p-0 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
               >
