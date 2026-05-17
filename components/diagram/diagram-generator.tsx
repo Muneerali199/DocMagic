@@ -25,6 +25,7 @@ import {
   Eye, 
   FileImage,
   Share2,
+  Save,
   Workflow,
   GitBranch,
   Database,
@@ -163,6 +164,15 @@ interface DiagramGeneratorProps {
   sessionId?: string | null;
 }
 
+interface SavedDiagram {
+  id: string;
+  title: string | null;
+  type: string | null;
+  code: string | null;
+  prompt: string | null;
+  created_at: string;
+}
+
 export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [previewDiagramCode, setPreviewDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
@@ -172,6 +182,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSavingDiagram, setIsSavingDiagram] = useState(false);
+  const [isLoadingDiagrams, setIsLoadingDiagrams] = useState(false);
+  const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
   const [activeTab, setActiveTab] = useState("editor");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -224,6 +237,103 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     broadcastDiagramChange(sessionId, mermaidCode, diagramType).catch((error) => {
       console.error('Diagram collaboration error:', error);
     });
+  };
+
+  const loadSavedDiagrams = useCallback(async () => {
+    setIsLoadingDiagrams(true);
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        throw new Error('Please sign in to load saved diagrams');
+      }
+
+      const { data, error } = await supabase
+        .from('diagrams')
+        .select('id,title,type,code,prompt,created_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setSavedDiagrams(data || []);
+    } catch (error) {
+      console.error('Load diagrams error:', error);
+      toast({
+        title: "Load failed",
+        description: error instanceof Error ? error.message : "Failed to load saved diagrams. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingDiagrams(false);
+    }
+  }, [supabase, toast]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+
+    if (value === 'my-diagrams') {
+      loadSavedDiagrams();
+    }
+  };
+
+  const saveDiagram = async () => {
+    setIsSavingDiagram(true);
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        throw new Error('Please sign in to save diagrams');
+      }
+
+      const title = prompt.trim().slice(0, 50) || "Untitled Diagram";
+
+      const { error } = await supabase.from('diagrams').insert({
+        user_id: session.user.id,
+        title,
+        type: selectedDiagramType,
+        code: diagramCode,
+        prompt,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Diagram saved",
+        description: "Your diagram has been saved successfully",
+      });
+
+      if (activeTab === 'my-diagrams') {
+        loadSavedDiagrams();
+      }
+    } catch (error) {
+      console.error('Save diagram error:', error);
+      toast({
+        title: "Save failed",
+        description: error instanceof Error ? error.message : "Failed to save diagram. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDiagram(false);
+    }
+  };
+
+  const loadDiagram = (diagram: SavedDiagram) => {
+    const type = diagram.type || "flowchart";
+    const code = diagram.code || "";
+
+    setSelectedDiagramType(type);
+    setSelectedTemplate(type);
+    setPrompt(diagram.prompt || "");
+    updateDiagramCode(code);
+    syncDiagramChange(code, type);
+    setActiveTab("editor");
   };
 
   const handleTemplateSelect = (template: string) => {
@@ -449,7 +559,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="flex justify-center mb-4 sm:mb-6 px-2">
           <TabsList className="glass-effect border border-yellow-400/20 p-1 h-auto">
             <TabsTrigger
@@ -473,6 +583,14 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
             >
               <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Preview
+            </TabsTrigger>
+            <TabsTrigger
+              value="my-diagrams"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <Database className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">My Diagrams</span>
+              <span className="sm:hidden">Saved</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -763,6 +881,19 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={saveDiagram}
+                    disabled={isSavingDiagram}
+                    className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+                  >
+                    {isSavingDiagram ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={shareDiagram}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
@@ -788,6 +919,60 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 }}
               />
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="my-diagrams" className="pt-4 px-2 sm:px-0">
+          <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">My Diagrams</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Load a saved diagram into the editor
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={loadSavedDiagrams}
+                disabled={isLoadingDiagrams}
+                className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+              >
+                {isLoadingDiagrams ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Database className="mr-2 h-4 w-4" />
+                )}
+                Refresh
+              </Button>
+            </div>
+
+            {isLoadingDiagrams ? (
+              <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading diagrams...
+              </div>
+            ) : savedDiagrams.length === 0 ? (
+              <div className="text-center py-10 text-sm text-muted-foreground">
+                No saved diagrams yet
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {savedDiagrams.map((diagram) => (
+                  <button
+                    key={diagram.id}
+                    onClick={() => loadDiagram(diagram)}
+                    className="text-left glass-effect rounded-lg border border-yellow-400/20 p-4 hover:border-yellow-400/60 transition-colors"
+                  >
+                    <div className="font-medium text-sm line-clamp-2">
+                      {diagram.title || "Untitled Diagram"}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2 capitalize">
+                      {diagram.type || "diagram"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -817,7 +1002,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 <Download className="h-5 w-5 text-yellow-500" />
                 Export & Share Options
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
                 <Button
                   onClick={() => exportDiagram('png')}
                   disabled={isExporting}
@@ -826,6 +1011,19 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   <FileImage className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">PNG Export</span>
                   <span className="sm:hidden">PNG</span>
+                </Button>
+                <Button
+                  onClick={saveDiagram}
+                  disabled={isSavingDiagram}
+                  variant="outline"
+                  className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 text-sm sm:text-base py-2 sm:py-3"
+                >
+                  {isSavingDiagram ? (
+                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  )}
+                  Save
                 </Button>
                 <Button
                   onClick={() => exportDiagram('svg')}
