@@ -165,7 +165,7 @@ export function DiagramGenerator() {
   const [selectedDiagramType, setSelectedDiagramType] = useState("flowchart");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<'png' | 'svg' | null>(null);
   const [activeTab, setActiveTab] = useState("editor");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -294,7 +294,7 @@ export function DiagramGenerator() {
   const exportDiagram = async (format: 'png' | 'svg') => {
     if (!diagramRef.current) return;
     
-    setIsExporting(true);
+    setExportingFormat(format);
     
     try {
       const element = diagramRef.current.querySelector('#mermaid-diagram');
@@ -359,7 +359,7 @@ export function DiagramGenerator() {
         variant: "destructive",
       });
     } finally {
-      setIsExporting(false);
+      setExportingFormat(null);
     }
   };
 
@@ -661,10 +661,10 @@ export function DiagramGenerator() {
                   <Button
                     variant="outline"
                     onClick={() => exportDiagram('png')}
-                    disabled={isExporting}
+                    disabled={exportingFormat === 'png'}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
-                    {isExporting ? (
+                    {exportingFormat === 'png' ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <FileImage className="mr-2 h-4 w-4" />
@@ -674,10 +674,10 @@ export function DiagramGenerator() {
                   <Button
                     variant="outline"
                     onClick={() => exportDiagram('svg')}
-                    disabled={isExporting}
+                    disabled={exportingFormat === 'svg'}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
-                    {isExporting ? (
+                    {exportingFormat === 'svg' ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <Download className="mr-2 h-4 w-4" />
@@ -742,7 +742,7 @@ export function DiagramGenerator() {
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                 <Button
                   onClick={() => exportDiagram('png')}
-                  disabled={isExporting}
+                  disabled={exportingFormat === 'png'}
                   className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm sm:text-base py-2 sm:py-3"
                 >
                   <FileImage className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -751,7 +751,7 @@ export function DiagramGenerator() {
                 </Button>
                 <Button
                   onClick={() => exportDiagram('svg')}
-                  disabled={isExporting}
+                  disabled={exportingFormat === 'svg'}
                   variant="outline"
                   className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 text-sm sm:text-base py-2 sm:py-3"
                 >
