@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -165,6 +165,7 @@ interface DiagramGeneratorProps {
 
 export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
+  const [previewDiagramCode, setPreviewDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [selectedTemplate, setSelectedTemplate] = useState("flowchart");
   const [prompt, setPrompt] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState("flowchart");
@@ -175,7 +176,33 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const diagramRef = useRef<HTMLDivElement>(null);
+  const previewDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
+
+  useEffect(() => {
+    return () => {
+      if (previewDebounceRef.current) {
+        clearTimeout(previewDebounceRef.current);
+      }
+    };
+  }, []);
+
+  const updateDiagramCode = useCallback((code: string, debouncePreview = false) => {
+    setDiagramCode(code);
+
+    if (previewDebounceRef.current) {
+      clearTimeout(previewDebounceRef.current);
+    }
+
+    if (debouncePreview) {
+      previewDebounceRef.current = setTimeout(() => {
+        setPreviewDiagramCode(code);
+        previewDebounceRef.current = null;
+      }, 500);
+    } else {
+      setPreviewDiagramCode(code);
+    }
+  }, []);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -183,13 +210,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     const unsubscribe = subscribeToDiagramChanges((change) => {
       if (change.session_id !== sessionId) return;
 
-      setDiagramCode(change.mermaid_code);
+      updateDiagramCode(change.mermaid_code);
       setSelectedDiagramType(change.diagram_type);
       setSelectedTemplate(change.diagram_type);
     });
 
     return unsubscribe;
-  }, [sessionId]);
+  }, [sessionId, updateDiagramCode]);
 
   const syncDiagramChange = (mermaidCode: string, diagramType: string) => {
     if (!sessionId) return;
@@ -203,7 +230,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     const code = DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart;
 
     setSelectedTemplate(template);
-    setDiagramCode(code);
+    updateDiagramCode(code);
     syncDiagramChange(code, template);
   };
 
@@ -267,7 +294,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
         throw new Error('Generated diagram code is empty');
       }
       
-      setDiagramCode(data.code);
+      updateDiagramCode(data.code);
       syncDiagramChange(data.code, selectedDiagramType);
       setActiveTab("preview");
       
@@ -481,7 +508,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                         Diagram Type
                       </Label>
                       <Select value={selectedDiagramType} onValueChange={setSelectedDiagramType}>
-                        <SelectTrigger id="diagramType" className="glass-effect border-yellow-400/20">
+                        <SelectTrigger id="diagramType" aria-label="Select diagram type" className="glass-effect border-yellow-400/20">
                           <SelectValue placeholder="Select diagram type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -571,6 +598,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     <Button
                       onClick={generateDiagramFromPrompt}
                       disabled={isGenerating}
+                      aria-label="Generate diagram from prompt"
                       className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                     >
                       {isGenerating ? (
@@ -623,15 +651,17 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     id="diagramCode"
                     value={diagramCode}
                     onChange={(e) => {
-                      setDiagramCode(e.target.value);
+                      updateDiagramCode(e.target.value, true);
                       syncDiagramChange(e.target.value, selectedDiagramType);
                     }}
+                    aria-label="Edit Mermaid diagram code"
                     placeholder="Enter your Mermaid diagram code here..."
                     className="min-h-[300px] font-mono text-sm glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
                   />
                   <Button
                     onClick={generateDiagramFromPrompt}
                     disabled={isGenerating}
+                    aria-label="Generate diagram from prompt"
                     className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                   >
                     {isGenerating ? (
@@ -681,7 +711,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 <div className="absolute inset-0 shimmer opacity-20"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
                 <div className="relative z-10 h-full">
-                  <DiagramPreview code={diagramCode} />
+                  <DiagramPreview code={previewDiagramCode} />
                 </div>
               </div>
 
@@ -720,6 +750,19 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={copyToClipboard}
+                    disabled={isCopying}
+                    className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+                  >
+                    {isCopying ? (
+                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="mr-2 h-4 w-4" />
+                    )}
+                    Copy Code
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={shareDiagram}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
@@ -739,7 +782,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
               <DiagramTemplates
                 onSelectTemplate={(template, code) => {
                   setSelectedTemplate(template);
-                  setDiagramCode(code);
+                  updateDiagramCode(code);
                   syncDiagramChange(code, template);
                   setActiveTab("editor");
                 }}
@@ -764,7 +807,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="relative z-10 h-full w-full flex flex-col">
-                <DiagramPreview code={diagramCode} fullScreen />
+                <DiagramPreview code={previewDiagramCode} fullScreen />
               </div>
             </div>
 

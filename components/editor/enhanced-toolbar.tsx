@@ -282,6 +282,9 @@ export function EnhancedEditorToolbar({ sessionId }: EnhancedEditorToolbarProps)
           scaleX: scale,
           scaleY: scale,
           name: 'AI Diagram',
+          hasControls: true,
+          selectable: true,
+          lockUniScaling: false,
         });
 
         canvas.add(img);
