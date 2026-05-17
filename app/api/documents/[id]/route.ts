@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -66,7 +66,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -79,7 +79,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { content, type, title } = body;
+    const { content, type, title, metadata } = body;
 
     // Check if user has edit permission
     const { data: document } = await supabase
@@ -118,6 +118,7 @@ export async function PUT(
         content,
         type,
         title,
+        metadata,
         updated_at: new Date().toISOString()
       })
       .eq('id', params.id)
@@ -148,7 +149,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRoute();
+    const supabase = await createRoute();
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

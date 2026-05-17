@@ -4,7 +4,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { generateDiagramWithMistral } from '@/lib/mistral';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+    const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     const body = await request.json();
     const { prompt, diagramType = 'flowchart' } = body;
@@ -97,11 +99,13 @@ export async function POST(request: Request) {
     }
 
     // Check if user has enough credits
-    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    const creditsRemaining = hasUnlimitedCredits
+      ? Number.MAX_SAFE_INTEGER
+      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
-    if (creditsRemaining < creditCost) {
+    if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${creditCost} credits to generate a diagram. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
@@ -112,16 +116,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     console.log(`📊 Generating ${diagramType} diagram with Mistral...`);
-    
+
     let diagram;
     try {
       diagram = await generateDiagramWithMistral({ prompt, diagramType });
     } catch (genError) {
       console.error('Diagram generation failed:', genError);
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       const errorMsg = genError instanceof Error ? genError.message : 'Unknown error during generation';
       return NextResponse.json(
-        { 
+        {
           error: 'Diagram generation failed',
           message: errorMsg.includes('parse') ? 'Invalid response format from AI. Please try again with a different description.' : errorMsg,
           details: errorMsg,
@@ -130,12 +155,15 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    
+
     // Validate diagram response
     if (!diagram || !diagram.code) {
       console.error('Invalid diagram response:', diagram);
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid diagram response',
           message: 'The AI did not generate valid diagram code. Please try again with a simpler description.',
           details: 'Missing code field in response',
@@ -149,11 +177,14 @@ export async function POST(request: Request) {
     const diagramCode = diagram.code.trim();
     const validDiagramTypes = ['flowchart', 'graph', 'sequenceDiagram', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie', 'gitGraph', 'mindmap', 'timeline'];
     const hasValidStart = validDiagramTypes.some(type => diagramCode.toLowerCase().startsWith(type.toLowerCase()));
-    
+
     if (!hasValidStart) {
       console.error('Invalid diagram type in code:', diagramCode.substring(0, 50));
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid diagram syntax',
           message: `Diagram must start with one of: ${validDiagramTypes.join(', ')}`,
           details: `Generated code starts with: ${diagramCode.substring(0, 30)}...`,
@@ -165,8 +196,11 @@ export async function POST(request: Request) {
 
     // Basic syntax validation
     if (diagramCode.length < 10) {
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       return NextResponse.json(
-        { 
+        {
           error: 'Diagram too short',
           message: 'Generated diagram is too simple. Please provide a more detailed description.',
           hint: 'Try a more detailed prompt, for example: "Create a flowchart for an ecommerce checkout process"'
@@ -174,24 +208,13 @@ export async function POST(request: Request) {
         { status: 422 }
       );
     }
-    
-    console.log('✅ Diagram generated successfully with Mistral');
-    
-    // ✅ DEDUCT CREDITS after successful generation
-    const { error: updateError } = await supabaseAdmin
-      .from('user_credits')
-      .update({ 
-        credits_used: userCredits.credits_used + creditCost,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
 
-    if (updateError) {
-      console.error('Failed to deduct credits:', updateError);
-      // Don't fail the request, just log the error
-    } else {
-      // Log the usage
-      await supabaseAdmin
+    console.log('✅ Diagram generated successfully with Mistral');
+
+    // Credits were already reserved atomically before generation. Just log
+    // the usage now that generation succeeded.
+    if (!hasUnlimitedCredits) {
+      const { error: logError } = await supabaseAdmin
         .from('credit_usage_log')
         .insert({
           user_id: user.id,
@@ -199,10 +222,14 @@ export async function POST(request: Request) {
           credits_used: creditCost,
           metadata: { diagram_type: diagramType, prompt_length: prompt.length }
         });
-      
-      console.log(`💳 Deducted ${creditCost} credits for diagram generation`);
+
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
+      } else {
+        console.log(`💳 Deducted ${creditCost} credits for diagram generation`);
+      }
     }
-    
+
     return NextResponse.json(diagram);
   } catch (error) {
     console.error('Error generating diagram:', error);

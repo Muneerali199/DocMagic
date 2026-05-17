@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     const { resumeData, jobDescription } = await req.json();
 
@@ -106,11 +108,13 @@ export async function POST(req: Request) {
     }
 
     // Check if user has enough credits
-    const creditsRemaining = calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+    const creditsRemaining = hasUnlimitedCredits
+      ? Number.MAX_SAFE_INTEGER
+      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
-    if (creditsRemaining < creditCost) {
+    if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${creditCost} credits to calculate ATS score. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
@@ -121,22 +125,38 @@ export async function POST(req: Request) {
       );
     }
 
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     // Calculate ATS score
-    const atsAnalysis = await calculateATSScore(resumeData, jobDescription);
+    let atsAnalysis;
+    try {
+      atsAnalysis = await calculateATSScore(resumeData, jobDescription);
+    } catch (err) {
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
+      throw err;
+    }
 
-    // ✅ DEDUCT CREDITS after successful analysis
-    const { error: updateError } = await supabaseAdmin
-      .from('user_credits')
-      .update({ 
-        credits_used: userCredits.credits_used + creditCost,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
-
-    if (updateError) {
-      console.error('Failed to deduct credits:', updateError);
-    } else {
-      await supabaseAdmin
+    // Credits were already reserved atomically. Log usage after success.
+    if (!hasUnlimitedCredits) {
+      const { error: logError } = await supabaseAdmin
         .from('credit_usage_log')
         .insert({
           user_id: user.id,
@@ -144,8 +164,12 @@ export async function POST(req: Request) {
           credits_used: creditCost,
           metadata: { has_job_description: !!jobDescription }
         });
-      
-      console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
+
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
+      } else {
+        console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
+      }
     }
 
     return NextResponse.json({ atsAnalysis });

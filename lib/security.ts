@@ -51,9 +51,9 @@ export const getSecurityHeaders = (isDevelopment: boolean = false) => {
   // Common CSP directives
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "font-src 'self' https://fonts.gstatic.com data: https://cdn.jsdelivr.net",
     "img-src 'self' data: https: blob:",
     // SECURITY NOTE: data: URIs in connect-src are ONLY needed for @react-pdf/renderer's yoga-wasm module
     // which loads the WASM layout engine via a data: URI. This is a controlled, safe use case as:
@@ -62,12 +62,13 @@ export const getSecurityHeaders = (isDevelopment: boolean = false) => {
     // 3. Alternative approaches (blob: or external URLs) would increase attack surface
     // WARNING: This allows data: URIs globally in connect-src. Monitor for unintended usage in other network requests.
     // If this directive is ever removed, PDF generation will fail with CSP violations.
-    "connect-src 'self' data: https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com",
-    "frame-src https://js.stripe.com",
-    "object-src 'none'",
+    "connect-src 'self' data: https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com https://latexonline.cc https://latex.ytotech.com https://cdn.jsdelivr.net",
+    "frame-src 'self' blob: https://js.stripe.com",
+    "object-src 'self' blob:",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
+    "worker-src 'self' blob:",
   ].join('; ');
 
   const headers = {
@@ -112,22 +113,18 @@ export function validateEnvironmentVariables() {
   }
 }
 
+import { logger } from './logger';
+
 // Log security events
 export function logSecurityEvent(event: string, details: any, ip?: string) {
-  const timestamp = new Date().toISOString();
   const logEntry = {
-    timestamp,
     event,
     ip: ip || 'unknown',
     details,
   };
 
-  // In production, send to monitoring service
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('SECURITY_EVENT:', JSON.stringify(logEntry));
-  } else {
-    console.log('Security Event:', logEntry);
-  }
+  // The logger handles environment checks and structured JSON output
+  logger.warn(null, 'SECURITY_EVENT', logEntry);
 }
 
 // Check if request is from allowed origin
@@ -136,7 +133,7 @@ export function isAllowedOrigin(origin: string | null, host: string): boolean {
 
   const allowedOrigins = [
     `https://${host}`,
-    'https://docmagic1.netlify.app',
+    'https://draftdeckai.com',
     'https://your-vercel-url.vercel.app',
   ];
 

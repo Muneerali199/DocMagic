@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { isPrivateUrl } from '@/lib/validate-fetch-url';
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url');
 
@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if(isPrivateUrl(url)){
+      return new NextResponse("Forbidden", { status: 403 });
+    }
     const response = await fetch(url);
     const blob = await response.blob();
     const headers = new Headers(response.headers);

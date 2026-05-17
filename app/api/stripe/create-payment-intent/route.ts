@@ -14,10 +14,9 @@ export async function POST(request: Request) {
   try {
     const supabase = await createRoute();
     
-    // Get the current user session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user?.email) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user?.email) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: {
@@ -45,8 +44,8 @@ export async function POST(request: Request) {
         enabled: true,
       },
       metadata: {
-        userId: session.user.id,
-        email: session.user.email,
+        userId: user.id,
+        email: user.email,
         ...metadata,
       },
     });

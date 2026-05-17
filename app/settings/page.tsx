@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Sparkles, Zap, Sun, Moon, Laptop, BarChart3, FileText, Layout, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { logger } from "@/lib/logger";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -28,13 +29,7 @@ export default function SettingsPage() {
     setMounted(true);
   }, []);
 
-  // Debug theme changes
-  useEffect(() => {
-    if (mounted) {
-      console.log('Theme changed:', { theme, resolvedTheme });
-      console.log('HTML classes:', document.documentElement.className);
-    }
-  }, [theme, resolvedTheme, mounted]);
+
 
   if (loading) {
     return (
@@ -70,7 +65,7 @@ export default function SettingsPage() {
                 size="lg"
               >
                 <Zap className="h-5 w-5 mr-2" />
-                Sign In to DocMagic
+                Sign In to DraftDeckAI
               </Button>
             </div>
           </div>
@@ -90,7 +85,7 @@ export default function SettingsPage() {
           </div>
           
           <h1 className="text-3xl font-bold mb-2">
-            Your <span className="bg-gradient-to-r from-yellow-400 to-blue-600 bg-clip-text text-transparent">DocMagic</span> Account
+            Your <span className="bg-gradient-to-r from-yellow-400 to-blue-600 bg-clip-text text-transparent">DraftDeckAI</span> Account
           </h1>
           <p className="text-muted-foreground">
             Manage your profile, subscription, and preferences

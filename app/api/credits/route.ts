@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, type Tier, type ActionType } from '@/lib/credits-service';
+import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { reserveCredits } from '@/lib/credit-operations';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +30,7 @@ export async function GET(request: Request) {
         { status: 401 }
       );
     }
+    const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     // Get user credits
     let { data: credits, error } = await supabase
@@ -93,16 +95,19 @@ export async function GET(request: Request) {
     }
 
     const tier = (credits?.tier || 'free') as Tier;
-    const creditsTotal = credits?.credits_total || TIER_LIMITS[tier];
-    const creditsUsed = credits?.credits_used || 0;
+    const tierToShow = hasUnlimitedCredits ? 'enterprise' : tier;
+    const creditsTotal = hasUnlimitedCredits
+      ? Number.MAX_SAFE_INTEGER
+      : (credits?.credits_total || TIER_LIMITS[tier]);
+    const creditsUsed = hasUnlimitedCredits ? 0 : (credits?.credits_used || 0);
 
     return NextResponse.json({
-      tier,
-      tierName: TIER_NAMES[tier],
+      tier: tierToShow,
+      tierName: TIER_NAMES[tierToShow],
       creditsTotal,
       creditsUsed,
       creditsRemaining: creditsTotal - creditsUsed,
-      features: TIER_FEATURES[tier],
+      features: TIER_FEATURES[tierToShow],
       resetDate: credits?.credits_reset_at,
       actionCosts: ACTION_COSTS,
       subscriptionStatus: credits?.subscription_status || 'active',
@@ -139,6 +144,7 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+    const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     const body = await request.json();
     const { action, metadata } = body as { action: ActionType; metadata?: any };
@@ -207,6 +213,15 @@ export async function POST(request: Request) {
     const creditsRemaining = credits.credits_total - credits.credits_used;
     const creditsRequired = ACTION_COSTS[action];
 
+    if (hasUnlimitedCredits) {
+      return NextResponse.json({
+        success: true,
+        creditsUsed: 0,
+        creditsRemaining: Number.MAX_SAFE_INTEGER,
+        tier: 'enterprise',
+      });
+    }
+
     // Check if user has enough credits
     if (creditsRemaining < creditsRequired) {
       return NextResponse.json({
@@ -220,20 +235,27 @@ export async function POST(request: Request) {
       }, { status: 402 }); // 402 Payment Required
     }
 
-    // Use the credits
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({
-        credits_used: credits.credits_used + creditsRequired,
-      })
-      .eq('user_id', user.id);
+    // Atomically reserve the credits using an optimistic-lock update to
+    // prevent the TOCTOU race documented in issue #477. Two concurrent
+    // requests with the same `expectedCreditsUsed` can no longer both
+    // succeed; the loser gets a 402 with the conflict message.
+    const reserved = await reserveCredits(
+      supabase,
+      user.id,
+      credits.credits_used,
+      creditsRequired
+    );
 
-    if (updateError) {
-      console.error('Error updating credits:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to use credits' },
-        { status: 500 }
-      );
+    if (!reserved) {
+      return NextResponse.json({
+        success: false,
+        error: 'Not enough credits',
+        creditsRemaining,
+        creditsRequired,
+        tier: credits.tier,
+        needsUpgrade: false,
+        message: 'A concurrent request consumed your remaining credits before this one could be reserved. Please try again in a moment.',
+      }, { status: 402 });
     }
 
     // Log the usage
