@@ -10,7 +10,6 @@ export default {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
       useESM: true,
-      isolatedModules: true,
     }],
   },
   transformIgnorePatterns: ['/node_modules/(?!react|react-dom|next|@testing-library)'],
