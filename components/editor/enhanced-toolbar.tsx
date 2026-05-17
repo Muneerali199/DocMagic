@@ -67,7 +67,11 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function EnhancedEditorToolbar() {
+interface EnhancedEditorToolbarProps {
+  sessionId?: string;
+}
+
+export function EnhancedEditorToolbar({ sessionId }: EnhancedEditorToolbarProps) {
   const {
     canvas,
     activeTool,
@@ -794,7 +798,7 @@ export function EnhancedEditorToolbar() {
             </DialogHeader>
 
             <div ref={diagramDialogRef}>
-              <DiagramGenerator />
+              <DiagramGenerator sessionId={sessionId} />
             </div>
 
             <DialogFooter>

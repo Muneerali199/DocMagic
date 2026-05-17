@@ -13,6 +13,7 @@ import { DiagramTemplates } from "@/components/diagram/diagram-templates";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
+import { broadcastDiagramChange, subscribeToDiagramChanges } from "@/lib/collaboration-service";
 import { 
   Loader2, 
   Sparkles, 
@@ -158,7 +159,11 @@ const DIAGRAM_EXAMPLES = {
       Sit down: 5: Me`
 };
 
-export function DiagramGenerator() {
+interface DiagramGeneratorProps {
+  sessionId?: string | null;
+}
+
+export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [selectedTemplate, setSelectedTemplate] = useState("flowchart");
   const [prompt, setPrompt] = useState("");
@@ -172,9 +177,34 @@ export function DiagramGenerator() {
   const diagramRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const unsubscribe = subscribeToDiagramChanges((change) => {
+      if (change.session_id !== sessionId) return;
+
+      setDiagramCode(change.mermaid_code);
+      setSelectedDiagramType(change.diagram_type);
+      setSelectedTemplate(change.diagram_type);
+    });
+
+    return unsubscribe;
+  }, [sessionId]);
+
+  const syncDiagramChange = (mermaidCode: string, diagramType: string) => {
+    if (!sessionId) return;
+
+    broadcastDiagramChange(sessionId, mermaidCode, diagramType).catch((error) => {
+      console.error('Diagram collaboration error:', error);
+    });
+  };
+
   const handleTemplateSelect = (template: string) => {
+    const code = DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart;
+
     setSelectedTemplate(template);
-    setDiagramCode(DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart);
+    setDiagramCode(code);
+    syncDiagramChange(code, template);
   };
 
   const generateDiagramFromPrompt = async () => {
@@ -238,6 +268,7 @@ export function DiagramGenerator() {
       }
       
       setDiagramCode(data.code);
+      syncDiagramChange(data.code, selectedDiagramType);
       setActiveTab("preview");
       
       toast({
@@ -591,7 +622,10 @@ export function DiagramGenerator() {
                   <Textarea
                     id="diagramCode"
                     value={diagramCode}
-                    onChange={(e) => setDiagramCode(e.target.value)}
+                    onChange={(e) => {
+                      setDiagramCode(e.target.value);
+                      syncDiagramChange(e.target.value, selectedDiagramType);
+                    }}
                     placeholder="Enter your Mermaid diagram code here..."
                     className="min-h-[300px] font-mono text-sm glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
                   />
@@ -706,6 +740,7 @@ export function DiagramGenerator() {
                 onSelectTemplate={(template, code) => {
                   setSelectedTemplate(template);
                   setDiagramCode(code);
+                  syncDiagramChange(code, template);
                   setActiveTab("editor");
                 }}
               />
