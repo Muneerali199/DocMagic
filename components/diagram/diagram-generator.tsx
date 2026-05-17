@@ -27,6 +27,7 @@ import {
   Share2,
   Save,
   History,
+  MessageSquare,
   Workflow,
   GitBranch,
   Database,
@@ -185,6 +186,15 @@ interface DiagramVersion {
   created_at: string;
 }
 
+interface DiagramComment {
+  id: string;
+  diagram_id: string;
+  user_id: string;
+  user_name: string;
+  body: string;
+  created_at: string;
+}
+
 export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const [previewDiagramCode, setPreviewDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
@@ -197,8 +207,12 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [isSavingDiagram, setIsSavingDiagram] = useState(false);
   const [isLoadingDiagrams, setIsLoadingDiagrams] = useState(false);
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
   const [diagramVersions, setDiagramVersions] = useState<DiagramVersion[]>([]);
+  const [diagramComments, setDiagramComments] = useState<DiagramComment[]>([]);
+  const [commentBody, setCommentBody] = useState("");
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("editor");
   const { toast } = useToast();
@@ -319,6 +333,38 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     }
   }, [currentDiagramId, supabase, toast]);
 
+  const loadDiagramComments = useCallback(async (diagramId = currentDiagramId) => {
+    if (!diagramId) {
+      setDiagramComments([]);
+      return;
+    }
+
+    setIsLoadingComments(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('diagram_comments')
+        .select('id,diagram_id,user_id,user_name,body,created_at')
+        .eq('diagram_id', diagramId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      setDiagramComments(data || []);
+    } catch (error) {
+      console.error('Load comments error:', error);
+      toast({
+        title: "Load failed",
+        description: error instanceof Error ? error.message : "Failed to load comments. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingComments(false);
+    }
+  }, [currentDiagramId, supabase, toast]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
 
@@ -328,6 +374,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
     if (value === 'history') {
       loadDiagramVersions();
+    }
+
+    if (value === 'comments') {
+      loadDiagramComments();
     }
   };
 
@@ -399,6 +449,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
       if (activeTab === 'history') {
         loadDiagramVersions(savedDiagram.id);
       }
+
+      if (activeTab === 'comments') {
+        loadDiagramComments(savedDiagram.id);
+      }
     } catch (error) {
       console.error('Save diagram error:', error);
       toast({
@@ -408,6 +462,47 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
       });
     } finally {
       setIsSavingDiagram(false);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!currentDiagramId || !commentBody.trim()) return;
+
+    setIsSubmittingComment(true);
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        throw new Error('Please sign in to add comments');
+      }
+
+      const { error } = await supabase.from('diagram_comments').insert({
+        diagram_id: currentDiagramId,
+        user_id: session.user.id,
+        user_name: session.user.email || "Anonymous",
+        body: commentBody.trim(),
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setCommentBody("");
+      toast({
+        title: "Comment added",
+        description: "Your comment has been added successfully",
+      });
+      loadDiagramComments(currentDiagramId);
+    } catch (error) {
+      console.error('Submit comment error:', error);
+      toast({
+        title: "Comment failed",
+        description: error instanceof Error ? error.message : "Failed to add comment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -660,7 +755,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="flex justify-center mb-4 sm:mb-6 px-2">
-          <TabsList className="glass-effect border border-yellow-400/20 p-1 h-auto">
+          <TabsList role="tablist" className="glass-effect border border-yellow-400/20 p-1 h-auto">
             <TabsTrigger
               value="editor"
               className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
@@ -697,6 +792,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
             >
               <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               History
+            </TabsTrigger>
+            <TabsTrigger
+              value="comments"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+            >
+              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Comments
             </TabsTrigger>
           </TabsList>
         </div>
@@ -931,7 +1033,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold bolt-gradient-text">Preview</h2>
               </div>
 
-              <div ref={diagramRef} className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[300px] sm:min-h-[450px] lg:min-h-[550px] shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div ref={diagramRef} aria-live="polite" className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[300px] sm:min-h-[450px] lg:min-h-[550px] shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <div className="absolute inset-0 shimmer opacity-20"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
                 <div className="relative z-10 h-full">
@@ -1143,6 +1245,98 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           </div>
         </TabsContent>
 
+        <TabsContent value="comments" className="pt-4 px-2 sm:px-0">
+          <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">Comments</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Discuss the current diagram
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => loadDiagramComments()}
+                disabled={isLoadingComments || !currentDiagramId}
+                className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+              >
+                {isLoadingComments ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                )}
+                Refresh
+              </Button>
+            </div>
+
+            {!currentDiagramId ? (
+              <div className="text-center py-10 text-sm text-muted-foreground">
+                Save a diagram first to add comments
+              </div>
+            ) : (
+              <>
+                {isLoadingComments ? (
+                  <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading comments...
+                  </div>
+                ) : diagramComments.length === 0 ? (
+                  <div className="text-center py-10 text-sm text-muted-foreground">
+                    No comments yet
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {diagramComments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="glass-effect rounded-lg border border-yellow-400/20 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-medium text-sm">
+                            {comment.user_name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
+                          {comment.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-3 border-t border-yellow-400/20 pt-4">
+                  <Label htmlFor="diagramComment" className="text-sm font-medium">
+                    Add Comment
+                  </Label>
+                  <Textarea
+                    id="diagramComment"
+                    value={commentBody}
+                    onChange={(e) => setCommentBody(e.target.value)}
+                    aria-label="Add diagram comment"
+                    placeholder="Write a comment..."
+                    className="min-h-[100px] text-sm glass-effect border-yellow-400/20 focus:border-yellow-400/60 resize-none"
+                  />
+                  <Button
+                    onClick={submitComment}
+                    disabled={!currentDiagramId || !commentBody.trim() || isSubmittingComment}
+                    className="bolt-gradient text-white font-semibold"
+                  >
+                    {isSubmittingComment ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                    )}
+                    Submit
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
         <TabsContent value="preview" className="pt-3 sm:pt-4 px-2 sm:px-0">
           <div className="space-y-4 sm:space-y-6">
             <div className="text-center animate-fade-in">
@@ -1154,7 +1348,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
               </p>
             </div>
 
-            <div ref={diagramRef} className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[400px] sm:min-h-[500px] md:min-h-[700px] shadow-2xl">
+            <div ref={diagramRef} aria-live="polite" className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[400px] sm:min-h-[500px] md:min-h-[700px] shadow-2xl">
               <div className="absolute inset-0 shimmer opacity-20"></div>
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
