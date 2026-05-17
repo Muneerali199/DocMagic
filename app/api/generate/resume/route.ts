@@ -7,6 +7,9 @@ import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
+// NEW: Import our custom AI response normalizer
+import { normalizeAIResponse } from '@/lib/ai/normalizer';
+
 // Service role client for credit operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -77,17 +80,9 @@ Create realistic, relevant content based on the job description. Use action verb
   }
 
   const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '';
-
-  // Parse JSON from response
-  const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
-
-  if (!jsonMatch) {
-    throw new Error('No JSON found in Mistral response');
-  }
-
-  return JSON.parse(jsonMatch[0]);
+  
+  // CHANGED: We now just return the raw string and let our normalizer handle the parsing
+  return data.choices?.[0]?.message?.content || '';
 }
 
 export async function POST(request: Request) {
@@ -257,10 +252,7 @@ export async function POST(request: Request) {
     }
 
 
-    // Additional security checks - only check name and email for SQL injection
-    // Note: We don't check prompt because it contains user-generated content like LinkedIn exports
-    // that naturally contain words like "SELECT candidates" which trigger false positives.
-    // The prompt is only passed to the AI model, not used in SQL queries.
+    // Additional security checks
     if (detectSqlInjection(name) || detectSqlInjection(email)) {
       console.warn('Potential SQL injection attempt detected in name/email');
       return NextResponse.json(
@@ -274,10 +266,6 @@ export async function POST(request: Request) {
     const sanitizedName = sanitizeInput(name);
     const sanitizedEmail = sanitizeInput(email);
 
-    // Atomically reserve credits BEFORE generation to prevent the
-    // TOCTOU race documented in issue #477. If a concurrent request beat
-    // us to the row, the optimistic-lock update returns no row and we
-    // respond 402 so the client can refresh and see real balance.
     if (!hasUnlimitedCredits) {
       const reserved = await reserveCredits(
         supabaseAdmin,
@@ -294,26 +282,37 @@ export async function POST(request: Request) {
       userCredits = reserved;
     }
 
-    // Generate resume with Mistral
-    let resume;
+    // Generate resume and pass through normalizer
+    let standardResponse;
     try {
       console.log('🚀 Generating resume with Mistral...');
-      resume = await generateResumeWithMistral({
+      const rawTextResponse = await generateResumeWithMistral({
         prompt: sanitizedPrompt,
         name: sanitizedName,
         email: sanitizedEmail
       });
-      console.log('✅ Resume generated with Mistral');
+      
+      console.log('✅ AI responded, pushing through Normalizer Layer...');
+      
+      // Pass the raw string through our central filter
+      standardResponse = normalizeAIResponse(rawTextResponse);
+
+      // If normalizer fails, throw an error so credits get refunded
+      if (!standardResponse.success) {
+        throw new Error(standardResponse.error);
+      }
+      
     } catch (mistralError: any) {
-      console.error('❌ Mistral failed:', mistralError.message);
+      console.error('❌ AI Generation or Normalization failed:', mistralError.message);
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
       }
       throw new Error('Unable to generate resume. Please try again later.');
     }
 
-    // Log usage only after the AI call succeeded. Credits were already
-    // deducted atomically above.
+    // Extract the clean data from our standard package to save to the database
+    const resume = standardResponse.data;
+
     if (!hasUnlimitedCredits) {
       const { error: logError } = await supabaseAdmin
         .from('credit_usage_log')
@@ -379,7 +378,8 @@ export async function POST(request: Request) {
       // Don't fail the request if saving fails
     }
 
-    return NextResponse.json(resume, { status: 200 });
+    // CHANGED: We now return the full standardResponse wrapper so the frontend gets consistent data
+    return NextResponse.json(standardResponse, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ Resume generation error:', {
@@ -388,7 +388,6 @@ export async function POST(request: Request) {
       stack: error.stack?.split('\n').slice(0, 3)
     });
 
-    // Provide detailed, user-friendly error messages
     let errorMessage = 'Failed to generate resume';
     let errorDetails = error.message || 'Unknown error occurred';
 
