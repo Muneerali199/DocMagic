@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import { FeedbackPopup } from "@/components/feedback-popup";
+import { DeploymentStatusBanner } from "@/components/deployment-status-banner";
 import type { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -57,6 +58,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
+        <DeploymentStatusBanner />
         <Providers>
           <CursorProvider>
             {children}
