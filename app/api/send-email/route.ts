@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { emailSchema, sanitizeHtml, sanitizeInput } from '@/lib/validation';
+import { emailSchema, sanitizeHtml, sanitizeInput, sanitizeObject } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { logSecurityEvent } from '@/lib/security';
@@ -150,25 +150,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sanitize string contents to prevent XSS/injection attacks inside HTML email rendering
-    const sanitizedFromName = fromName ? sanitizeHtml(fromName) : '';
-    const sanitizedFromEmail = fromEmail ? sanitizeHtml(fromEmail) : '';
-    const sanitizedSubject = sanitizeHtml(subject);
-    const sanitizedPersonalMessage = content ? sanitizeHtml(content) : '';
-    
-    const sanitizedLetterContent = {
-      from: {
-        name: letterContent.from?.name ? sanitizeHtml(letterContent.from.name) : '',
-        address: letterContent.from?.address ? sanitizeHtml(letterContent.from.address) : '',
-      },
-      to: {
-        name: letterContent.to?.name ? sanitizeHtml(letterContent.to.name) : '',
-        address: letterContent.to?.address ? sanitizeHtml(letterContent.to.address) : '',
-      },
-      date: letterContent.date ? sanitizeHtml(letterContent.date) : '',
-      subject: letterContent.subject ? sanitizeHtml(letterContent.subject) : '',
-      content: letterContent.content ? sanitizeHtml(letterContent.content) : '',
-    };
+    // Use the reusable sanitizeObject helper for consistent sanitization across nested fields
+    const sanitizedBody = sanitizeObject({
+      fromName,
+      fromEmail,
+      subject,
+      content,
+      letterContent
+    });
+
+    const {
+      fromName: sanitizedFromName,
+      fromEmail: sanitizedFromEmail,
+      subject: sanitizedSubject,
+      content: sanitizedPersonalMessage,
+      letterContent: sanitizedLetterContent
+    } = sanitizedBody;
 
     const hasFullSmtpConfig =
       !!process.env.EMAIL_HOST && !!process.env.EMAIL_USER && !!process.env.EMAIL_PASS;

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
+import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput, sanitizeObject } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
@@ -277,10 +277,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Sanitize inputs
-    const sanitizedPrompt = sanitizeInput(prompt);
-    const sanitizedName = sanitizeInput(name);
-    const sanitizedEmail = sanitizeInput(email);
+    // Sanitize all inputs consistently
+    const sanitizedInput = sanitizeObject({ prompt, name, email });
+    const { 
+      prompt: sanitizedPrompt, 
+      name: sanitizedName, 
+      email: sanitizedEmail 
+    } = sanitizedInput;
 
     // Atomically reserve credits BEFORE generation to prevent the
     // TOCTOU race documented in issue #477. If a concurrent request beat
