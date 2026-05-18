@@ -1,8 +1,14 @@
-import { NextResponse } from 'next/server';
+const { NextResponse } = require('next/server');
+import { createClient } from '@supabase/supabase-js';
 import { generateCodeDrivenPresentation } from '@/lib/qwen-code-presentation';
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -44,6 +50,25 @@ export async function POST(request: Request) {
   incrementRequestCount();
 
   try {
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       outlines,
