@@ -124,37 +124,41 @@ export function SiteHeader() {
                 <div className="mt-6 space-y-6">
                   {/* Navigation Items */}
                   <nav className="space-y-1">
-                    {navItems.map((item) => (
-                      <SheetClose asChild key={item.href}>
-                        <Link
-                          href={item.href}
-                          onClick={handleNavClick}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
-                            pathname === item.href
-                              ? "bg-accent text-accent-foreground shadow-sm"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "transition-colors duration-200",
-                              pathname === item.href
-                                ? "text-yellow-600"
-                                : "group-hover:text-yellow-500"
-                            )}
-                          >
-                            {item.icon}
-                          </span>
-                          <span className="font-medium">{item.label}</span>
-                          {pathname === item.href && (
-                            <div className="ml-auto">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            </div>
-                          )}
-                        </Link>
-                      </SheetClose>
-                    ))}
+                    <ul>
+                      {navItems.map((item) => (
+                        <li key={item.href}>
+                          <SheetClose asChild>
+                            <Link
+                              href={item.href}
+                              onClick={handleNavClick}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "transition-colors duration-200",
+                                  pathname === item.href
+                                    ? "text-yellow-600"
+                                    : "group-hover:text-yellow-500"
+                                )}
+                              >
+                                {item.icon}
+                              </span>
+                              <span className="font-medium">{item.label}</span>
+                              {pathname === item.href && (
+                                <div className="ml-auto">
+                                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                </div>
+                              )}
+                            </Link>
+                          </SheetClose>
+                        </li>
+                      ))}
+                    </ul>
                   </nav>
 
                   {/* User Section in Mobile */}
@@ -217,18 +221,13 @@ export function SiteHeader() {
                   {!user && (
                     <div className="pt-4 border-t border-border/20">
                       <SheetClose asChild>
-                        <Button
-                          asChild
-                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+                        <Link
+                          href="/auth/signin"
+                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex items-center gap-2"
                         >
-                          <Link
-                            href="/auth/signin"
-                            className="flex items-center gap-2"
-                          >
-                            <Zap className="h-4 w-4" />
-                            Sign In to DraftDeckAI
-                          </Link>
-                        </Button>
+                          <Zap className="h-4 w-4" />
+                          Sign In to DraftDeckAI
+                        </Link>
                       </SheetClose>
                     </div>
                   )}
@@ -403,12 +402,12 @@ export function SiteHeader() {
             ) : (
               /* Desktop Sign In Button */
               <TooltipWithShortcut content="Sign in to save and manage your documents">
-                <Link href="/auth/signin">
-                  <Button className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
+                <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
+                  <Link href="/auth/signin">
                     <Zap className="h-4 w-4" />
                     <span>Sign In</span>
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </TooltipWithShortcut>
             )}
           </div>
