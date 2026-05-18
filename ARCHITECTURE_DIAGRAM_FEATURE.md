@@ -12,8 +12,8 @@ DraftDeckAI now includes **enhanced Mermaid diagram support** for generating pro
 - **Subgraph Support**: Automatic grouping of related components (Frontend, Backend, Database, etc.)
 - **Styling Classes**: Consistent color schemes using `classDef` for professional appearance
 - **Multiple Diagram Types**: Flowchart, Sequence, Class, State, ER, Journey, Gantt, Mindmap, and more
-- **Responsive Rendering**: Diagrams scale beautifully on mobile and desktop
-- **Theme Integration**: Diagrams adapt to light/dark/colorful themes automatically
+- Responsive Rendering: Diagrams adapt properly across different screen sizes and layouts.
+- Theme Integration: Diagram styles automatically adjust based on the active presentation theme.
 
 ### 📊 Supported Diagram Types
 

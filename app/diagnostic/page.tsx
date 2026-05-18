@@ -1,6 +1,17 @@
 import { createClient } from '@/lib/supabase/client';
 
 export default async function DiagnosticPage() {
+
+    // Restrict diagnostic page in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-2xl font-bold">
+          Access Denied
+        </h1>
+      </div>
+    );
+  }
   const supabase = createClient();
 
   // Check if tables exist by trying to query them
