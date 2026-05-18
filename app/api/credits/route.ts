@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { reserveCredits } from '@/lib/credit-operations';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -234,20 +235,27 @@ export async function POST(request: Request) {
       }, { status: 402 }); // 402 Payment Required
     }
 
-    // Use the credits
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({
-        credits_used: credits.credits_used + creditsRequired,
-      })
-      .eq('user_id', user.id);
+    // Atomically reserve the credits using an optimistic-lock update to
+    // prevent the TOCTOU race documented in issue #477. Two concurrent
+    // requests with the same `expectedCreditsUsed` can no longer both
+    // succeed; the loser gets a 402 with the conflict message.
+    const reserved = await reserveCredits(
+      supabase,
+      user.id,
+      credits.credits_used,
+      creditsRequired
+    );
 
-    if (updateError) {
-      console.error('Error updating credits:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to use credits' },
-        { status: 500 }
-      );
+    if (!reserved) {
+      return NextResponse.json({
+        success: false,
+        error: 'Not enough credits',
+        creditsRemaining,
+        creditsRequired,
+        tier: credits.tier,
+        needsUpgrade: false,
+        message: 'A concurrent request consumed your remaining credits before this one could be reserved. Please try again in a moment.',
+      }, { status: 402 });
     }
 
     // Log the usage

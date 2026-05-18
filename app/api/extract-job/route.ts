@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+import { isPrivateUrl } from '@/lib/validate-fetch-url';
 
 import { NextResponse } from 'next/server';
 
@@ -13,7 +14,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
+    if(isPrivateUrl(url)){
+      return NextResponse.json(
+        { error: 'Forbidden URL' },
+        { status: 403 }
+      );
+    }
     // Validate URL format
     try {
       new URL(url);

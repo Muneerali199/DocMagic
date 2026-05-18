@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { generateLetterWithMistral, generateCoverLetterFromJob } from '@/lib/mistral';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -127,42 +128,68 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if this is a job-based cover letter request
+    // Validate required fields for the standard-letter branch BEFORE
+    // reserving credits, so a missing-fields error doesn't charge anyone.
+    if (!isCoverLetter && (!prompt || !fromName || !toName || !letterType)) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
+    // Cover-letter branch
     if (isCoverLetter) {
       console.log('📝 Generating cover letter from job description with Mistral...');
 
-      const coverLetter = await generateCoverLetterFromJob({
-        jobDescription,
-        jobUrl,
-        fromName,
-        fromEmail,
-        fromAddress,
-        skills,
-        experience
-      });
+      let coverLetter;
+      try {
+        coverLetter = await generateCoverLetterFromJob({
+          jobDescription,
+          jobUrl,
+          fromName,
+          fromEmail,
+          fromAddress,
+          skills,
+          experience
+        });
+      } catch (err) {
+        if (!hasUnlimitedCredits) {
+          await refundCredits(supabaseAdmin, user.id, creditCost);
+        }
+        throw err;
+      }
 
-      // ✅ DEDUCT CREDITS after successful generation
       if (!hasUnlimitedCredits) {
-        const { error: updateError } = await supabaseAdmin
-          .from('user_credits')
-          .update({
-            credits_used: userCredits.credits_used + creditCost,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
+        const { error: logError } = await supabaseAdmin
+          .from('credit_usage_log')
+          .insert({
+            user_id: user.id,
+            action: actionType,
+            credits_used: creditCost,
+            metadata: { type: 'cover_letter', has_job_description: true }
+          });
 
-        if (updateError) {
-          console.error('Failed to deduct credits:', updateError);
+        if (logError) {
+          console.error('Failed to log credit usage:', logError);
         } else {
-          await supabaseAdmin
-            .from('credit_usage_log')
-            .insert({
-              user_id: user.id,
-              action: actionType,
-              credits_used: creditCost,
-              metadata: { type: 'cover_letter', has_job_description: true }
-            });
-
           console.log(`💳 Deducted ${creditCost} credits for cover letter generation`);
         }
       }
@@ -171,23 +198,24 @@ export async function POST(request: Request) {
     }
 
     // Standard letter generation
-    if (!prompt || !fromName || !toName || !letterType) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
     console.log(`📝 Generating ${letterType} letter with Mistral...`);
 
-    const letter = await generateLetterWithMistral({
-      prompt,
-      fromName,
-      fromAddress,
-      toName,
-      toAddress,
-      letterType,
-    });
+    let letter;
+    try {
+      letter = await generateLetterWithMistral({
+        prompt,
+        fromName,
+        fromAddress,
+        toName,
+        toAddress,
+        letterType,
+      });
+    } catch (err) {
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
+      throw err;
+    }
 
     // Format the response to ensure it has the expected structure
     const formattedResponse = {
@@ -210,28 +238,19 @@ export async function POST(request: Request) {
 
     console.log('✅ Letter generated successfully with Mistral');
 
-    // ✅ DEDUCT CREDITS after successful generation
     if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: userCredits.credits_used + creditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: actionType,
+          credits_used: creditCost,
+          metadata: { letter_type: letterType, prompt_length: prompt.length }
+        });
 
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
       } else {
-        await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: actionType,
-            credits_used: creditCost,
-            metadata: { letter_type: letterType, prompt_length: prompt.length }
-          });
-
         console.log(`💳 Deducted ${creditCost} credits for letter generation`);
       }
     }

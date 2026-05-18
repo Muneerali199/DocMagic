@@ -132,9 +132,10 @@ export default async function DiagnosticPage() {
             >
               Sign In
             </a>
-            <a 
-              href="https://dashboard.stripe.com/test/products" 
+            <a
+              href="https://dashboard.stripe.com/test/products"
               target="_blank"
+              rel="noopener noreferrer"
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
             >
               Stripe Dashboard

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+const { NextResponse } = require('next/server');
 import { createRoute } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -7,17 +7,16 @@ export const runtime = 'nodejs';
 export async function GET() {
   const supabase = await createRoute();
   
-  // Get the current user session
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session?.user?.email) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user?.email) {
     return NextResponse.json({ subscribed: false }, { status: 200 });
   }
 
   const { data: userData, error } = await supabase
     .from('users')
     .select('subscription:subscriptions(stripe_subscription_id)')
-    .eq('email', session.user.email)
+    .eq('email', user.email)
     .single();
 
   if (error || !userData) {

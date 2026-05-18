@@ -1,6 +1,8 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
     
     if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${creditCost} credits to analyze a resume. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
@@ -120,6 +122,30 @@ export async function POST(request: Request) {
         { status: 402 }
       );
     }
+
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
+    // Single refund-on-exit guard for everything after the reservation:
+    // any unsuccessful return path (HTTP failure, missing content, thrown
+    // exception) refunds via finally; success flips the flag off.
+    let refundOnExit = !hasUnlimitedCredits;
+    try {
 
     const systemPrompt = `You are an expert ATS (Applicant Tracking System) analyzer. Analyze the provided resume text and return a detailed ATS compatibility score with actionable suggestions.
 
@@ -250,33 +276,40 @@ ${resumeText}`;
       };
     }
 
-    // ✅ DEDUCT CREDITS after successful analysis
-    if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({ 
-          credits_used: userCredits.credits_used + creditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+    // The user gets a result (either the parsed analysis or the fallback
+    // default). Mark the reservation as kept BEFORE returning so the
+    // finally guard doesn't refund a successful generation.
+    refundOnExit = false;
 
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
+    // Log the usage now that the analysis succeeded. Credits were already
+    // reserved atomically above.
+    if (!hasUnlimitedCredits) {
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'ats_check',
+          credits_used: creditCost,
+          metadata: { has_job_description: !!jobDescription, resume_length: resumeText.length }
+        });
+
+      if (logError) {
+        console.error('Failed to log credit usage:', logError);
       } else {
-        await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: 'ats_check',
-            credits_used: creditCost,
-            metadata: { has_job_description: !!jobDescription, resume_length: resumeText.length }
-          });
-        
         console.log(`💳 Deducted ${creditCost} credits for ATS analysis`);
       }
     }
 
     return NextResponse.json(analysisResult);
+
+    } finally {
+      if (refundOnExit) {
+        const refunded = await refundCredits(supabaseAdmin, user.id, creditCost);
+        if (!refunded) {
+          console.error(`Failed to refund ${creditCost} credits after ATS analysis failure for user ${user.id}`);
+        }
+      }
+    }
 
   } catch (error) {
     console.error('ATS analysis error:', error);
@@ -286,3 +319,4 @@ ${resumeText}`;
     );
   }
 }
+

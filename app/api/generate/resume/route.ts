@@ -5,6 +5,11 @@ import { NextResponse } from 'next/server';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+
+import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -71,7 +76,7 @@ Create realistic, relevant content based on the job description. Use action verb
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Mistral API error:', errorText);
+    // Scoped logger will handle context
     throw new Error(`Mistral API error: ${response.status}`);
   }
 
@@ -90,6 +95,10 @@ Create realistic, relevant content based on the job description. Use action verb
 }
 
 export async function POST(request: Request) {
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
+
   try {
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -138,7 +147,7 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      log.error('Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
@@ -171,7 +180,7 @@ export async function POST(request: Request) {
         .single();
 
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        log.error('Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -194,7 +203,7 @@ export async function POST(request: Request) {
         .single();
 
       if (updateError) {
-        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        log.warn('Failed to reset credits in database, applying local reset instead:', updateError);
         userCredits = {
           ...userCredits,
           credits_used: 0,
@@ -203,7 +212,7 @@ export async function POST(request: Request) {
       } else if (updatedCredits) {
         userCredits = updatedCredits;
       } else {
-        console.error('Credits reset did not return an updated record, applying local reset instead');
+        log.warn('Credits reset did not return an updated record, applying local reset instead');
         userCredits = {
           ...userCredits,
           credits_used: 0,
@@ -261,7 +270,7 @@ export async function POST(request: Request) {
     // that naturally contain words like "SELECT candidates" which trigger false positives.
     // The prompt is only passed to the AI model, not used in SQL queries.
     if (detectSqlInjection(name) || detectSqlInjection(email)) {
-      console.warn('Potential SQL injection attempt detected in name/email');
+      log.warn('Potential SQL injection attempt detected in name/email');
       return NextResponse.json(
         { error: 'Invalid input detected' },
         { status: 400 }
@@ -273,46 +282,60 @@ export async function POST(request: Request) {
     const sanitizedName = sanitizeInput(name);
     const sanitizedEmail = sanitizeInput(email);
 
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477. If a concurrent request beat
+    // us to the row, the optimistic-lock update returns no row and we
+    // respond 402 so the client can refresh and see real balance.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits!.credits_used,
+        creditCost
+      );
+      if (!reserved) {
+        return NextResponse.json(
+          creditReservationConflictResponse(creditCost, userCredits!.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     // Generate resume with Mistral
     let resume;
     try {
-      console.log('🚀 Generating resume with Mistral...');
+      log.info('🚀 Generating resume with Mistral...');
       resume = await generateResumeWithMistral({
         prompt: sanitizedPrompt,
         name: sanitizedName,
         email: sanitizedEmail
       });
-      console.log('✅ Resume generated with Mistral');
+      log.info('✅ Resume generated with Mistral');
     } catch (mistralError: any) {
-      console.error('❌ Mistral failed:', mistralError.message);
+      log.error('❌ Mistral failed:', mistralError.message);
+      if (!hasUnlimitedCredits) {
+        await refundCredits(supabaseAdmin, user.id, creditCost);
+      }
       throw new Error('Unable to generate resume. Please try again later.');
     }
 
-    // Deduct credits after successful generation
+    // Log usage only after the AI call succeeded. Credits were already
+    // deducted atomically above.
     if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: userCredits!.credits_used + creditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+      const { error: logError } = await supabaseAdmin
+        .from('credit_usage_log')
+        .insert({
+          user_id: user.id,
+          action: 'resume',
+          credits_used: creditCost,
+          metadata: { prompt_length: sanitizedPrompt.length }
+        });
 
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
-        // Don't fail the request, just log the error
+      if (logError) {
+        log.error('Failed to log credit usage:', logError);
       } else {
-        // Log the usage
-        await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: 'resume',
-            credits_used: creditCost,
-            metadata: { prompt_length: sanitizedPrompt.length }
-          });
-
-        console.log(`💳 Deducted ${creditCost} credits for resume generation`);
+        log.info(`💳 Deducted ${creditCost} credits for resume generation`);
       }
     }
 
@@ -333,7 +356,7 @@ export async function POST(request: Request) {
         .single();
 
       if (docError) {
-        console.error('Failed to save to documents table:', docError);
+        log.error('Failed to save to documents table:', docError);
 
         // Fallback: Try saving to resumes table
         const { error: resumeError } = await supabaseAdmin
@@ -352,22 +375,23 @@ export async function POST(request: Request) {
           });
 
         if (resumeError) {
-          console.error('Failed to save to resumes table:', resumeError);
+          log.error('Failed to save to resumes table:', resumeError);
         } else {
-          console.log('📄 Resume saved to resumes table');
+          log.info('📄 Resume saved to resumes table');
         }
       } else {
-        console.log('📄 Resume saved to documents table:', savedDoc?.id);
+        log.info('📄 Resume saved to documents table:', savedDoc?.id);
       }
     } catch (saveError) {
-      console.error('Error saving resume:', saveError);
+      log.error('Error saving resume:', saveError);
       // Don't fail the request if saving fails
     }
 
     return NextResponse.json(resume, { status: 200 });
 
   } catch (error: any) {
-    console.error('❌ Resume generation error:', {
+    incrementErrorCount();
+    log.error('❌ Resume generation error:', {
       message: error.message,
       name: error.name,
       stack: error.stack?.split('\n').slice(0, 3)

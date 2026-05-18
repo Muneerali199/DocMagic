@@ -30,7 +30,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center justify-center sm:justify-start gap-4 pt-2">
               <Link
-                href="https://github.com/Muneerali199/DocMagic"
+                href="https://github.com/Muneerali199/Draftdeckai"
                 className="p-2 rounded-full bg-gray-200/50 dark:bg-gray-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110"
                 aria-label="GitHub"
               >
@@ -101,8 +101,18 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 sm:space-y-3">
               <li>
-                <Link href="https://github.com/Muneerali199/DocMagic/tree/main/docs" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                <Link href="https://github.com/Muneerali199/Draftdeckai/tree/main/docs" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
                   Documentation
+                </Link>
+              </li>
+            {/* Add Email Section */}
+            <li>
+              <Link 
+                href="mailto:support@draftdeck.ai" 
+                className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 flex items-center justify-center sm:justify-start gap-2"
+              >
+                <Mail className="h-4 w-4" />
+                Email Support
                 </Link>
               </li>
               <li>
@@ -116,12 +126,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/Muneerali199/DocMagic/discussions" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                <Link href="https://github.com/Muneerali199/Draftdeckai/discussions" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
                   Community
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/Muneerali199/DocMagic/issues" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                <Link href="https://github.com/Muneerali199/Draftdeckai/issues" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
                   Report Issues
                 </Link>
               </li>
@@ -141,12 +151,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/Muneerali199/DocMagic/graphs/contributors" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                <Link href="https://github.com/Muneerali199/Draftdeckai/graphs/contributors" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
                   Contributors
                 </Link>
               </li>
               <li>
-                <Link href="https://github.com/Muneerali199/DocMagic/blob/main/LICENSE" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 flex items-center justify-center sm:justify-start gap-2">
+                <Link href="https://github.com/Muneerali199/Draftdeckai/blob/main/LICENSE" className="text-sm sm:text-base text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 flex items-center justify-center sm:justify-start gap-2">
                   <Shield className="h-4 w-4" />
                   MIT License
                 </Link>
