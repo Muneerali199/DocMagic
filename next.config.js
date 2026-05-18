@@ -3,7 +3,9 @@ import withPWACore from 'next-pwa';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
+  allowedDevOrigins: process.env.NEXT_PUBLIC_DEV_ORIGIN
+  ? [process.env.NEXT_PUBLIC_DEV_ORIGIN]
+  : [],
 images: {
     unoptimized: false,
     remotePatterns: [
