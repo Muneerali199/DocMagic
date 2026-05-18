@@ -6,6 +6,7 @@ import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, saniti
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
 
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
@@ -151,6 +152,25 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
+      );
+    }
+
+    // Apply Rate Limiting
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(user.id, SECURITY_CONFIG.RATE_LIMITS.GENERATE);
+    
+    if (!rateLimit.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED_RESUME', { userId: user.id, ip }, ip);
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded', 
+          message: `Please wait ${rateLimit.retryAfter} seconds before trying again.`,
+          retryAfter: rateLimit.retryAfter 
+        },
+        { 
+          status: 429,
+          headers: { 'Retry-After': rateLimit.retryAfter.toString() }
+        }
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);

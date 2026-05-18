@@ -4,45 +4,20 @@ import { z } from 'zod';
 import { emailSchema, sanitizeHtml, sanitizeInput, sanitizeObject } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
-import { logSecurityEvent } from '@/lib/security';
+import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
 
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// Rate limiting store: 5 requests per 15 minutes per user ID
-const rateLimitStore = new Map<string, { count: number; reset: number }>();
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 5;
-const RATE_LIMIT_MAX_ENTRIES = 10_000;
-
-function pruneExpired(now: number) {
-  for (const [key, value] of rateLimitStore) {
-    if (now > value.reset) rateLimitStore.delete(key);
-  }
-}
-
-function checkRateLimit(userId: string): { allowed: boolean; remaining: number; reset: number } {
-  const now = Date.now();
-  if (rateLimitStore.size > RATE_LIMIT_MAX_ENTRIES) pruneExpired(now);
-  let data = rateLimitStore.get(userId);
-
-  if (!data || now > data.reset) {
-    data = { count: 1, reset: now + RATE_LIMIT_WINDOW_MS };
-    rateLimitStore.set(userId, data);
-    return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - 1, reset: data.reset };
-  }
-
-  if (data.count >= MAX_REQUESTS_PER_WINDOW) {
-    return { allowed: false, remaining: 0, reset: data.reset };
-  }
-
-  data.count++;
-  rateLimitStore.set(userId, data);
-  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - data.count, reset: data.reset };
-}
+// Rate limiting configuration for email endpoint
+const EMAIL_RATE_LIMIT = {
+  requests: 5,
+  windowMs: 15 * 60 * 1000 // 15 minutes
+};
 
 const sendEmailSchema = z.object({
   to: emailSchema,
@@ -130,14 +105,14 @@ export async function POST(request: NextRequest) {
 
     const { to, subject, content, fromName, fromEmail, letterContent } = validationResult.data;
 
-    // 3. Rate Limiting Check
-    const rateLimitResult = checkRateLimit(user.id);
+    // 3. Rate Limiting Check using the shared utility
+    const rateLimitResult = checkRateLimit(user.id, EMAIL_RATE_LIMIT);
     if (!rateLimitResult.allowed) {
       logSecurityEvent('RATE_LIMIT_EXCEEDED_EMAIL', { userId: user.id, ip, requestId }, ip);
       return new Response(
         JSON.stringify({ 
           error: 'Rate limit exceeded. Maximum 5 emails allowed per 15 minutes.',
-          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+          retryAfter: rateLimitResult.retryAfter
         }),
         { 
           status: 429,
