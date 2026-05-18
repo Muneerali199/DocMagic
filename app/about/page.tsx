@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { LINKS } from "@/lib/config/links"; 
 import { 
   Sparkles, 
   Zap, 
@@ -446,14 +447,14 @@ export default function AboutPage() {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild className="bolt-gradient text-white font-semibold px-6 py-3 rounded-full hover:scale-105 transition-all duration-300">
-                  <Link href="https://github.com/Muneerali199/DraftDeckAI/" className="flex items-center gap-2">
+                  <Link href={LINKS.github || "/"} className="flex items-center gap-2">
                     <Github className="h-4 w-4" />
                     View on GitHub
                     <ExternalLink className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="gradient-border px-6 py-3 rounded-full hover:scale-105 transition-all duration-300">
-                  <Link href="https://github.com/Muneerali199/DraftDeckAI/issues" className="flex items-center gap-2">
+                  <Link href={LINKS.issues || "/"} className="flex items-center gap-2">
                     <Heart className="h-4 w-4" />
                     Start Contributing
                     <ArrowRight className="h-4 w-4" />
@@ -713,21 +714,21 @@ const communityLinks = [
   {
     name: "GitHub",
     description: "Source code & issues",
-    href: "https://github.com/Muneerali199/DraftDeckAI",
+    href: LINKS.github || "/",
     icon: <Github className="h-6 w-6 text-white" />,
     gradientClass: "sunset-gradient"
   },
   {
     name: "Discord",
     description: "Community chat",
-    href: "https://discord.gg/3hMNhxGa",
+    href: LINKS.discord || "/",
     icon: <Users className="h-6 w-6 text-white" />,
     gradientClass: "ocean-gradient"
   },
   {
     name: "Documentation",
     description: "Guides & tutorials",
-    href: "https://github.com/Muneerali199/DraftDeckAI/blob/main/README.md",
+    href: LINKS.docs || "/",
     icon: <BookOpen className="h-6 w-6 text-white" />,
     gradientClass: "forest-gradient"
   },
