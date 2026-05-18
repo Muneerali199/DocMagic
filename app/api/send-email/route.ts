@@ -101,10 +101,10 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      logSecurityEvent('UNAUTHORIZED_EMAIL_ATTEMPT', { authError, ip }, ip);
+      logSecurityEvent('UNAUTHORIZED_EMAIL_ATTEMPT', { authError, ip, requestId }, ip);
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Please sign in to send emails' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid JSON payload' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       const errorMessage = validationResult.error.errors.map((e: any) => e.message).join(', ');
       return new Response(
         JSON.stringify({ error: `Validation failed: ${errorMessage}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     // 3. Rate Limiting Check
     const rateLimitResult = checkRateLimit(user.id);
     if (!rateLimitResult.allowed) {
-      logSecurityEvent('RATE_LIMIT_EXCEEDED_EMAIL', { userId: user.id, ip }, ip);
+      logSecurityEvent('RATE_LIMIT_EXCEEDED_EMAIL', { userId: user.id, ip, requestId }, ip);
       return new Response(
         JSON.stringify({ 
           error: 'Rate limit exceeded. Maximum 5 emails allowed per 15 minutes.',
@@ -144,6 +144,7 @@ export async function POST(request: NextRequest) {
           headers: {
             'Content-Type': 'application/json',
             'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+            'x-request-id': requestId,
           }
         }
       );
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
 
     // Log successful email dispatch internally without PII
     const recipientDomain = to.split('@')[1];
-    logSecurityEvent('EMAIL_SENT_SUCCESSFULLY', { userId: user.id, messageId: info.messageId, recipientDomain, ip }, ip);
+    logSecurityEvent('EMAIL_SENT_SUCCESSFULLY', { userId: user.id, messageId: info.messageId, recipientDomain, ip, requestId }, ip);
 
     return new Response(
       JSON.stringify({
@@ -266,18 +267,18 @@ export async function POST(request: NextRequest) {
         messageId: info.messageId,
         previewUrl
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
     );
   } catch (error) {
     incrementErrorCount();
     // Safe error responses: Do not leak raw provider/server internals in API responses.
     // Keep detailed errors only in server logs.
     log.error('Error sending email:', error);
-    logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip }, ip);
+    logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip, requestId }, ip);
     
     return new Response(
       JSON.stringify({ error: 'Failed to send email. Please try again later.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
     );
   }
 }

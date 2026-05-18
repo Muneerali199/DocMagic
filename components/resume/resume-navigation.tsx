@@ -38,7 +38,7 @@ export function ResumeNavigation({ currentStep, onStepChange, progress = 0 }: Re
 
   return (
     <div className="w-full mb-6">
-      <div className="flex items-center justify-center gap-2 mb-2 overflow-x-auto pb-2 resume-nav">
+      <div className="flex items-center justify-center gap-2 mb-2 overflow-x-auto pb-3 pt-1 px-1 resume-nav">
         {steps.map((step, index) => (
           <div key={step.id} className="flex items-center">
             <button
@@ -46,7 +46,7 @@ export function ResumeNavigation({ currentStep, onStepChange, progress = 0 }: Re
                 "flex items-center gap-2 px-3 py-2 rounded-full transition-all whitespace-nowrap cursor-pointer resume-nav-item",
                 currentStep === step.id
                   ? "active bg-primary text-white font-semibold shadow-md"
-                  : "hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  : "hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-white"
               )}
               onClick={() => onStepChange(step.id)}
             >
