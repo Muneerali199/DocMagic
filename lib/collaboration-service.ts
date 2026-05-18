@@ -247,11 +247,11 @@ export class CollaborationService {
   /**
    * Subscribe to diagram changes
    */
-  subscribeToDiagramChanges(callback: (change: DiagramChange) => void): () => void {
+  subscribeToDiagramChanges(sessionId: string, callback: (change: DiagramChange) => void): () => void {
     this.diagramChangeCallbacks.push(callback);
 
-    if (!this.channel && this.sessionId) {
-      this.channel = this.supabase.channel(`collaboration:${this.sessionId}`);
+    if (!this.channel) {
+      this.channel = this.supabase.channel(`collaboration:${sessionId}`);
       this.listenForDiagramChanges();
       this.channel.subscribe();
     } else {
@@ -426,5 +426,7 @@ export const broadcastDiagramChange = (
   diagramType: string
 ) => collaborationService.broadcastDiagramChange(sessionId, mermaidCode, diagramType);
 
-export const subscribeToDiagramChanges = (callback: (change: DiagramChange) => void) =>
-  collaborationService.subscribeToDiagramChanges(callback);
+export const subscribeToDiagramChanges = (
+  sessionId: string,
+  callback: (change: DiagramChange) => void
+) => collaborationService.subscribeToDiagramChanges(sessionId, callback);

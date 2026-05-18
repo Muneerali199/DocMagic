@@ -265,35 +265,40 @@ export function EnhancedEditorToolbar({ sessionId }: EnhancedEditorToolbarProps)
         quality: 1,
       });
 
-      fabric.Image.fromURL(dataUrl, (img) => {
-        const logicalWidth = canvas.getWidth() / canvas.getZoom();
-        const logicalHeight = canvas.getHeight() / canvas.getZoom();
-        const maxWidth = Math.min(720, logicalWidth * 0.6);
-        const maxHeight = Math.min(460, logicalHeight * 0.6);
-        const scale = Math.min(
-          maxWidth / (img.width || maxWidth),
-          maxHeight / (img.height || maxHeight),
-          1
-        );
-
-        img.set({
-          left: logicalWidth / 2 - ((img.width || 0) * scale) / 2,
-          top: logicalHeight / 2 - ((img.height || 0) * scale) / 2,
-          scaleX: scale,
-          scaleY: scale,
-          name: 'AI Diagram',
-          hasControls: true,
-          selectable: true,
-          lockUniScaling: false,
-        });
-
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        canvas.renderAll();
-        setIsDiagramDialogOpen(false);
-        toast({
-          title: 'Diagram inserted',
-          description: 'The diagram has been added to the canvas.',
+      await new Promise<void>((resolve, reject) => {
+        fabric.Image.fromURL(dataUrl, (img) => {
+          try {
+            const logicalWidth = canvas.getWidth() / canvas.getZoom();
+            const logicalHeight = canvas.getHeight() / canvas.getZoom();
+            const maxWidth = Math.min(720, logicalWidth * 0.6);
+            const maxHeight = Math.min(460, logicalHeight * 0.6);
+            const scale = Math.min(
+              maxWidth / (img.width || maxWidth),
+              maxHeight / (img.height || maxHeight),
+              1
+            );
+            img.set({
+              left: logicalWidth / 2 - ((img.width || 0) * scale) / 2,
+              top: logicalHeight / 2 - ((img.height || 0) * scale) / 2,
+              scaleX: scale,
+              scaleY: scale,
+              name: 'AI Diagram',
+              hasControls: true,
+              selectable: true,
+              lockUniScaling: false,
+            });
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+            setIsDiagramDialogOpen(false);
+            toast({
+              title: 'Diagram inserted',
+              description: 'The diagram has been added to the canvas.',
+            });
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
       });
     } catch (error) {

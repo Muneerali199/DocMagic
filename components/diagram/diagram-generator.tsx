@@ -249,7 +249,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   useEffect(() => {
     if (!sessionId) return;
 
-    const unsubscribe = subscribeToDiagramChanges((change) => {
+    const unsubscribe = subscribeToDiagramChanges(sessionId, (change) => {
       if (change.session_id !== sessionId) return;
 
       updateDiagramCode(change.mermaid_code);
@@ -393,23 +393,46 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
       const title = prompt.trim().slice(0, 50) || "Untitled Diagram";
 
-      const { data: savedDiagram, error } = await supabase
-        .from('diagrams')
-        .insert({
-          user_id: session.user.id,
-          title,
-          type: selectedDiagramType,
-          code: diagramCode,
-          prompt,
-        })
-        .select('id')
-        .single();
+      let savedDiagram;
 
-      if (error || !savedDiagram) {
-        throw error || new Error('Failed to save diagram');
+      if (currentDiagramId) {
+        const { data: updated, error } = await supabase
+          .from('diagrams')
+          .update({
+            title,
+            type: selectedDiagramType,
+            code: diagramCode,
+            prompt,
+          })
+          .eq('id', currentDiagramId)
+          .select('id')
+          .single();
+
+        if (error || !updated) {
+          throw error || new Error('Failed to update diagram');
+        }
+
+        savedDiagram = updated;
+      } else {
+        const { data: inserted, error } = await supabase
+          .from('diagrams')
+          .insert({
+            user_id: session.user.id,
+            title,
+            type: selectedDiagramType,
+            code: diagramCode,
+            prompt,
+          })
+          .select('id')
+          .single();
+
+        if (error || !inserted) {
+          throw error || new Error('Failed to save diagram');
+        }
+
+        savedDiagram = inserted;
+        setCurrentDiagramId(inserted.id);
       }
-
-      setCurrentDiagramId(savedDiagram.id);
 
       const { count, error: countError } = await supabase
         .from('document_versions')
