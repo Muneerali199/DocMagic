@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
 import { createClient } from '@supabase/supabase-js';
@@ -17,6 +17,15 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+export async function GET() {
+  return new Response(JSON.stringify({
+    message: 'Generate Image API active'
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
 export async function POST(req: NextRequest) {
   try {
     // ✅ AUTHENTICATION CHECK
@@ -24,29 +33,41 @@ export async function POST(req: NextRequest) {
     const token = authHeader?.replace('Bearer ', '');
     
     if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required. Please sign in.' },
-        { status: 401 }
-      );
+      return new Response(JSON.stringify(
+        { error: 'Authentication required. Please sign in.' }
+      ), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required. Please sign in.' },
-        { status: 401 }
-      );
+      return new Response(JSON.stringify(
+        { error: 'Authentication required. Please sign in.' }
+      ), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     const { topic, audience, outline, settings } = await req.json();
 
     if (!topic) {
-      return NextResponse.json(
-        { error: 'Topic is required' },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify(
+        { error: 'Topic is required' }
+      ), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     // Calculate slide count from outline or default
@@ -75,10 +96,14 @@ export async function POST(req: NextRequest) {
       
       if (insertError) {
         console.error('Failed to create credits record:', insertError);
-        return Response.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
+        return new Response(JSON.stringify(
+          { error: 'Failed to initialize credits' }
+        ), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       }
       userCredits = newCredits;
     }
@@ -109,7 +134,7 @@ export async function POST(req: NextRequest) {
       : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
     
     if (!hasUnlimitedCredits && creditsRemaining < estimatedCreditCost) {
-      return Response.json(
+      return new Response(JSON.stringify(
         { 
           error: 'Not enough credits',
           message: `You need ${estimatedCreditCost} credits to generate a ${slideCount}-slide presentation. You have ${creditsRemaining} credits remaining.`,
@@ -117,9 +142,13 @@ export async function POST(req: NextRequest) {
           currentTier: userCredits.tier,
           creditsRemaining,
           creditsRequired: estimatedCreditCost
+        }
+      ), {
+        status: 402,
+        headers: {
+          'Content-Type': 'application/json',
         },
-        { status: 402 }
-      );
+      });
     }
 
     console.log(`🎨 Generating ENHANCED presentation: "${topic}" for ${audience}`);
@@ -253,10 +282,14 @@ Never include explanatory text, just the slide content.`,
     });
   } catch (error) {
     console.error('❌ API error:', error);
-    return Response.json(
-      { error: 'Failed to generate presentation' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify(
+      { error: 'Failed to generate presentation' }
+    ), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
 
