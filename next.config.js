@@ -2,7 +2,7 @@ import withPWACore from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
 images: {
     unoptimized: false,
