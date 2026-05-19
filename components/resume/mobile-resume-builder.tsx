@@ -1709,10 +1709,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                               <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
                             </div>
                             <Button
-                              onClick={async () => {
-                                const ok = await preflight.check('resume', handlePdfGenerateResume);
-                                if (ok) handlePdfGenerateResume();
-                              }}
+                              onClick={() => preflight.check('resume', handlePdfGenerateResume)}
                               disabled={isImporting}
                               className="w-full sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
                               size="lg"
@@ -1809,10 +1806,7 @@ Certified AWS Solutions Architect
                             <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
                           </div>
                           <Button
-                            onClick={async () => {
-                              const ok = await preflight.check('resume', handleManualImport);
-                              if (ok) handleManualImport();
-                            }}
+                            onClick={() => preflight.check('resume', handleManualImport)}
                             disabled={isImporting}
                             className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
                             size="lg"
@@ -2062,10 +2056,7 @@ Certified AWS Solutions Architect
                             <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
                           </div>
                           <Button
-                            onClick={async () => {
-                              const ok = await preflight.check('resume', handleGenerateTailoredResume);
-                              if (ok) handleGenerateTailoredResume();
-                            }}
+                            onClick={() => preflight.check('resume', handleGenerateTailoredResume)}
                             disabled={isImporting || !userName.trim() || !userEmail.trim()}
                             className="w-full h-12 bolt-gradient text-white font-semibold"
                           >

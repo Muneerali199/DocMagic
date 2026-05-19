@@ -86,37 +86,39 @@ export function useBudgetMode(): BudgetModeAPI {
     setSettings(readFromStorage());
   }, []);
 
-  const save = useCallback((next: BudgetSettings) => {
-    setSettings(next);
-    writeToStorage(next);
+  const save = useCallback((updater: (prev: BudgetSettings) => BudgetSettings) => {
+    setSettings((prev) => {
+      const next = updater(prev);
+      writeToStorage(next);
+      return next;
+    });
   }, []);
 
   const setEnabled = useCallback(
-    (enabled: boolean) => save({ ...settings, enabled }),
-    [settings, save]
+    (enabled: boolean) => save((prev) => ({ ...prev, enabled })),
+    [save]
   );
 
   const setDailyCap = useCallback(
-    (dailyCap: number) => save({ ...settings, dailyCap }),
-    [settings, save]
+    (dailyCap: number) => save((prev) => ({ ...prev, dailyCap })),
+    [save]
   );
 
   const setSessionCap = useCallback(
-    (sessionCap: number) => save({ ...settings, sessionCap }),
-    [settings, save]
+    (sessionCap: number) => save((prev) => ({ ...prev, sessionCap })),
+    [save]
   );
 
   const recordUsage = useCallback(
     (cost: number) => {
-      const next: BudgetSettings = {
-        ...settings,
-        dailyUsed: settings.dailyUsed + cost,
+      save((prev) => ({
+        ...prev,
+        dailyUsed: prev.dailyUsed + cost,
         dailyDate: todayStr(),
-        sessionUsed: settings.sessionUsed + cost,
-      };
-      save(next);
+        sessionUsed: prev.sessionUsed + cost,
+      }));
     },
-    [settings, save]
+    [save]
   );
 
   const resetSession = useCallback(() => {

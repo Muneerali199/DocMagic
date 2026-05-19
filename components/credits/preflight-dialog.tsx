@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   XCircle,
   Zap,
-  ShieldAlert,
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,9 +41,7 @@ export function PreflightDialog({
 }: PreflightDialogProps) {
   if (!estimate) return null;
 
-  const isBlocked = !estimate.canAfford;
-  const isBudgetWarning = estimate.exceedsBudget && estimate.canAfford;
-  const isWarning = isBudgetWarning;
+  const isBlocked = !estimate.canAfford || estimate.exceedsBudget;
 
   const progressPct = Math.min(
     (estimate.creditsRemaining / Math.max(creditsTotal, 1)) * 100,
@@ -58,8 +55,6 @@ export function PreflightDialog({
           <DialogTitle className="flex items-center gap-2 text-base">
             {isBlocked ? (
               <XCircle className="h-5 w-5 text-red-500 shrink-0" />
-            ) : isWarning ? (
-              <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0" />
             ) : (
               <Coins className="h-5 w-5 text-yellow-500 shrink-0" />
             )}
@@ -136,7 +131,7 @@ export function PreflightDialog({
           )}
 
           {/* Upgrade prompt for blocked users */}
-          {isBlocked && (
+          {!estimate.canAfford && (
             <Link href="/pricing" onClick={onCancel}>
               <Button
                 variant="outline"
@@ -156,14 +151,10 @@ export function PreflightDialog({
           {!isBlocked && (
             <Button
               onClick={onConfirm}
-              className={`flex-1 sm:flex-none gap-2 ${
-                isWarning
-                  ? "bg-amber-500 hover:bg-amber-600 text-white"
-                  : "bg-gradient-to-r from-yellow-400 to-blue-600 text-white hover:opacity-90"
-              }`}
+              className="flex-1 sm:flex-none gap-2 bg-gradient-to-r from-yellow-400 to-blue-600 text-white hover:opacity-90"
             >
               <Zap className="h-4 w-4" />
-              {isWarning ? "Proceed Anyway" : "Proceed"}
+              Proceed
             </Button>
           )}
         </DialogFooter>

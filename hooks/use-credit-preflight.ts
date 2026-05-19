@@ -70,7 +70,12 @@ export function useCreditPreflight(): PreflightState {
       onConfirm: () => Promise<void> | void,
       params?: EstimateParams
     ): Promise<boolean> => {
-      const remaining = creditsRemaining ?? 0;
+      if (creditsRemaining === undefined) {
+        Promise.resolve(onConfirm()).catch(console.error);
+        return true;
+      }
+
+      const remaining = creditsRemaining;
       const estimate = buildEstimate(
         action,
         remaining,
@@ -81,6 +86,7 @@ export function useCreditPreflight(): PreflightState {
       // If the user can afford it AND it doesn't exceed budget,
       // skip the dialog and proceed immediately.
       if (estimate.canAfford && !estimate.exceedsBudget) {
+        Promise.resolve(onConfirm()).catch(console.error);
         return true;
       }
 
