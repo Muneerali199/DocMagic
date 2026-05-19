@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { createClient } from '@/lib/supabase/client';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -50,12 +51,14 @@ export default function ATSScoreDisplay({ resumeData, onClose }: ATSScoreProps) 
   const calculateScore = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('supabase_token');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch('/api/resume/ats-score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           resumeData,
