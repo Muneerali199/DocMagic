@@ -2,7 +2,7 @@ import withPWACore from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   allowedDevOrigins: process.env.NEXT_PUBLIC_DEV_ORIGIN
   ? [process.env.NEXT_PUBLIC_DEV_ORIGIN]
   : [],
