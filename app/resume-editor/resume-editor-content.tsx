@@ -14,6 +14,7 @@ import { ResumePreviewPanel } from '@/components/resume-editor/preview-panel';
 import { CompileErrorPopup } from '@/components/resume-editor/compile-error-popup';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { useDocumentAnalytics } from '@/hooks/use-document-analytics';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,6 +111,9 @@ export default function ResumeEditorContent() {
   // Resume state
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [resumeData, setResumeData] = useState(defaultResumeData);
+
+  // Initialize analytics tracking
+  const { trackEvent } = useDocumentAnalytics(resumeId);
 
   // Save state
   const [isSaving, setIsSaving] = useState(false);
@@ -254,6 +258,10 @@ export default function ResumeEditorContent() {
       if (result.data) {
         const savedDoc = result.data as any;
         setResumeId(savedDoc.id);
+        
+        // Track engagement: save
+        trackEvent('edit');
+
         toast.success(resumeId ? 'Resume updated successfully' : 'Resume saved successfully');
       }
     } catch (error) {
@@ -299,6 +307,9 @@ export default function ResumeEditorContent() {
           URL.revokeObjectURL(url);
 
           toast.success('PDF downloaded successfully!');
+          
+          // Track engagement: download
+          trackEvent('download');
         } else {
           // JSON response (likely an error)
           const result = await response.json();
