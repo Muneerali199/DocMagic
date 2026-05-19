@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Sparkles, Zap, Sun, Moon, Laptop, BarChart3, FileText, Layout, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { logger } from "@/lib/logger";
+import { BudgetModeCard } from '@/components/credits/budget-mode-card';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -206,6 +207,9 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Budget Mode */}
+          <BudgetModeCard />
 
           {/* Usage Stats */}
           <Card>

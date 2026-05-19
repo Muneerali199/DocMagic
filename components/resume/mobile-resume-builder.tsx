@@ -18,11 +18,15 @@ import {
   FileText, Upload, Sparkles, Download, Globe, Linkedin,
   FileDown, Loader2, CheckCircle2, AlertCircle, Edit, MessageSquare,
   ExternalLink, Copy, Check, Crown, FileCheck, Share2, Link, Target, ArrowLeft,
-  Briefcase, BarChart3
+  Briefcase, BarChart3, Camera, X as XIcon
 } from "lucide-react";
 import { ResumePreview, ResumePreviewRef } from "./resume-preview";
 import { ATSScoreDisplay } from "./ats-score-display";
 import { AIResumeChat } from "./ai-resume-chat";
+import { useCreditPreflight } from "@/hooks/use-credit-preflight";
+import { PreflightDialog } from "@/components/credits/preflight-dialog";
+import { CreditCostBadge } from "@/components/credits/credit-cost-badge";
+import { PhotoUploadModal } from "./photo-upload-modal";
 import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
 import { userProfileService } from "@/lib/user-profile-service";
 import { TemplateCustomizationPanel } from "@/components/templates/template-customization-panel";
@@ -65,6 +69,9 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
   const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null); // Track uploaded PDF file
   const containerRef = useRef<HTMLDivElement>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | undefined>();
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const preflight = useCreditPreflight();
 
   const supabase = createClient();
 
@@ -438,6 +445,8 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       setResumeData(resume);
       setAtsScore(generatedAtsScore);
+      preflight.budgetMode.recordUsage(1);
+      preflight.refreshCredits();
       setCurrentStep('preview');
 
       // Clear the uploaded file after successful generation
@@ -613,6 +622,8 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       setResumeData(resume);
       setAtsScore(atsScore);
+      preflight.budgetMode.recordUsage(1);
+      preflight.refreshCredits();
       setCurrentStep('preview');
 
       // Clear form fields after successful generation
@@ -884,6 +895,8 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
       setResumeData(resume);
       setAtsScore(atsScore);
+      preflight.budgetMode.recordUsage(1);
+      preflight.refreshCredits();
       setCurrentStep('preview');
 
       toast({
@@ -1248,6 +1261,15 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Preflight credit dialog — rendered at root so it overlays everything */}
+      <PreflightDialog
+        open={preflight.dialogOpen}
+        estimate={preflight.pendingEstimate}
+        creditsTotal={preflight.creditsRemaining !== undefined ? preflight.creditsRemaining + 20 : 20}
+        onConfirm={preflight.confirmAction}
+        onCancel={preflight.closeDialog}
+      />
+
       {/* Enhanced Background - Matching Landing Page */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="mesh-gradient opacity-40"></div>
@@ -1682,24 +1704,32 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
                         {/* Generate Resume with AI Button - Only visible after file upload */}
                         {uploadedPdfFile && (
-                          <Button
-                            onClick={handlePdfGenerateResume}
-                            disabled={isImporting}
-                            className="w-full sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
-                            size="lg"
-                          >
-                            {isImporting ? (
-                              <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                <span className="font-semibold">Generating Professional Resume...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="mr-2 h-5 w-5" />
-                                <span className="font-semibold">Generate Resume with AI</span>
-                              </>
-                            )}
-                          </Button>
+                          <div className="space-y-1.5">
+                            <div className="flex justify-end">
+                              <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
+                            </div>
+                            <Button
+                              onClick={async () => {
+                                const ok = await preflight.check('resume', handlePdfGenerateResume);
+                                if (ok) handlePdfGenerateResume();
+                              }}
+                              disabled={isImporting}
+                              className="w-full sunset-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
+                              size="lg"
+                            >
+                              {isImporting ? (
+                                <>
+                                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                  <span className="font-semibold">Generating Professional Resume...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="mr-2 h-5 w-5" />
+                                  <span className="font-semibold">Generate Resume with AI</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         )}
 
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-3">
@@ -1774,24 +1804,32 @@ Certified AWS Solutions Architect
                             </p>
                           </div>
                         </div>
-                        <Button
-                          onClick={handleManualImport}
-                          disabled={isImporting}
-                          className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
-                          size="lg"
-                        >
-                          {isImporting ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              <span className="font-semibold">Generating Professional Resume...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="mr-2 h-5 w-5" />
-                              <span className="font-semibold">Generate Resume with AI</span>
-                            </>
-                          )}
-                        </Button>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-end">
+                            <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
+                          </div>
+                          <Button
+                            onClick={async () => {
+                              const ok = await preflight.check('resume', handleManualImport);
+                              if (ok) handleManualImport();
+                            }}
+                            disabled={isImporting}
+                            className="w-full forest-gradient hover:scale-105 transition-all duration-300 text-white shadow-lg text-sm sm:text-base"
+                            size="lg"
+                          >
+                            {isImporting ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                <span className="font-semibold">Generating Professional Resume...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                <span className="font-semibold">Generate Resume with AI</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </TabsContent>
                     </Tabs>
                   </CardContent>
@@ -2019,23 +2057,31 @@ Certified AWS Solutions Architect
                       </Button>
 
                       {jobData && (
-                        <Button
-                          onClick={handleGenerateTailoredResume}
-                          disabled={isImporting || !userName.trim() || !userEmail.trim()}
-                          className="flex-1 h-12 bolt-gradient text-white font-semibold"
-                        >
-                          {isImporting ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              Generating Resume...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="mr-2 h-5 w-5" />
-                              Create Tailored Resume
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex-1 space-y-1.5">
+                          <div className="flex justify-end">
+                            <CreditCostBadge action="resume" creditsRemaining={preflight.creditsRemaining} />
+                          </div>
+                          <Button
+                            onClick={async () => {
+                              const ok = await preflight.check('resume', handleGenerateTailoredResume);
+                              if (ok) handleGenerateTailoredResume();
+                            }}
+                            disabled={isImporting || !userName.trim() || !userEmail.trim()}
+                            className="w-full h-12 bolt-gradient text-white font-semibold"
+                          >
+                            {isImporting ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Generating Resume...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                Create Tailored Resume
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       )}
                     </div>
 
@@ -2411,6 +2457,36 @@ Certified AWS Solutions Architect
                     </div>
 
 
+                    {/* Profile Photo — only for templates that declare supportsPhoto */}
+                    {RESUME_TEMPLATES.find(t => t.id === selectedTemplate)?.supportsPhoto && (
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3">
+                          <Camera className="w-4 h-4" />
+                          Profile Photo <span className="font-normal text-gray-500">(optional)</span>
+                        </h4>
+                        {profilePhoto ? (
+                          <div className="flex items-center gap-3">
+                            <img src={profilePhoto} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-gray-300" />
+                            <Button variant="outline" size="sm" onClick={() => setShowPhotoModal(true)}>Change</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setProfilePhoto(undefined)} className="text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center gap-1">
+                              <XIcon className="w-3 h-3" /> Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setShowPhotoModal(true)} className="flex items-center gap-2">
+                            <Camera className="w-4 h-4" /> Upload Photo
+                          </Button>
+                        )}
+                        <PhotoUploadModal
+                          open={showPhotoModal}
+                          onClose={() => setShowPhotoModal(false)}
+                          currentPhoto={profilePhoto}
+                          onSave={(dataUrl) => { setProfilePhoto(dataUrl); setShowPhotoModal(false); }}
+                          onRemove={() => { setProfilePhoto(undefined); setShowPhotoModal(false); }}
+                        />
+                      </div>
+                    )}
+
                     {/* Resume Preview */}
                     {/* View Mode Toggle - Only show on desktop/tablet */}
                     {!isMobile && (
@@ -2460,7 +2536,7 @@ Certified AWS Solutions Architect
                       >
                         <ResumePreview
                           ref={resumePreviewRef}
-                          resume={resumeData}
+                          resume={resumeData ? { ...resumeData, photo: profilePhoto } : resumeData}
                           template={selectedTemplate}
                           showControls={false}
                           isCV={isCV}
@@ -2490,7 +2566,7 @@ Certified AWS Solutions Architect
                         >
                           <ResumePreview
                             ref={resumePreviewRef}
-                            resume={resumeData}
+                            resume={resumeData ? { ...resumeData, photo: profilePhoto } : resumeData}
                             template={selectedTemplate}
                             showControls={false}
                             isCV={isCV}
