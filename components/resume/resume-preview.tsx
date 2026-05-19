@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, UnderlineType } from 'docx';
 import { saveAs } from 'file-saver';
 import { RESUME_TEMPLATES } from '@/lib/resume-template-data';
+import { PhotoUploadModal } from './photo-upload-modal';
 
 interface ResumeData {
   name?: string;
@@ -59,6 +60,14 @@ interface ResumeData {
     includedKeywords?: string[];
     density?: string;
   };
+  /** Base64 PNG data-URL of the cropped circular profile photo (optional) */
+  photo?: string;
+  /** Normalized crop metadata for the optional profile photo */
+  photoMeta?: {
+    x: number;
+    y: number;
+    scale: number;
+  };
 }
 
 interface ResumePreviewProps {
@@ -104,6 +113,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   
   const [isEditing, setIsEditing] = useState(enableEditing);
   const [isExporting, setIsExporting] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const { toast } = useToast();
   const [editableResume, setEditableResume] = useState<ResumeData>({
     ...safeResume,
@@ -2160,16 +2170,55 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       <div className="w-full md:max-w-[794px] mx-auto font-sans print:w-[794px] min-h-[1123px] bg-white shadow-lg print:shadow-none">
         {/* Header */}
         <div className="text-white p-8 md:p-12" style={{ backgroundColor: primaryColor }}>
-          {isEditing ? (
-            <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-4xl md:text-5xl font-bold mb-4 text-white" />
-          ) : (
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{safeResume.name}</h1>
-          )}
-          <div className="text-lg mb-6" style={{ color: 'rgba(255,255,255,0.8)' }}>{safeResume.experience?.[0]?.title || "Professional"}</div>
-          <div className="flex flex-wrap gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {safeResume.email}</div>
-            <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {safeResume.phone}</div>
-            <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {safeResume.location}</div>
+          <div className="flex items-center gap-6">
+            {/* Profile photo slot — only for templates that declare supportsPhoto */}
+            {currentTemplate.supportsPhoto && (
+              <div className="flex-shrink-0">
+                {(editableResume.photo || safeResume.photo) ? (
+                  <div className="relative group">
+                    <img
+                      src={editableResume.photo || safeResume.photo}
+                      alt={safeResume.name || "Profile photo"}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white/30 print:block"
+                    />
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPhotoModal(true)}
+                        className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Change photo"
+                      >
+                        <Camera className="w-6 h-6 text-white" />
+                      </button>
+                    )}
+                  </div>
+                ) : isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoModal(true)}
+                    className="w-24 h-24 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    aria-label="Add profile photo"
+                  >
+                    <Camera className="w-8 h-8 text-white/70" />
+                  </button>
+                ) : null}
+              </div>
+            )}
+
+            {/* Name and contact info */}
+            <div className="flex-1 min-w-0">
+              {isEditing ? (
+                <EditableText value={editableResume.name || ""} onChange={v => updateField(["name"], v)} className="text-4xl md:text-5xl font-bold mb-4 text-white" />
+              ) : (
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">{safeResume.name}</h1>
+              )}
+              <div className="text-lg mb-6" style={{ color: 'rgba(255,255,255,0.8)' }}>{safeResume.experience?.[0]?.title || "Professional"}</div>
+              <div className="flex flex-wrap gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {safeResume.email}</div>
+                <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {safeResume.phone}</div>
+                <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {safeResume.location}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2593,46 +2642,66 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     </div>
   );
 
+  // Photo upload modal (rendered once, shared across all templates)
+  const photoModal = currentTemplate.supportsPhoto ? (
+    <PhotoUploadModal
+      open={showPhotoModal}
+      onClose={() => setShowPhotoModal(false)}
+      currentPhoto={editableResume.photo}
+      currentMeta={editableResume.photoMeta}
+      onSave={(dataUrl, meta) => {
+        updateField(["photo"], dataUrl);
+        updateField(["photoMeta"], meta);
+        setShowPhotoModal(false);
+      }}
+      onRemove={() => {
+        updateField(["photo"], undefined);
+        updateField(["photoMeta"], undefined);
+      }}
+    />
+  ) : null;
+
   // Main Render Switch - Each template maps to ONE specific layout
   console.log('ResumePreview rendering template:', template);
-  
+
+  let templateContent: React.ReactNode;
   switch (true) {
-    // Tech/Engineering Templates - Clean single-column with skills at top
     case template === 'software-engineering-resume':
     case template === 'it-manager-cv':
-      return renderTechTemplate();
-
-    // Deedy Resume - Two-column with dark sidebar
+      templateContent = renderTechTemplate();
+      break;
     case template === 'deedy-resume':
-      return renderDeedyTemplate();
-
-    // Modern Templates - Sidebar with modern design  
+      templateContent = renderDeedyTemplate();
+      break;
     case template === 'blue-white-modern-professional':
     case template.includes('modern'):
-      return renderModernTemplate();
-
-    // Black & White Professional - Clean ATS-friendly
+      templateContent = renderModernTemplate();
+      break;
     case template === 'black-white-professional':
-      return renderBlackWhiteTemplate();
-    
-    // Academic Templates - Traditional academic format
+      templateContent = renderBlackWhiteTemplate();
+      break;
     case template === 'nit-patna-resume':
-      return renderNITPatnaTemplate();
-    
+      templateContent = renderNITPatnaTemplate();
+      break;
     case template === 'autocv-template':
     case template.includes('academic'):
-      return renderAcademicTemplate();
-
-    // Creative Templates - Bold creative design
+      templateContent = renderAcademicTemplate();
+      break;
     case template === 'altacv-template':
     case template === 'blue-black-geometric-creative':
     case template.includes('creative'):
-      return renderCreativeTemplate();
-
-    // Professional/Corporate Templates (Default) - Clean professional
+      templateContent = renderCreativeTemplate();
+      break;
     default:
-      return renderProfessionalTemplate();
+      templateContent = renderProfessionalTemplate();
   }
+
+  return (
+    <>
+      {templateContent}
+      {photoModal}
+    </>
+  );
 });
 
 ResumePreview.displayName = 'ResumePreview';

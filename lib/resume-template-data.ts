@@ -13,6 +13,7 @@ export interface ResumeTemplate {
   difficulty: 'beginner' | 'intermediate' | 'advanced' | 'professional';
   isPro: boolean;
   isFeatured: boolean;
+  supportsPhoto?: boolean;
   rating: number;
   downloads: number;
   author: {
@@ -116,6 +117,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     difficulty: 'intermediate',
     isPro: true,
     isFeatured: true,
+    supportsPhoto: true,
     rating: 4.8,
     downloads: 14200,
     author: {
@@ -176,6 +178,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     difficulty: 'intermediate',
     isPro: false,
     isFeatured: false,
+    supportsPhoto: true,
     rating: 4.7,
     downloads: 9560,
     author: {
