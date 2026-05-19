@@ -165,13 +165,17 @@ Free tier: 50 credits/month
 
 ## 📚 Documentation
 
+### Getting Started (⭐ Start Here!)
+- **[docs/SETUP.md](./docs/SETUP.md)** - 📖 Complete setup guide with step-by-step API key generation and troubleshooting
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
+- **[docs/UTILITIES.md](./docs/UTILITIES.md)** - Development utilities & best practices guide
+
 ### Architecture & Diagrams
 - [ARCHITECTURE_DIAGRAM_FEATURE.md](./ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
 - [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md) - Technical system architecture  
 - [ARCHITECTURE_IMPROVEMENTS.md](./ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
 
 ### Other Docs
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 - [Code_of_Conduct.md](./Code_of_Conduct.md) - Community standards
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 - [FAQ.md](./FAQ.md) - Frequently asked questions
@@ -212,13 +216,24 @@ https://github.com/Muneerali199/Draftdeckai/graphs/contributors
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
+Contributions are welcome! We've made it easy to get started:
 
+**First-time contributors?** Start here:
+1. 📖 Read [docs/SETUP.md](./docs/SETUP.md) - Complete setup guide with all API keys
+2. 📚 Check [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
+3. 🛠️ Review [docs/UTILITIES.md](./docs/UTILITIES.md) - Development utilities guide
+
+**Ready to contribute?**
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+**Get help:**
+- Check [GitHub Issues](https://github.com/Muneerali199/DraftDeckAI/issues) for tasks
+- Look for `good first issue` label for beginner-friendly tasks
+- Join our Discord community for mentorship
 
 ---
 
