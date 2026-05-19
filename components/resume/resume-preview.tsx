@@ -2647,8 +2647,8 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     <PhotoUploadModal
       open={showPhotoModal}
       onClose={() => setShowPhotoModal(false)}
-      currentPhoto={editableResume.photo}
-      currentMeta={editableResume.photoMeta}
+      currentPhoto={editableResume.photo ?? safeResume.photo}
+      currentMeta={editableResume.photoMeta ?? safeResume.photoMeta}
       onSave={(dataUrl, meta) => {
         updateField(["photo"], dataUrl);
         updateField(["photoMeta"], meta);
@@ -2657,6 +2657,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
       onRemove={() => {
         updateField(["photo"], undefined);
         updateField(["photoMeta"], undefined);
+        setShowPhotoModal(false);
       }}
     />
   ) : null;

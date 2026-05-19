@@ -65,8 +65,19 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
   const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null); // Track uploaded PDF file
   const containerRef = useRef<HTMLDivElement>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | undefined>();
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const preflight = useCreditPreflight();
 
   const supabase = createClient();
+
+  const updateProfilePhoto = (photo?: string, photoMeta?: { x: number; y: number; scale: number }) => {
+    setResumeData((prev: any) => ({
+      ...(prev || {}),
+      photo,
+      photoMeta,
+    }));
+  };
 
   // Load template data if templateId is provided
   useEffect(() => {
@@ -2410,6 +2421,36 @@ Certified AWS Solutions Architect
                       />
                     </div>
 
+
+                    {/* Profile Photo — only for templates that declare supportsPhoto */}
+                    {RESUME_TEMPLATES.find(t => t.id === selectedTemplate)?.supportsPhoto && (
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3">
+                          <Camera className="w-4 h-4" />
+                          Profile Photo <span className="font-normal text-gray-500">(optional)</span>
+                        </h4>
+                        {profilePhoto ? (
+                          <div className="flex items-center gap-3">
+                            <img src={profilePhoto} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-gray-300" />
+                            <Button variant="outline" size="sm" onClick={() => setShowPhotoModal(true)}>Change</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setProfilePhoto(undefined)} className="text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center gap-1">
+                              <XIcon className="w-3 h-3" /> Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setShowPhotoModal(true)} className="flex items-center gap-2">
+                            <Camera className="w-4 h-4" /> Upload Photo
+                          </Button>
+                        )}
+                        <PhotoUploadModal
+                          open={showPhotoModal}
+                          onClose={() => setShowPhotoModal(false)}
+                          currentPhoto={profilePhoto}
+                          onSave={(dataUrl) => { setProfilePhoto(dataUrl); setShowPhotoModal(false); }}
+                          onRemove={() => { setProfilePhoto(undefined); setShowPhotoModal(false); }}
+                        />
+                      </div>
+                    )}
 
                     {/* Resume Preview */}
                     {/* View Mode Toggle - Only show on desktop/tablet */}
