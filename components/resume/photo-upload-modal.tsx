@@ -106,6 +106,13 @@ export function PhotoUploadModal({
       return;
     }
     const reader = new FileReader();
+    reader.onerror = () => {
+      console.error("Failed to read profile photo file", reader.error);
+      setImgSrc("");
+      imgRef.current = null;
+      setMeta(DEFAULT_META);
+      setError("Failed to read image. Please try a different file.");
+    };
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       const newMeta = DEFAULT_META;
