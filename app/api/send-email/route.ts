@@ -186,7 +186,7 @@ async function postHandler(request: NextRequest) {
         <div style="margin-bottom: 20px;">
           ${sanitizedFromName ? `<p style="margin-bottom: 5px;"><strong>${sanitizedFromName}</strong></p>` : ''}
           ${sanitizedFromEmail ? `<p style="margin-bottom: 5px;">${sanitizedFromEmail}</p>` : ''}
-          ${sanitizedLetterContent.from.address ? `<p style="margin-bottom: 5px;">${sanitizedLetterContent.from.address}</p>` : ''}
+          ${sanitizedLetterContent.from?.address ? `<p style="margin-bottom: 5px;">${sanitizedLetterContent.from.address}</p>` : ''}
         </div>
         
         <div style="margin-bottom: 20px;">
@@ -194,8 +194,8 @@ async function postHandler(request: NextRequest) {
         </div>
         
         <div style="margin-bottom: 20px;">
-          ${sanitizedLetterContent.to.name ? `<p style="margin-bottom: 5px;"><strong>${sanitizedLetterContent.to.name}</strong></p>` : ''}
-          ${sanitizedLetterContent.to.address ? `<p style="margin-bottom: 5px;">${sanitizedLetterContent.to.address}</p>` : ''}
+          ${sanitizedLetterContent.to?.name ? `<p style="margin-bottom: 5px;"><strong>${sanitizedLetterContent.to.name}</strong></p>` : ''}
+          ${sanitizedLetterContent.to?.address ? `<p style="margin-bottom: 5px;">${sanitizedLetterContent.to.address}</p>` : ''}
         </div>
         
         ${sanitizedLetterContent.subject ? `<div style="margin-bottom: 20px;"><p><strong>Subject: ${sanitizedLetterContent.subject}</strong></p></div>` : ''}

@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- **Newsletter/Waitlist System** - Complete double opt-in email subscription system
+  - Newsletter subscription form on homepage
+  - Email validation and duplicate detection
+  - Confirmation email with HTML template
+  - 24-hour token-based verification
+  - Responsive newsletter components
+  - Rate limiting (10 subscriptions per hour per IP)
+  - Complete API endpoints (`/api/newsletter`, `/api/newsletter/confirm`)
+  - Confirmation page with proper state management
+  - Comprehensive documentation and testing guide
+  - Row Level Security (RLS) policies on database
+  - Support for subscription source tracking
+
 ## [2.0.0] - 2025-07-28
 ### Changed
 - Updated version to 2.0.0 in package.json

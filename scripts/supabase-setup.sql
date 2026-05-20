@@ -55,6 +55,39 @@ CREATE INDEX IF NOT EXISTS idx_templates_tags ON templates USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_templates_difficulty_level ON templates(difficulty_level);
 CREATE INDEX IF NOT EXISTS idx_templates_rating ON templates(rating);
 
+-- Create newsletter_leads table for newsletter signups
+CREATE TABLE IF NOT EXISTS public.newsletter_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  source_page TEXT NOT NULL DEFAULT 'homepage',
+  confirmed BOOLEAN DEFAULT false,
+  confirmation_token TEXT UNIQUE,
+  token_expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.newsletter_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE INDEX IF NOT EXISTS newsletter_leads_email_idx ON public.newsletter_leads(email);
+CREATE INDEX IF NOT EXISTS newsletter_leads_token_idx ON public.newsletter_leads(confirmation_token);
+CREATE INDEX IF NOT EXISTS newsletter_leads_confirmed_idx ON public.newsletter_leads(confirmed);
+
+DROP POLICY IF EXISTS "Anyone can read confirmed newsletter leads" ON public.newsletter_leads;
+CREATE POLICY "Anyone can read confirmed newsletter leads"
+  ON public.newsletter_leads FOR SELECT
+  USING (confirmed = true);
+
+DROP POLICY IF EXISTS "Anyone can subscribe to newsletter" ON public.newsletter_leads;
+CREATE POLICY "Anyone can subscribe to newsletter"
+  ON public.newsletter_leads FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Anyone can update with confirmation token" ON public.newsletter_leads;
+CREATE POLICY "Anyone can update with confirmation token"
+  ON public.newsletter_leads FOR UPDATE
+  USING (true);
+
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -155,15 +155,60 @@ async function setupDatabase() {
       CREATE INDEX IF NOT EXISTS idx_templates_created_at ON templates(created_at);
     `;
 
-    // Execute the SQL to create table
+    // Execute the SQL to create templates table
     const { error: createError } = await supabase.rpc('exec_sql', {
       sql: createTableSQL
     });
 
     if (createError) {
-      console.log('Note: Could not create table via RPC, trying direct insert...');
+      console.log('Note: Could not create templates table via RPC:', createError.message || createError);
     } else {
-      console.log('Table created successfully!');
+      console.log('Templates table created successfully!');
+    }
+
+    // Create newsletter leads table if missing
+    const createNewsletterLeadsSQL = `
+      CREATE TABLE IF NOT EXISTS public.newsletter_leads (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        source_page TEXT NOT NULL DEFAULT 'homepage',
+        confirmed BOOLEAN DEFAULT false,
+        confirmation_token TEXT UNIQUE,
+        token_expires_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+      );
+
+      ALTER TABLE public.newsletter_leads ENABLE ROW LEVEL SECURITY;
+
+      CREATE INDEX IF NOT EXISTS newsletter_leads_email_idx ON public.newsletter_leads(email);
+      CREATE INDEX IF NOT EXISTS newsletter_leads_token_idx ON public.newsletter_leads(confirmation_token);
+      CREATE INDEX IF NOT EXISTS newsletter_leads_confirmed_idx ON public.newsletter_leads(confirmed);
+
+      DROP POLICY IF EXISTS "Anyone can read confirmed newsletter leads" ON public.newsletter_leads;
+      CREATE POLICY "Anyone can read confirmed newsletter leads"
+        ON public.newsletter_leads FOR SELECT
+        USING (confirmed = true);
+
+      DROP POLICY IF EXISTS "Anyone can subscribe to newsletter" ON public.newsletter_leads;
+      CREATE POLICY "Anyone can subscribe to newsletter"
+        ON public.newsletter_leads FOR INSERT
+        WITH CHECK (true);
+
+      DROP POLICY IF EXISTS "Anyone can update with confirmation token" ON public.newsletter_leads;
+      CREATE POLICY "Anyone can update with confirmation token"
+        ON public.newsletter_leads FOR UPDATE
+        USING (true);
+    `;
+
+    const { error: newsletterError } = await supabase.rpc('exec_sql', {
+      sql: createNewsletterLeadsSQL
+    });
+
+    if (newsletterError) {
+      console.log('Note: Could not create newsletter_leads table via RPC:', newsletterError.message || newsletterError);
+    } else {
+      console.log('newsletter_leads table created successfully!');
     }
 
     // Now try to insert templates

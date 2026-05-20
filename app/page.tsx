@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
+import { NewsletterSection } from "@/components/newsletter-section";
 import { DocumentCard } from "@/components/document-card";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -311,6 +312,7 @@ export default async function Home() {
         </section>
         <FeaturesSection />
         <TestimonialsSection />
+        <NewsletterSection />
         <ScrollToTop />
       </main>
     </div>
