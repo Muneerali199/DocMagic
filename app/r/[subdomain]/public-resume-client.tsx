@@ -88,7 +88,7 @@ export function PublicResumeClient({
             <Button asChild variant="outline" size="sm" className="gap-2">
               <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer">
                 <Share2 className="h-4 w-4" />
-                Share
+                Share on LinkedIn
               </a>
             </Button>
             <Button asChild size="sm" className="bolt-gradient text-white">
