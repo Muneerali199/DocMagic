@@ -44,5 +44,4 @@ build.log
 next-env.d.ts
 
 # supabase
-/supabase/.temp/
-
+supabase/.temp/
