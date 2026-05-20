@@ -18,12 +18,13 @@ export function SimpleThemeToggle() {
     setTheme(newTheme);
   };
 
-  if (!mounted) {
+ if (!mounted) {
     return (
-      // loading button with focus-visible styles and aria-label for accessibility
       <button
-  className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
-  aria-label="Toggle theme">
+        className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
         <Sun className="h-5 w-5" />
       </button>
     );
