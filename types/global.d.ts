@@ -16,6 +16,7 @@ declare module '*.jpg';
 declare module '*.jpeg';
 declare module '*.gif';
 declare module '*.webp';
+declare module '*.pdf';
 
 // Add global type extensions here
 interface Window {

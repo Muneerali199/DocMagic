@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createRoute } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function DELETE(
@@ -7,7 +6,7 @@ export async function DELETE(
   { params }: { params: { id: string; shareId: string } }
 ) {
   const { id, shareId } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +50,7 @@ export async function PATCH(
   { params }: { params: { id: string; shareId: string } }
 ) {
   const { id, shareId } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
