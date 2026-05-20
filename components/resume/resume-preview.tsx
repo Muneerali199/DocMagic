@@ -1182,6 +1182,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 variant="outline"
                 size="sm"
                 onClick={exportToLaTeX}
+                disabled={isExporting}
                 className="flex items-center gap-1"
               >
                 <Code className="h-4 w-4" />

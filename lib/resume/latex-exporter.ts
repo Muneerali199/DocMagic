@@ -262,7 +262,7 @@ export async function exportToLaTeXFile(resume: ResumeData, filename?: string): 
   
   let downloadName = filename;
   if (!downloadName) {
-    const safeName = resume.name ? resume.name.replace(/\\s+/g, '-').toLowerCase() : 'resume';
+    const safeName = resume.name ? resume.name.replace(/\s+/g, '-').toLowerCase() : 'resume';
     downloadName = `${safeName}.tex`;
   }
   
