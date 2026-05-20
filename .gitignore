@@ -42,6 +42,3 @@ build.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# supabase
-supabase/.temp/
