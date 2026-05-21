@@ -267,7 +267,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       creditsUsed: creditsRequired,
-      creditsRemaining: creditsRemaining - creditsRequired,
+      creditsRemaining: reserved.credits_total - reserved.credits_used,
       tier: credits.tier,
     });
 
