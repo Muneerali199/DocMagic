@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Check, Smartphone } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
@@ -17,14 +17,17 @@ export const PWAInstallButton = React.forwardRef<HTMLButtonElement, PWAInstallBu
   ({ className, variant = 'default', size = 'default', showText = true }, ref) => {
     const { isInstallable, isInstalled, installApp } = usePWAInstall();
     const [isInstalling, setIsInstalling] = useState(false);
+    const installingRef = useRef(false);
 
     const handleInstall = async () => {
-      if (!isInstallable) return;
+      if (!isInstallable || installingRef.current) return;
       
+      installingRef.current = true;
       setIsInstalling(true);
       try {
         await installApp();
       } finally {
+        installingRef.current = false;
         setIsInstalling(false);
       }
     };
