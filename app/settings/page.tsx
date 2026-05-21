@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Sparkles, Zap, Sun, Moon, Laptop, BarChart3, FileText, Layout, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { logger } from "@/lib/logger";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -28,13 +29,7 @@ export default function SettingsPage() {
     setMounted(true);
   }, []);
 
-  // Debug theme changes
-  useEffect(() => {
-    if (mounted) {
-      console.log('Theme changed:', { theme, resolvedTheme });
-      console.log('HTML classes:', document.documentElement.className);
-    }
-  }, [theme, resolvedTheme, mounted]);
+
 
   if (loading) {
     return (

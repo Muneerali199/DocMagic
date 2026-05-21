@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = 'force-dynamic';
 
@@ -143,10 +143,23 @@ function RegisterForm() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      toast({
+        title: "Password too simple",
+        description: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
         variant: "destructive",
       });
       return;
@@ -231,7 +244,21 @@ function RegisterForm() {
     password.trim() &&
     confirmPassword.trim() &&
     password === confirmPassword &&
-    password.length >= 6;
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password);
+
+  // Memoized referral handler to prevent unnecessary re-renders
+  const handleReferral = useCallback((code: string | null) => {
+    setReferralCode(code);
+    if (code) {
+      toast({
+        title: "Referral Applied",
+        description: "Your referral code has been applied successfully.",
+      });
+    }
+  }, [toast]);
 
   // Success view: show verification instructions
   if (success) {
@@ -301,17 +328,6 @@ function RegisterForm() {
       </div>
     );
   }
-
-  // Memoized referral handler to prevent unnecessary re-renders
-  const handleReferral = useCallback((code: string | null) => {
-    setReferralCode(code);
-    if (code) {
-      toast({
-        title: "Referral Applied",
-        description: "Your referral code has been applied successfully.",
-      });
-    }
-  }, [toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
@@ -613,7 +629,7 @@ function RegisterForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Create a password (min. 6 characters)"
+                    placeholder="Create a strong password (min. 8 characters)"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading || isOAuthLoading !== null}

@@ -204,7 +204,7 @@ export function ATSAnalyzer() {
                       </h5>
                       <div className="flex flex-wrap gap-1">
                         {displayAnalysis.analysis.keywordMatch.found?.map((k: string, i: number) => (
-                          <span key={i} className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                          <span key={i} className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
                             {k}
                           </span>
                         ))}
@@ -217,7 +217,7 @@ export function ATSAnalyzer() {
                       </h5>
                       <div className="flex flex-wrap gap-1">
                         {displayAnalysis.analysis.keywordMatch.missing?.map((k: string, i: number) => (
-                          <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
+                          <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                             {k}
                           </span>
                         ))}
@@ -231,7 +231,7 @@ export function ATSAnalyzer() {
               {displayAnalysis.improvements?.critical && (
                 <div>
                   <h4 className="font-medium mb-2">Critical Improvements</h4>
-                  <ul className="space-y-2 text-sm text-red-600">
+                  <ul className="space-y-2 text-sm text-red-600 dark:text-red-400">
                     {displayAnalysis.improvements.critical.map((tip: string, i: number) => (
                       <li key={i} className="flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 mt-1 flex-shrink-0" />
@@ -245,7 +245,7 @@ export function ATSAnalyzer() {
               {displayAnalysis.improvements?.recommended && (
                 <div>
                   <h4 className="font-medium mb-2">Recommended Enhancements</h4>
-                  <ul className="space-y-2 text-sm text-yellow-600">
+                  <ul className="space-y-2 text-sm text-yellow-600 dark:text-yellow-400">
                     {displayAnalysis.improvements.recommended.map((tip: string, i: number) => (
                       <li key={i} className="flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 mt-1 flex-shrink-0" />
@@ -261,7 +261,7 @@ export function ATSAnalyzer() {
                   <h4 className="font-medium mb-2">AI Suggestions</h4>
                   <div className="space-y-2">
                     {displayAnalysis.improvements.aiSuggestions.map((suggestion: string, i: number) => (
-                      <div key={i} className="flex gap-2 p-3 bg-blue-50 rounded-lg text-sm">
+                      <div key={i} className="flex gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
                         <Sparkles className="h-4 w-4 mt-1 flex-shrink-0 text-blue-500" />
                         {suggestion}
                       </div>

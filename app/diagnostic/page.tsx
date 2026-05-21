@@ -1,6 +1,8 @@
-import { createClient } from '@/lib/supabase/client';
+import { notFound } from 'next/navigation';
+import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
+ restrict-diagnostic-page
 
     // Restrict diagnostic page in production
   if (process.env.NODE_ENV === 'production') {
@@ -13,6 +15,16 @@ export default async function DiagnosticPage() {
     );
   }
   const supabase = createClient();
+
+  const diagnosticsEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ENABLE_DIAGNOSTIC_PAGE === 'true';
+
+  if (!diagnosticsEnabled) {
+    notFound();
+  }
+
+ main
 
   // Check if tables exist by trying to query them
   let tablesStatus = {
@@ -143,10 +155,17 @@ export default async function DiagnosticPage() {
             >
               Sign In
             </a>
+ restrict-diagnostic-page
             <a 
   href="https://dashboard.stripe.com/test/products"
   target="_blank"
   rel="noopener noreferrer"
+
+            <a
+              href="https://dashboard.stripe.com/test/products"
+              target="_blank"
+              rel="noopener noreferrer"
+ main
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
             >
               Stripe Dashboard

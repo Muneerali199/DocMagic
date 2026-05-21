@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { collaborationService } from '@/lib/collaboration-service';
 import { useEditorStore } from '@/lib/editor-store';
+import { logger } from '@/lib/logger';
 
 function EditorContent() {
   const router = useRouter();
@@ -104,7 +105,10 @@ function EditorContent() {
           toast.success(`Template "${template.title}" loaded! Start editing.`);
         }
       } catch (error) {
-        console.error('Error loading content:', error);
+        logger.error(
+          'Error loading content:',
+           error instanceof Error ? error.message : String(error)
+      );
         toast.error('Failed to load content');
       } finally {
         setIsLoading(false);
@@ -120,7 +124,6 @@ function EditorContent() {
     
     // Skip save for temporary documents (not yet in database)
     if (documentData.id.startsWith('temp-')) {
-      console.log('Skipping save for temporary document');
       return;
     }
     
