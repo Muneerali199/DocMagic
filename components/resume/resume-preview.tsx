@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, UnderlineType } from 'docx';
 import { saveAs } from 'file-saver';
 import { RESUME_TEMPLATES } from '@/lib/resume-template-data';
+import { getLatexForTemplate } from '@/lib/latex-templates';
 
 interface ResumeData {
   name?: string;
@@ -75,6 +76,7 @@ interface ResumePreviewProps {
 export interface ResumePreviewRef {
   exportToPDF: () => Promise<void>;
   exportToWord: () => void;
+  exportToLatex: () => void;
   toggleEdit: () => void;
   isEditing: boolean;
 }
@@ -583,6 +585,35 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     }
   };
 
+  const exportToLatex = () => {
+    try {
+      const latexCode = getLatexForTemplate(template, safeResume);
+      const fileName = isCV
+        ? `${safeResume.name?.replace(/\s+/g, '_').toLowerCase() || 'cv'}-cv.tex`
+        : `${safeResume.name?.replace(/\s+/g, '_').toLowerCase() || 'resume'}.tex`;
+      const blob = new Blob([latexCode], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: `${isCV ? 'CV' : 'Resume'} exported as LaTeX!`,
+        description: `${fileName} downloaded — open in Overleaf or any LaTeX editor to compile.`,
+      });
+    } catch (error) {
+      console.error('Error exporting to LaTeX:', error);
+      toast({
+        title: "Export failed",
+        description: "There was an error generating the LaTeX source.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
@@ -591,6 +622,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   useImperativeHandle(ref, () => ({
     exportToPDF,
     exportToWord,
+    exportToLatex,
     toggleEdit,
     isEditing,
   }));
@@ -1154,6 +1186,17 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               >
                 <FileText className="h-4 w-4" />
                 Word
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToLatex}
+                className="flex items-center gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                title="Advanced Export: Download LaTeX source for Overleaf"
+              >
+                <FileCode className="h-4 w-4" />
+                <span>LaTeX</span>
+                <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-1 py-0.5 rounded-full leading-none">⚡</span>
               </Button>
             </div>
             
@@ -1766,6 +1809,17 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             >
               {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {isExporting ? "Exporting..." : "Export PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToLatex}
+              className="flex items-center gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+              title="Advanced Export: Download LaTeX source for Overleaf"
+            >
+              <FileCode className="h-4 w-4" />
+              <span>LaTeX</span>
+              <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-1 py-0.5 rounded-full leading-none">⚡</span>
             </Button>
           </div>
         )}
