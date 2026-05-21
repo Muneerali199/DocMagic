@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCcw, Home, HelpCircle } from 'lucide-react';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 export default function Error({
@@ -51,11 +53,17 @@ export default function Error({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-10 bg-gradient-to-b from-white to-gray-50 text-gray-800 font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-10 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-lg w-full">
-        {/* Icon/Illustration */}
+        {/* Icon */}
+        <div className="mb-8 flex justify-center">
+          <div className="p-4 bg-red-50 rounded-full">
+            <AlertTriangle className="w-12 h-12 text-red-600" />
+          </div>
+        </div>
+
+        {/* Error Illustration */}
         <div className="mb-8">
-          <div className="text-6xl mb-4">⚠️</div>
           <Image
             src="/magic-hat.svg"
             alt="Error Illustration"
@@ -66,7 +74,7 @@ export default function Error({
         </div>
 
         {/* Error Title */}
-        <h1 className="text-4xl font-bold mb-4">
+        <h1 className="text-4xl font-bold mb-4 text-gray-900">
           {isDeploymentError 
             ? "Service Temporarily Unavailable" 
             : "Oops! Something went wrong"}
@@ -94,35 +102,44 @@ export default function Error({
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-4 mb-8">
-          <button
+        <div className="space-y-3 mb-8">
+          <Button
             onClick={handleRetry}
-            className="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
+            size="lg"
+            className="w-full"
           >
+            <RefreshCcw className="w-4 h-4 mr-2" />
             Try Again
-          </button>
+          </Button>
 
-          <Link
-            href="/"
-            className="w-full block bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
-          >
-            Back to Homepage
+          <Link href="/" className="w-full block">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Back to Homepage
+            </Button>
           </Link>
         </div>
 
         {/* Additional Help Links */}
         <div className="border-t pt-8 space-y-4 text-sm">
-          <p className="text-gray-600">Need help?</p>
+          <div className="flex items-center justify-center gap-2 text-gray-600 mb-4">
+            <HelpCircle className="w-4 h-4" />
+            <p>Need help?</p>
+          </div>
           <div className="flex flex-col gap-2">
-            <Link href="/contact" className="text-indigo-600 hover:underline">
+            <Link href="/contact" className="text-indigo-600 hover:underline hover:text-indigo-700">
               Contact Support
             </Link>
-            <Link href="/documentation" className="text-indigo-600 hover:underline">
+            <Link href="/documentation" className="text-indigo-600 hover:underline hover:text-indigo-700">
               View Documentation
             </Link>
             <a 
               href="https://status.example.com" 
-              className="text-indigo-600 hover:underline"
+              className="text-indigo-600 hover:underline hover:text-indigo-700"
             >
               Check Service Status
             </a>
