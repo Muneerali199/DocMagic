@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DiagramPreview } from "@/components/diagram/diagram-preview";
 import { DiagramTemplates } from "@/components/diagram/diagram-templates";
+import { DiagramDiffViewer } from "@/components/diagram/DiagramDiffViewer";
+import type { FixRecord } from "@/components/diagram/DiagramDiffViewer";
+import { LintErrorPanel } from "@/components/diagram/LintErrorPanel";
+import { WarningBanner } from "@/components/diagram/WarningBanner";
+import { LintResultsPanel } from "@/components/diagram/LintResultsPanel";
+import { useDiagramLintStore } from "@/lib/diagram-lint-store";
+import type { LintError, AutoFixResult } from "@/lib/diagram-lint-store";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
@@ -28,7 +35,8 @@ import {
   GitBranch,
   Database,
   Network,
-  Zap
+  Zap,
+  Play
 } from "lucide-react";
 import { toPng, toSvg } from 'html-to-image';
 
@@ -167,14 +175,151 @@ export function DiagramGenerator() {
   const [isCopying, setIsCopying] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<'png' | 'svg' | null>(null);
   const [activeTab, setActiveTab] = useState("editor");
+  const [renderedCode, setRenderedCode] = useState(DIAGRAM_EXAMPLES.flowchart);
   const { toast } = useToast();
   const { user } = useAuth();
   const diagramRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
+  // ── Live linter diagnostics state ─────────────────────────────────────────
+  const [liveErrors, setLiveErrors] = useState<LintError[]>([]);
+  const [renderError, setRenderError] = useState<string | null>(null);
+
+  // Combine liveErrors and renderError (if any)
+  const lintErrorsToShow = useMemo(() => {
+    if (!renderError) return liveErrors;
+
+    const hasParseError = liveErrors.some((e) => e.ruleId === "mermaid-parse-error");
+    if (hasParseError) return liveErrors;
+
+    const parseError: LintError = {
+      ruleId: "mermaid-parse-error",
+      severity: "error",
+      message: renderError,
+      line: 1,
+      column: 1,
+      autoFixable: false,
+    };
+    return [...liveErrors, parseError];
+  }, [liveErrors, renderError]);
+
+  // ── Dynamically loaded lint functions (avoids ESM/CJS issues) ───────────
+  const lintFnsRef = useRef<{
+    lintMermaid: (src: string) => LintError[];
+    autoFixMermaid: (src: string, errors: LintError[]) => AutoFixResult;
+  } | null>(null);
+
+  useEffect(() => {
+    // Load lintMermaid.js once on the client — it has no SSR-safe default export,
+    // so we load it dynamically and extract the named exports.
+    // @/ resolves to the project root per tsconfig paths.
+    import(/* webpackChunkName: "lint-mermaid" */ '@/lintMermaid.js')
+      .then((mod: any) => {
+        const lintMermaid = mod.lintMermaid ?? mod.default?.lintMermaid;
+        const autoFixMermaid = mod.autoFixMermaid ?? mod.default?.autoFixMermaid;
+        if (typeof lintMermaid === 'function' && typeof autoFixMermaid === 'function') {
+          lintFnsRef.current = { lintMermaid, autoFixMermaid };
+          // Run initial linter run
+          try {
+            setLiveErrors(lintMermaid(diagramCode));
+          } catch (e) {}
+        }
+      })
+      .catch((err: unknown) => console.warn('[DiagramGenerator] Could not load lintMermaid:', err));
+  }, []);
+
+  // Debounce ref for manual edits linting
+  const lintDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced linter function
+  const debouncedLint = useCallback((code: string) => {
+    if (lintDebounceTimeoutRef.current) {
+      clearTimeout(lintDebounceTimeoutRef.current);
+    }
+    lintDebounceTimeoutRef.current = setTimeout(() => {
+      const fns = lintFnsRef.current;
+      if (fns) {
+        try {
+          const errs = fns.lintMermaid(code);
+          setLiveErrors(errs);
+        } catch (err) {
+          console.warn('[DiagramGenerator] Live lint error:', err);
+        }
+      }
+    }, 500);
+  }, []);
+
+  const handleCodeChange = useCallback((newCode: string) => {
+    setDiagramCode(newCode);
+    setRenderError(null); // Clear render error on new manual edit
+    debouncedLint(newCode);
+  }, [debouncedLint]);
+
+  useEffect(() => {
+    return () => {
+      if (lintDebounceTimeoutRef.current) {
+        clearTimeout(lintDebounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handler for live inline auto-fixes
+  const handleLiveAutoFix = useCallback((errorIds: string[]) => {
+    const fns = lintFnsRef.current;
+    if (!fns) return;
+
+    try {
+      const errorSet = new Set(errorIds);
+      const errorsToFix = liveErrors.filter((e) =>
+        errorSet.has(`${e.ruleId}-L${e.line}`)
+      );
+
+      if (errorsToFix.length === 0) return;
+
+      const result = fns.autoFixMermaid(diagramCode, errorsToFix);
+      setDiagramCode(result.fixedSource);
+      setRenderError(null);
+      try {
+        setLiveErrors(fns.lintMermaid(result.fixedSource));
+      } catch (e) {}
+
+      toast({
+        title: "⚡ Auto-fix Applied",
+        description: `Successfully resolved ${result.appliedFixes.length} issue(s).`,
+      });
+    } catch (err) {
+      console.error('[DiagramGenerator] Auto-fix error:', err);
+      toast({
+        title: "Auto-fix Failed",
+        description: "An error occurred while attempting to fix the diagram automatically.",
+        variant: "destructive",
+      });
+    }
+  }, [diagramCode, liveErrors, toast]);
+
+  // ── Lint store ────────────────────────────────────────────────────────────
+  const {
+    lintErrors,
+    fixResult,
+    lintState,
+    warningDismissed,
+    runLint,
+    resolveDiff,
+    dismissWarning,
+    reset: resetLint,
+  } = useDiagramLintStore();
+
   const handleTemplateSelect = (template: string) => {
     setSelectedTemplate(template);
-    setDiagramCode(DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart);
+    const code = DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart;
+    setDiagramCode(code);
+    setRenderError(null);
+    const fns = lintFnsRef.current;
+    if (fns) {
+      try {
+        setLiveErrors(fns.lintMermaid(code));
+      } catch (e) {}
+    }
   };
 
   const generateDiagramFromPrompt = async () => {
@@ -238,7 +383,15 @@ export function DiagramGenerator() {
       }
       
       setDiagramCode(data.code);
-      setActiveTab("preview");
+      setRenderError(null);
+      const fns = lintFnsRef.current;
+      if (fns) {
+        try {
+          setLiveErrors(fns.lintMermaid(data.code));
+        } catch (e) {}
+      }
+      // renderDiagram gates the preview through lintMermaid before switching tabs
+      renderDiagram(data.code);
       
       toast({
         title: "🎯 AI Diagram Generated!",
@@ -291,37 +444,33 @@ export function DiagramGenerator() {
     }
   };
 
-  const exportDiagram = async (format: 'png' | 'svg') => {
+  // ── Core export implementation (runs after lint gate passes) ────────────
+  const _runExport = useCallback(async (source: string, format: 'png' | 'svg') => {
     if (!diagramRef.current) return;
-    
+
     setExportingFormat(format);
-    
+
     try {
       const element = diagramRef.current.querySelector('#mermaid-diagram');
       if (!element) throw new Error('Diagram element not found');
-      
+
       let dataUrl: string;
-      
-      // Enhanced export options to preserve colors and styling
+
       const exportOptions = {
         backgroundColor: '#ffffff',
         quality: 1.0,
-        pixelRatio: 3, // Higher resolution for better quality
+        pixelRatio: 3,
         cacheBust: true,
-        width: element.scrollWidth + 60, // Add padding
-        height: element.scrollHeight + 60, // Add padding
+        width: element.scrollWidth + 60,
+        height: element.scrollHeight + 60,
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left',
           padding: '30px',
-        },
-        // Include all CSS styles
+        } as Partial<CSSStyleDeclaration>,
         includeQueryParams: true,
         skipAutoScale: false,
-        // Ensure fonts and colors are embedded
-        fontEmbedCSS: true,
         filter: (node: HTMLElement) => {
-          // Ensure all text elements are captured with black color
           if (node.tagName === 'text' || node.tagName === 'tspan') {
             node.setAttribute('fill', '#000000');
             node.style.fill = '#000000';
@@ -329,39 +478,95 @@ export function DiagramGenerator() {
           return true;
         },
       };
-      
+
       if (format === 'png') {
         dataUrl = await toPng(element as HTMLElement, exportOptions);
       } else {
-        dataUrl = await toSvg(element as HTMLElement, {
-          ...exportOptions,
-          // For SVG, ensure all styles are inline
-          skipFonts: false,
-        });
+        dataUrl = await toSvg(element as HTMLElement, { ...exportOptions, skipFonts: false });
       }
-      
-      // Create download link with timestamp
+
       const timestamp = new Date().toISOString().slice(0, 10);
       const link = document.createElement('a');
       link.download = `diagram-${timestamp}.${format}`;
       link.href = dataUrl;
       link.click();
-      
+
       toast({
         title: `Diagram exported as ${format.toUpperCase()}!`,
-        description: "Your diagram has been downloaded with full styling preserved",
+        description: 'Your diagram has been downloaded with full styling preserved',
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Export failed",
+        title: 'Export failed',
         description: `Failed to export diagram as ${format.toUpperCase()}. Please try again.`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setExportingFormat(null);
     }
-  };
+  }, [diagramRef, toast]);
+
+  // ── Lint-gated export ───────────────────────────────────────────────────
+  const exportDiagram = useCallback(async (format: 'png' | 'svg') => {
+    const fns = lintFnsRef.current;
+    const { proceed, source } = runLint(
+      diagramCode, 'export', format,
+      fns?.lintMermaid,
+      fns?.autoFixMermaid,
+    );
+    if (proceed) {
+      await _runExport(source, format);
+    }
+    // If !proceed → lintState is now 'error' or 'diff-pending'; overlays handle it.
+  }, [diagramCode, runLint, _runExport]);
+
+  // ── Lint-gated preview render ───────────────────────────────────────────
+  /**
+   * Call this instead of setActiveTab('preview') directly — it runs lintMermaid
+   * first and shows the appropriate overlay if errors are found.
+   */
+  const renderDiagram = useCallback((source?: string) => {
+    const src = source ?? diagramCode;
+    const fns = lintFnsRef.current;
+    const { proceed, source: lintedSrc } = runLint(
+      src, 'render', undefined,
+      fns?.lintMermaid,
+      fns?.autoFixMermaid,
+    );
+    if (proceed) {
+      setRenderedCode(lintedSrc);
+      setActiveTab('preview');
+    }
+    // If !proceed → lintState is 'error' or 'diff-pending'; overlays handle it.
+  }, [diagramCode, runLint]);
+
+  // ── DiagramDiffViewer: handle user's accept/reject decision ─────────────
+  const handleDiffApply = useCallback((acceptedFixes: FixRecord[]) => {
+    const acceptedIds = acceptedFixes.map((f) => f.id);
+    const fns = lintFnsRef.current;
+    const finalSource = resolveDiff(diagramCode, acceptedIds, fns?.autoFixMermaid);
+
+    // Update the editor with the fixed source so the user sees it
+    setDiagramCode(finalSource);
+    setRenderError(null);
+    if (fns) {
+      try {
+        setLiveErrors(fns.lintMermaid(finalSource));
+      } catch (e) {}
+    }
+
+    const { pendingAction, pendingFormat } = useDiagramLintStore.getState();
+
+    if (pendingAction === 'render') {
+      setRenderedCode(finalSource);
+      setActiveTab('preview');
+    } else if (pendingAction === 'export' && pendingFormat) {
+      _runExport(finalSource, pendingFormat);
+    }
+
+    resetLint();
+  }, [diagramCode, resolveDiff, _runExport, resetLint]);
 
   const shareDiagram = async () => {
     try {
@@ -389,8 +594,43 @@ export function DiagramGenerator() {
     }
   };
 
+  // ── Derive the FixRecord[] expected by DiagramDiffViewer ──────────────
+  // autoFixMermaid returns { ruleId, originalText, fixedText, lineNumber }
+  // DiagramDiffViewer needs an extra `id`, `line`, `description`, `originalLine`, `fixedLine`.
+  const diffViewerFixes: FixRecord[] = fixResult?.appliedFixes.map((r) => ({
+    id: `${r.ruleId}-L${r.lineNumber}`,
+    line: r.lineNumber,
+    ruleId: r.ruleId,
+    description: `Replace line ${r.lineNumber} to fix '${r.ruleId}'`,
+    originalLine: r.originalText,
+    fixedLine: r.fixedText,
+  })) ?? [];
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* ── Lint Error Panel (blocks render/export) ─────────────────────── */}
+      {lintState === 'error' && (
+        <LintErrorPanel errors={lintErrors} onClose={resetLint} />
+      )}
+
+      {/* ── Diff Viewer Modal (auto-fixable errors — user accepts/rejects) ── */}
+      {lintState === 'diff-pending' && fixResult && diffViewerFixes.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(2,6,23,0.90)', backdropFilter: 'blur(8px)' }}
+        >
+          <div className="w-full max-w-4xl" style={{ height: '80vh' }}>
+            <DiagramDiffViewer
+              original={diagramCode}
+              fixed={fixResult.fixedSource}
+              fixes={diffViewerFixes}
+              onApply={handleDiffApply}
+              onCancel={resetLint}
+            />
+          </div>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center mb-4 sm:mb-6 px-2">
           <TabsList className="glass-effect border border-yellow-400/20 p-1 h-auto">
@@ -411,6 +651,12 @@ export function DiagramGenerator() {
             </TabsTrigger>
             <TabsTrigger
               value="preview"
+              onClick={(e) => {
+                // Intercept tab click: run lint gate, then let the store
+                // set activeTab to 'preview' only if no blocking errors.
+                e.preventDefault();
+                renderDiagram();
+              }}
               className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
             >
               <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -591,7 +837,7 @@ export function DiagramGenerator() {
                   <Textarea
                     id="diagramCode"
                     value={diagramCode}
-                    onChange={(e) => setDiagramCode(e.target.value)}
+                    onChange={(e) => handleCodeChange(e.target.value)}
                     placeholder="Enter your Mermaid diagram code here..."
                     className="min-h-[300px] font-mono text-sm glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 resize-none"
                   />
@@ -614,8 +860,15 @@ export function DiagramGenerator() {
                   </Button>
                 </div>
 
-                {/* Copy Code Button */}
+                {/* Render & Copy Code Buttons */}
                 <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => renderDiagram()}
+                    className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex-1"
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Render
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={copyToClipboard}
@@ -630,6 +883,12 @@ export function DiagramGenerator() {
                     Copy Code
                   </Button>
                 </div>
+
+                {/* Live Diagnostics Linter Panel */}
+                <LintResultsPanel
+                  errors={lintErrorsToShow}
+                  onAutoFix={handleLiveAutoFix}
+                />
               </div>
             </div>
 
@@ -643,11 +902,18 @@ export function DiagramGenerator() {
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold bolt-gradient-text">Preview</h2>
               </div>
 
+              {/* Warning Banner — warnings only, render already proceeded */}
+              {lintState === 'warning' && !warningDismissed && (
+                <div className="mb-3">
+                  <WarningBanner errors={lintErrors} onDismiss={dismissWarning} />
+                </div>
+              )}
+
               <div ref={diagramRef} className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[300px] sm:min-h-[450px] lg:min-h-[550px] shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <div className="absolute inset-0 shimmer opacity-20"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
                 <div className="relative z-10 h-full">
-                  <DiagramPreview code={diagramCode} />
+                  <DiagramPreview code={diagramCode} onRenderError={setRenderError} />
                 </div>
               </div>
 
@@ -729,7 +995,7 @@ export function DiagramGenerator() {
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="relative z-10 h-full w-full flex flex-col">
-                <DiagramPreview code={diagramCode} fullScreen />
+                <DiagramPreview code={renderedCode} fullScreen onRenderError={setRenderError} />
               </div>
             </div>
 

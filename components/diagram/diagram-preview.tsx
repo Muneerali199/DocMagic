@@ -17,9 +17,10 @@ interface DiagramPreviewProps {
     border?: string;
     card?: string;
   };
+  onRenderError?: (error: string | null) => void;
 }
 
-export function DiagramPreview({ code, fullScreen = false, compact = false, themeColors }: DiagramPreviewProps) {
+export function DiagramPreview({ code, fullScreen = false, compact = false, themeColors, onRenderError }: DiagramPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,7 @@ export function DiagramPreview({ code, fullScreen = false, compact = false, them
   useEffect(() => {
     if (!mermaidLoaded || !code.trim()) {
       setIsLoading(false);
+      onRenderError?.(null);
       return;
     }
 
@@ -140,7 +142,16 @@ export function DiagramPreview({ code, fullScreen = false, compact = false, them
           const diagramId = `mermaid-diagram-${Date.now()}`;
           
           // Validate and render the diagram
-          const { svg } = await mermaid.render(diagramId, code);
+          let svg: string;
+          try {
+            const renderResult = await mermaid.render(diagramId, code);
+            svg = renderResult.svg;
+            onRenderError?.(null);
+          } catch (renderErr: any) {
+            const actualErrorMsg = renderErr?.message || String(renderErr);
+            onRenderError?.(actualErrorMsg);
+            throw renderErr;
+          }
           
           // Create container div with the expected ID
           const diagramContainer = document.createElement('div');
