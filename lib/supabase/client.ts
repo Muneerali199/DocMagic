@@ -12,6 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const isPlaceholder = supabaseUrl.includes("your-project-id") || supabaseUrl.includes("placeholder");
 
+// Global mock auth listeners shared across mock client instances
+let mockAuthListeners: Array<(event: string, session: any) => void> = [];
+
 // Export the Supabase client
 export const createClient = () => {
   if (isPlaceholder) {
@@ -33,8 +36,6 @@ export const createClient = () => {
       expires_at: Math.floor(Date.now() / 1000) + 3600,
     };
 
-    let authListeners: Array<(event: string, session: any) => void> = [];
-
     const getStoredSession = () => {
       if (typeof window === 'undefined') return null;
       try {
@@ -55,22 +56,28 @@ export const createClient = () => {
           const session = getStoredSession();
           return { data: { user: session?.user ?? null }, error: null };
         },
-        signInWithPassword: async ({ email }: { email: string }) => {
+        signInWithPassword: async ({ email, password }: { email: string; password?: string }) => {
+          if (!password || password.length < 6) {
+            return { data: null, error: { message: 'Password must be at least 6 characters' } } as any;
+          }
           const userObj = { ...mockUser, email: email || 'developer@example.com' };
           const sessionObj = { ...mockSession, user: userObj };
           if (typeof window !== 'undefined') {
             localStorage.setItem('sb-mock-session', JSON.stringify(sessionObj));
           }
-          authListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
+          mockAuthListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
           return { data: { user: userObj, session: sessionObj }, error: null };
         },
-        signUp: async ({ email }: { email: string }) => {
+        signUp: async ({ email, password }: { email: string; password?: string }) => {
+          if (!password || password.length < 6) {
+            return { data: null, error: { message: 'Password must be at least 6 characters' } } as any;
+          }
           const userObj = { ...mockUser, email: email || 'developer@example.com' };
           const sessionObj = { ...mockSession, user: userObj };
           if (typeof window !== 'undefined') {
             localStorage.setItem('sb-mock-session', JSON.stringify(sessionObj));
           }
-          authListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
+          mockAuthListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
           return { data: { user: userObj, session: sessionObj }, error: null };
         },
         signInWithOAuth: async ({ provider }: { provider: string }) => {
@@ -79,7 +86,7 @@ export const createClient = () => {
           if (typeof window !== 'undefined') {
             localStorage.setItem('sb-mock-session', JSON.stringify(sessionObj));
           }
-          authListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
+          mockAuthListeners.forEach(cb => cb('SIGNED_IN', sessionObj));
           // Redirect home to simulate complete OAuth flow
           if (typeof window !== 'undefined') {
             window.location.href = '/';
@@ -90,11 +97,11 @@ export const createClient = () => {
           if (typeof window !== 'undefined') {
             localStorage.removeItem('sb-mock-session');
           }
-          authListeners.forEach(cb => cb('SIGNED_OUT', null));
+          mockAuthListeners.forEach(cb => cb('SIGNED_OUT', null));
           return { error: null };
         },
         onAuthStateChange: (callback: any) => {
-          authListeners.push(callback);
+          mockAuthListeners.push(callback);
           const session = getStoredSession();
           // Notify immediate session state on subscription
           setTimeout(() => {
@@ -104,7 +111,7 @@ export const createClient = () => {
             data: {
               subscription: {
                 unsubscribe: () => {
-                  authListeners = authListeners.filter(cb => cb !== callback);
+                  mockAuthListeners = mockAuthListeners.filter(cb => cb !== callback);
                 }
               }
             }

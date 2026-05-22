@@ -167,19 +167,23 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     onChange,
     className,
     multiline,
+    disabled,
   }: {
     value: string;
     onChange: (val: string) => void;
     className?: string;
     multiline?: boolean;
+    disabled?: boolean;
   }) => {
     if (multiline) {
       return (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
           className={cn(
             "w-full resize-none bg-transparent border-none p-0 m-0 font-sans text-gray-900 focus:outline-none focus:ring-0",
+            disabled && "text-gray-400 cursor-not-allowed",
             className
           )}
           rows={3}
@@ -191,8 +195,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
         className={cn(
           "bg-transparent border-none p-0 m-0 font-sans text-gray-900 focus:outline-none focus:ring-0 w-full",
+          disabled && "text-gray-400 cursor-not-allowed",
           className
         )}
       />
@@ -213,14 +219,17 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     const [enhancingIdx, setEnhancingIdx] = useState<number | null>(null);
 
     function updateItem(idx: number, val: string) {
+      if (enhancingIdx !== null) return;
       const newItems = [...items];
       newItems[idx] = val;
       onChange(newItems);
     }
     function addItem() {
+      if (enhancingIdx !== null) return;
       onChange([...items, ""]);
     }
     function removeItem(idx: number) {
+      if (enhancingIdx !== null) return;
       const newItems = items.filter((_, i) => i !== idx);
       onChange(newItems);
     }
@@ -237,6 +246,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         return;
       }
 
+      const originalBullet = items[idx];
       setEnhancingIdx(idx);
       try {
         const response = await fetch("/api/resume/enhance-bullet", {
@@ -259,13 +269,15 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
 
         const data = await response.json();
         if (data.enhancedBullet) {
-          const newItems = [...items];
-          newItems[idx] = data.enhancedBullet;
-          onChange(newItems);
-          toast({
-            title: "Enhancement successful",
-            description: "Your bullet point has been enhanced with action-oriented metrics!",
-          });
+          if (items[idx] === originalBullet) {
+            const newItems = [...items];
+            newItems[idx] = data.enhancedBullet;
+            onChange(newItems);
+            toast({
+              title: "Enhancement successful",
+              description: "Your bullet point has been enhanced with action-oriented metrics!",
+            });
+          }
         } else {
           throw new Error("AI did not return an enhanced bullet");
         }
@@ -287,6 +299,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             <EditableText
               value={item}
               onChange={(val) => updateItem(i, val)}
+              disabled={enhancingIdx !== null}
               className="flex-grow"
             />
             {aiContext && (
@@ -298,7 +311,8 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                   "flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold shadow-sm transition-all duration-200 shrink-0",
                   enhancingIdx === i
                     ? "bg-purple-100 text-purple-700 animate-pulse border border-purple-200 cursor-not-allowed"
-                    : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white hover:scale-105 active:scale-95 hover:shadow-md hover:shadow-indigo-500/20"
+                    : "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white hover:scale-105 active:scale-95 hover:shadow-md hover:shadow-indigo-500/20",
+                  enhancingIdx !== null && enhancingIdx !== i && "opacity-50 cursor-not-allowed"
                 )}
                 title="AI Enhance bullet point with action-oriented metrics"
               >
@@ -318,7 +332,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             <button
               type="button"
               onClick={() => removeItem(i)}
-              className="text-red-500 font-bold hover:text-red-700 px-2 shrink-0"
+              disabled={enhancingIdx !== null}
+              className={cn(
+                "text-red-500 font-bold hover:text-red-700 px-2 shrink-0",
+                enhancingIdx !== null && "opacity-50 cursor-not-allowed"
+              )}
             >
               &times;
             </button>
@@ -327,7 +345,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         <button
           type="button"
           onClick={addItem}
-          className="text-blue-600 underline text-sm mt-1 hover:text-blue-800"
+          disabled={enhancingIdx !== null}
+          className={cn(
+            "text-blue-600 underline text-sm mt-1 hover:text-blue-800",
+            enhancingIdx !== null && "opacity-50 cursor-not-allowed"
+          )}
         >
           + Add
         </button>
