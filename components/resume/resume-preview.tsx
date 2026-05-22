@@ -250,6 +250,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
 
       const originalBullet = items[idx];
       setEnhancingIdx(idx);
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
       try {
         const response = await fetch("/api/resume/enhance-bullet", {
           method: "POST",
@@ -262,6 +266,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             company: aiContext?.company,
             skills: aiContext?.skills,
           }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -270,10 +275,12 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         }
 
         const data = await response.json();
-        if (data.enhancedBullet) {
+        const enhancedBullet = typeof data?.enhancedBullet === "string" ? data.enhancedBullet.trim() : "";
+
+        if (enhancedBullet) {
           if (itemsRef.current[idx] === originalBullet) {
             const newItems = [...itemsRef.current];
-            newItems[idx] = data.enhancedBullet;
+            newItems[idx] = enhancedBullet;
             onChange(newItems);
             toast({
               title: "Enhancement successful",
@@ -287,15 +294,24 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             });
           }
         } else {
-          throw new Error("AI did not return an enhanced bullet");
+          throw new Error("AI did not return a valid enhanced bullet");
         }
       } catch (error: any) {
-        toast({
-          title: "Enhancement failed",
-          description: error.message || "Something went wrong while enhancing the bullet.",
-          variant: "destructive",
-        });
+        if (error?.name === "AbortError") {
+          toast({
+            title: "Enhancement timed out",
+            description: "The request took too long to respond (15s limit reached). Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Enhancement failed",
+            description: error.message || "Something went wrong while enhancing the bullet.",
+            variant: "destructive",
+          });
+        }
       } finally {
+        window.clearTimeout(timeoutId);
         setEnhancingIdx(null);
       }
     }
