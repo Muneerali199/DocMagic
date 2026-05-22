@@ -210,7 +210,7 @@ export async function POST(request: Request) {
           .from("credit_usage_log")
           .insert({
             user_id: user.id,
-            action: actionType,
+            action_type: actionType,
             credits_used: creditCost,
             metadata: { type: "cover_letter", has_job_description: true },
           });
@@ -275,7 +275,7 @@ export async function POST(request: Request) {
         .from("credit_usage_log")
         .insert({
           user_id: user.id,
-          action: actionType,
+          action_type: actionType,
           credits_used: creditCost,
           metadata: { letter_type: letterType, prompt_length: prompt.length },
         });
