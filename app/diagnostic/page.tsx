@@ -1,7 +1,16 @@
-import { createClient } from '@/lib/supabase/client';
+import { notFound } from 'next/navigation';
+import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
-  const supabase = createClient();
+  const diagnosticsEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ENABLE_DIAGNOSTIC_PAGE === 'true';
+
+  if (!diagnosticsEnabled) {
+    notFound();
+  }
+
+  const supabase = await createServer();
 
   // Check if tables exist by trying to query them
   let tablesStatus = {

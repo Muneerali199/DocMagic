@@ -1,5 +1,4 @@
 import { createRoute } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { sendWelcomeEmail } from "@/lib/email";
 import { createClient } from '@supabase/supabase-js';

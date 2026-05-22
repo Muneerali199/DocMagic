@@ -123,10 +123,10 @@ function buildImagePrompt(
   
   return prompt;
 }
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
     const { 
       topic, 
       imageType = 'illustration', 
@@ -138,6 +138,21 @@ export async function POST(request: NextRequest) {
       count = 1
     } = body;
 
+    // Validate count parameter
+    const parsedCount = Number(count);
+
+    if (
+      isNaN(parsedCount) ||
+      !Number.isInteger(parsedCount) ||
+      parsedCount < 1 ||
+      parsedCount > 10
+    ) {
+      return NextResponse.json(
+        { error: 'Count must be an integer between 1 and 10' },
+        { status: 400 }
+      );
+    }
+
     if (!topic && !customPrompt) {
       return NextResponse.json(
         { error: 'Topic or custom prompt is required' },
@@ -148,31 +163,49 @@ export async function POST(request: NextRequest) {
     // Check for API key
     if (!NEBIUS_API_KEY) {
       console.warn('⚠️ NEBIUS_API_KEY not set, returning placeholder');
-      const placeholderImages = Array(count).fill(null).map((_, i) => ({
-        url: `https://placehold.co/${size}/6366F1/FFFFFF?text=${encodeURIComponent(topic || 'Image')}`,
-        type: imageType,
-        prompt: customPrompt || topic
-      }));
-      return NextResponse.json({ images: placeholderImages, fallback: true });
+
+      const placeholderImages = Array(parsedCount)
+        .fill(null)
+        .map((_, i) => ({
+          url: `https://placehold.co/${size}/6366F1/FFFFFF?text=${encodeURIComponent(topic || 'Image')}`,
+          type: imageType,
+          prompt: customPrompt || topic
+        }));
+
+      return NextResponse.json({ 
+        images: placeholderImages, 
+        fallback: true 
+      });
     }
 
-    console.log(`🎨 Generating ${count} ${imageType} image(s) for: "${topic || customPrompt}"`);
+    console.log(
+      `🎨 Generating ${parsedCount} ${imageType} image(s) for: "${topic || customPrompt}"`
+    );
 
     // Parse size
     const [width, height] = size.split('x').map(Number);
 
     // Build prompts
     const prompts: string[] = [];
-    for (let i = 0; i < count; i++) {
+
+    for (let i = 0; i < parsedCount; i++) {
       if (customPrompt) {
         prompts.push(customPrompt);
       } else {
-        prompts.push(buildImagePrompt(topic, imageType, slideTitle, slideContent));
+        prompts.push(
+          buildImagePrompt(
+            topic,
+            imageType,
+            slideTitle,
+            slideContent
+          )
+        );
       }
     }
 
     // Use OpenAI SDK for Nebius
     const OpenAI = (await import('openai')).default;
+
     const client = new OpenAI({
       baseURL: NEBIUS_BASE_URL,
       apiKey: NEBIUS_API_KEY,
@@ -186,6 +219,7 @@ export async function POST(request: NextRequest) {
             model: "black-forest-labs/flux-dev",
             prompt: prompt,
             response_format: "url",
+
             // @ts-ignore - Nebius-specific parameters
             width: width,
             height: height,
@@ -203,8 +237,13 @@ export async function POST(request: NextRequest) {
             prompt: prompt,
             success: true
           };
+
         } catch (error: any) {
-          console.error(`❌ Error generating image ${index + 1}:`, error.message);
+          console.error(
+            `❌ Error generating image ${index + 1}:`,
+            error.message
+          );
+
           return {
             url: `https://placehold.co/${size}/6366F1/FFFFFF?text=${encodeURIComponent('Generation+Failed')}`,
             type: imageType,
@@ -217,33 +256,25 @@ export async function POST(request: NextRequest) {
     );
 
     const successCount = imageResults.filter(r => r.success).length;
-    console.log(`✅ Generated ${successCount}/${count} images successfully`);
 
-    return NextResponse.json({ 
+    console.log(
+      `✅ Generated ${successCount}/${parsedCount} images successfully`
+    );
+
+    return Response.json({ 
       images: imageResults,
-      recommendations: slideType ? SLIDE_TYPE_RECOMMENDATIONS[slideType] : undefined
+      recommendations: slideType
+        ? SLIDE_TYPE_RECOMMENDATIONS[slideType]
+        : undefined
     });
 
   } catch (error: any) {
     console.error('❌ Image generation API error:', error);
-    return NextResponse.json(
+
+    return Response.json(
       { error: error.message || 'Failed to generate images' },
       { status: 500 }
     );
   }
 }
 
-// GET endpoint to get image type recommendations
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const slideType = searchParams.get('slideType');
-
-  return NextResponse.json({
-    imageTypes: Object.keys(IMAGE_TYPES),
-    recommendations: slideType ? SLIDE_TYPE_RECOMMENDATIONS[slideType] : SLIDE_TYPE_RECOMMENDATIONS,
-    typeDescriptions: Object.entries(IMAGE_TYPES).map(([key, value]) => ({
-      type: key,
-      style: value.style
-    }))
-  });
-}

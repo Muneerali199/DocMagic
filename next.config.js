@@ -2,7 +2,7 @@ import withPWACore from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
 images: {
     unoptimized: false,
@@ -40,7 +40,7 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
     scrollRestoration: true,
     workerThreads: true,
   },

@@ -53,7 +53,9 @@ export const letterGenerationSchema = z.object({
 });
 
 export function sanitizeHtml(input: string): string {
+  if (!input) return '';
   return input
+    .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
@@ -62,7 +64,38 @@ export function sanitizeHtml(input: string): string {
 }
 
 export function sanitizeInput(input: string): string {
+  if (!input) return '';
   return input.trim().slice(0, 10000);
+}
+
+/**
+ * Recursively sanitizes all string properties in an object or array.
+ * Useful for processing entire request bodies or nested data structures.
+ */
+export function sanitizeObject<T>(data: T): T {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (typeof data === 'string') {
+    return sanitizeHtml(data) as unknown as T;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeObject(item)) as unknown as T;
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    const result: any = {};
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        result[key] = sanitizeObject((data as any)[key]);
+      }
+    }
+    return result as T;
+  }
+
+  return data;
 }
 
 export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): T {

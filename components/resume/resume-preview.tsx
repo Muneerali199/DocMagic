@@ -9,6 +9,7 @@ import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, UnderlineType } from 'docx';
 import { saveAs } from 'file-saver';
 import { RESUME_TEMPLATES } from '@/lib/resume-template-data';
+import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 
 interface ResumeData {
   name?: string;
@@ -75,6 +76,7 @@ interface ResumePreviewProps {
 export interface ResumePreviewRef {
   exportToPDF: () => Promise<void>;
   exportToWord: () => void;
+  exportToLaTeX: () => Promise<void>;
   toggleEdit: () => void;
   isEditing: boolean;
 }
@@ -583,6 +585,26 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     }
   };
 
+  const exportToLaTeX = async () => {
+    try {
+      setIsExporting(true);
+      await exportToLaTeXFile(safeResume as any);
+      toast({
+        title: `${isCV ? 'CV' : 'Resume'} exported to LaTeX!`,
+        description: `Your LaTeX source has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Error exporting to LaTeX:', error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting to LaTeX format.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
@@ -591,6 +613,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   useImperativeHandle(ref, () => ({
     exportToPDF,
     exportToWord,
+    exportToLaTeX,
     toggleEdit,
     isEditing,
   }));
@@ -1154,6 +1177,16 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               >
                 <FileText className="h-4 w-4" />
                 Word
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToLaTeX}
+                disabled={isExporting}
+                className="flex items-center gap-1"
+              >
+                <Code className="h-4 w-4" />
+                LaTeX
               </Button>
             </div>
             
@@ -1766,6 +1799,16 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             >
               {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {isExporting ? "Exporting..." : "Export PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToLaTeX}
+              disabled={isExporting}
+              className="flex items-center gap-1"
+            >
+              <Code className="h-4 w-4" />
+              LaTeX
             </Button>
           </div>
         )}
