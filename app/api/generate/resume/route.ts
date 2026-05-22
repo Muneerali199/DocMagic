@@ -11,6 +11,7 @@ import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/securit
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { withErrorHandling } from '@/lib/error-handler';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -95,7 +96,7 @@ Create realistic, relevant content based on the job description. Use action verb
   return JSON.parse(jsonMatch[0]);
 }
 
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
   const requestId = getRequestId(request.headers);
   const log = logger.withContext({ requestId });
   incrementRequestCount();
@@ -433,21 +434,9 @@ export async function POST(request: Request) {
     } else if (error.message?.includes('timeout')) {
       errorMessage = 'Request timeout';
       errorDetails = 'The request took too long. Please try again with a shorter prompt.';
-    } else if (error.message?.includes('JSON')) {
-      errorMessage = 'AI response parsing error';
-      errorDetails = 'The AI generated an invalid response. Please try rephrasing your input.';
-    } else if (error.message?.includes('network')) {
-      errorMessage = 'Network error';
-      errorDetails = 'Unable to connect to AI service. Please check your internet connection.';
-    }
-
-    return NextResponse.json(
-      {
-        error: errorMessage,
-        message: errorDetails,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      },
-      { status: 500 }
-    );
+    // Re-throw so the global error handler captures request context and stack trace
+    throw error;
   }
 }
+
+export const POST = withErrorHandling(postHandler);

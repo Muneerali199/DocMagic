@@ -79,6 +79,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@react-pdf/renderer": "^4.3.2",
+    "@sentry/nextjs": "^10.53.1",
     "@stripe/react-stripe-js": "^3.8.1",
     "@stripe/stripe-js": "^3.5.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",

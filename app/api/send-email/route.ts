@@ -8,6 +8,7 @@ import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/securit
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { withErrorHandling } from '@/lib/error-handler';
 
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,7 @@ const sendEmailSchema = z.object({
   }),
 });
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const requestId = getRequestId(request.headers);
   const log = logger.withContext({ requestId });
   incrementRequestCount();
@@ -254,3 +255,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withErrorHandling(postHandler);
