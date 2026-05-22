@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2 } from "lucide-react";
@@ -217,6 +217,11 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     aiContext?: { title?: string; company?: string; skills?: string; };
   }) => {
     const [enhancingIdx, setEnhancingIdx] = useState<number | null>(null);
+    const itemsRef = useRef(items);
+
+    useEffect(() => {
+      itemsRef.current = items;
+    }, [items]);
 
     function updateItem(idx: number, val: string) {
       if (enhancingIdx !== null) return;
@@ -269,13 +274,19 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
 
         const data = await response.json();
         if (data.enhancedBullet) {
-          if (items[idx] === originalBullet) {
-            const newItems = [...items];
+          if (itemsRef.current[idx] === originalBullet) {
+            const newItems = [...itemsRef.current];
             newItems[idx] = data.enhancedBullet;
             onChange(newItems);
             toast({
               title: "Enhancement successful",
               description: "Your bullet point has been enhanced with action-oriented metrics!",
+            });
+          } else {
+            toast({
+              title: "Bullet point was edited",
+              description: "The bullet was modified while enhancing. Enhancement result was discarded.",
+              variant: "destructive",
             });
           }
         } else {
