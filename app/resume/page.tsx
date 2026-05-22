@@ -2,6 +2,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { MobileResumeBuilder } from "@/components/resume/mobile-resume-builder";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useEffect, useState, Suspense } from "react";
 import { ResumeGeneratorSkeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
@@ -55,7 +56,9 @@ export default function ResumePage() {
             <ResumeGeneratorSkeleton />
           </div>
         }>
-          <ResumeContent />
+          <ErrorBoundary>
+            <ResumeContent />
+          </ErrorBoundary>
         </Suspense>
       </main>
     </div>
