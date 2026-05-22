@@ -6,7 +6,15 @@ import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink } from 'lucide-react';
+import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink, ChevronDown, FileCode } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ResumeFormEditor } from '@/components/resume-editor/form-editor';
 import { ResumeLatexEditor, generateLatexFromData } from '@/components/resume-editor/latex-editor';
 import { ResumeAIEditor } from '@/components/resume-editor/ai-editor';
@@ -329,6 +337,24 @@ export default function ResumeEditorContent() {
     }
   }, [resumeData]);
 
+  // Export as LaTeX (.tex file)
+  const handleExportLatex = useCallback(() => {
+    const latexCode = generateLatexFromData(resumeData, selectedTemplate);
+    const fileName = `${resumeData.name?.replace(/\s+/g, '_') || 'resume'}.tex`;
+    const blob = new Blob([latexCode], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded ${fileName} — open in Overleaf or any LaTeX editor to compile.`);
+    // Track engagement: download
+    trackEvent('download');
+  }, [resumeData, selectedTemplate]);
+
   // Show loading state while checking auth
   if (authLoading || isLoading) {
     return (
@@ -390,24 +416,56 @@ export default function ResumeEditorContent() {
               </>
             )}
           </Button>
-          <Button
-            size="sm"
-            className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
-            onClick={handleExportPdf}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
-              </>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleExportPdf}
+                disabled={isExporting}
+                className="gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-green-600" />
+                <div>
+                  <div className="font-medium">Export PDF</div>
+                  <div className="text-xs text-muted-foreground">Compiled via LaTeX engine</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleExportLatex}
+                className="gap-2 cursor-pointer"
+              >
+                <FileCode className="w-4 h-4 text-blue-600" />
+                <div>
+                  <div className="font-medium flex items-center gap-1">
+                    Export as LaTeX
+                    <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">⚡ Advanced</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">Download .tex for Overleaf</div>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
