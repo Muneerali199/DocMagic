@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Linkedin, Github, Globe, Mail, Phone, MapPin, Download, Edit, Check, X, Sparkles, FileText, Briefcase, GraduationCap, Code, Award, Link as LinkIcon, Loader2 } from "lucide-react";
@@ -218,10 +218,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   }) => {
     const [enhancingIdx, setEnhancingIdx] = useState<number | null>(null);
     const itemsRef = useRef(items);
-
-    useEffect(() => {
-      itemsRef.current = items;
-    }, [items]);
+    itemsRef.current = items;
 
     function updateItem(idx: number, val: string) {
       if (enhancingIdx !== null) return;
