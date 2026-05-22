@@ -1,60 +1,23 @@
-import { z } from 'zod';
+/**
+ * lib/validation.ts — Fix #6 (XSS/SQLi) + Fix #17 (safe parse) + Fix #20 (limits)
+ */
+import { z, ZodSchema } from 'zod';
 
-const isValidEmailDomain = (email: string): boolean => {
-  // Only block obvious spam patterns (numeric-only QQ emails and suspicious numeric usernames)
-  if (/^\d+@qq\.com$/.test(email) || /^\d{10,}@/.test(email)) return false;
-  
-  // Allow all other valid email formats including custom domains
-  return true;
-};
+export const LIMITS = {
+  NAME_MAX: 200,
+  EMAIL_MAX: 254,
+  PASSWORD_MIN: 8,
+  PASSWORD_MAX: 128,
+  PROMPT_MIN: 10,
+  PROMPT_MAX: 5_000,
+  CONTENT_MAX: 10_000,
+  TITLE_MAX: 200,
+  DESCRIPTION_MAX: 2_000,
+  MAX_BODY_BYTES: 1_048_576,
+} as const;
 
-export const emailSchema = z
-  .string()
-  .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email address')
-  .max(254, 'Email address is too long')
-  .refine(isValidEmailDomain, {
-    message: 'Please enter a valid email address'
-  });
-
-export const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must be less than 128 characters')
-  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number');
-
-export const nameSchema = z
-  .string()
-  .min(1, 'Name is required')
-  .max(100, 'Name must be less than 100 characters')
-  .regex(/^[a-zA-Z0-9\s.'-]+$/, 'Name contains invalid characters');
-
-export const registrationSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema,
-});
-
-export const resumeGenerationSchema = z.object({
-  prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(5000, 'Prompt too long'),
-  name: nameSchema,
-  email: emailSchema,
-});
-
-export const presentationGenerationSchema = z.object({
-  topic: z.string().min(3, 'Topic must be at least 3 characters').max(200, 'Topic too long'),
-  slides: z.number().min(1).max(50, 'Maximum 50 slides allowed'),
-  style: z.enum(['professional', 'creative', 'minimal', 'corporate']).optional(),
-});
-
-export const letterGenerationSchema = z.object({
-  type: z.enum(['cover', 'recommendation', 'resignation', 'complaint', 'thank-you']),
-  recipient: nameSchema,
-  content: z.string().min(50, 'Content must be at least 50 characters').max(3000, 'Content too long'),
-});
-
-export function sanitizeHtml(input: string): string {
-  if (!input) return '';
-  return input
+export function sanitizeHtml(s: string): string {
+  return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -63,60 +26,100 @@ export function sanitizeHtml(input: string): string {
     .replace(/\//g, '&#x2F;');
 }
 
-export function sanitizeInput(input: string): string {
-  if (!input) return '';
-  return input.trim().slice(0, 10000);
+export function sanitizeInput(s: string, max = LIMITS.CONTENT_MAX): string {
+  return s.replace(/\0/g, '').replace(/\r\n/g, '\n').trim().slice(0, max);
 }
 
-/**
- * Recursively sanitizes all string properties in an object or array.
- * Useful for processing entire request bodies or nested data structures.
- */
-export function sanitizeObject<T>(data: T): T {
-  if (data === null || data === undefined) {
-    return data;
-  }
-
-  if (typeof data === 'string') {
-    return sanitizeHtml(data) as unknown as T;
-  }
-
-  if (Array.isArray(data)) {
-    return data.map((item) => sanitizeObject(item)) as unknown as T;
-  }
-
-  if (typeof data === 'object' && data !== null) {
-    const result: any = {};
-    for (const key in data) {
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        result[key] = sanitizeObject((data as any)[key]);
-      }
-    }
-    return result as T;
-  }
-
-  return data;
-}
-
-export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): T {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    throw new Error('Validation failed: ' + result.error.errors.map(e => e.message).join(', '));
-  }
-  return result.data;
-}
-
-export function detectSqlInjection(input: string): boolean {
-  const sqlPatterns = [
-    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC)\b.*['";])/i,
+export function detectSqlInjection(s: string): boolean {
+  return [
+    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|TRUNCATE)\b.*['";-])/i,
     /(\bUNION\s+(ALL\s+)?SELECT\b)/i,
-    /(;--|\/\*|\*\/|--\s|#)/,
-    /(0x[0-9a-f]+)/i,
-    /(\'\s*(OR|AND)\s*\'\s*=\s*\')|(\'\s*(OR|AND)\s*\d+\s*=\s*\d+)/i,
-  ];
-  return sqlPatterns.some(pattern => pattern.test(input));
+    /(;--|\/\*|\*\/|--\s|#\s)/,
+    /(\bOR\b\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i,
+    /WAITFOR\s+DELAY/i,
+  ].some((p) => p.test(s));
 }
 
-export function generateRateLimitKey(ip: string, endpoint: string): string {
-  return ip + ':' + endpoint;
+export const emailSchema = z
+  .string()
+  .email()
+  .max(LIMITS.EMAIL_MAX)
+  .refine((e) => /^[^@]+@[^@]+\.[^@]+$/.test(e));
+
+export const passwordSchema = z
+  .string()
+  .min(LIMITS.PASSWORD_MIN, `Min ${LIMITS.PASSWORD_MIN} chars`)
+  .max(LIMITS.PASSWORD_MAX)
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Needs upper, lower, digit');
+
+export const nameSchema = z
+  .string()
+  .min(1)
+  .max(LIMITS.NAME_MAX)
+  .regex(/^[a-zA-Z0-9\s.'"\\-]+$/, 'Invalid chars');
+
+export const promptSchema = z
+  .string()
+  .min(LIMITS.PROMPT_MIN, `Min ${LIMITS.PROMPT_MIN} chars`)
+  .max(LIMITS.PROMPT_MAX);
+
+export const registrationSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+export const resumeGenerationSchema = z.object({
+  prompt: promptSchema,
+  name: nameSchema,
+  email: emailSchema,
+});
+
+export const presentationGenerationSchema = z.object({
+  topic: z.string().min(3).max(200),
+  slides: z.number().int().min(1).max(50),
+  style: z.enum(['professional', 'creative', 'minimal', 'corporate']).optional(),
+});
+
+export const letterGenerationSchema = z.object({
+  type: z.enum(['cover', 'recommendation', 'resignation', 'complaint', 'thank-you']),
+  recipient: nameSchema,
+  content: z.string().min(50).max(LIMITS.DESCRIPTION_MAX),
+});
+
+export const documentCreateSchema = z.object({
+  title: z.string().min(1).max(LIMITS.TITLE_MAX),
+  documentType: z.string().min(1).max(50),
+  content: z.unknown().optional(),
+  metadata: z.record(z.unknown()).optional(),
+  sections: z.array(z.unknown()).max(100).optional(),
+});
+
+export const paginationSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export async function safeParseBody<T>(request: Request, schema: ZodSchema<T>): Promise<T> {
+  const ct = request.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) throw new Error('Content-Type must be application/json');
+  const cl = Number(request.headers.get('content-length') ?? 0);
+  if (cl > LIMITS.MAX_BODY_BYTES) throw new Error('Request body too large');
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    throw new Error('Invalid JSON body');
+  }
+  const r = schema.safeParse(raw);
+  if (!r.success)
+    throw new Error('Validation failed: ' + r.error.errors.map((e) => e.message).join(', '));
+  return r.data;
+}
+
+export function validateAndSanitize<T>(schema: ZodSchema<T>, data: unknown): T {
+  const r = schema.safeParse(data);
+  if (!r.success)
+    throw new Error('Validation failed: ' + r.error.errors.map((e) => e.message).join(', '));
+  return r.data;
 }
