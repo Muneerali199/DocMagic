@@ -434,6 +434,7 @@ async function postHandler(request: Request) {
     } else if (error.message?.includes('timeout')) {
       errorMessage = 'Request timeout';
       errorDetails = 'The request took too long. Please try again with a shorter prompt.';
+    }
     // Re-throw so the global error handler captures request context and stack trace
     throw error;
   }
