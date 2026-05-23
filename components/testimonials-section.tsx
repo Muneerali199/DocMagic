@@ -2,8 +2,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Star, Quote, Heart, Users, Trophy } from "lucide-react";
-import { useState, useEffect } from "react";
-  import {FaCircleChevronRight } from "react-icons/fa6";
+import { useState, useEffect, useRef } from "react";
+import { FaCircleChevronRight } from "react-icons/fa6";
 
 export function TestimonialsSection() {
 
@@ -19,8 +19,18 @@ export function TestimonialsSection() {
     const autoSlide = true; // Set to true to enable auto sliding
     const autoSlideInterval = 5000; // Interval in milliseconds for auto sliding
 
+    const reducedMotionRef = useRef(false);
+
     useEffect(() => {
-        if (autoSlide) {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        reducedMotionRef.current = mq.matches;
+        const handler = (e: MediaQueryListEvent) => { reducedMotionRef.current = e.matches; };
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    useEffect(() => {
+        if (autoSlide && !reducedMotionRef.current) {
             const slideInterval = setInterval(nextSlide, autoSlideInterval);
             return () => clearInterval(slideInterval);
         }
@@ -71,18 +81,20 @@ export function TestimonialsSection() {
         {/* Enhanced testimonials carousel */}
         <div className="relative">
           {/* Testimonial Cards Container */}
-          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
+          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0" aria-live="polite" aria-label="Testimonial carousel">
             {testimonials.map((testimonial, i) => {
-              let positionClass = 'translate-x-full opacity-0'; // Off-screen to the right
-              if (i === currentIndex) {
-                positionClass = 'translate-x-0 opacity-100'; // Active slide
+              const isActive = i === currentIndex;
+              let positionClass = 'translate-x-full opacity-0';
+              if (isActive) {
+                positionClass = 'translate-x-0 opacity-100';
               } else if (i === (currentIndex - 1 + testimonials.length) % testimonials.length) {
-                positionClass = '-translate-x-full opacity-0'; // Off-screen to the left
+                positionClass = '-translate-x-full opacity-0';
               }
 
               return (
               <div 
                 key={i} 
+                aria-hidden={!isActive}
                 className={`group w-full absolute flex items-center justify-center transition-all ease-in-out duration-500 transform ${positionClass}`}
                 style={{
                   transitionProperty: 'transform, opacity',

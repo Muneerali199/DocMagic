@@ -7,7 +7,7 @@ import { Sparkles, ArrowRight, Zap, Star, Wand2, Clock, Users, Trophy } from "lu
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">
+    <section aria-label="Hero" className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">
       {/* Enhanced animated background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20"></div>
       <div className="absolute inset-0 mesh-gradient-alt opacity-20"></div>
@@ -227,6 +227,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

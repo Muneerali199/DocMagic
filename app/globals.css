@@ -136,7 +136,7 @@
     }
 
     .bolt-gradient-text {
-        background: linear-gradient(135deg, #2563eb 0%, #ff0000 25%, #1e40af 50%, #1e3a8a 75%, #312e81 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #f59e0b 25%, #1e40af 50%, #1e3a8a 75%, #312e81 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -1358,10 +1358,15 @@ img {
     .animate-float-gentle,
     .animate-glow-pulse,
     .animate-text-glow,
-    .animate-scroll-to-left {
+    .animate-scroll-to-left,
+    .bolt-gradient-text {
         animation: none;
         opacity: 1;
         transform: none;
+    }
+
+    .bolt-gradient-text {
+        background-size: 100% 100%;
     }
 }
 
@@ -2886,7 +2891,32 @@ section {
    ============================================ */
 
 /* ============================================
-   LATEX PREVIEW - COMPUTER MODERN FONT SYSTEM
+   SKIP-TO-CONTENT — WCAG 2.4.1 Bypass Blocks
+   ============================================ */
+
+.skip-to-content {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 9999;
+    padding: 1rem 1.5rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 0 0 0.5rem 0;
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 2px;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINT SYSTEM
+   DraftDeckAI - Breakpoint-aware section reflow
    ============================================ */
 
 /* Computer Modern Roman (Serif) - Main text font */

@@ -59,11 +59,14 @@ export default async function Home() {
 
   return (
     <div id="top" className="min-h-screen flex flex-col">
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
       <SiteHeader />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <HeroSection />
         {/* Enhanced AI-Powered Features Showcase */}
-        <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
+        <section aria-label="AI-Powered Features" className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
           {/* Enhanced Background Elements - Matching other sections */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="mesh-gradient opacity-40"></div>

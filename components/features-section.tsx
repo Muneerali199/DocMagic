@@ -2,7 +2,7 @@ import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, Book
 
 export function FeaturesSection() {
   return (
-    <div className="py-12 sm:py-20 md:py-28 lg:py-36 relative overflow-hidden section-header" id="how-it-works">
+    <section aria-label="How It Works" className="py-12 sm:py-20 md:py-28 lg:py-36 relative overflow-hidden section-header" id="how-it-works">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 mesh-gradient opacity-25"></div>
       <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
@@ -84,7 +84,7 @@ export function FeaturesSection() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
