@@ -51,9 +51,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const language = searchParams.get('language') ?? undefined
     const minQuality = Number(searchParams.get('minQuality') ?? 0)
     
-    // Pagination parameters
-    const page = Number(searchParams.get('page') ?? 1)
-    const limit = Number(searchParams.get('limit') ?? 10)
+    // Pagination parameters with bounds: page >= 1, limit clamped to 1..100
+    const page = Math.max(1, Number(searchParams.get('page')) || 1)
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 10))
     const offset = (page - 1) * limit
 
     if (!query.trim()) {
