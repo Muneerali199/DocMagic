@@ -98,12 +98,12 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Enhanced CTA Buttons */}
+          {/* Enhanced CTA Buttons with micro-interactions */}
           <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full max-w-2xl mx-auto">
             <Button
               asChild
               size="lg"
-              className="bolt-gradient text-white font-bold px-10 sm:px-12 py-5 sm:py-6 rounded-full hover:scale-110 focus:ring-4 focus:ring-blue-400 focus:outline-none transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden shadow-2xl text-base sm:text-xl group"
+              className="bolt-gradient text-white font-bold px-10 sm:px-12 py-5 sm:py-6 rounded-full hover:scale-110 focus:ring-4 focus:ring-blue-400 focus:outline-none transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden shadow-2xl text-base sm:text-xl group micro-active-press"
               style={{ animation: "gradient-shift 4s ease infinite" }}
               aria-label="Start Creating Documents"
             >
@@ -125,12 +125,12 @@ export function HeroSection() {
                 />
               </Link>
             </Button>
-            {/*Enhanced watch demo button*/}
+            {/*Enhanced watch demo button with micro-interactions*/}
               <Button
              asChild
              variant="outline"
              size="lg"
-            className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group
+            className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group micro-active-press
              bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
              hover:from-red-700 hover:to-neutral-900
              hover:scale-110 hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:z-20"
@@ -171,7 +171,7 @@ export function HeroSection() {
             <TooltipWithShortcut content="Over 10,000 professional documents successfully created by our users worldwide">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-400/30 to-orange-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-coral hover-glow-coral p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 sunset-glow animate-fade-in-up delay-400 will-change-transform cursor-pointer border-2 border-amber-200/40 dark:border-amber-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-coral hover-glow-coral p-8 sm:p-10 rounded-3xl hover:scale-110 micro-hover-lift sunset-glow animate-fade-in-up delay-400 will-change-transform cursor-pointer border-2 border-amber-200/40 dark:border-amber-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={10000} suffix="+" />
@@ -190,7 +190,7 @@ export function HeroSection() {
             <TooltipWithShortcut content="98% of our users successfully achieve their goals with DraftDeckAI-generated documents">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/30 to-cyan-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-sky hover-glow-sky p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 bolt-glow animate-fade-in-up delay-500 will-change-transform cursor-pointer border-2 border-blue-200/40 dark:border-blue-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-sky hover-glow-sky p-8 sm:p-10 rounded-3xl hover:scale-110 micro-hover-lift bolt-glow animate-fade-in-up delay-500 will-change-transform cursor-pointer border-2 border-blue-200/40 dark:border-blue-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={98} suffix="%" />
@@ -209,7 +209,7 @@ export function HeroSection() {
             <TooltipWithShortcut content="Average 5-star rating from thousands of satisfied users across all platforms">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/30 to-teal-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-mint hover-glow-mint p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 ocean-glow animate-fade-in-up delay-600 will-change-transform cursor-pointer border-2 border-emerald-200/40 dark:border-emerald-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-mint hover-glow-mint p-8 sm:p-10 rounded-3xl hover:scale-110 micro-hover-lift ocean-glow animate-fade-in-up delay-600 will-change-transform cursor-pointer border-2 border-emerald-200/40 dark:border-emerald-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={5} suffix="★" />

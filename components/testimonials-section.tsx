@@ -35,8 +35,9 @@ export function TestimonialsSection() {
       <div className="floating-orb w-56 h-56 sm:w-80 sm:h-80 cosmic-gradient opacity-15 top-1/2 left-1/4"></div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 transition-all duration-300">
+        <ScrollReveal animation="fade-in-up">
+          <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 micro-hover-lift">
             <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
             <span className="text-base sm:text-lg font-bold bolt-gradient-text">Customer Love</span>
             <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
@@ -67,6 +68,7 @@ export function TestimonialsSection() {
             </div>
           </div>
         </div>
+        </ScrollReveal>
 
         {/* Enhanced testimonials carousel */}
         <div className="relative">
@@ -143,7 +145,7 @@ export function TestimonialsSection() {
           {/* Navigation Buttons - Improved positioning */}
           <div className="flex items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
             <button
-              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl touch-manipulation"
+              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 micro-active-press shadow-lg hover:shadow-xl touch-manipulation micro-focus-ring"
               onClick={prevSlide}
               aria-label="Previous testimonial"
             >
@@ -163,7 +165,7 @@ export function TestimonialsSection() {
             </div>
 
             <button
-              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-xl touch-manipulation"
+              className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 micro-active-press shadow-lg hover:shadow-xl touch-manipulation micro-focus-ring"
               onClick={nextSlide}
               aria-label="Next testimonial"
             >
@@ -173,13 +175,15 @@ export function TestimonialsSection() {
         </div>
 
         {/* Enhanced bottom CTA */}
-        <div className="text-center mt-16 sm:mt-20">
-          <div className="inline-flex items-center gap-3 sm:gap-4 px-6 sm:px-8 py-3 sm:py-4 rounded-full glass-effect border-2 border-purple-200/40 dark:border-purple-500/30 hover:scale-105 transition-transform duration-300 shadow-lg hover:shadow-xl">
-            <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
-            <span className="text-sm sm:text-base font-bold text-purple-700 dark:text-purple-300">Join our happy community</span>
-            <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
+        <ScrollReveal animation="scale-in">
+          <div className="text-center mt-16 sm:mt-20">
+            <div className="inline-flex items-center gap-3 sm:gap-4 px-6 sm:px-8 py-3 sm:py-4 rounded-full glass-effect border-2 border-purple-200/40 dark:border-purple-500/30 hover:scale-105 micro-hover-lift shadow-lg hover:shadow-xl">
+              <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
+              <span className="text-sm sm:text-base font-bold text-purple-700 dark:text-purple-300">Join our happy community</span>
+              <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

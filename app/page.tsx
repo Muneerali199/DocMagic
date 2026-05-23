@@ -114,11 +114,11 @@ export default async function Home() {
               <TooltipWithShortcut content="Create ATS-optimized resumes with AI guidance and real-time optimization">
                 <Link
                   href="/resume"
-                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 hover:scale-105 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl shadow-lg hover:shadow-amber-200/20"
+                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 hover:scale-105 micro-hover-lift backdrop-blur-xl shadow-lg hover:shadow-amber-200/20 micro-focus-ring"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-500/8 to-orange-500/8 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 sunset-gradient rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg ring-2 ring-white/20">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 sunset-gradient rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 group-hover:rotate-3 micro-hover-lift shadow-lg ring-2 ring-white/20">
                       <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                     </div>
                     <h3 className="text-lg font-bold mb-2 group-hover:bolt-gradient-text transition-all duration-300 text-gray-800 dark:text-white">
@@ -139,7 +139,7 @@ export default async function Home() {
               <TooltipWithShortcut content="Create stunning presentations with AI-generated content, charts, and shareable links">
                 <Link
                   href="/presentation"
-                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl shadow-lg hover:shadow-purple-200/20"
+                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 micro-hover-lift backdrop-blur-xl shadow-lg hover:shadow-purple-200/20 micro-focus-ring"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/8 to-pink-500/8 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
@@ -164,7 +164,7 @@ export default async function Home() {
               <TooltipWithShortcut content="Draft professional letters and cover letters with perfect tone and formatting">
                 <Link
                   href="/letter"
-                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl shadow-lg hover:shadow-blue-200/20"
+                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 micro-hover-lift backdrop-blur-xl shadow-lg hover:shadow-blue-200/20 micro-focus-ring"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-cyan-500/8 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
@@ -189,7 +189,7 @@ export default async function Home() {
               <TooltipWithShortcut content="Build comprehensive academic CVs with research focus and detailed formatting">
                 <Link
                   href="/cv"
-                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-mint hover-mint border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl shadow-lg hover:shadow-emerald-200/20"
+                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl card-mint hover-mint border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 micro-hover-lift backdrop-blur-xl shadow-lg hover:shadow-emerald-200/20 micro-focus-ring"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/8 to-teal-500/8 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
@@ -214,7 +214,7 @@ export default async function Home() {
               <TooltipWithShortcut content="Generate structured documents with AI - proposals, reports, research papers, and specs">
                 <Link
                   href="/documents"
-                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border-2 border-indigo-200/50 hover:border-indigo-300/70 hover:scale-105 hover:shadow-2xl transition-all duration-500 backdrop-blur-xl shadow-lg hover:shadow-indigo-200/20"
+                  className="group relative flex flex-col p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border-2 border-indigo-200/50 hover:border-indigo-300/70 hover:scale-105 micro-hover-lift backdrop-blur-xl shadow-lg hover:shadow-indigo-200/20 micro-focus-ring"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/8 to-purple-500/8 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative z-10">
@@ -241,9 +241,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Access premium templates and manage your document library">
                 <Link
                   href="/templates"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 cosmic-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 cosmic-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <BookOpen className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">Templates</span>
@@ -254,9 +254,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Manage your profile and track document creation analytics">
                 <Link
                   href="/profile"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bolt-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bolt-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">Profile</span>
@@ -267,9 +267,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Explore flexible pricing plans for individuals and teams">
                 <Link
                   href="/pricing"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-mint hover-mint border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-mint hover-mint border-2 border-emerald-200/50 hover:border-emerald-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 forest-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 forest-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <Star className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">Pricing</span>
@@ -280,9 +280,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Learn about our mission to democratize document creation">
                 <Link
                   href="/about"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 sunset-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 sunset-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">About</span>
@@ -293,9 +293,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Get support and connect with our community">
                 <Link
                   href="/contact"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-sky hover-sky border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 ocean-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 ocean-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <HelpCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">Support</span>
@@ -306,9 +306,9 @@ export default async function Home() {
               <TooltipWithShortcut content="Access comprehensive guides and API documentation">
                 <Link
                   href="/documentation"
-                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 transition-all duration-300 backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center"
+                  className="group flex flex-col items-center p-3 sm:p-4 rounded-xl card-lavender hover-lavender border-2 border-purple-200/50 hover:border-purple-300/70 hover:scale-105 micro-hover-lift backdrop-blur-lg shadow-md hover:shadow-lg min-h-[100px] justify-center micro-focus-ring"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bolt-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-md ring-2 ring-white/20">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bolt-gradient rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 micro-hover-lift shadow-md ring-2 ring-white/20">
                     <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <span className="text-sm font-medium text-center text-gray-800 dark:text-white">Docs</span>
@@ -319,7 +319,7 @@ export default async function Home() {
 
             {/* Call to Action */}
             <div className="text-center mt-12">
-              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 transition-all duration-300 cursor-pointer backdrop-blur-lg shadow-lg hover:shadow-blue-200/20">
+              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full glass-effect border-2 border-blue-200/50 hover:border-blue-300/70 hover:scale-105 micro-hover-lift cursor-pointer backdrop-blur-lg shadow-lg hover:shadow-blue-200/20 micro-focus-ring">
                 <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
                 <span className="text-lg font-semibold bolt-gradient-text">Ready to create your first document?</span>
                 <ArrowRight className="h-5 w-5 text-purple-500 group-hover:translate-x-1 transition-transform" />
