@@ -1,9 +1,17 @@
 const { TextDecoder, TextEncoder } = require('node:util');
 const { webcrypto } = require('node:crypto');
+const {
+  ReadableStream,
+  TransformStream,
+  WritableStream,
+} = require('node:stream/web');
 
 if (!globalThis.TextEncoder) globalThis.TextEncoder = TextEncoder;
 if (!globalThis.TextDecoder) globalThis.TextDecoder = TextDecoder;
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
+if (!globalThis.ReadableStream) globalThis.ReadableStream = ReadableStream;
+if (!globalThis.TransformStream) globalThis.TransformStream = TransformStream;
+if (!globalThis.WritableStream) globalThis.WritableStream = WritableStream;
 
 const undici = require('undici');
 
