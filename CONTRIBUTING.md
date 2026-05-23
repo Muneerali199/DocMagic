@@ -219,6 +219,25 @@ New to the project? We've got you covered! Here's how to find the perfect first 
 - **Need guidance?** Contact mentors and Project Admins via Discord, LinkedIn, or comment on the issue
 
 ---
+## 🚀 Contributor Quick-Start Matrix
+
+New contributors can use this quick matrix to identify suitable contribution areas based on their interests and skills.
+
+| Area | Skills Needed | Relevant Folders | Example First Tasks | Expected Output |
+|------|----------------|-----------------|--------------------|----------------|
+| Frontend | React, Tailwind CSS | `src/components` `src/pages` | Fix UI bugs, improve layouts | Improved UI experience |
+| Backend | Node.js, APIs | `server` `api` | Add API routes, improve validation | Functional backend updates |
+| Documentation | Markdown, Writing | `README.md` `docs/` | Improve guides, fix typos | Updated documentation |
+| Testing | Debugging, QA | `tests` | Add or improve test cases | Better reliability |
+
+### 🌱 Suggested Beginner-Friendly Contributions
+
+- Improve documentation clarity
+- Fix small UI alignment issues
+- Add missing validations
+- Improve error messages
+- Add simple test cases
+
 
 ## 🤝 Ways to Contribute
 
