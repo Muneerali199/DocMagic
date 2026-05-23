@@ -15,6 +15,7 @@ const config = {
   testEnvironment: 'jsdom',
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+  setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: ['lib/**/*.ts', 'app/api/**/*.ts', '!**/__tests__/**'],
 };
