@@ -1,4 +1,13 @@
-import nextJest from 'next/jest.js';
+import { webcrypto } from 'node:crypto';
+
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+  });
+}
+
+const { default: nextJest } = await import('next/jest.js');
 
 const createJestConfig = nextJest({ dir: './' });
 
