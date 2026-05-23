@@ -12,7 +12,7 @@ export class AppError extends Error {
     public readonly message: string,
     public readonly statusCode = 500,
     public readonly code = 'INTERNAL_ERROR',
-  ) { super(message); this.name = 'AppError'; Object.setPrototypeOf(this,AppError.prototype); }
+  ) { super(message); this.name = new.target.name; Object.setPrototypeOf(this,new.target.prototype); }
 }
 export class ValidationError extends AppError {
   constructor(m: string) { super(m, 400, 'VALIDATION_ERROR'); this.name='ValidationError'; }
