@@ -6,6 +6,7 @@ import { generatePresentation, generatePresentationOutline } from '@/lib/gemini'
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -36,25 +37,18 @@ export async function POST(request: NextRequest) {
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
-    const body = await request.json();
-    const { prompt, pageCount = 8, template } = body;
-
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    let prompt, validatedPageCount, template;
+    try {
+      const body = await safeParseBody(request, presentationGenerationSchema);
+      prompt = body.prompt;
+      validatedPageCount = body.pageCount;
+      template = body.template;
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return NextResponse.json(
-        { error: 'Missing or invalid prompt' },
-        { status: 400 }
-      );
-    }
-
-    // Validate pageCount
-    const validatedPageCount = Number(pageCount);
-    if (
-      !Number.isInteger(validatedPageCount) ||
-      validatedPageCount < 1 ||
-      validatedPageCount > 100
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
+        { error: validationError.message, details: validationError.details },
         { status: 400 }
       );
     }

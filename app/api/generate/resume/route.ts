@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput, sanitizeObject } from '@/lib/validation';
+import { resumeGenerationSchema, detectSqlInjection, sanitizeObject, safeParseBody, RequestValidationError } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
@@ -260,27 +260,18 @@ async function postHandler(request: Request) {
       );
     }
 
-    // Validate request body exists
-    let rawBody;
-    try {
-      rawBody = await request.json();
-    } catch (parseError) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
-    // Validate and sanitize input
     let prompt, name, email;
     try {
-      const validatedData = validateAndSanitize(resumeGenerationSchema, rawBody);
+      const validatedData = await safeParseBody(request, resumeGenerationSchema);
       prompt = validatedData.prompt;
       name = validatedData.name;
       email = validatedData.email;
-    } catch (validationError: any) {
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return NextResponse.json(
-        { error: 'Invalid input data', details: validationError.message },
+        { error: validationError.message, details: validationError.details },
         { status: 400 }
       );
     }
