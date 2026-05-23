@@ -361,7 +361,7 @@ function ResumeBuilderContent() {
                       ✏️ Editing Template: {templateId}
                     </p>
                     <p className="text-xs text-gray-600">Click any text to edit directly • Changes save automatically</p>
-                    <p className="text-xs text-blue-600 font-mono mt-1">DEBUG: template="{templateId}"</p>
+          
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

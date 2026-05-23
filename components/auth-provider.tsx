@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -31,18 +32,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('Error getting session:', error);
+          logger.error('Error getting session:', error);
           setUser(null);
         } else {
           // Set user from session
           const currentUser = session?.user ?? null;
           setUser(currentUser);
           if (currentUser) {
-            console.log('Initial session loaded for:', currentUser.email);
+            logger.debug("Initial session loaded");
           }
         }
       } catch (error) {
-        console.error('Error in getInitialSession:', error);
+        logger.error('Error in getInitialSession:', error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -54,20 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        logger.debug('Auth state changed:', event);
         setUser(session?.user ?? null);
         setLoading(false);
 
         // Handle different auth events
         if (event === 'SIGNED_IN') {
-          console.log('User signed in:', session?.user?.email);
+          logger.debug('User signed in');
           router.refresh();
         } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+          logger.info('User signed out');
           router.push('/');
           router.refresh();
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed for:', session?.user?.email);
+          logger.debug('Token refreshed');
         }
       }
     );
@@ -81,10 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error signing out:', error);
+        logger.error('Error signing out:', error);
       }
     } catch (error) {
-      console.error('Error in signOut:', error);
+      logger.error('Error in signOut:', error);
     }
   };
 

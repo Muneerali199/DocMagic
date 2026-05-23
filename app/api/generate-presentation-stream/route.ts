@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
     
     if (!hasUnlimitedCredits && creditsRemaining < estimatedCreditCost) {
       return Response.json(
-        { 
+        {
           error: 'Not enough credits',
           message: `You need ${estimatedCreditCost} credits to generate a ${slideCount}-slide presentation. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
@@ -122,8 +123,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Atomically reserve credits BEFORE generation to prevent the
+    // TOCTOU race documented in issue #477. We refund inside the streaming
+    // task below if generation fails.
+    if (!hasUnlimitedCredits) {
+      const reserved = await reserveCredits(
+        supabaseAdmin,
+        user.id,
+        userCredits.credits_used,
+        estimatedCreditCost
+      );
+      if (!reserved) {
+        return Response.json(
+          creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
+          { status: 402 }
+        );
+      }
+      userCredits = reserved;
+    }
+
     console.log(`🎨 Generating ENHANCED presentation: "${topic}" for ${audience}`);
-    console.log(`💳 Will deduct ${estimatedCreditCost} credits for ${slideCount} slides`);
+    console.log(`💳 Reserved ${estimatedCreditCost} credits for ${slideCount} slides`);
 
     // Create the ENHANCED prompt for 10x better presentations
     const prompt = createEnhancedPresentationPrompt(
@@ -138,39 +158,9 @@ export async function POST(req: NextRequest) {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    // ✅ DEDUCT CREDITS BEFORE STARTING GENERATION
-    if (!hasUnlimitedCredits) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({ 
-          credits_used: userCredits.credits_used + estimatedCreditCost,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
-      } else {
-        // Log the usage
-        await supabaseAdmin
-          .from('credit_usage_log')
-          .insert({
-            user_id: user.id,
-            action: 'presentation',
-            credits_used: estimatedCreditCost,
-            metadata: { 
-              slideCount,
-              topic,
-              audience
-            }
-          });
-        
-        console.log(`💳 Deducted ${estimatedCreditCost} credits for ${slideCount}-slide presentation`);
-      }
-    }
-
     // Start streaming in the background
     (async () => {
+      let streamSucceeded = false;
       try {
         console.log('📡 Starting Qwen3-235B stream with ENHANCED prompt...');
 
@@ -220,10 +210,33 @@ Never include explanatory text, just the slide content.`,
 
         console.log('✅ ENHANCED stream complete');
         console.log(`📊 Generated ${fullContent.length} characters`);
+        streamSucceeded = true;
+
+        // Log usage only after the stream finished successfully. Credits
+        // were already reserved atomically before generation started.
+        if (!hasUnlimitedCredits) {
+          const { error: logError } = await supabaseAdmin
+            .from('credit_usage_log')
+            .insert({
+              user_id: user.id,
+              action: 'presentation',
+              credits_used: estimatedCreditCost,
+              metadata: {
+                slideCount,
+                topic,
+                audience
+              }
+            });
+          if (logError) {
+            console.error('Failed to log credit usage:', logError);
+          } else {
+            console.log(`💳 Deducted ${estimatedCreditCost} credits for ${slideCount}-slide presentation`);
+          }
+        }
 
         // Send completion signal with credit info
         await writer.write(
-          encoder.encode(`data: ${JSON.stringify({ 
+          encoder.encode(`data: ${JSON.stringify({
             done: true,
             credits: {
               used: hasUnlimitedCredits ? 0 : estimatedCreditCost,
@@ -239,6 +252,14 @@ Never include explanatory text, just the slide content.`,
           )
         );
       } finally {
+        // If the stream never completed, refund the reservation so the
+        // user is not charged for content they did not receive.
+        if (!streamSucceeded && !hasUnlimitedCredits) {
+          const refunded = await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
+          if (!refunded) {
+            console.error(`Failed to refund ${estimatedCreditCost} credits after stream failure for user ${user.id}`);
+          }
+        }
         await writer.close();
       }
     })();

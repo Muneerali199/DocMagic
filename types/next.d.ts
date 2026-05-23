@@ -21,7 +21,10 @@ declare module 'next' {
   interface Metadata {
     title?: string;
     description?: string;
-    // Add other metadata properties as needed
+    alternates?: Record<string, any>;
+    openGraph?: Record<string, any>;
+    robots?: Record<string, any>;
+    twitter?: Record<string, any>;
   }
   
   interface PageProps {

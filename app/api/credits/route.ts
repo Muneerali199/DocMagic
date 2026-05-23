@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, getCreditsResetDate, shouldResetCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { reserveCredits } from '@/lib/credit-operations';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,8 +41,7 @@ export async function GET(request: Request) {
 
     // If no credits record, create one
     if (error?.code === 'PGRST116' || !credits) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
+      const resetDate = getCreditsResetDate();
 
       const { data: newCredits, error: insertError } = await supabase
         .from('user_credits')
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
           tier: 'free',
           credits_total: TIER_LIMITS.free,
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString(),
+          credits_reset_at: resetDate,
         })
         .select()
         .single();
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
           creditsUsed: 0,
           creditsRemaining: TIER_LIMITS.free,
           features: TIER_FEATURES.free,
-          resetDate: resetDate.toISOString(),
+          resetDate: resetDate,
           actionCosts: ACTION_COSTS,
         });
       }
@@ -74,15 +74,14 @@ export async function GET(request: Request) {
     }
 
     // Check if credits need reset
-    if (credits && new Date(credits.credits_reset_at) < new Date()) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
+    if (credits && shouldResetCredits(credits.credits_reset_at)) {
+      const resetDate = getCreditsResetDate();
 
       const { data: updatedCredits } = await supabase
         .from('user_credits')
         .update({
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString(),
+          credits_reset_at: resetDate,
         })
         .eq('user_id', user.id)
         .select()
@@ -164,8 +163,7 @@ export async function POST(request: Request) {
 
     // If no credits record, create one
     if (error?.code === 'PGRST116' || !credits) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
+      const resetDate = getCreditsResetDate();
 
       const { data: newCredits, error: insertError } = await supabase
         .from('user_credits')
@@ -174,7 +172,7 @@ export async function POST(request: Request) {
           tier: 'free',
           credits_total: TIER_LIMITS.free,
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString(),
+          credits_reset_at: resetDate,
         })
         .select()
         .single();
@@ -190,15 +188,14 @@ export async function POST(request: Request) {
     }
 
     // Check if credits need reset
-    if (credits && new Date(credits.credits_reset_at) < new Date()) {
-      const resetDate = new Date();
-      resetDate.setDate(resetDate.getDate() + 30);
+    if (credits && shouldResetCredits(credits.credits_reset_at)) {
+      const resetDate = getCreditsResetDate();
 
       const { data: updatedCredits } = await supabase
         .from('user_credits')
         .update({
           credits_used: 0,
-          credits_reset_at: resetDate.toISOString(),
+          credits_reset_at: resetDate,
         })
         .eq('user_id', user.id)
         .select()
@@ -234,20 +231,27 @@ export async function POST(request: Request) {
       }, { status: 402 }); // 402 Payment Required
     }
 
-    // Use the credits
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({
-        credits_used: credits.credits_used + creditsRequired,
-      })
-      .eq('user_id', user.id);
+    // Atomically reserve the credits using an optimistic-lock update to
+    // prevent the TOCTOU race documented in issue #477. Two concurrent
+    // requests with the same `expectedCreditsUsed` can no longer both
+    // succeed; the loser gets a 402 with the conflict message.
+    const reserved = await reserveCredits(
+      supabase,
+      user.id,
+      credits.credits_used,
+      creditsRequired
+    );
 
-    if (updateError) {
-      console.error('Error updating credits:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to use credits' },
-        { status: 500 }
-      );
+    if (!reserved) {
+      return NextResponse.json({
+        success: false,
+        error: 'Not enough credits',
+        creditsRemaining,
+        creditsRequired,
+        tier: credits.tier,
+        needsUpgrade: false,
+        message: 'A concurrent request consumed your remaining credits before this one could be reserved. Please try again in a moment.',
+      }, { status: 402 });
     }
 
     // Log the usage
@@ -263,7 +267,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       creditsUsed: creditsRequired,
-      creditsRemaining: creditsRemaining - creditsRequired,
+      creditsRemaining: reserved.credits_total - reserved.credits_used,
       tier: credits.tier,
     });
 

@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+import { isPrivateUrl } from '@/lib/validate-fetch-url';
 
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
@@ -13,6 +14,12 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Missing URL' },
         { status: 400 }
+      );
+    }
+    if(isPrivateUrl(url)){
+      return NextResponse.json(
+        { error: 'Forbidden URL' },
+        { status: 403 }
       );
     }
 

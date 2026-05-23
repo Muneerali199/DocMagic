@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ResumeData {
   name: string;
@@ -22,9 +24,75 @@ interface EditableResumeProps {
 
 export default function EditableResume({ data, onUpdate }: EditableResumeProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [enhancingPoint, setEnhancingPoint] = useState<string | null>(null);
+  const latestDataRef = useRef(data);
+  latestDataRef.current = data;
   
   const updateField = (field: keyof ResumeData, value: any) => {
     onUpdate({ ...data, [field]: value });
+  };
+
+  const enhanceExperiencePoint = async (experienceIndex: number, pointIndex: number) => {
+    const point = data.experience[experienceIndex]?.points[pointIndex] || '';
+    if (!point.trim()) {
+      toast.error('Add a bullet point before enhancing it');
+      return;
+    }
+
+    const requestKey = `${experienceIndex}-${pointIndex}`;
+    setEnhancingPoint(requestKey);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const experience = data.experience[experienceIndex];
+      const response = await fetch('/api/resume/enhance-bullet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bullet: point,
+          title: experience.title,
+          company: experience.company,
+          skills: [
+            data.skills.languages,
+            data.skills.technologies,
+            data.skills.tools,
+          ].filter(Boolean).join(', '),
+        }),
+        signal: controller.signal,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to enhance bullet point');
+      }
+
+      const enhancedBullet = typeof result?.enhancedBullet === 'string' ? result.enhancedBullet.trim() : '';
+
+      if (enhancedBullet) {
+        const latestData = latestDataRef.current;
+        const newExp = [...latestData.experience];
+        newExp[experienceIndex] = {
+          ...newExp[experienceIndex],
+          points: [...newExp[experienceIndex].points],
+        };
+        newExp[experienceIndex].points[pointIndex] = enhancedBullet;
+        onUpdate({ ...latestData, experience: newExp });
+        toast.success('Bullet point enhanced');
+      } else {
+        throw new Error('AI did not return a valid enhanced bullet');
+      }
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        toast.error('Enhancement timed out (15s limit reached). Please try again.');
+      } else {
+        toast.error(error?.message || 'Failed to enhance bullet point');
+      }
+    } finally {
+      window.clearTimeout(timeoutId);
+      setEnhancingPoint(null);
+    }
   };
 
   return (
@@ -193,17 +261,29 @@ export default function EditableResume({ data, onUpdate }: EditableResumeProps) 
             <ul className="list-disc ml-6 space-y-2">
               {exp.points.map((point, pi) => (
                 <li key={pi}>
-                  <input
-                    type="text"
-                    value={point}
-                    onChange={(e) => {
-                      const newExp = [...data.experience];
-                      newExp[i].points[pi] = e.target.value;
-                      updateField('experience', newExp);
-                    }}
-                    className="w-full border-none outline-none focus:ring-2 focus:ring-blue-300 rounded px-2 text-gray-900"
-                    placeholder="Achievement point"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={point}
+                      onChange={(e) => {
+                        const newExp = [...data.experience];
+                        newExp[i].points[pi] = e.target.value;
+                        updateField('experience', newExp);
+                      }}
+                      className="min-w-0 flex-1 border-none outline-none focus:ring-2 focus:ring-blue-300 rounded px-2 text-gray-900"
+                      placeholder="Achievement point"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => enhanceExperiencePoint(i, pi)}
+                      disabled={enhancingPoint === `${i}-${pi}`}
+                      className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-blue-200 px-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label="Enhance bullet point with AI"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      {enhancingPoint === `${i}-${pi}` ? 'Enhancing' : 'Enhance'}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

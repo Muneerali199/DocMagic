@@ -4,7 +4,7 @@
 
 ### AI-Powered Document Creation Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.30-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
@@ -71,8 +71,8 @@ cd Draftdeckai
 npm install
 
 # Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+cp .env.example .env.local
+# Edit .env.local with your API keys
 
 # Run development server
 npm run dev
@@ -82,7 +82,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
-Create a `.env` file with these variables:
+Create a `.env.local` file with these variables:
 
 ```env
 # Supabase (Required)
@@ -90,9 +90,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# AI Provider (Required - choose one)
-MISTRAL_API_KEY=your_mistral_api_key
-# OR
+# AI Provider (Required)
 GEMINI_API_KEY=your_gemini_api_key
 
 # Optional
@@ -102,11 +100,42 @@ STRIPE_SECRET_KEY=your_stripe_key
 
 ---
 
+## 🐳 Docker Quick Start
+
+Run the entire application with one command — no manual Node.js installation required.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Muneerali199/Draftdeckai.git
+cd Draftdeckai
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Build and start (development mode with hot reload)
+docker compose up
+
+# For production build:
+docker compose -f docker-compose.yml up
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+The development setup mounts your local files for hot reload — changes to the source code automatically refresh the app.
+
+---
+
 ## 🏗️ Tech Stack
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 14 (App Router) |
+| **Framework** | Next.js 14.2 (App Router) |
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS, shadcn/ui |
 | **Database** | Supabase (PostgreSQL) |
@@ -167,13 +196,17 @@ Free tier: 50 credits/month
 
 ## 📚 Documentation
 
+### Getting Started (⭐ Start Here!)
+- **[docs/SETUP.md](./docs/SETUP.md)** - 📖 Complete setup guide with step-by-step API key generation and troubleshooting
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
+- **[docs/UTILITIES.md](./docs/UTILITIES.md)** - Development utilities & best practices guide
+
 ### Architecture & Diagrams
 - [ARCHITECTURE_DIAGRAM_FEATURE.md](./ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
 - [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md) - Technical system architecture  
 - [ARCHITECTURE_IMPROVEMENTS.md](./ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
 
 ### Other Docs
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 - [Code_of_Conduct.md](./Code_of_Conduct.md) - Community standards
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 - [FAQ.md](./FAQ.md) - Frequently asked questions
@@ -195,19 +228,43 @@ npm run lint     # Run ESLint
 Join our official WhatsApp group to connect with other contributors, get help with your PRs, or discuss project ideas: 
 [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/JblK45aOdv9Ao0YhnMcPcQ)
 
+---
 
+## 👥 Contributors
+
+We appreciate all contributors who help improve DraftDeckAI ❤️
+
+### 📊 All Contributors
+https://github.com/Muneerali199/Draftdeckai/graphs/contributors
+
+### 🎨 Visual Contributors
+
+<a href="https://github.com/Muneerali199/Draftdeckai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Muneerali199/Draftdeckai" />
+</a>
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
+Contributions are welcome! We've made it easy to get started:
 
+**First-time contributors?** Start here:
+1. 📖 Read [docs/SETUP.md](./docs/SETUP.md) - Complete setup guide with all API keys
+2. 📚 Check [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
+3. 🛠️ Review [docs/UTILITIES.md](./docs/UTILITIES.md) - Development utilities guide
+
+**Ready to contribute?**
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+**Get help:**
+- Check [GitHub Issues](https://github.com/Muneerali199/DraftDeckAI/issues) for tasks
+- Look for `good first issue` label for beginner-friendly tasks
+- Join our Discord community for mentorship
 
 ---
 

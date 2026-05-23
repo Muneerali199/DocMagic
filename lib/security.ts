@@ -113,22 +113,76 @@ export function validateEnvironmentVariables() {
   }
 }
 
+import { logger } from './logger';
+
 // Log security events
 export function logSecurityEvent(event: string, details: any, ip?: string) {
-  const timestamp = new Date().toISOString();
   const logEntry = {
-    timestamp,
     event,
     ip: ip || 'unknown',
     details,
   };
 
-  // In production, send to monitoring service
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('SECURITY_EVENT:', JSON.stringify(logEntry));
-  } else {
-    console.log('Security Event:', logEntry);
+  // The logger handles environment checks and structured JSON output
+  logger.warn(null, 'SECURITY_EVENT', logEntry);
+}
+
+// Rate limiting store: shared across the instance
+const rateLimitStore = new Map<string, { count: number; reset: number }>();
+const RATE_LIMIT_MAX_ENTRIES = 10_000;
+
+function pruneExpired(now: number) {
+  for (const [key, value] of rateLimitStore) {
+    if (now > value.reset) rateLimitStore.delete(key);
   }
+}
+
+export interface RateLimitConfig {
+  requests: number;
+  windowMs: number;
+}
+
+/**
+ * Reusable rate limiting utility.
+ * Supports configurable request caps and time windows.
+ */
+export function checkRateLimit(
+  identifier: string,
+  config: RateLimitConfig
+): { allowed: boolean; remaining: number; reset: number; retryAfter: number } {
+  const now = Date.now();
+  if (rateLimitStore.size > RATE_LIMIT_MAX_ENTRIES) pruneExpired(now);
+  
+  let data = rateLimitStore.get(identifier);
+
+  if (!data || now > data.reset) {
+    data = { count: 1, reset: now + config.windowMs };
+    rateLimitStore.set(identifier, data);
+    return { 
+      allowed: true, 
+      remaining: config.requests - 1, 
+      reset: data.reset,
+      retryAfter: 0 
+    };
+  }
+
+  if (data.count >= config.requests) {
+    return { 
+      allowed: false, 
+      remaining: 0, 
+      reset: data.reset,
+      retryAfter: Math.ceil((data.reset - now) / 1000)
+    };
+  }
+
+  data.count++;
+  rateLimitStore.set(identifier, data);
+  return { 
+    allowed: true, 
+    remaining: config.requests - data.count, 
+    reset: data.reset,
+    retryAfter: 0
+  };
 }
 
 // Check if request is from allowed origin

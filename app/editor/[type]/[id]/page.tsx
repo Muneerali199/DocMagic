@@ -215,7 +215,7 @@ export default function UnifiedEditorPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Enhanced Toolbar with Save/Export/Share */}
       <div className="flex-none">
-        <EnhancedEditorToolbar />
+        <EnhancedEditorToolbar sessionId={sessionId ?? undefined} />
         <div className="bg-gray-800/90 border-b border-gray-700/50 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">

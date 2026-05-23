@@ -30,9 +30,18 @@ yarn-error.log*
 .env.backup
 .env.bak
 
+# backups and temp files
+*.bak
+*.backup
+*.tmp
+build.log
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase
+supabase/.temp/

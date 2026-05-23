@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+const { NextResponse } = require("next/server");
 import { stripe } from "@/lib/stripe";
 import { createRoute } from "@/lib/supabase/server";
 
@@ -11,18 +11,17 @@ export async function POST() {
   try {
     const supabase = await createRoute();
     
-    // Get the current user session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user?.email) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user?.email) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-    
+
     // Get user data with subscription
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('*, subscription:subscriptions(stripe_subscription_id)')
-      .eq('email', session.user.email)
+      .eq('email', user.email)
       .single();
 
     if (userError || !userData) {
