@@ -39,9 +39,13 @@ function errorToResponse(error: unknown, requestId: string): NextResponse {
     return NextResponse.json({ error:'Validation failed', details, requestId }, { status:400 });
   }
   if (error instanceof RateLimitError) {
-    const response = NextResponse.json({ error:error.message, code:error.code, requestId }, { status:429 });
-    response.headers.set('Retry-After', String(error.retryAfter));
-    return response;
+    return new NextResponse(JSON.stringify({ error:error.message, code:error.code, requestId }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(error.retryAfter),
+      },
+    });
   }
   if (error instanceof AppError) {
     return NextResponse.json({ error:error.message, code:error.code, requestId }, { status:error.statusCode });
