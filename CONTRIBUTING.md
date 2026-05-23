@@ -303,6 +303,9 @@ npm run lint
 
 # Build for production (to test)
 npm run build
+
+# Run accessibility tests
+npm run test:a11y
 ```
 
 **Having Issues?** 💬 Don't hesitate to reach out:
@@ -501,6 +504,9 @@ npm run build
 
 # Tests pass (when implemented)
 npm run test
+
+# Accessibility tests pass
+npm run test:a11y
 ```
 
 ---

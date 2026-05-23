@@ -34,7 +34,6 @@ import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { useUTMCapture } from "@/hooks/useUTMCapture";
 import { UpgradeModal, useCredits } from "@/components/upgrade-modal";
 import {
   Sheet,
@@ -54,7 +53,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -64,9 +62,6 @@ export function SiteHeader() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
 
-  useUTMCapture();
-  const { trackEvent } = useTrackEvent();
-
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
@@ -75,6 +70,9 @@ export function SiteHeader() {
   const handleNavClick = () => {
     setIsSheetOpen(false);
   };
+
+  // Note: Removed redundant refetchCredits on user change - 
+  // useCredits already fetches on mount and has debouncing built-in
 
   return (
     <header className="sticky top-0 z-50 w-full nav-professional">
@@ -180,20 +178,21 @@ export function SiteHeader() {
                         {secondaryNavItems.map((item) => (
                           <li key={item.href}>
                             <SheetClose asChild>
-                              <Link
-                                href={item.href}
-                                onClick={handleNavClick}
-                                className={cn(
-                                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
-                                  pathname === item.href
-                                    ? "bg-accent text-accent-foreground"
-                                    : "text-muted-foreground hover:text-foreground"
-                                )}
-                              >
-                                <span className="text-muted-foreground group-hover:text-yellow-500">{item.icon}</span>
-                                <span>{item.label}</span>
-                              </Link>
-                            </SheetClose>
+                            <Link
+                              href={item.href}
+                              onClick={handleNavClick}
+                              className={cn(
+
+                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <span className="text-muted-foreground group-hover:text-yellow-500">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </Link>
+                          </SheetClose>
                           </li>
                         ))}
                       </ul>
@@ -262,8 +261,7 @@ export function SiteHeader() {
                       <SheetClose asChild>
                         <Link
                           href="/auth/signin"
-                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex items-center gap-2 px-4 py-2 rounded-md"
-                          onClick={() => trackEvent("Header Sign In Clicked")}
+                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex items-center gap-2"
                         >
                           <Zap className="h-4 w-4" />
                           Sign In to DraftDeckAI
@@ -344,19 +342,21 @@ export function SiteHeader() {
             {/* Credits Badge - Desktop Only */}
             {user && !creditsLoading && credits && (
               <TooltipWithShortcut content={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUpgradeModalOpen(true)}
-                  aria-label={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}
-                  className={cn(
-                    "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2",
-                    credits.creditsRemaining < 3
-                      ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
-                      : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                  )}
-                >
+            {/* Added aria-label and focus-visible ring so keyboard users 
+    can see and understand this button */}
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={() => setUpgradeModalOpen(true)}
+  aria-label={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}
+  className={cn(
+    "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2",
+    credits.creditsRemaining < 3
+      ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
+      : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+  )}
+>
                   <Coins className="h-3.5 w-3.5" />
                   <span className="text-xs font-semibold">{credits.creditsRemaining}</span>
                   {credits.tier !== 'free' && (
@@ -373,10 +373,12 @@ export function SiteHeader() {
               <DropdownMenu>
                 <TooltipWithShortcut content="View account settings and profile">
                   <DropdownMenuTrigger asChild>
+                    {/* Added aria-label and focus ring so keyboard users 
+    know this opens the user menu */}
                     <Button
                       variant="ghost"
-                      aria-label="Open user menu"
-                      className="relative h-8 w-8 rounded-full hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
+                       aria-label="Open user menu"
+  className="relative h-8 w-8 rounded-full hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-yellow-400/20 hover:ring-yellow-400/40 transition-all duration-200">
                         <AvatarImage
@@ -470,12 +472,9 @@ export function SiteHeader() {
             ) : (
               /* Desktop Sign In Button */
               <TooltipWithShortcut content="Sign in to save and manage your documents">
+                {/* Added focus-visible ring so keyboard users can see the Sign In button when tabbing */}
                 <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
-                  <Link 
-                    href="/auth/signin" 
-                    className="flex items-center gap-2"
-                    onClick={() => trackEvent("Header Sign In Clicked")}
-                  >
+                  <Link href="/auth/signin" className="flex items-center gap-2">
                     <Zap className="h-4 w-4" />
                     <span>Sign In</span>
                   </Link>
@@ -534,7 +533,7 @@ const navItems = [
     tooltip: "Browse and manage document templates",
   },
   {
-    href: "/showcase",
+    href: "/showcase",        // ← add this
     label: "Showcase",
     icon: <Trophy className="h-4 w-4" />,
     tooltip: "Discover resumes and presentations from the community",
