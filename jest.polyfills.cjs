@@ -1,10 +1,12 @@
 const { TextDecoder, TextEncoder } = require('node:util');
 const { webcrypto } = require('node:crypto');
-const undici = require('undici');
 
 if (!globalThis.TextEncoder) globalThis.TextEncoder = TextEncoder;
 if (!globalThis.TextDecoder) globalThis.TextDecoder = TextDecoder;
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
+
+const undici = require('undici');
+
 if (!globalThis.fetch) globalThis.fetch = undici.fetch;
 if (!globalThis.Headers) globalThis.Headers = undici.Headers;
 if (!globalThis.Request) globalThis.Request = undici.Request;
