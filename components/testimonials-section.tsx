@@ -37,11 +37,11 @@ export function TestimonialsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <ScrollReveal animation="fade-in-up">
           <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 micro-hover-lift">
-            <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
-            <span className="text-base sm:text-lg font-bold bolt-gradient-text">Customer Love</span>
-            <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
-          </div>
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 micro-hover-lift">
+              <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
+              <span className="text-base sm:text-lg font-bold bolt-gradient-text">Customer Love</span>
+              <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
+            </div>
 
           <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-8 leading-tight font-extrabold">
             <span className="block mb-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">Trusted by</span>
@@ -54,7 +54,7 @@ export function TestimonialsSection() {
 
           {/* Social proof stats */}
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-8 px-4 sm:px-0">
-            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-effect border-2 border-amber-200/40 dark:border-amber-500/30 shadow-md hover:scale-105 transition-all duration-300">
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-effect border-2 border-amber-200/40 dark:border-amber-500/30 shadow-md hover:scale-105 micro-hover-lift">
               <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 fill-current" />
               <span className="text-sm sm:text-base font-bold text-amber-700 dark:text-amber-300">4.9/5 Rating</span>
             </div>
@@ -142,7 +142,7 @@ export function TestimonialsSection() {
             )})}
           </div>
 
-          {/* Navigation Buttons - Improved positioning */}
+          {/* Navigation Buttons - Improved positioning with micro-interactions */}
           <div className="flex items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
             <button
               className="p-3 sm:p-4 rounded-full glass-effect border-2 border-blue-200/40 dark:border-blue-500/30 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-all duration-300 hover:scale-110 micro-active-press shadow-lg hover:shadow-xl touch-manipulation micro-focus-ring"

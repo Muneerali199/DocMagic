@@ -1410,10 +1410,14 @@ img {
 
 @media (prefers-reduced-motion: reduce) {
 
-    .animate-slide-in-left,
-    .animate-slide-in-right,
-    .animate-scale-in,
-    .animate-bounce-in,
+     body {
+         scroll-behavior: auto;
+     }
+ 
+     .animate-slide-in-left,
+     .animate-slide-in-right,
+     .animate-scale-in,
+     .animate-bounce-in,
     .animate-float-gentle,
     .animate-glow-pulse,
     .animate-text-glow,

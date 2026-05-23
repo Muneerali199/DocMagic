@@ -62,6 +62,10 @@ const config: Config = {
         },
       },
       screens: {
+        // Landing redesign responsive breakpoints (Issue #488)
+        'mobile-sm': '320px',
+        'mobile': '375px',
+        'mobile-lg': '425px',
         'xs': '475px',
       },
             keyframes: {
