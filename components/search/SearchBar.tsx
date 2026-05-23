@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Search, Loader2, X } from 'lucide-react'
 
 interface SearchResult {
@@ -19,23 +19,32 @@ interface SearchResponse {
   query: string
 }
 
+const LIMIT = 10
+
 export default function SearchBar() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
   const [results, setResults] = useState<SearchResult[]>([])
   const [suggestion, setSuggestion] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
 
-  const handleSearch = useCallback(async (q: string) => {
+  const handleSearch = useCallback(async (q: string, searchPage: number = 1) => {
     if (!q.trim()) return
     setLoading(true)
     setError(null)
     setSearched(true)
+    setPage(searchPage)
 
     try {
-      const params = new URLSearchParams({ q })
+      const params = new URLSearchParams({
+        q,
+        page: String(searchPage),
+        limit: String(LIMIT)
+      })
       if (category) params.set('category', category)
 
       const res = await fetch(`/api/search?${params.toString()}`)
@@ -44,6 +53,7 @@ export default function SearchBar() {
       const data: SearchResponse = await res.json()
       setResults(data.results)
       setSuggestion(data.suggestion)
+      setTotal(data.total)
     } catch {
       setError('Search failed. Please try again.')
     } finally {
@@ -51,12 +61,31 @@ export default function SearchBar() {
     }
   }, [category])
 
+  // Debounced search trigger as user types
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.trim()) {
+        handleSearch(query, 1)
+      } else {
+        setResults([])
+        setSuggestion(null)
+        setTotal(0)
+        setSearched(false)
+        setError(null)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [query, handleSearch])
+
   const handleClear = () => {
     setQuery('')
     setResults([])
     setSuggestion(null)
+    setTotal(0)
     setSearched(false)
     setError(null)
+    setPage(1)
   }
 
   const categoryColors: Record<string, string> = {
@@ -65,6 +94,8 @@ export default function SearchBar() {
     template: 'bg-green-100 text-green-700',
     letter: 'bg-yellow-100 text-yellow-700',
   }
+
+  const totalPages = Math.ceil(total / LIMIT)
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
@@ -76,7 +107,7 @@ export default function SearchBar() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch(query, 1)}
             placeholder="Search resumes, templates, presentations..."
             className="flex-1 outline-none text-sm text-gray-900 placeholder:text-gray-400 bg-transparent"
           />
@@ -90,7 +121,10 @@ export default function SearchBar() {
         {/* Category Filter */}
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => {
+            setCategory(e.target.value)
+            setPage(1)
+          }}
           className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white text-gray-700"
         >
           <option value="">All Types</option>
@@ -101,7 +135,7 @@ export default function SearchBar() {
         </select>
 
         <button
-          onClick={() => handleSearch(query)}
+          onClick={() => handleSearch(query, 1)}
           disabled={loading || !query.trim()}
           className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
         >
@@ -120,7 +154,7 @@ export default function SearchBar() {
             className="text-indigo-600 underline"
             onClick={() => {
               setQuery(suggestion)
-              handleSearch(suggestion)
+              handleSearch(suggestion, 1)
             }}
           >
             {suggestion}
@@ -132,7 +166,9 @@ export default function SearchBar() {
       {/* Results */}
       {results.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs text-gray-400">{results.length} results found</p>
+          <p className="text-xs text-gray-400">
+            Showing {(page - 1) * LIMIT + 1} - {Math.min(page * LIMIT, total)} of {total} results
+          </p>
           {results.map((result) => (
             <div
               key={result.id}
@@ -155,13 +191,38 @@ export default function SearchBar() {
               </div>
             </div>
           ))}
+
+          {/* Pagination Controls */}
+          {total > LIMIT && (
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                Page {page} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleSearch(query, page - 1)}
+                  disabled={page === 1 || loading}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handleSearch(query, page + 1)}
+                  disabled={page === totalPages || loading}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Empty state */}
       {searched && !loading && results.length === 0 && !suggestion && (
         <p className="text-sm text-gray-400 text-center py-4">
-          No results found for "{query}". Try different keywords.
+          No results found for &quot;{query}&quot;. Try different keywords.
         </p>
       )}
     </div>

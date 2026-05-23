@@ -23,6 +23,7 @@ export interface SearchOptions {
   language?: string
   minQualityScore?: number
   limit?: number
+  offset?: number
 }
 
 /**
@@ -39,6 +40,7 @@ export function searchDocuments(
     language,
     minQualityScore = 0,
     limit = 10,
+    offset = 0,
   } = options
 
   if (!query.trim()) return []
@@ -84,9 +86,8 @@ export function searchDocuments(
     })
     .filter((r) => r.relevanceScore > 0)
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
-    .slice(0, limit)
 
-  return results
+  return results.slice(offset, offset + limit)
 }
 
 /**
