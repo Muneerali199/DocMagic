@@ -4,7 +4,7 @@ import type { SearchableDocument } from '@/lib/search-engine'
 import { createRoute } from '@/lib/supabase/server'
 
 // Recursive helper to extract all nested string contents from JSON fields
-function extractTextFromContent(type: string, content: any): string {
+function extractTextFromContent(content: any): string {
   if (!content) return ''
   if (typeof content === 'string') return content
   if (typeof content === 'number' || typeof content === 'boolean') return String(content)
@@ -13,7 +13,7 @@ function extractTextFromContent(type: string, content: any): string {
 
   if (Array.isArray(content)) {
     for (const item of content) {
-      texts.push(extractTextFromContent(type, item))
+      texts.push(extractTextFromContent(item))
     }
     return texts.join(' ')
   }
@@ -24,7 +24,7 @@ function extractTextFromContent(type: string, content: any): string {
       if (typeof val === 'string') {
         texts.push(val)
       } else if (Array.isArray(val) || typeof val === 'object') {
-        texts.push(extractTextFromContent(type, val))
+        texts.push(extractTextFromContent(val))
       }
     }
     return texts.join(' ')
@@ -91,8 +91,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           let mappedCategory: 'resume' | 'presentation' | 'template' | 'letter' = 'resume'
           if (doc.type === 'presentation') mappedCategory = 'presentation'
           else if (doc.type === 'letter') mappedCategory = 'letter'
+          else if (doc.type !== 'resume' && doc.type !== 'cv') {
+            console.warn(`Unknown document type: ${doc.type}, defaulting to resume`)
+          }
 
-          const textContent = extractTextFromContent(doc.type, doc.content)
+          const textContent = extractTextFromContent(doc.content)
           
           let score = 80
           if (doc.content && typeof doc.content === 'object' && 'atsScore' in doc.content) {
@@ -129,7 +132,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
       if (templates) {
         for (const template of templates) {
-          const textContent = template.description || extractTextFromContent(template.type, template.content)
+          const textContent = template.description || extractTextFromContent(template.content)
           allMappedDocs.push({
             id: template.id,
             title: template.title,
@@ -143,25 +146,33 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Build spell correction vocabulary dynamically from all retrieved documents and templates
-    const vocabulary = allMappedDocs.flatMap((d) =>
-      [...d.title.split(/\s+/), ...d.content.split(/\s+/)].map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
-    ).filter(Boolean)
-
-    // Execute search logic across all documents with limit=999999 to get full matches for pagination
-    const results = searchDocuments(allMappedDocs, {
+    // Retrieve all matches first so we can return the total count, then paginate manually.
+    // (searchDocuments returns only a slice, so we need the full result set for the total.)
+    const allResults = searchDocuments(allMappedDocs, {
       query,
       category,
       language,
       minQualityScore: minQuality,
       limit: 999999,
+      offset: 0,
     })
 
-    const total = results.length
-    const paginatedResults = results.slice(offset, offset + limit)
+    const total = allResults.length
+    const paginatedResults = allResults.slice(offset, offset + limit)
 
+    // Build vocabulary only when needed for spell correction (total === 0)
     const suggestion =
-      total === 0 ? suggestCorrection(query, vocabulary) : null
+      total === 0
+        ? suggestCorrection(
+            query,
+            [...new Set(
+              allMappedDocs.flatMap((d) =>
+                [...d.title.split(/\s+/), ...d.content.split(/\s+/)]
+                  .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
+              ).filter(Boolean)
+            )]
+          )
+        : null
 
     return NextResponse.json({
       results: paginatedResults,

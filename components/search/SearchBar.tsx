@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Search, Loader2, X } from 'lucide-react'
 
 interface SearchResult {
@@ -32,12 +32,15 @@ export default function SearchBar() {
   const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
 
+  // Sequence counter to discard stale responses when requests resolve out of order
+  const latestRequestId = useRef(0)
+
   const handleSearch = useCallback(async (q: string, searchPage: number = 1) => {
     if (!q.trim()) return
+    const requestId = ++latestRequestId.current
     setLoading(true)
     setError(null)
     setSearched(true)
-    setPage(searchPage)
 
     try {
       const params = new URLSearchParams({
@@ -51,12 +54,16 @@ export default function SearchBar() {
       if (!res.ok) throw new Error('Search failed')
 
       const data: SearchResponse = await res.json()
+      if (requestId !== latestRequestId.current) return
       setResults(data.results)
       setSuggestion(data.suggestion)
       setTotal(data.total)
+      setPage(searchPage)
     } catch {
+      if (requestId !== latestRequestId.current) return
       setError('Search failed. Please try again.')
     } finally {
+      if (requestId !== latestRequestId.current) return
       setLoading(false)
     }
   }, [category])
@@ -79,6 +86,7 @@ export default function SearchBar() {
   }, [query, handleSearch])
 
   const handleClear = () => {
+    latestRequestId.current += 1
     setQuery('')
     setResults([])
     setSuggestion(null)
