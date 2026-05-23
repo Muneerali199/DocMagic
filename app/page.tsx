@@ -63,7 +63,7 @@ export default async function Home() {
       <main className="flex-1">
         <HeroSection />
         {/* Enhanced AI-Powered Features Showcase */}
-        <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
+        <section className="py-16 sm:py-20 lg:py-24 relative overflow-hidden overflow-safe">
           {/* Enhanced Background Elements - Matching other sections */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="mesh-gradient opacity-40"></div>
@@ -236,8 +236,8 @@ export default async function Home() {
               </TooltipWithShortcut>
             </div>
 
-            {/* Secondary Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+              {/* Secondary Features */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
               <TooltipWithShortcut content="Access premium templates and manage your document library">
                 <Link
                   href="/templates"

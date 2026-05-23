@@ -63,6 +63,8 @@ const config: Config = {
       },
       screens: {
         'xs': '475px',
+        'tablet': '640px',
+        'laptop': '1024px',
       },
       keyframes: {
         'accordion-down': {

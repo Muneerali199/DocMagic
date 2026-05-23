@@ -2,7 +2,7 @@ import { CheckCircle, FileText, PresentationIcon as LayoutPresentationIcon, Book
 
 export function FeaturesSection() {
   return (
-    <div className="py-12 sm:py-20 md:py-28 lg:py-36 relative overflow-hidden section-header" id="how-it-works">
+    <div className="py-12 sm:py-20 md:py-28 lg:py-36 relative overflow-hidden overflow-safe section-header" id="how-it-works">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 mesh-gradient opacity-25"></div>
       <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
@@ -17,7 +17,7 @@ export function FeaturesSection() {
             <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 animate-pulse" />
           </div>
 
-          <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-6 sm:mb-8 leading-tight px-4">
+          <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-6 sm:mb-8 leading-tight px-4 break-words">
             <span className="block mb-2">How DraftDeckAI</span>
             <span className="bolt-gradient-text">Works Its Magic</span>
           </h2>

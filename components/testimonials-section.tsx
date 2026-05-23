@@ -27,7 +27,7 @@ export function TestimonialsSection() {
     }, [currentIndex, autoSlide, autoSlideInterval]);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 dark:from-purple-950/20 dark:via-background dark:to-blue-950/20 py-20 sm:py-28 lg:py-36">
+    <section className="relative overflow-hidden overflow-safe bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 dark:from-purple-950/20 dark:via-background dark:to-blue-950/20 py-20 sm:py-28 lg:py-36">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 mesh-gradient opacity-30"></div>
       <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
@@ -42,7 +42,7 @@ export function TestimonialsSection() {
             <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500 fill-current" />
           </div>
 
-          <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-8 leading-tight font-extrabold">
+          <h2 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-8 leading-tight font-extrabold break-words">
             <span className="block mb-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">Trusted by</span>
             <span className="bolt-gradient-text">10,000+ Professionals</span>
           </h2>
@@ -71,7 +71,7 @@ export function TestimonialsSection() {
         {/* Enhanced testimonials carousel */}
         <div className="relative">
           {/* Testimonial Cards Container */}
-          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
+          <div className="overflow-hidden relative min-h-[420px] sm:min-h-[450px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
             {testimonials.map((testimonial, i) => {
               let positionClass = 'translate-x-full opacity-0'; // Off-screen to the right
               if (i === currentIndex) {

@@ -2886,6 +2886,113 @@ section {
    ============================================ */
 
 /* ============================================
+   RESPONSIVE BREAKPOINT SYSTEM
+   DraftDeckAI - Breakpoint-aware section reflow
+   ============================================ */
+
+/* Breakpoint reference:
+   mobile:  0-639px   (xs: 475px min)
+   tablet:  640-1023px (sm + md)
+   desktop: 1024px+    (lg, xl, 2xl)
+*/
+
+/* Section reflow: hide decorative elements on mobile to prevent overflow */
+@media (max-width: 639px) {
+    .desktop-only {
+        display: none !important;
+    }
+
+    .floating-orb {
+        width: 60px !important;
+        height: 60px !important;
+        opacity: 0.06 !important;
+    }
+
+    .mesh-gradient,
+    .mesh-gradient-alt {
+        opacity: 0.05 !important;
+    }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    .floating-orb {
+        width: 120px !important;
+        height: 120px !important;
+        opacity: 0.08 !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Section spacing per breakpoint */
+.section-responsive {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+    .section-responsive {
+        padding-top: 5rem;
+        padding-bottom: 5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .section-responsive {
+        padding-top: 7rem;
+        padding-bottom: 7rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    .section-responsive {
+        padding-top: 9rem;
+        padding-bottom: 9rem;
+    }
+}
+
+/* Touch-friendly hover degradation: no sticky hover on mobile */
+@media (hover: none) and (pointer: coarse) {
+
+    .hover\:scale-105:hover,
+    .hover\:scale-110:hover,
+    .hover-lift:hover,
+    .hover-coral:hover,
+    .hover-sky:hover,
+    .hover-mint:hover,
+    .hover-lavender:hover {
+        transform: none !important;
+    }
+
+    .hover\:scale-105:active,
+    .hover\:scale-110:active {
+        transform: scale(0.98) !important;
+    }
+}
+
+/* Disable smooth-scroll animation on mobile for performance */
+@media (hover: none) and (pointer: coarse) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Prevent grid overflow at all breakpoints */
+@media (max-width: 639px) {
+    .overflow-safe {
+        overflow: hidden;
+    }
+}
+
+/* ============================================
+   END RESPONSIVE BREAKPOINT SYSTEM
+   ============================================ */
+
+/* ============================================
    LATEX PREVIEW - COMPUTER MODERN FONT SYSTEM
    ============================================ */
 

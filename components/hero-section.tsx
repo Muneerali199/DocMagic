@@ -7,7 +7,7 @@ import { Sparkles, ArrowRight, Zap, Star, Wand2, Clock, Users, Trophy } from "lu
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">
+    <div className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40 overflow-safe">
       {/* Enhanced animated background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20"></div>
       <div className="absolute inset-0 mesh-gradient-alt opacity-20"></div>
@@ -58,7 +58,7 @@ export function HeroSection() {
             </div>
           </div>
           {/* Enhanced Hero Heading - Landing Page Specific */}
-          <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-6 sm:mb-8 animate-slide-in-left will-change-transform leading-[1.15] px-4 sm:px-0">
+          <h1 className="modern-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-6 sm:mb-8 animate-slide-in-left will-change-transform leading-[1.15] px-4 sm:px-0 break-words">
             <span className="block mb-2 sm:mb-3 font-extrabold text-gray-900 dark:text-white">
               Create Stunning Documents
             </span>
@@ -171,12 +171,12 @@ export function HeroSection() {
             <TooltipWithShortcut content="Over 10,000 professional documents successfully created by our users worldwide">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-400/30 to-orange-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-coral hover-glow-coral p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 sunset-glow animate-fade-in-up delay-400 will-change-transform cursor-pointer border-2 border-amber-200/40 dark:border-amber-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-coral hover-glow-coral p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl hover:scale-105 lg:hover:scale-110 transition-all duration-500 sunset-glow animate-fade-in-up delay-400 will-change-transform cursor-pointer border-2 border-amber-200/40 dark:border-amber-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
-                    <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
+                    <div className="bolt-gradient-text text-3xl sm:text-4xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-2 sm:mb-3">
                       <StatCounter target={10000} suffix="+" />
                     </div>
-                    <div className="text-muted-foreground text-base sm:text-lg font-bold">
+                    <div className="text-muted-foreground text-sm sm:text-base lg:text-lg font-bold">
                       Documents Created
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground/70 mt-2 font-medium">
@@ -190,12 +190,12 @@ export function HeroSection() {
             <TooltipWithShortcut content="98% of our users successfully achieve their goals with DraftDeckAI-generated documents">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/30 to-cyan-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-sky hover-glow-sky p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 bolt-glow animate-fade-in-up delay-500 will-change-transform cursor-pointer border-2 border-blue-200/40 dark:border-blue-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-sky hover-glow-sky p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl hover:scale-105 lg:hover:scale-110 transition-all duration-500 bolt-glow animate-fade-in-up delay-500 will-change-transform cursor-pointer border-2 border-blue-200/40 dark:border-blue-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
-                    <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
+                    <div className="bolt-gradient-text text-3xl sm:text-4xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-2 sm:mb-3">
                       <StatCounter target={98} suffix="%" />
                     </div>
-                    <div className="text-muted-foreground text-base sm:text-lg font-bold">
+                    <div className="text-muted-foreground text-sm sm:text-base lg:text-lg font-bold">
                       Success Rate
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground/70 mt-2 font-medium">
@@ -209,12 +209,12 @@ export function HeroSection() {
             <TooltipWithShortcut content="Average 5-star rating from thousands of satisfied users across all platforms">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/30 to-teal-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-mint hover-glow-mint p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 ocean-glow animate-fade-in-up delay-600 will-change-transform cursor-pointer border-2 border-emerald-200/40 dark:border-emerald-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative card-mint hover-glow-mint p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl hover:scale-105 lg:hover:scale-110 transition-all duration-500 ocean-glow animate-fade-in-up delay-600 will-change-transform cursor-pointer border-2 border-emerald-200/40 dark:border-emerald-500/30 shadow-xl hover:shadow-2xl">
                   <div className="text-center">
-                    <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
+                    <div className="bolt-gradient-text text-3xl sm:text-4xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-2 sm:mb-3">
                       <StatCounter target={5} suffix="★" />
                     </div>
-                    <div className="text-muted-foreground text-base sm:text-lg font-bold">
+                    <div className="text-muted-foreground text-sm sm:text-base lg:text-lg font-bold">
                       User Rating
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground/70 mt-2 font-medium">
