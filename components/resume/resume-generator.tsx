@@ -16,6 +16,7 @@ import { ResumeTemplates } from "@/components/resume/resume-templates";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
 import { useToast } from "@/hooks/use-toast";
+import { useShare } from "@/hooks/use-share";
 import {
   File as FileIcon,
   Loader2,
@@ -359,80 +360,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     }
   };
 
-  const copyShareLink = async () => {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Share link has been copied to your clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to copy",
-        description: "Please copy the URL manually",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const shareViaEmail = () => {
-    const subject = encodeURIComponent('Check out my resume!');
-    const body = encodeURIComponent(`I wanted to share my professional resume with you:\\n\\n${shareUrl}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const shareViaWhatsApp = () => {
-    const text = encodeURIComponent(`Check out my resume: ${shareUrl}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  const shareViaTwitter = () => {
-    const text = encodeURIComponent('Check out my professional resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-  };
-
-  const shareViaLinkedIn = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-  };
-
-  const shareViaFacebook = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-  };
-
-  const shareViaTelegram = () => {
-    const text = encodeURIComponent('Check out my resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
-  };
-
-  const shareViaWebShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My Resume',
-          text: 'Check out my professional resume!',
-          url: shareUrl
-        });
-        toast({
-          title: "Shared successfully!",
-          description: "Resume shared via Web Share API",
-        });
-      } catch (error) {
-        // User cancelled sharing
-      }
-    } else {
-      toast({
-        title: "Not supported",
-        description: "Web Share API is not supported on this device",
-        variant: "destructive",
-      });
-    }
-  };
+  const {
+    copyToClipboard: copyShareLink,
+    shareViaEmail,
+    shareViaWhatsApp,
+    shareViaTwitter,
+    shareViaLinkedIn,
+    shareViaFacebook,
+    shareViaTelegram,
+    shareViaWebShare,
+  } = useShare(shareUrl, {
+    emailSubject: "Check out my resume!",
+    emailBody: `I wanted to share my professional resume with you:\n\n${shareUrl}`,
+    text: "Check out my professional resume!",
+    title: "My Resume",
+  });
 
   return (
     <>
