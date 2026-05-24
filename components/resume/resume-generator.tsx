@@ -210,6 +210,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
     setIsExporting(true);
     try {
+      // First try the new @react-pdf/renderer vector PDF export for highest quality
+      try {
+        const { generateReactPDF } = await import('@/lib/resume/pdf-exporter');
+        await generateReactPDF(resumeData, selectedTemplate);
+        
+        toast({
+          title: "Resume downloaded!",
+          description: "Your resume has been downloaded as a high-quality PDF.",
+        });
+        return; // Success! Exit early.
+      } catch (reactPdfError) {
+        console.error('Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
+        // Fall back to html2canvas if React PDF fails
+      }
+
       const resumeElement = document.getElementById('resume-content');
       if (!resumeElement) {
         throw new Error('Resume content not found');

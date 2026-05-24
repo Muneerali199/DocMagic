@@ -385,6 +385,21 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
     setIsExporting(true);
     
     try {
+      // First try the new @react-pdf/renderer vector PDF export for highest quality
+      try {
+        const { generateReactPDF } = await import('@/lib/resume/pdf-exporter');
+        await generateReactPDF(safeResume as any, template, isCV);
+        
+        toast({
+          title: `${isCV ? 'CV' : 'Resume'} exported!`,
+          description: `Your ${isCV ? 'CV' : 'resume'} has been downloaded as a high-quality PDF.`,
+        });
+        return; // Success! Exit early.
+      } catch (reactPdfError) {
+        console.error('Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
+        // Fall back to html2canvas if React PDF fails
+      }
+
       const element = document.getElementById('resume-content');
       if (!element) throw new Error('Resume content element not found');
       
