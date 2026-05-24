@@ -177,19 +177,19 @@ export default async function DiagnosticPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
           <h2 className="text-xl font-semibold mb-3">📚 Documentation</h2>
           <div className="grid md:grid-cols-2 gap-3">
-            <a href="/PAYMENT_SETUP_CHECKLIST.md" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <a href="/docs/PAYMENT_METHODS_SETUP.md" target="_blank" rel="noopener noreferrer" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
               <h3 className="font-semibold">Setup Checklist</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Step-by-step setup guide</p>
             </a>
-            <a href="/PAYMENT_QUICK_START.md" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <a href="/docs/PAYMENT_METHODS_SETUP.md" target="_blank" rel="noopener noreferrer" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
               <h3 className="font-semibold">Quick Start</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Quick reference guide</p>
             </a>
-            <a href="/PAYMENT_FLOW_DIAGRAM.md" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <a href="/docs/PAYMENT_METHODS_SETUP.md" target="_blank" rel="noopener noreferrer" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
               <h3 className="font-semibold">Flow Diagram</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Visual architecture</p>
             </a>
-            <a href="/PAYMENT_IMPLEMENTATION_SUMMARY.md" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <a href="/docs/PAYMENT_METHODS_SETUP.md" target="_blank" rel="noopener noreferrer" className="p-3 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition">
               <h3 className="font-semibold">Implementation Summary</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Complete overview</p>
             </a>
