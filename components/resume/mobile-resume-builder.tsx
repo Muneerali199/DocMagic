@@ -29,6 +29,7 @@ import { TemplateCustomizationPanel } from "@/components/templates/template-cust
 import { VersionHistoryPanel } from "@/components/templates/version-history-panel";
 import { CollaborationPanel } from "@/components/templates/collaboration-panel";
 import { versionHistoryService } from "@/lib/version-history-service";
+import { logger } from "@/lib/logger";
 
 interface MobileResumeBuilderProps {
   templateId?: string | null;
@@ -70,10 +71,10 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
   // Load template data if templateId is provided
   useEffect(() => {
-    console.log('Template ID received:', templateId);
+    logger.info(null, 'Template ID received:', templateId);
     if (templateId) {
       const template = RESUME_TEMPLATES.find(t => t.id === templateId);
-      console.log('Template found:', template);
+      logger.info(null, 'Template found:', template);
       if (template) {
         // Initialize with template data - create a basic resume structure
         const templateResume = {
@@ -117,7 +118,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           certifications: []
         };
 
-        console.log('Setting resume data:', templateResume);
+        logger.info(null, 'Setting resume data:', templateResume);
         setResumeData(templateResume);
         setSelectedTemplate(template.id);
         setCurrentStep('preview');
@@ -142,7 +143,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
     const loadSavedResume = async () => {
       if (!resumeId) return;
 
-      console.log('📄 Loading saved resume:', resumeId);
+      logger.info(null, '📄 Loading saved resume:', resumeId);
 
       try {
         // First try documents table using raw query to avoid type issues
@@ -153,7 +154,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           .single()) as { data: any; error: any };
 
         if (docResult && !docError) {
-          console.log('📄 Loaded from documents table:', docResult);
+          logger.info(null, '📄 Loaded from documents table:', docResult);
           const content = docResult.content;
 
           // Extract resume data from content
@@ -195,7 +196,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           .single()) as { data: any; error: any };
 
         if (resumeResult && !resumeError) {
-          console.log('📄 Loaded from resumes table:', resumeResult);
+          logger.info(null, '📄 Loaded from resumes table:', resumeResult);
 
           const savedContent = resumeResult.content || {};
 
@@ -340,7 +341,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         // If extraction failed, offer fallback
         if (extractData.text && extractData.text.length > 20) {
           // Partial extraction - use what we got
-          console.log("Partial PDF extraction, using available text");
+          logger.info(null, "Partial PDF extraction, using available text");
         } else {
           throw new Error(extractData.error || "Could not extract text from PDF. Please use the Text tab to paste your resume content manually.");
         }
@@ -392,7 +393,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         });
       }
 
-      console.log(`Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`);
+      logger.info(null, `Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`);
 
       // Step 3: Call the resume generation API with extracted text as prompt
       const response = await fetch("/api/generate/resume", {

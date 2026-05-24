@@ -2,6 +2,7 @@ import { createRoute } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { sendWelcomeEmail } from "@/lib/email";
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/logger";
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +24,13 @@ async function processReferral(referralCode: string, newUserId: string) {
       .single();
 
     if (referrerError || !referrer) {
-      console.log('Invalid referral code:', referralCode);
+      logger.info(null, 'Invalid referral code:', referralCode);
       return false;
     }
 
     // Prevent self-referral
     if (referrer.user_id === newUserId) {
-      console.log('User tried to use own referral code');
+      logger.info(null, 'User tried to use own referral code');
       return false;
     }
 
@@ -41,7 +42,7 @@ async function processReferral(referralCode: string, newUserId: string) {
       .single();
 
     if (existingReferral) {
-      console.log('User already referred');
+      logger.info(null, 'User already referred');
       return false;
     }
 
@@ -57,7 +58,7 @@ async function processReferral(referralCode: string, newUserId: string) {
       });
 
     if (insertError) {
-      console.error('Error creating referral:', insertError);
+      logger.error('Error creating referral:', insertError);
       return false;
     }
 
@@ -71,7 +72,7 @@ async function processReferral(referralCode: string, newUserId: string) {
       .eq('user_id', referrer.user_id);
 
     if (updateError) {
-      console.error('Error awarding referral credits:', updateError);
+      logger.error('Error awarding referral credits:', updateError);
     }
 
     // Award bonus credits to the new user AND update referred_by
@@ -92,10 +93,10 @@ async function processReferral(referralCode: string, newUserId: string) {
       })
       .eq('user_id', newUserId);
 
-    console.log('Referral processed successfully');
+    logger.info(null, 'Referral processed successfully');
     return true;
   } catch (error) {
-    console.error('Error processing referral:', error);
+    logger.error(null, 'Error processing referral:', error);
     return false;
   }
 }
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (error) {
-        console.error("Auth callback error:", error);
+        logger.error("Auth callback error:", error);
         // If there's an error, redirect to sign in with error message
         const errorUrl = new URL(`/auth/signin?error=${encodeURIComponent(error.message)}`, requestUrl.origin);
         return Response.redirect(errorUrl.toString());
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
             await sendWelcomeEmail(userEmail, userName);
           }
         } catch (e) {
-          console.error("Failed to send welcome email after verification:", e);
+          logger.error("Failed to send welcome email after verification:", e);
         }
         
         // Process referral: Check URL first, then user metadata
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest) {
               await sendWelcomeEmail(userEmail, userName);
             }
           } catch (e) {
-            console.error("Failed to send welcome email for OAuth signup:", e);
+            logger.error("Failed to send welcome email for OAuth signup:", e);
           }
           
           // Process referral for OAuth signups if code is present
@@ -191,7 +192,7 @@ export async function GET(request: NextRequest) {
       const nextUrl = new URL(next, requestUrl.origin);
       return Response.redirect(nextUrl.toString());
     } catch (err) {
-      console.error("Auth callback exception:", err);
+      logger.error("Auth callback exception:", err);
       const failUrl = new URL("/auth/signin?error=Authentication%20failed", requestUrl.origin);
       return Response.redirect(failUrl.toString());
     }

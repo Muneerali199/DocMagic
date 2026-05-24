@@ -10,6 +10,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Unde
 import { saveAs } from 'file-saver';
 import { RESUME_TEMPLATES } from '@/lib/resume-template-data';
 import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
+import { logger } from "@/lib/logger";
 
 interface ResumeData {
   name?: string;
@@ -396,7 +397,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         });
         return; // Success! Exit early.
       } catch (reactPdfError) {
-        console.error('Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
+        logger.error(null, 'Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
         // Fall back to html2canvas if React PDF fails
       }
 
@@ -467,7 +468,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         description: `Your ${isCV ? 'CV' : 'resume'} has been downloaded as a PDF.`,
       });
     } catch (error) {
-      console.error('Error exporting to PDF:', error);
+      logger.error(null, 'Error exporting to PDF:', error);
       toast({
         title: "Export failed",
         description: `Failed to export ${isCV ? 'CV' : 'resume'} to PDF. Please try again.`,
@@ -732,7 +733,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         description: `${fileName} has been downloaded.`,
       });
     } catch (error) {
-      console.error('Error exporting to Word:', error);
+      logger.error(null, 'Error exporting to Word:', error);
       toast({
         title: "Export failed",
         description: "There was an error exporting to Word format.",
@@ -752,7 +753,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         description: `Your LaTeX source has been downloaded.`,
       });
     } catch (error) {
-      console.error('Error exporting to LaTeX:', error);
+      logger.error(null, 'Error exporting to LaTeX:', error);
       toast({
         title: "Export failed",
         description: "There was an error exporting to LaTeX format.",
@@ -2805,7 +2806,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   );
 
   // Main Render Switch - Each template maps to ONE specific layout
-  console.log('ResumePreview rendering template:', template);
+  logger.info(null, 'ResumePreview rendering template:', template);
   
   switch (true) {
     // Tech/Engineering Templates - Clean single-column with skills at top

@@ -47,6 +47,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { TooltipWithShortcut } from "../ui/tooltip";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
+import { logger } from "@/lib/logger";
 
 export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const supabaseClient = createClient();
@@ -139,7 +140,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               isPublic: false
             }),
           });
-          console.log('✅ Resume saved to history');
+          logger.info(null, '✅ Resume saved to history');
         }
       } catch (saveError) {
         console.error('Failed to auto-save resume:', saveError);
@@ -166,7 +167,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   };
 
   const handleLinkedInImport = (profile: any) => {
-    console.log('LinkedIn profile received:', profile);
+    logger.info(null, 'LinkedIn profile received:', profile);
 
     // Convert LinkedIn profile to resume format
     // Handle both 'name' and 'fullName' field
@@ -187,7 +188,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       languages: profile.languages || [],
     };
 
-    console.log('Converted resume data:', resume);
+    logger.info(null, 'Converted resume data:', resume);
 
     setResumeData(resume);
     setName(fullName);
@@ -195,7 +196,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
     // Log to verify state was updated
     setTimeout(() => {
-      console.log('Resume data state after update:', resume);
+      logger.info(null, 'Resume data state after update:', resume);
     }, 100);
 
     toast({
