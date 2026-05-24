@@ -292,7 +292,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      increment_report_count: {
+        Args: { post_id_arg: string; threshold: number }
+        Returns: undefined
+      }
     }
     Enums: {
       showcase_event_type: "view" | "like" | "save" | "share" | "dwell"

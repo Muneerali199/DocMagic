@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRoute } from "@/lib/supabase/server";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { computeFinalScore, defaultEngagement } from "@/lib/showcase/ranking";
 import type { EngagementRaw } from "@/lib/showcase/ranking";
 import { BURST_LIKE_THRESHOLD, BURST_WINDOW_MINUTES } from "@/lib/showcase/ranking.config";
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   }
 
   const startedAt = Date.now();
-  const supabase  = await createRoute();
+  const supabase = createSupabaseAdmin();
 
   try {
     // ── 1. Load all posts that need scoring ───────────────────────────────
@@ -67,12 +67,17 @@ export async function GET(req: NextRequest) {
       Date.now() - BURST_WINDOW_MINUTES * 60_000
     ).toISOString();
 
-    const { data: burstRows } = await supabase
+    const { data: burstRows, error: burstError } = await supabase
       .from("showcase_engagement_events")
       .select("post_id")
       .in("post_id", postIds)
       .eq("event_type", "like")
       .gte("created_at", burstWindow);
+
+    if (burstError) {
+      console.error("[ranking-job] burst detection query failed:", burstError);
+      throw burstError;
+    }
 
     // Count likes per post in burst window
     const burstCounts = new Map<string, number>();

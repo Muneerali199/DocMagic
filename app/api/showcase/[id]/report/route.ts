@@ -11,14 +11,14 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   const supabase = await createRoute();
   const { id: postId } = params;
 
-  // ── Auth required ─────────────────────────────────────────────────────────
+  //  Auth required
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
     return Response.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  // ── Parse body ────────────────────────────────────────────────────────────
+  // Parse body 
   let body: ReportRequest;
   try {
     body = await req.json();
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     );
   }
 
-  // ── Verify post exists ────────────────────────────────────────────────────
+  // Verify post exists
   const { data: post, error: postError } = await supabase
     .from("showcase_posts")
     .select("id, user_id, status, report_count")
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return Response.json({ error: "Cannot report your own post" }, { status: 422 });
   }
 
-  // ── Insert report ─────────────────────────────────────────────────────────
+  // Insert report
   const { error: reportError } = await supabase
     .from("showcase_reports")
     .insert({
@@ -73,22 +73,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return Response.json({ error: "Failed to submit report" }, { status: 500 });
   }
 
-  // ── Increment report counter ──────────────────────────────────────────────
-  const newCount = (post.report_count ?? 0) + 1;
-
-  const updatePayload: Record<string, unknown> = {
-    report_count: newCount,
-  };
-
-  // Auto-flip to under_review when threshold is crossed
-  if (newCount >= REPORT_AUTO_HIDE_THRESHOLD && post.status === "published") {
-    updatePayload.status = "under_review";
-  }
-
-  const { error: updateError } = await supabase
-    .from("showcase_posts")
-    .update(updatePayload as any)
-    .eq("id", postId);
+  // Increment report counter
+  const { error: updateError } = await (supabase as any).rpc(
+  "increment_report_count",
+  { post_id_arg: postId, threshold: REPORT_AUTO_HIDE_THRESHOLD }
+  );
 
   if (updateError) {
     console.error("[showcase/report] update error:", updateError);

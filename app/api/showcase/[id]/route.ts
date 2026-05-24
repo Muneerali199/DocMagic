@@ -71,10 +71,10 @@ async function recordView(
     .eq("post_id", postId)
     .eq("event_type", "view")
     .gte("created_at", new Date(Date.now() - VIEW_DEDUP_MINUTES * 60_000).toISOString())
-    .or(
+     .or(
       userId
-        ? `user_id.eq.${userId},ip_hash.eq.${ipHash}`
-        : `ip_hash.eq.${ipHash}`
+        ? `user_id.eq."${userId}",ip_hash.eq."${ipHash}"`
+        : `ip_hash.eq."${ipHash}"`
     )
     .limit(1);
 

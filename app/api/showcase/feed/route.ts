@@ -51,26 +51,20 @@ async function fetchLatest(
   cursorParam: string | null,
   limit: number
 ): Promise<{ items: FeedItem[]; next_cursor: string | null }> {
-  let query = supabase
-    .from("showcase_posts")
-    .select(`
+  let { data, error } = await supabase
+  .from("showcase_post_scores")
+  .select(`
+    final_score,
+    score_breakdown,
+    showcase_posts!inner (
       *,
-      showcase_post_tags ( tag ),
-      showcase_post_scores ( final_score, score_breakdown ),
-      profiles ( full_name, avatar_url )
-    `)
-    .eq("visibility", "public")
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(limit + 1);
-
-  if (cursorParam) {
-    const decoded = decodeTimeCursor(cursorParam);
-    if (decoded) query = query.lt("created_at", decoded.created_at);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
+      showcase_post_tags ( tag )
+    )
+  `)
+  .eq("showcase_posts.visibility", "public")
+  .eq("showcase_posts.status", "published")
+  .order("final_score", { ascending: false })
+  .limit(limit + 1);
 
   const rows = data ?? [];
   const hasMore = rows.length > limit;
@@ -101,8 +95,7 @@ async function fetchTrending(
       score_breakdown,
       showcase_posts!inner (
         *,
-        showcase_post_tags ( tag ),
-        profiles ( full_name, avatar_url )
+        showcase_post_tags ( tag )
       )
     `)
     .eq("showcase_posts.visibility", "public")
@@ -110,9 +103,14 @@ async function fetchTrending(
     .order("final_score", { ascending: false })
     .limit(limit + 1);
 
+  // Composite cursor — stable pagination even with identical scores
   if (cursorParam) {
     const decoded = decodeCursor(cursorParam);
-    if (decoded) query = query.lt("final_score", decoded.score);
+    if (decoded) {
+      query = query.or(
+        `final_score.lt.${decoded.score},and(final_score.eq.${decoded.score},post_id.gt.${decoded.post_id})`
+      );
+    }
   }
 
   const { data, error } = await query;
@@ -127,8 +125,8 @@ async function fetchTrending(
     tags:            row.showcase_posts.showcase_post_tags?.map((t: any) => t.tag) ?? [],
     score_breakdown: row.score_breakdown,
     final_score:     row.final_score,
-    author_name:     row.showcase_posts.profiles?.full_name ?? null,
-    author_avatar:   row.showcase_posts.profiles?.avatar_url ?? null,
+    author_name:     null,
+    author_avatar:   null,
   })) as FeedItem[];
 
   const next_cursor =
@@ -258,3 +256,4 @@ function mapToFeedItem(row: any): FeedItem {
     author_avatar:   row.profiles?.avatar_url ?? null,
   };
 }
+

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect , useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +54,17 @@ export function PublishModal({
   const [tags,            setTags]            = useState<string[]>([]);
   const [isSubmitting,    setIsSubmitting]    = useState(false);
   const [error,           setError]           = useState<string | null>(null);
+
+   useEffect(() => {
+     if (!open) return;
+     setTitle(defaults?.title ?? "");
+     setRole("");
+     setExperienceLevel("mid");
+     setVisibility("public");
+     setTagInput("");
+     setTags([]);
+     setError(null);
+   }, [open, defaults?.title]);
 
   // Tag management
   const addTag = () => {

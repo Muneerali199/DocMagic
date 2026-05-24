@@ -54,14 +54,20 @@ export function ShowcaseCard({ item, showScore = false }: ShowcaseCardProps) {
 
   //  Engagement handlers
   const handleLike = () => {
-    setLiked((v) => !v);
-    engage("like");
-  };
+    setLiked((prev) => {
+     const next = !prev;
+     if (next) engage("like");
+     return next;
+  });
+};
 
   const handleSave = () => {
-    setSaved((v) => !v);
-    engage("save");
-  };
+    setSaved((prev) => {
+    const next = !prev;
+    if (next) engage("save");
+    return next;
+  });
+};
 
   const handleShare = () => {
     const url = `${window.location.origin}/showcase/${item.id}`;
@@ -122,7 +128,7 @@ export function ShowcaseCard({ item, showScore = false }: ShowcaseCardProps) {
       )}
 
       {/* ── Tags ── */}
-      {item.tags.length > 0 && (
+      {(item.tags.length > 0 || item.experience_level) && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {item.tags.map((tag) => (
             <span
@@ -132,16 +138,18 @@ export function ShowcaseCard({ item, showScore = false }: ShowcaseCardProps) {
               #{tag}
             </span>
           ))}
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-              LEVEL_STYLES[item.experience_level] ?? ""
-            }`}
-          >
-            {item.experience_level}
-          </span>
+          {item.experience_level && (
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                LEVEL_STYLES[item.experience_level] ?? ""
+              }`}
+            >
+              {item.experience_level}
+            </span>
+          )}
         </div>
       )}
-
+ss
       {/* ── Score breakdown (dev / debug) ── */}
       {showScore && item.score_breakdown && (
         <div className="mt-3">

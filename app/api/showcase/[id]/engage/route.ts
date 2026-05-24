@@ -4,6 +4,7 @@ import { hashIp, getClientIp } from "@/lib/showcase/ip";
 import {
   VIEW_DEDUP_MINUTES,
   BURST_WINDOW_MINUTES,
+  BURST_LIKE_THRESHOLD
 } from "@/lib/showcase/ranking.config";
 import type { EngageRequest } from "@/types/showcase";
 
@@ -92,12 +93,21 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   if (event_type === "like") {
     const burstWindow = new Date(Date.now() - BURST_WINDOW_MINUTES * 60_000).toISOString();
 
-    const { count } = await supabase
+    const { count , error: burstCountError } = await supabase
       .from("showcase_engagement_events")
       .select("id", { count: "exact", head: true })
       .eq("post_id", postId)
       .eq("event_type", "like")
       .gte("created_at", burstWindow);
+
+    if (burstCountError) {
+  console.error("[showcase/engage] burst count error:", burstCountError);
+}
+
+if ((count ?? 0) >= BURST_LIKE_THRESHOLD) {
+  console.warn(`[showcase/engage] burst detected on post ${postId} — ${count} likes in ${BURST_WINDOW_MINUTES} minutes`);
+  // Ranking job will de-weight this post on next run via like count check
+}
   }
 
   // Insert event

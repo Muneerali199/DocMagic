@@ -109,6 +109,23 @@ CREATE TABLE user_showcase_preferences (
   pref_role  text,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ 
+CREATE OR REPLACE FUNCTION increment_report_count(
+  post_id_arg uuid,
+  threshold integer
+) RETURNS void AS $$
+BEGIN
+  UPDATE showcase_posts
+  SET
+    report_count = report_count + 1,
+    status = CASE
+      WHEN report_count + 1 >= threshold AND status = 'published'
+      THEN 'under_review'::showcase_post_status
+      ELSE status
+    END
+  WHERE id = post_id_arg;
+END;
+$$ LANGUAGE plpgsql;
 
 -- RANKING VIEW
 -- Used by the trending feed query directly.

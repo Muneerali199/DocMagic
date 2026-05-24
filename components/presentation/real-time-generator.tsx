@@ -2823,7 +2823,11 @@ export default function RealTimeGenerator() {
         defaults={{
           type: "presentation",
           title: slides?.[0]?.title ?? "My Presentation",
-          content_ref: shareUrl ?? "",
+          content_ref:
+            shareUrl ||
+            (visiblePresentationId
+              ? `${window.location.origin}/presentation/view/${visiblePresentationId}`
+               : ""),
         }}
         onSuccess={() => alert("Published to Showcase!")}
       />

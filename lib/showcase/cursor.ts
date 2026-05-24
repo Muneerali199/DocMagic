@@ -38,9 +38,12 @@ export function decodeTimeCursor(
 ): { created_at: string; post_id: string } | null {
   try {
     const raw = Buffer.from(cursor, "base64url").toString("utf8");
-    const idx = raw.indexOf(":");
+    const idx = raw.lastIndexOf(":");
     if (idx === -1) return null;
-    return { created_at: raw.slice(0, idx), post_id: raw.slice(idx + 1) };
+    const created_at = raw.slice(0, idx);
+    const post_id = raw.slice(idx + 1);
+    if (!created_at || !post_id) return null;
+    return { created_at, post_id };
   } catch {
     return null;
   }
