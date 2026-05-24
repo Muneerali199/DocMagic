@@ -32,8 +32,10 @@ setInterval(() => {
 }, 60_000);
 
 function rlKey(p: string): RLKey {
-  if (p.startsWith('/api/auth/'))     return 'AUTH';
-  if (p.startsWith('/api/generate/')) return 'GENERATE';
+  // Strip version prefix so /api/v1/generate/... and /api/generate/... share the same bucket
+  const norm = p.replace(/^\/api\/v\d+(?:\/|$)/, '/api/');
+  if (norm.startsWith('/api/auth/'))     return 'AUTH';
+  if (norm.startsWith('/api/generate/')) return 'GENERATE';
   return 'API';
 }
 
@@ -106,6 +108,11 @@ export function middleware(req: NextRequest) {
     r.headers.set('X-RateLimit-Limit', String(rl.limit));
     r.headers.set('X-RateLimit-Remaining', String(rl.remaining));
     r.headers.set('X-RateLimit-Reset', String(Math.ceil(rl.reset / 1000)));
+
+    // Stamp which API version was routed so clients always know what they got
+    const versionMatch = pathname.match(/^\/api\/(v\d+)(?:\/|$)/);
+    r.headers.set('X-API-Version', versionMatch ? versionMatch[1] : 'v2');
+
     return r;
   }
 
