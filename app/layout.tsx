@@ -21,6 +21,17 @@ export const metadata: Metadata = {
   description:
     "Create beautiful resumes, presentations, CVs and letters with AI",
 };
+
+/**
+ * Inline script injected into <head> to apply the correct theme class
+ * before the first paint, preventing a flash of the wrong color scheme.
+ *
+ * It reads the same localStorage key ("theme") that next-themes uses,
+ * so the two are always in sync. The script must be a plain string
+ * (not a module) so the browser executes it synchronously.
+ */
+const themeScript = `(function(){try{var s=localStorage.getItem('theme');var d=document.documentElement;if(s==='dark'){d.classList.add('dark');}else if(s==='light'){d.classList.remove('dark');}else{if(window.matchMedia('(prefers-color-scheme: dark)').matches){d.classList.add('dark');}else{d.classList.remove('dark');}}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -29,6 +40,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Blocking theme script -- must be first in <head> to prevent FOUC */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link

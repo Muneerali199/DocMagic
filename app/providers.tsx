@@ -27,9 +27,10 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem={true}
-          disableTransitionOnChange={false}
+          defaultTheme="system"
+          enableSystem
+          storageKey="theme"
+          disableTransitionOnChange
         >
           <TooltipProvider>
             <ToastProvider>
