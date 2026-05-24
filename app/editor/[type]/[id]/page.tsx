@@ -100,6 +100,12 @@ export default function UnifiedEditorPage() {
 
   const lastSavedContent = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (!documentData || !canvas) return;
+
+    lastSavedContent.current = JSON.stringify(canvas.toJSON());
+  }, [canvas, documentData]);
+
   // Auto-save functionality
   const handleSave = useCallback(async () => {
     if (!canvas || !documentData || isSaving) return;

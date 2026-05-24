@@ -105,10 +105,7 @@ function EditorContent() {
           toast.success(`Template "${template.title}" loaded! Start editing.`);
         }
       } catch (error) {
-        logger.error(
-          'Error loading content:',
-           error instanceof Error ? error.message : String(error)
-      );
+        logger.error(null, 'Error loading content:', error instanceof Error ? error.message : String(error));
         toast.error('Failed to load content');
       } finally {
         setIsLoading(false);
@@ -119,6 +116,15 @@ function EditorContent() {
   }, [templateId, documentId, user, router]);
 
   const lastSavedContent = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!canvas || !documentData) return;
+
+    lastSavedContent.current = JSON.stringify({
+      content: canvas.toJSON(),
+      title: documentTitle,
+    });
+  }, [canvas, documentData?.id, documentTitle]);
 
   // Auto-save functionality
   const handleSave = useCallback(async () => {
