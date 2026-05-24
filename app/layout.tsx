@@ -20,6 +20,28 @@ export const metadata: Metadata = {
   title: "DraftDeckAI - AI Document Creation Platform",
   description:
     "Create beautiful resumes, presentations, CVs and letters with AI",
+  openGraph: {
+    title: "DraftDeckAI - AI Document Creation Platform",
+    description: "Create beautiful resumes, presentations, CVs and letters with AI",
+    siteName: "DraftDeckAI",
+    url: "https://draftdeckai.com",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "DraftDeckAI - AI Document Creation Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DraftDeckAI - AI Document Creation Platform",
+    description: "Create beautiful resumes, presentations, CVs and letters with AI",
+    images: ["/og-image.png"],
+  },
 };
 
 /**

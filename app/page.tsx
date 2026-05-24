@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
@@ -32,6 +33,20 @@ import {
 import ScrollToTop from "@/components/scroll-to-top";
 import { createServer } from "@/lib/supabase/server";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
+
+export const metadata: Metadata = {
+  title: "DraftDeckAI - Best AI Document Creator",
+  description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+  openGraph: {
+    title: "DraftDeckAI - Best AI Document Creator",
+    description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+    url: "https://draftdeckai.com",
+  },
+  twitter: {
+    title: "DraftDeckAI - Best AI Document Creator",
+    description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+  },
+};
 
 export const dynamic = 'force-dynamic';
 
