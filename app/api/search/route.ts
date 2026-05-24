@@ -1,79 +1,183 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchDocuments, suggestCorrection } from '@/lib/search-engine'
 import type { SearchableDocument } from '@/lib/search-engine'
+import { createRoute } from '@/lib/supabase/server'
 
-// Sample documents index — replace with real DB query later
-const SAMPLE_INDEX: SearchableDocument[] = [
-  {
-    id: '1',
-    title: 'Software Engineer Resume',
-    content: 'Experienced software engineer with React TypeScript Node.js skills',
-    category: 'resume',
-    language: 'en',
-    qualityScore: 90,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Product Manager CV',
-    content: 'Product manager with 5 years experience in agile teams',
-    category: 'resume',
-    language: 'en',
-    qualityScore: 85,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Marketing Presentation Template',
-    content: 'Professional marketing presentation with slides for campaigns',
-    category: 'presentation',
-    language: 'en',
-    qualityScore: 80,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Cover Letter Template',
-    content: 'Professional cover letter template for job applications',
-    category: 'letter',
-    language: 'en',
-    qualityScore: 75,
-    createdAt: new Date().toISOString(),
-  },
-]
+// Recursive helper to extract all nested string contents from JSON fields
+function extractTextFromContent(content: any): string {
+  if (!content) return ''
+  if (typeof content === 'string') return content
+  if (typeof content === 'number' || typeof content === 'boolean') return String(content)
 
-const VOCABULARY = SAMPLE_INDEX.flatMap((d) =>
-  [...d.title.split(' '), ...d.content.split(' ')].map((w) => w.toLowerCase())
-)
+  const texts: string[] = []
+
+  if (Array.isArray(content)) {
+    for (const item of content) {
+      texts.push(extractTextFromContent(item))
+    }
+    return texts.join(' ')
+  }
+
+  if (typeof content === 'object') {
+    for (const key in content) {
+      const val = content[key]
+      if (typeof val === 'string') {
+        texts.push(val)
+      } else if (Array.isArray(val) || typeof val === 'object') {
+        texts.push(extractTextFromContent(val))
+      }
+    }
+    return texts.join(' ')
+  }
+
+  return ''
+}
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
+    const supabase = await createRoute()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(req.url)
     const query = searchParams.get('q') ?? ''
     const category = searchParams.get('category') ?? undefined
     const language = searchParams.get('language') ?? undefined
     const minQuality = Number(searchParams.get('minQuality') ?? 0)
-    const limit = Number(searchParams.get('limit') ?? 10)
+    
+    // Pagination parameters with bounds: page >= 1, limit clamped to 1..100
+    const page = Math.max(1, Number(searchParams.get('page')) || 1)
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 10))
+    const offset = (page - 1) * limit
 
     if (!query.trim()) {
       return NextResponse.json({ results: [], suggestion: null, total: 0 })
     }
 
-    const results = searchDocuments(SAMPLE_INDEX, {
+    const allMappedDocs: SearchableDocument[] = []
+
+    // 1. Fetch user documents from 'documents' table if category is not 'template'
+    if (category !== 'template') {
+      let docQuery = supabase
+        .from('documents')
+        .select('*')
+        .eq('user_id', user.id)
+
+      // Filter by type if a specific category is requested
+      if (category === 'resume') {
+        docQuery = docQuery.or('type.eq.resume,type.eq.cv')
+      } else if (category) {
+        docQuery = docQuery.eq('type', category)
+      }
+
+      const { data: documents, error: docError } = await docQuery
+      if (docError) {
+        console.error('Error fetching documents:', docError)
+        return NextResponse.json(
+          { error: 'Failed to fetch user documents' },
+          { status: 500 }
+        )
+      }
+
+      if (documents) {
+        for (const doc of documents) {
+          // Normalize type to category
+          let mappedCategory: 'resume' | 'presentation' | 'template' | 'letter' = 'resume'
+          if (doc.type === 'presentation') mappedCategory = 'presentation'
+          else if (doc.type === 'letter') mappedCategory = 'letter'
+          else if (doc.type !== 'resume' && doc.type !== 'cv') {
+            console.warn(`Unknown document type: ${doc.type}, defaulting to resume`)
+          }
+
+          const textContent = extractTextFromContent(doc.content)
+          
+          let score = 80
+          if (doc.content && typeof doc.content === 'object' && 'atsScore' in doc.content) {
+            score = Number(doc.content.atsScore) || 80
+          }
+
+          allMappedDocs.push({
+            id: doc.id,
+            title: doc.title,
+            content: textContent,
+            category: mappedCategory,
+            language: 'en',
+            qualityScore: score,
+            createdAt: doc.created_at || new Date().toISOString()
+          })
+        }
+      }
+    }
+
+    // 2. Fetch user templates from 'templates' table if category is 'template' or undefined
+    if (!category || category === 'template') {
+      const { data: templates, error: templateError } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('user_id', user.id)
+
+      if (templateError) {
+        console.error('Error fetching templates:', templateError)
+        return NextResponse.json(
+          { error: 'Failed to fetch user templates' },
+          { status: 500 }
+        )
+      }
+
+      if (templates) {
+        for (const template of templates) {
+          const textContent = template.description || extractTextFromContent(template.content)
+          allMappedDocs.push({
+            id: template.id,
+            title: template.title,
+            content: textContent,
+            category: 'template',
+            language: 'en',
+            qualityScore: 85,
+            createdAt: template.created_at || new Date().toISOString()
+          })
+        }
+      }
+    }
+
+    // Retrieve all matches first so we can return the total count, then paginate manually.
+    // (searchDocuments returns only a slice, so we need the full result set for the total.)
+    const allResults = searchDocuments(allMappedDocs, {
       query,
       category,
       language,
       minQualityScore: minQuality,
-      limit,
+      limit: 999999,
+      offset: 0,
     })
 
+    const total = allResults.length
+    const paginatedResults = allResults.slice(offset, offset + limit)
+
+    // Build vocabulary only when needed for spell correction (total === 0)
     const suggestion =
-      results.length === 0 ? suggestCorrection(query, VOCABULARY) : null
+      total === 0
+        ? suggestCorrection(
+            query,
+            [...new Set(
+              allMappedDocs.flatMap((d) =>
+                [...d.title.split(/\s+/), ...d.content.split(/\s+/)]
+                  .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
+              ).filter(Boolean)
+            )]
+          )
+        : null
 
     return NextResponse.json({
-      results,
+      results: paginatedResults,
       suggestion,
-      total: results.length,
+      total,
       query,
     })
   } catch (error) {
