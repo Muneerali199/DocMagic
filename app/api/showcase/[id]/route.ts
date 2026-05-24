@@ -64,19 +64,18 @@ async function recordView(
   const ip     = getClientIp(headers);
   const ipHash = hashIp(ip);
 
-  // Dedup check — has this user/IP already viewed in the last N minutes?
-  const { data: existing } = await supabase
+   let query = supabase
     .from("showcase_engagement_events")
     .select("id")
     .eq("post_id", postId)
     .eq("event_type", "view")
-    .gte("created_at", new Date(Date.now() - VIEW_DEDUP_MINUTES * 60_000).toISOString())
-     .or(
-      userId
-        ? `user_id.eq."${userId}",ip_hash.eq."${ipHash}"`
-        : `ip_hash.eq."${ipHash}"`
-    )
-    .limit(1);
+    .gte("created_at", new Date(Date.now() - VIEW_DEDUP_MINUTES * 60_000).toISOString());
+
+     query = userId
+      ? query.eq("user_id", userId)
+      : query.eq("ip_hash", ipHash);
+
+  const { data: existing } = await query.limit(1);
 
   if (existing && existing.length > 0) return; // Already counted
 

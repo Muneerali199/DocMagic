@@ -149,7 +149,7 @@ export function ShowcaseCard({ item, showScore = false }: ShowcaseCardProps) {
           )}
         </div>
       )}
-ss
+
       {/* ── Score breakdown (dev / debug) ── */}
       {showScore && item.score_breakdown && (
         <div className="mt-3">

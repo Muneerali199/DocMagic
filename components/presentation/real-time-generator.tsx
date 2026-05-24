@@ -1670,6 +1670,8 @@ export default function RealTimeGenerator() {
     return themeConfig.colors.gradient;
   };
 
+   const origin = typeof window !== "undefined" ? window.location.origin : "";
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground selection:bg-blue-500/30">
       {/* Mesh Gradient Background */}
@@ -2817,6 +2819,7 @@ export default function RealTimeGenerator() {
           }
         `}</style>
       </div>
+
       <PublishModal
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
@@ -2826,7 +2829,7 @@ export default function RealTimeGenerator() {
           content_ref:
             shareUrl ||
             (visiblePresentationId
-              ? `${window.location.origin}/presentation/view/${visiblePresentationId}`
+              ? `${origin}/presentation/view/${visiblePresentationId}`
                : ""),
         }}
         onSuccess={() => alert("Published to Showcase!")}

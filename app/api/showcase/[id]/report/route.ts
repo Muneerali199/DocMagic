@@ -51,37 +51,26 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return Response.json({ error: "Cannot report your own post" }, { status: 422 });
   }
 
-  // Insert report
-  const { error: reportError } = await supabase
-    .from("showcase_reports")
-    .insert({
-      post_id:     postId,
-      reporter_id: user.id,
-      reason:      reason.trim(),
-      status:      "pending",
-    });
+  // Verify post exists and user hasn't reported before, then submit atomically
+  const { error: reportError } = await (supabase as any).rpc(
+    "submit_report",
+    {
+      post_id_arg:     postId,
+      reporter_id_arg: user.id,
+      reason_arg:      reason.trim(),
+      threshold_arg:   REPORT_AUTO_HIDE_THRESHOLD,
+    }
+  );
 
   if (reportError) {
-    // 23505 = unique_violation (user already reported this post)
     if (reportError.code === "23505") {
       return Response.json(
         { error: "You have already reported this post" },
         { status: 409 }
       );
     }
-    console.error("[showcase/report] insert error:", reportError);
+    console.error("[showcase/report] error:", reportError);
     return Response.json({ error: "Failed to submit report" }, { status: 500 });
-  }
-
-  // Increment report counter
-  const { error: updateError } = await (supabase as any).rpc(
-  "increment_report_count",
-  { post_id_arg: postId, threshold: REPORT_AUTO_HIDE_THRESHOLD }
-  );
-
-  if (updateError) {
-    console.error("[showcase/report] update error:", updateError);
-    // Non-fatal — report was submitted, counter update failed
   }
 
   return Response.json({ success: true }, { status: 201 });

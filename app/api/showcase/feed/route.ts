@@ -47,24 +47,29 @@ export async function GET(req: NextRequest) {
 // Simple time-ordered query from Postgres. No score needed.
 
 async function fetchLatest(
-  supabase: any ,
+  supabase: any,
   cursorParam: string | null,
   limit: number
 ): Promise<{ items: FeedItem[]; next_cursor: string | null }> {
-  let { data, error } = await supabase
-  .from("showcase_post_scores")
-  .select(`
-    final_score,
-    score_breakdown,
-    showcase_posts!inner (
+  let query = supabase
+    .from("showcase_posts")
+    .select(`
       *,
-      showcase_post_tags ( tag )
-    )
-  `)
-  .eq("showcase_posts.visibility", "public")
-  .eq("showcase_posts.status", "published")
-  .order("final_score", { ascending: false })
-  .limit(limit + 1);
+      showcase_post_tags ( tag ),
+      showcase_post_scores ( final_score, score_breakdown )
+    `)
+    .eq("visibility", "public")
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(limit + 1);
+
+  if (cursorParam) {
+    const decoded = decodeTimeCursor(cursorParam);
+    if (decoded) query = query.lt("created_at", decoded.created_at);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
 
   const rows = data ?? [];
   const hasMore = rows.length > limit;
