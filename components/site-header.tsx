@@ -340,17 +340,21 @@ export function SiteHeader() {
             {/* Credits Badge - Desktop Only */}
             {user && !creditsLoading && credits && (
               <TooltipWithShortcut content={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUpgradeModalOpen(true)}
-                  className={cn(
-                    "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
-                    credits.creditsRemaining < 3
-                      ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
-                      : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                  )}
-                >
+            {/* Added aria-label and focus-visible ring so keyboard users 
+    can see and understand this button */}
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={() => setUpgradeModalOpen(true)}
+  aria-label={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}
+  className={cn(
+    "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2",
+    credits.creditsRemaining < 3
+      ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
+      : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
+  )}
+>
                   <Coins className="h-3.5 w-3.5" />
                   <span className="text-xs font-semibold">{credits.creditsRemaining}</span>
                   {credits.tier !== 'free' && (
@@ -367,9 +371,12 @@ export function SiteHeader() {
               <DropdownMenu>
                 <TooltipWithShortcut content="View account settings and profile">
                   <DropdownMenuTrigger asChild>
+                    {/* Added aria-label and focus ring so keyboard users 
+    know this opens the user menu */}
                     <Button
                       variant="ghost"
-                      className="relative h-8 w-8 rounded-full hidden md:flex"
+                       aria-label="Open user menu"
+  className="relative h-8 w-8 rounded-full hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-yellow-400/20 hover:ring-yellow-400/40 transition-all duration-200">
                         <AvatarImage
@@ -463,8 +470,14 @@ export function SiteHeader() {
             ) : (
               /* Desktop Sign In Button */
               <TooltipWithShortcut content="Sign in to save and manage your documents">
+<<<<<<< HEAD
                 <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
                   <Link href="/auth/signin">
+=======
+                {/* Added focus-visible ring so keyboard users 
+    can see the Sign In button when tabbing */}
+<Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
+>>>>>>> 5257199 (fix: improve header accessibility - focus rings and aria labels (#456))
                   <Link href="/auth/signin" className="flex items-center gap-2">
                     <Zap className="h-4 w-4" />
                     <span>Sign In</span>
