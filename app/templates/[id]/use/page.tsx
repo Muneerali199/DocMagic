@@ -28,12 +28,16 @@ export default function UseTemplatePage() {
   const [template, setTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
     const fetchTemplate = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/templates/${params.id}`);
+        const response = await fetch(`/api/templates/${params.id}`, {
+          signal: abortController.signal
+        });
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -45,7 +49,8 @@ export default function UseTemplatePage() {
         
         const data = await response.json();
         setTemplate(data);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError') return;
         console.error('Error fetching template:', error);
         setError('Failed to load template');
         toast.error('Failed to load template');
@@ -57,6 +62,10 @@ export default function UseTemplatePage() {
     if (params.id) {
       fetchTemplate();
     }
+    
+    return () => {
+      abortController.abort();
+    };
   }, [params.id]);
 
   const handleUseTemplate = async () => {
@@ -66,7 +75,10 @@ export default function UseTemplatePage() {
       return;
     }
     
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
       // Create a new document from the template
       const response = await fetch('/api/documents/create-from-template', {
         method: 'POST',
@@ -88,6 +100,8 @@ export default function UseTemplatePage() {
     } catch (error) {
       console.error('Error creating document:', error);
       toast.error('Failed to load template');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -217,9 +231,18 @@ export default function UseTemplatePage() {
       </Card>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <Button onClick={handleUseTemplate} size="lg" className="flex-1">
-          <FileText className="mr-2 h-4 w-4" />
-          Use This Template
+        <Button onClick={handleUseTemplate} disabled={isSubmitting} size="lg" className="flex-1">
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <FileText className="mr-2 h-4 w-4" />
+              Use This Template
+            </>
+          )}
         </Button>
         
         <Button variant="outline" onClick={handleDownloadTemplate} size="lg">

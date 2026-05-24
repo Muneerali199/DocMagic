@@ -42,17 +42,21 @@ export default function ViewPresentationPage() {
   useEffect(() => {
     if (!id) return;
 
+    const abortController = new AbortController();
+
     async function loadPresentation() {
       try {
-        const response = await fetch(`/api/presentations/${id}`);
-
+        const response = await fetch(`/api/presentations/${id}`, {
+          signal: abortController.signal
+        });
         if (!response.ok) {
           throw new Error('Presentation not found');
         }
 
         const data = await response.json();
         setPresentation(data);
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
         console.error('Error loading presentation:', err);
         setError('Failed to load presentation');
       } finally {
@@ -61,6 +65,10 @@ export default function ViewPresentationPage() {
     }
 
     loadPresentation();
+
+    return () => {
+      abortController.abort();
+    };
   }, [id]);
 
   async function handleExportPDF() {
