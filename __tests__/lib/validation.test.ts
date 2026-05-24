@@ -98,15 +98,22 @@ describe('sanitizeInput', () => {
     expect(sanitizeInput(long).length).toBe(LIMITS.CONTENT_MAX);
   });
 
-  it('truncates to a custom max', () => {
+it('truncates to a custom max', () => {
     const long = 'a'.repeat(50);
     expect(sanitizeInput(long, 10).length).toBe(10);
   });
 
   it('handles multi-byte unicode characters without corruption', () => {
     const emoji = '😀'.repeat(20);
-    const result = sanitizeInput(emoji, 20);
-    expect(result.length).toBeLessThanOrEqual(20);
+    
+    // 1. Ensure standard sanitization doesn't corrupt it (Your fix)
+    const standardResult = sanitizeInput(emoji);
+    expect(standardResult).toBe(emoji);
+    
+    // 2. Ensure custom truncation doesn't corrupt the bytes (Maintainer's fix)
+    const truncatedResult = sanitizeInput(emoji, 20);
+    expect(truncatedResult.length).toBeLessThanOrEqual(20);
+  });
   });
 
   it('handles empty string', () => {
@@ -301,19 +308,28 @@ describe('resumeGenerationSchema', () => {
 describe('presentationGenerationSchema', () => {
   it('accepts a valid presentation request', () => {
     expect(
-      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 10 }).success
+      presentationGenerationSchema.safeParse({ 
+        prompt: 'Create a presentation on React Hooks', 
+        pageCount: 10 
+      }).success
     ).toBe(true);
   });
 
   it('rejects pageCount = 0', () => {
     expect(
-      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 0 }).success
+      presentationGenerationSchema.safeParse({
+        prompt: 'Valid prompt character length',
+        pageCount: 0
+      }).success
     ).toBe(false);
   });
 
   it('rejects pageCount > 100', () => {
     expect(
-      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 101 }).success
+      presentationGenerationSchema.safeParse({
+        prompt: 'Valid prompt character length',
+        pageCount: 101 // Schema max limit is 100
+      }).success
     ).toBe(false);
   });
 
@@ -328,8 +344,10 @@ describe('letterGenerationSchema', () => {
   it('accepts a valid cover letter input', () => {
     expect(
       letterGenerationSchema.safeParse({
-        jobDescription: 'a'.repeat(20),
-        fromName: 'Jane Doe',
+        prompt: 'Generate a cover letter for a software engineering role.',
+        fromName: 'Swarup Patil',
+        toName: 'Hiring Manager',
+        letterType: 'Cover Letter'
       }).success
     ).toBe(true);
   });
@@ -342,9 +360,12 @@ describe('letterGenerationSchema', () => {
     ).toBe(false);
   });
 
-  it('rejects a jobDescription shorter than 20 characters', () => {
+  it('rejects content shorter than 20 characters', () => {
     expect(
-      letterGenerationSchema.safeParse({ jobDescription: 'short', fromName: 'Jane' }).success
+      letterGenerationSchema.safeParse({
+        fromName: 'Swarup Patil',
+        jobDescription: 'Short description' // Fails because min limit is 20
+      }).success
     ).toBe(false);
   });
 });
