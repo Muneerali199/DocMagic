@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { exportPremiumPresentation } from '@/lib/premium-presentation-export';
+import { analyzeSlideQuality, SlideQualityReport } from '@/lib/analyzeSlideQuality';
+import { autoFixSlide } from '@/lib/autoFixSlide';
+import { SlideQualityPanel } from './SlideQualityPanel';
+import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
@@ -1007,6 +1011,13 @@ export default function RealTimeGenerator() {
   // Export state
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [qualityReports, setQualityReports] = 
+    useState<SlideQualityReport[]>([]);
+  const [showQualityPanel, setShowQualityPanel] = 
+    useState(false);
+  const [pendingExportFormat, setPendingExportFormat] = 
+    useState<'png' | 'pdf' | 'pptx' | null>(null);
+  const { toast } = useToast();
 
   // AI Image Generator Modal State
   const [showImageGenerator, setShowImageGenerator] = useState(false);
@@ -1516,6 +1527,46 @@ export default function RealTimeGenerator() {
     }
   };
 
+  const handleExportClick = (
+    format: 'png' | 'pdf' | 'pptx'
+  ) => {
+    setShowExportMenu(false);
+    const reports = slides.map(analyzeSlideQuality);
+    setQualityReports(reports);
+    const hasIssues = reports.some(r => !r.passed);
+    if (hasIssues) {
+      setPendingExportFormat(format);
+      setShowQualityPanel(true);
+      return;
+    }
+    toast({
+      title: 'All quality checks passed',
+      description: 'Your presentation is ready.',
+    });
+    handleExport(format);
+  };
+
+  const handleAutoFix = (
+    slideNumber: number,
+    ruleIds: string[]
+  ) => {
+    const slideIndex = slides.findIndex(
+      s => s.slideNumber === slideNumber
+    );
+    if (slideIndex === -1) return;
+    const slide = slides[slideIndex];
+    const issues = (qualityReports
+      .find(r => r.slideNumber === slideNumber)
+      ?.issues ?? [])
+      .filter(i => ruleIds.includes(i.ruleId));
+    const { fixedSlides } = autoFixSlide(slide, issues);
+    const newSlides = [...slides];
+    newSlides.splice(slideIndex, 1, ...fixedSlides);
+    setSlides(newSlides);
+    const newReports = newSlides.map(analyzeSlideQuality);
+    setQualityReports(newReports);
+  };
+
   const handleExport = async (format: 'png' | 'pdf' | 'pptx') => {
     setIsExporting(true);
     setShowExportMenu(false);
@@ -1724,6 +1775,9 @@ export default function RealTimeGenerator() {
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
                 Transform your ideas into professional presentations in seconds.
               </p>
+              <div className="mt-6">
+
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2510,7 +2564,7 @@ export default function RealTimeGenerator() {
                       {showExportMenu && !isExporting && (
                         <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
                           <button
-                            onClick={() => handleExport('png')}
+                            onClick={() => handleExportClick('png')}
                             className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
                           >
                             <ImageIcon className="w-4 h-4" />
@@ -2520,7 +2574,7 @@ export default function RealTimeGenerator() {
                             </div>
                           </button>
                           <button
-                            onClick={() => handleExport('pdf')}
+                            onClick={() => handleExportClick('pdf')}
                             className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
                           >
                             <FileText className="w-4 h-4" />
@@ -2530,7 +2584,7 @@ export default function RealTimeGenerator() {
                             </div>
                           </button>
                           <button
-                            onClick={() => handleExport('pptx')}
+                            onClick={() => handleExportClick('pptx')}
                             className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 border-t border-border"
                           >
                             <Layout className="w-4 h-4" />
@@ -2806,6 +2860,25 @@ export default function RealTimeGenerator() {
           }
         `}</style>
       </div>
+
+      <SlideQualityPanel
+        isOpen={showQualityPanel}
+        reports={qualityReports}
+        onAutoFix={handleAutoFix}
+        onExportAnyway={() => {
+          setShowQualityPanel(false);
+          if (pendingExportFormat) {
+            handleExport(pendingExportFormat);
+          }
+        }}
+        onExportClean={() => {
+          setShowQualityPanel(false);
+          if (pendingExportFormat) {
+            handleExport(pendingExportFormat);
+          }
+        }}
+        onClose={() => setShowQualityPanel(false)}
+      />
     </div>
   );
 }
