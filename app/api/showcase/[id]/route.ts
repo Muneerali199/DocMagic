@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createRoute } from "@/lib/supabase/server";
 import { hashIp, getClientIp } from "@/lib/showcase/ip";
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   // ── Fire view event (deduped, fire-and-forget) ────────────────────────────
   recordView(supabase, postId, user?.id ?? null, req.headers).catch((e) =>
-    console.error("[showcase/:id] view error:", e)
+    logger.error({ route: 'app/api/showcase/[id]/route.ts' }, "[showcase/:id] view error:", e)
   );
 
   return Response.json({

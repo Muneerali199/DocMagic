@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { stripe } from '@/lib/stripe';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error creating payment intent:", error);
+    logger.error({ route: 'app/api/stripe/create-payment-intent/route.ts' }, "Error creating payment intent:", error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: {

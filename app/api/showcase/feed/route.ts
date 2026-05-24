@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from "next/server";
 import { createRoute } from "@/lib/supabase/server";
 import { computeRelevanceScore } from "@/lib/showcase/ranking";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     return Response.json({ items, next_cursor, total_hint: null });
   } catch (err) {
-    console.error("[showcase/feed] error:", err);
+    logger.error({ route: 'app/api/showcase/feed/route.ts' }, "[showcase/feed] error:", err);
     return Response.json({ error: "Failed to load feed" }, { status: 500 });
   }
 }

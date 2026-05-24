@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ API error:', error);
+    logger.error({ route: 'app/api/generate-presentation-stream/route.ts' }, '❌ API error:', error);
 
     return NextResponse.json(
       { error: 'Failed to generate presentation' },

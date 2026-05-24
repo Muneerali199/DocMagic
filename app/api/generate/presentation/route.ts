@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
     if (overReserved > 0) {
       const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
       if (!refunded) {
-        console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+        logger.error({ route: 'app/api/generate/presentation/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
       }
     }
 
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (logError) {
-      console.error('Failed to log credit usage:', logError);
+      logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Failed to log credit usage:', logError);
     } else {
       console.log(`💳 Deducted ${actualCreditCost} credits for ${slides.length}-slide presentation`);
     }
@@ -208,7 +209,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error generating presentation:', error);
+    logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Error generating presentation:', error);
     return NextResponse.json(
       { error: 'Failed to generate presentation' },
       { status: 500 }

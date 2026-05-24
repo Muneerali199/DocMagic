@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
@@ -13,12 +14,12 @@ export async function POST(req: Request) {
 
     // Validate webhook signature
     if (!signature) {
-      console.error('Missing Stripe signature');
+      logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Missing Stripe signature');
       return new NextResponse('Missing signature', { status: 400 });
     }
 
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      console.error('Missing Stripe webhook secret');
+      logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Missing Stripe webhook secret');
       return new NextResponse('Server configuration error', { status: 500 });
     }
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
         process.env.STRIPE_WEBHOOK_SECRET
       );
     } catch (error: any) {
-      console.error('Webhook signature verification failed:', error.message);
+      logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Webhook signature verification failed:', error.message);
       return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
 
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       // Validate required fields
       if (!session.subscription || !session.metadata?.userId) {
-        console.error('Missing required session data');
+        logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Missing required session data');
         return new NextResponse('Invalid session data', { status: 400 });
       }
 
@@ -75,14 +76,14 @@ export async function POST(req: Request) {
         });
 
       if (error) {
-        console.error('Error creating subscription:', error);
+        logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Error creating subscription:', error);
         return new NextResponse('Database Error', { status: 500 });
       }
     }
 
     if (event.type === "invoice.payment_succeeded") {
       if (!session.subscription) {
-        console.error('Missing subscription in invoice event');
+        logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Missing subscription in invoice event');
         return new NextResponse('Invalid invoice data', { status: 400 });
       }
 
@@ -102,14 +103,14 @@ export async function POST(req: Request) {
         .eq('stripe_subscription_id', subscription.id);
 
       if (error) {
-        console.error('Error updating subscription:', error);
+        logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Error updating subscription:', error);
         return new NextResponse('Database Error', { status: 500 });
       }
     }
 
     return new NextResponse(null, { status: 200 });
   } catch (error: any) {
-    console.error('Webhook processing error:', error);
+    logger.error({ route: 'app/api/stripe/webhook/route.ts' }, 'Webhook processing error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

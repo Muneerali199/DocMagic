@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
       .single();
 
     if (creditsError && creditsError.code !== 'PGRST116') {
-      console.error('Error getting referral info:', creditsError);
+      logger.error({ route: 'app/api/referral/route.ts' }, 'Error getting referral info:', creditsError);
       return NextResponse.json(
         { error: 'Failed to get referral info' },
         { status: 500 }
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Referral API error:', error);
+    logger.error({ route: 'app/api/referral/route.ts' }, 'Referral API error:', error);
     return NextResponse.json(
       { error: 'Failed to get referral info' },
       { status: 500 }
@@ -138,7 +139,7 @@ export async function POST(request: Request) {
       });
 
     if (insertError) {
-      console.error('Error creating referral:', insertError);
+      logger.error({ route: 'app/api/referral/route.ts' }, 'Error creating referral:', insertError);
       return NextResponse.json(
         { success: false, message: 'Failed to process referral' },
         { status: 200 }
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
       .eq('user_id', referrer.user_id);
 
     if (updateError) {
-      console.error('Error awarding referral credits:', updateError);
+      logger.error({ route: 'app/api/referral/route.ts' }, 'Error awarding referral credits:', updateError);
     }
 
     // Update the new user's record to track who referred them
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Referral processing error:', error);
+    logger.error({ route: 'app/api/referral/route.ts' }, 'Referral processing error:', error);
     return NextResponse.json(
       { error: 'Failed to process referral' },
       { status: 500 }

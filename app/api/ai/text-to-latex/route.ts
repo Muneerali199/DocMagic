@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -48,7 +49,7 @@ Generate complete LaTeX code that can be compiled directly.`;
         timestamp: new Date().toISOString()
       });
     } catch (aiError) {
-      console.error('AI generation failed, using fallback:', aiError);
+      logger.error({ route: 'app/api/ai/text-to-latex/route.ts' }, 'AI generation failed, using fallback:', aiError);
       // Fallback: Generate basic LaTeX
       const fallbackLatex = generateFallbackLatex(text);
       return NextResponse.json({
@@ -58,7 +59,7 @@ Generate complete LaTeX code that can be compiled directly.`;
     }
 
   } catch (error: any) {
-    console.error('Error in text-to-latex:', error);
+    logger.error({ route: 'app/api/ai/text-to-latex/route.ts' }, 'Error in text-to-latex:', error);
     
     // Return fallback response
     const fallbackLatex = generateFallbackLatex(body?.text || '');

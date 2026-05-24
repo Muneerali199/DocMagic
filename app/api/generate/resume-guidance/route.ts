@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     const guidance = await generateResumeStepGuidance(step, targetRole, existingData);
     return NextResponse.json(guidance);
   } catch (error) {
-    console.error('Error generating resume guidance:', error);
+    logger.error({ route: 'app/api/generate/resume-guidance/route.ts' }, 'Error generating resume guidance:', error);
     return NextResponse.json(
       { error: 'Failed to generate guidance' },
       { status: 500 }

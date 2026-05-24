@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 import { sendVerificationEmail } from "@/lib/email";
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      console.error('Signup error:', error);
+      logger.error({ route: 'app/api/auth/register/route.ts' }, 'Signup error:', error);
       // ... (keep your existing error handling logic for 422/user_already_exists here)
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ message: 'Registration successful!', requiresVerification }), { status: 200 });
 
   } catch (error: any) {
-    console.error('Unexpected error in registration:', error);
+    logger.error({ route: 'app/api/auth/register/route.ts' }, 'Unexpected error in registration:', error);
     return new Response(JSON.stringify({ error: error.message || 'An unexpected error occurred' }), { status: 500 });
   }
 }

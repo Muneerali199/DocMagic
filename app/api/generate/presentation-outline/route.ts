@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -202,7 +203,7 @@ Make content professional, engaging, and visually focused.`
       
       return parsedSlides;
     } catch (e) {
-      console.error('Failed to parse Nebius response:', e);
+      logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to parse Nebius response:', e);
     }
   }
   
@@ -292,7 +293,7 @@ export async function POST(request: Request) {
         .single();
       
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -315,7 +316,7 @@ export async function POST(request: Request) {
         .single();
 
       if (updateError) {
-        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
+        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to reset credits in database, applying local reset instead:', updateError);
         userCredits = {
           ...userCredits,
           credits_used: 0,
@@ -324,7 +325,7 @@ export async function POST(request: Request) {
       } else if (updatedCredits) {
         userCredits = updatedCredits;
       } else {
-        console.error('Credits reset did not return an updated record, applying local reset instead');
+        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Credits reset did not return an updated record, applying local reset instead');
         userCredits = {
           ...userCredits,
           credits_used: 0,
@@ -401,7 +402,7 @@ export async function POST(request: Request) {
 
           console.log('Generated with Mistral');
         } catch (mistralError: any) {
-          console.error('Mistral failed:', mistralError.message);
+          logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Mistral failed:', mistralError.message);
           console.log('Falling back to Nebius...');
           outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
         }
@@ -467,7 +468,7 @@ export async function POST(request: Request) {
       chartDataList = await generateChartData(outlines, prompt);
       console.log(`✅ Generated ${chartDataList.length} charts`);
     } catch (error) {
-      console.error('Error generating charts:', error);
+      logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Error generating charts:', error);
       console.log('⚠️ Skipping chart generation due to rate limit');
     }
     
@@ -500,7 +501,7 @@ export async function POST(request: Request) {
       if (overReserved > 0) {
         const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
         if (!refunded) {
-          console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+          logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
         } else {
           creditsUsedAfter -= overReserved;
         }
@@ -519,7 +520,7 @@ export async function POST(request: Request) {
         });
 
       if (logError) {
-        console.error('Failed to log credit usage:', logError);
+        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to log credit usage:', logError);
       } else {
         console.log(`💳 Deducted ${actualCreditCost} credits for ${enhancedOutlines.length}-slide presentation`);
       }
@@ -543,7 +544,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Error generating presentation outline:', error);
+    logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Error generating presentation outline:', error);
     return NextResponse.json(
       { error: 'Failed to generate presentation outline', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

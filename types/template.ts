@@ -19,3 +19,14 @@ export interface TemplateFormValues {
   useAI?: boolean;
   aiPrompt?: string;
 }
+export interface TemplateCapabilities {
+  supportsPhoto: boolean;
+  multiColumn: boolean;
+  atsMode: boolean;
+  exportStable: boolean;
+}
+
+export interface TemplateCompatibilityResult {
+  warnings: string[];
+  suggestions: string[];
+}

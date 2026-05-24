@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, getCreditsResetDate, shouldResetCredits, type Tier, type ActionType } from '@/lib/credits-service';
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
         .single();
 
       if (insertError) {
-        console.error('Error creating credits:', insertError);
+        logger.error({ route: 'app/api/credits/route.ts' }, 'Error creating credits:', insertError);
         // Return default free tier info
         return NextResponse.json({
           tier: 'free',
@@ -112,7 +113,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Credits API error:', error);
+    logger.error({ route: 'app/api/credits/route.ts' }, 'Credits API error:', error);
     return NextResponse.json(
       { error: 'Failed to get credits info' },
       { status: 500 }
@@ -272,7 +273,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Credits API error:', error);
+    logger.error({ route: 'app/api/credits/route.ts' }, 'Credits API error:', error);
     return NextResponse.json(
       { error: 'Failed to use credits' },
       { status: 500 }

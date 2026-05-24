@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 60; // Allow 60 seconds for AI generation (Vercel Hobby limit)
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
         .single();
 
       if (insertError) {
-        console.error("Failed to create credits record:", insertError);
+        logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to create credits record:", insertError);
         return NextResponse.json(
           { error: "Failed to initialize credits" },
           { status: 500 },
@@ -227,7 +228,7 @@ export async function POST(request: Request) {
           });
 
         if (logError) {
-          console.error("Failed to log credit usage:", logError);
+          logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to log credit usage:", logError);
         } else {
           console.log(
             `💳 Deducted ${creditCost} credits for cover letter generation`,
@@ -296,7 +297,7 @@ export async function POST(request: Request) {
         });
 
       if (logError) {
-        console.error("Failed to log credit usage:", logError);
+        logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to log credit usage:", logError);
       } else {
         console.log(`💳 Deducted ${creditCost} credits for letter generation`);
       }
@@ -304,7 +305,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(formattedResponse);
   } catch (error) {
-    console.error("Error generating letter:", error);
+    logger.error({ route: 'app/api/generate/letter/route.ts' }, "Error generating letter:", error);
     return NextResponse.json(
       {
         error: "Failed to generate letter",

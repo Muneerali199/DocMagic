@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error generating campaign:', error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, 'Error generating campaign:', error);
     
     // Handle specific error types
     if (error.message?.includes('QUOTA_EXCEEDED')) {
@@ -179,7 +180,7 @@ Return ONLY a JSON array with this structure:
 
     return [];
   } catch (error) {
-    console.error('Error generating ideas:', error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, 'Error generating ideas:', error);
     return [];
   }
 }
@@ -239,7 +240,7 @@ Return ONLY a JSON object:
       cta: 'Learn more',
     };
   } catch (error) {
-    console.error(`Error generating ${platform} post:`, error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, `Error generating ${platform} post:`, error);
     return {
       caption: idea.summary,
       hashtags: [],

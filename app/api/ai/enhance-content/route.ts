@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -96,7 +97,7 @@ Keep responses concise, practical, and easy to implement. Use bullet points for 
     });
 
   } catch (error: any) {
-    console.error('Error in AI enhancement:', error);
+    logger.error({ route: 'app/api/ai/enhance-content/route.ts' }, 'Error in AI enhancement:', error);
     return NextResponse.json(
       { error: 'Failed to enhance content. Please try again.' },
       { status: 500 }
