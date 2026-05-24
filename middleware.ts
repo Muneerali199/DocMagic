@@ -5,7 +5,6 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
   .map((o) => o.trim());
 
-// Deployment error detection
 const DEPLOYMENT_ERROR_PATTERNS = [
   /DEPLOYMENT_NOT_FOUND/i,
   /503|504/,
@@ -13,53 +12,25 @@ const DEPLOYMENT_ERROR_PATTERNS = [
   /deployment.*error/i,
 ];
 
-// In-memory stores
-const rateLimitStore = new Map<string, { count: number; reset: number }>();
-const ipBlocklist = new Set<string>();
-
-/**
- * Detect if error is deployment-related
- */
 function isDeploymentError(response: Response): boolean {
   const status = response.status;
-  
-  // Check HTTP status codes that indicate deployment issues
   if (status === 503 || status === 504 || status >= 500) {
     return true;
   }
-  
   return false;
 }
 
-/**
- * Log error for monitoring (Sentry, LogRocket, etc.)
- */
 async function logError(
   pathname: string,
   error: string,
   status: number,
   timestamp: number
 ) {
-  // Log to console in development
   if (process.env.NODE_ENV === 'development') {
     console.error(`[ERROR] ${pathname}: ${error} (${status}) at ${new Date(timestamp).toISOString()}`);
   }
-
-  // TODO: Integrate with Sentry or other monitoring service
-  // if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-  //   await Sentry.captureMessage(`Deployment Error: ${error}`, 'error');
-  // }
 }
 
-function getRateLimitConfig(pathname: string) {
-  if (pathname.startsWith('/api/auth/')) {
-    return RATE_LIMITS.AUTH;
-  } else if (pathname.startsWith('/api/generate/')) {
-    return RATE_LIMITS.GENERATE;
-  } else if (pathname.startsWith('/api/export/')) {
-    return RATE_LIMITS.EXPORT;
-  }
-  return RATE_LIMITS.API;
 const CORS_HDRS = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-Id',
@@ -87,7 +58,6 @@ setInterval(() => {
 }, 60_000);
 
 function rlKey(p: string): RLKey {
-  // Strip version prefix so /api/v1/generate/... and /api/generate/... share the same bucket
   const norm = p.replace(/^\/api\/v\d+(?:\/|$)/, '/api/');
   if (norm.startsWith('/api/auth/'))     return 'AUTH';
   if (norm.startsWith('/api/generate/')) return 'GENERATE';
@@ -136,17 +106,6 @@ export function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith('/api/')) {
-    const rateLimitResult = checkRateLimit(ip, pathname);
-    
-    if (!rateLimitResult.allowed) {
-      const errorMsg = 'Rate limit exceeded';
-      logError(pathname, errorMsg, 429, Date.now());
-      
-      return NextResponse.json(
-        {
-          error: errorMsg,
-          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
-        },
     const ip = (
       req.headers.get('x-forwarded-for')?.split(',')[0] ??
       req.headers.get('x-real-ip') ??
@@ -155,6 +114,7 @@ export function middleware(req: NextRequest) {
     const rl = checkRL(ip, pathname);
     if (!rl.allowed) {
       const ra = Math.ceil((rl.reset - Date.now()) / 1000);
+      logError(pathname, 'Rate limit exceeded', 429, Date.now());
       return NextResponse.json(
         { error: 'Rate limit exceeded', retryAfter: ra },
         {
@@ -170,62 +130,38 @@ export function middleware(req: NextRequest) {
       );
     }
 
-    const response = NextResponse.next();
-    
-    // Add rate limit headers
-    response.headers.set('X-RateLimit-Limit', RATE_LIMITS.API.max.toString());
-    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
-    response.headers.set('X-RateLimit-Reset', Math.ceil(rateLimitResult.reset / 1000).toString());
-    
-    // Performance monitoring for AI endpoints
-    if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
-      response.headers.set('X-Endpoint-Type', 'ai-generation');
-    }
-    
-    // Detect and log deployment errors
-    if (isDeploymentError(response)) {
-      logError(pathname, 'Deployment error detected', response.status, Date.now());
-      
-      // Add error context header for client-side handling
-      response.headers.set('X-Deployment-Error', 'true');
-    }
-    
-    return response;
-  }
-
-  // HTML pages - add performance headers
-  if (pathname.match(/\.html$/) || !pathname.includes('.')) {
-    const response = NextResponse.next();
-    
-    // Security headers
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-    
-    // Performance headers
-    response.headers.set('X-DNS-Prefetch-Control', 'on');
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    
-    // Cache HTML pages moderately
-    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
-    
-    // Detect and log deployment errors for pages
-    if (isDeploymentError(response)) {
-      logError(pathname, 'Deployment error on page load', response.status, Date.now());
-      response.headers.set('X-Deployment-Error', 'true');
-    }
-    
-    return response;
     const r = NextResponse.next();
     for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
     r.headers.set('X-RateLimit-Limit', String(rl.limit));
     r.headers.set('X-RateLimit-Remaining', String(rl.remaining));
     r.headers.set('X-RateLimit-Reset', String(Math.ceil(rl.reset / 1000)));
 
-    // Stamp which API version was routed so clients always know what they got
     const versionMatch = pathname.match(/^\/api\/(v\d+)(?:\/|$)/);
     r.headers.set('X-API-Version', versionMatch ? versionMatch[1] : 'v2');
+
+    if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
+      r.headers.set('X-Endpoint-Type', 'ai-generation');
+    }
+
+    if (isDeploymentError(r)) {
+      logError(pathname, 'Deployment error detected', r.status, Date.now());
+      r.headers.set('X-Deployment-Error', 'true');
+    }
+
+    return r;
+  }
+
+  if (!pathname.includes('.')) {
+    const r = NextResponse.next();
+    secHdrs(r);
+    r.headers.set('X-DNS-Prefetch-Control', 'on');
+    r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
+    r.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+    if (isDeploymentError(r)) {
+      logError(pathname, 'Deployment error on page load', r.status, Date.now());
+      r.headers.set('X-Deployment-Error', 'true');
+    }
 
     return r;
   }
@@ -237,5 +173,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)', ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
 };
