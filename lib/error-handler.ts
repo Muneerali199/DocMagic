@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementErrorCount, incrementRequestCount } from '@/app/api/metrics/route';
+import { RequestValidationError } from '@/lib/validation';
 
 /**
  * ==========================================
@@ -347,6 +348,15 @@ export function withErrorHandling(handler: ApiHandler): ApiHandler {
         errors: currentStats.errors + 1,
         totalDurationMs: currentStats.totalDurationMs + durationMs,
       });
+
+      if (error instanceof RequestValidationError) {
+        const response = NextResponse.json(
+          { error: error.message, details: error.details, requestId },
+          { status: 400 },
+        );
+        response.headers.set('x-request-id', requestId);
+        return response;
+      }
 
       // Capture and track exception details
       const caughtDetails = captureException(error, requestContext);

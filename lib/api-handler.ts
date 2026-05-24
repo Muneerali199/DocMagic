@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { ZodError } from 'zod';
+import { RequestValidationError } from '@/lib/validation';
 
 // ── Typed errors ─────────────────────────────────────────────
 export class AppError extends Error {
@@ -34,6 +35,9 @@ export class RateLimitError extends AppError {
 // ── Error → Response ─────────────────────────────────────────
 function errorToResponse(error: unknown, requestId: string): NextResponse {
   const isProd = process.env.NODE_ENV === 'production';
+  if (error instanceof RequestValidationError) {
+    return NextResponse.json({ error: error.message, details: error.details, requestId }, { status: 400 });
+  }
   if (error instanceof ZodError) {
     const details = error.errors.map(e=>`${e.path.join('.')}: ${e.message}`);
     return NextResponse.json({ error:'Validation failed', details, requestId }, { status:400 });

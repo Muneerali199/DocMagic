@@ -21,6 +21,11 @@ import {
   refundCredits,
   creditReservationConflictResponse,
 } from "@/lib/credit-operations";
+import {
+  letterGenerationSchema,
+  RequestValidationError,
+  safeParseBody,
+} from "@/lib/validation";
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -54,7 +59,19 @@ export async function POST(request: Request) {
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await safeParseBody(request, letterGenerationSchema);
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
+      return NextResponse.json(
+        { error: validationError.message, details: validationError.details },
+        { status: 400 },
+      );
+    }
+
     const {
       prompt,
       fromName,
@@ -151,15 +168,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate required fields for the standard-letter branch BEFORE
-    // reserving credits, so a missing-fields error doesn't charge anyone.
-    if (!isCoverLetter && (!prompt || !fromName || !toName || !letterType)) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
-
     // Atomically reserve credits BEFORE generation to prevent the
     // TOCTOU race documented in issue #477.
     if (!hasUnlimitedCredits) {
@@ -184,12 +192,15 @@ export async function POST(request: Request) {
         "📝 Generating cover letter from job description with Mistral...",
       );
 
+      const coverJobDescription = jobDescription as string;
+      const coverFromName = fromName as string;
+
       let coverLetter;
       try {
         coverLetter = await generateCoverLetterFromJob({
-          jobDescription,
+          jobDescription: coverJobDescription,
           jobUrl,
-          fromName,
+          fromName: coverFromName,
           fromEmail,
           fromAddress,
           skills,
@@ -229,16 +240,20 @@ export async function POST(request: Request) {
 
     // Standard letter generation
     console.log(`📝 Generating ${letterType} letter with Mistral...`);
+    const standardPrompt = prompt as string;
+    const standardFromName = fromName as string;
+    const standardToName = toName as string;
+    const standardLetterType = letterType as string;
 
     let letter;
     try {
       letter = await generateLetterWithMistral({
-        prompt,
-        fromName,
+        prompt: standardPrompt,
+        fromName: standardFromName,
         fromAddress,
-        toName,
+        toName: standardToName,
         toAddress,
-        letterType,
+        letterType: standardLetterType,
       });
     } catch (err) {
       if (!hasUnlimitedCredits) {
@@ -250,11 +265,11 @@ export async function POST(request: Request) {
     // Format the response to ensure it has the expected structure
     const formattedResponse = {
       from: {
-        name: letter.from?.name || fromName,
+        name: letter.from?.name || standardFromName,
         address: letter.from?.address || fromAddress || "",
       },
       to: {
-        name: letter.to?.name || toName,
+        name: letter.to?.name || standardToName,
         address: letter.to?.address || toAddress || "",
       },
       date:
@@ -264,7 +279,7 @@ export async function POST(request: Request) {
           month: "long",
           day: "numeric",
         }),
-      subject: letter.subject || "Re: " + prompt.substring(0, 30) + "...",
+      subject: letter.subject || "Re: " + standardPrompt.substring(0, 30) + "...",
       content: letter.content || "Letter content not available.",
     };
 
@@ -277,7 +292,7 @@ export async function POST(request: Request) {
           user_id: user.id,
           action_type: actionType,
           credits_used: creditCost,
-          metadata: { letter_type: letterType, prompt_length: prompt.length },
+          metadata: { letter_type: standardLetterType, prompt_length: standardPrompt.length },
         });
 
       if (logError) {
