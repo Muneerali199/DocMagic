@@ -34,7 +34,8 @@ import {
   ChevronRight,
   Minus,
   Wand2,
-  PenTool
+  PenTool,
+  Share2
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
@@ -50,6 +51,7 @@ import {
   isWheelNavigationLocked,
   PRESENTATION_WHEEL_LOCK_MS,
 } from '@/lib/presentation-motion';
+import { PublishModal } from "@/components/showcase/publish-modal";
 
 // Circuit Pattern Component (inline for now)
 export const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -1157,6 +1159,7 @@ export default function RealTimeGenerator() {
   const presentWheelLockRef = useRef(0);
   const prefersReducedMotion = useReducedMotion();
   const visiblePresentationId = presentationId || editId;
+  const [publishOpen, setPublishOpen] = useState(false);
 
   const handleCopyLink = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -1666,6 +1669,8 @@ export default function RealTimeGenerator() {
     const themeConfig = getThemeById(selectedThemeId);
     return themeConfig.colors.gradient;
   };
+
+   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground selection:bg-blue-500/30">
@@ -2485,6 +2490,14 @@ export default function RealTimeGenerator() {
                       )}
                     </button>
 
+                    {/* Publish to Showcase Button */}
+                    <button
+                      onClick={() => setPublishOpen(true)}
+                    >
+                      <Share2 className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Publish</span>
+                    </button>
+
                     {/* Export Button */}
                     <div className="relative">
                       <button
@@ -2806,6 +2819,21 @@ export default function RealTimeGenerator() {
           }
         `}</style>
       </div>
+
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        defaults={{
+          type: "presentation",
+          title: slides?.[0]?.title ?? "My Presentation",
+          content_ref:
+            shareUrl ||
+            (visiblePresentationId
+              ? `${origin}/presentation/view/${visiblePresentationId}`
+               : ""),
+        }}
+        onSuccess={() => alert("Published to Showcase!")}
+      />
     </div>
   );
 }

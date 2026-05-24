@@ -24,6 +24,7 @@ import {
   Layout,
   BookOpen,
   MoreHorizontal,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -521,6 +522,12 @@ const navItems = [
     label: "Templates",
     icon: <Layout className="h-4 w-4" />,
     tooltip: "Browse and manage document templates",
+  },
+  {
+    href: "/showcase",        // ← add this
+    label: "Showcase",
+    icon: <Trophy className="h-4 w-4" />,
+    tooltip: "Discover resumes and presentations from the community",
   },
   {
     href: "/dashboard/history",
