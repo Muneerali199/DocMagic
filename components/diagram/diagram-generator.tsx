@@ -778,8 +778,8 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="flex justify-center mb-4 sm:mb-6 px-2">
-          <TabsList role="tablist" className="glass-effect border border-yellow-400/20 p-1 h-auto">
+        <div className="flex justify-center mb-4 sm:mb-6 px-2 overflow-x-auto">
+          <TabsList role="tablist" className="glass-effect border border-yellow-400/20 p-1 h-auto flex-nowrap"  style={{ scrollbarWidth: 'none' }}>
             <TabsTrigger
               value="editor"
               className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
@@ -1029,8 +1029,77 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   </Button>
                 </div>
 
-                {/* Copy Code Button */}
-                <div className="flex flex-wrap gap-2">
+                {/* Mobile Action Toolbar - visible on mobile only, Export panel handles desktop */}
+                <div className="lg:hidden glass-effect p-3 rounded-xl border border-yellow-400/20">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
+                    <Download className="h-3.5 w-3.5 text-yellow-500" />
+                    Actions
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => exportDiagram('png')}
+                      disabled={exportingFormat === 'png'}
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
+                    >
+                      {exportingFormat === 'png' ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileImage className="mr-2 h-4 w-4" />
+                      )}
+                      Export PNG
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => exportDiagram('svg')}
+                      disabled={exportingFormat === 'svg'}
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
+                    >
+                      {exportingFormat === 'svg' ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                      )}
+                      Export SVG
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={copyToClipboard}
+                      disabled={isCopying}
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
+                    >
+                      {isCopying ? (
+                        <Check className="mr-2 h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="mr-2 h-4 w-4" />
+                      )}
+                      Copy Code
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={saveDiagram}
+                      disabled={isSavingDiagram}
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
+                    >
+                      {isSavingDiagram ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={shareDiagram}
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px] col-span-2"
+                    >
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Share
+                    </Button>
+                  </div>
+                </div>
+                {/* Desktop Copy Code Button */}
+                <div className="hidden lg:flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     onClick={copyToClipboard}
