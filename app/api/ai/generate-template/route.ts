@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
+import { validateGenerationRequest } from '@/lib/validators/aiRequestValidator';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -31,14 +32,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { prompt, type } = await request.json();
+  const body = await request.json();
 
-    if (!prompt || !type) {
-      return NextResponse.json(
-        { error: 'Prompt and type are required' },
-        { status: 400 }
-      );
-    }
+const validation = validateGenerationRequest(body);
+
+if (!validation.valid) {
+  return NextResponse.json(
+    {
+      error: 'Invalid request payload',
+      details: validation.errors,
+    },
+    { status: 400 }
+  );
+}
+
+const { prompt, type } = body;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 

@@ -2,6 +2,20 @@ import { notFound } from 'next/navigation';
 import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
+ restrict-diagnostic-page
+
+    // Restrict diagnostic page in production
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-2xl font-bold">
+          Access Denied
+        </h1>
+      </div>
+    );
+  }
+  const supabase = createClient();
+
   const diagnosticsEnabled =
     process.env.NODE_ENV !== 'production' &&
     process.env.ENABLE_DIAGNOSTIC_PAGE === 'true';
@@ -10,7 +24,7 @@ export default async function DiagnosticPage() {
     notFound();
   }
 
-  const supabase = await createServer();
+ main
 
   // Check if tables exist by trying to query them
   let tablesStatus = {
@@ -25,7 +39,7 @@ export default async function DiagnosticPage() {
 
   try {
     const { data: plans, error } = await supabase
-      .from('subscription_plans')
+      .from<any, any>('subscription_plans')
       .select('*');
     
     if (!error && plans) {
@@ -141,10 +155,17 @@ export default async function DiagnosticPage() {
             >
               Sign In
             </a>
+ restrict-diagnostic-page
+            <a 
+  href="https://dashboard.stripe.com/test/products"
+  target="_blank"
+  rel="noopener noreferrer"
+
             <a
               href="https://dashboard.stripe.com/test/products"
               target="_blank"
               rel="noopener noreferrer"
+ main
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
             >
               Stripe Dashboard

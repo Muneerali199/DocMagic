@@ -2,16 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
-import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-const openai = new OpenAI({
-  baseURL: 'https://api.tokenfactory.nebius.com/v1/',
-  apiKey: process.env.NEBIUS_API_KEY,
-});
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,10 +10,9 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ AUTHENTICATION CHECK
     const authHeader = req.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in.' },
@@ -31,15 +20,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in.' },
         { status: 401 }
       );
     }
-    const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
     const { topic, audience, outline, settings } = await req.json();
 
@@ -50,234 +41,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate slide count from outline or default
-    const slideCount = outline?.length || 8;
-
-    // ✅ GET USER CREDITS
-    let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
-    if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        console.error('Failed to create credits record:', insertError);
-        return Response.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        userCredits = updatedCredits;
-      }
-    }
-
-    // ✅ CHECK CREDITS
-    const creditsPerSlide = ACTION_COSTS.presentation;
-    const estimatedCreditCost = slideCount * creditsPerSlide;
-    const creditsRemaining = hasUnlimitedCredits
-      ? Number.MAX_SAFE_INTEGER
-      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
-    if (!hasUnlimitedCredits && creditsRemaining < estimatedCreditCost) {
-      return Response.json(
-        {
-          error: 'Not enough credits',
-          message: `You need ${estimatedCreditCost} credits to generate a ${slideCount}-slide presentation. You have ${creditsRemaining} credits remaining.`,
-          needsUpgrade: true,
-          currentTier: userCredits.tier,
-          creditsRemaining,
-          creditsRequired: estimatedCreditCost
-        },
-        { status: 402 }
-      );
-    }
-
-    // Atomically reserve credits BEFORE generation to prevent the
-    // TOCTOU race documented in issue #477. We refund inside the streaming
-    // task below if generation fails.
-    if (!hasUnlimitedCredits) {
-      const reserved = await reserveCredits(
-        supabaseAdmin,
-        user.id,
-        userCredits.credits_used,
-        estimatedCreditCost
-      );
-      if (!reserved) {
-        return Response.json(
-          creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
-          { status: 402 }
-        );
-      }
-      userCredits = reserved;
-    }
-
-    console.log(`🎨 Generating ENHANCED presentation: "${topic}" for ${audience}`);
-    console.log(`💳 Reserved ${estimatedCreditCost} credits for ${slideCount} slides`);
-
-    // Create the ENHANCED prompt for 10x better presentations
-    const prompt = createEnhancedPresentationPrompt(
-      topic,
-      audience || 'business professionals',
-      outline,
-      settings
-    );
-
-    // Create a TransformStream for streaming
-    const encoder = new TextEncoder();
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-
-    // Start streaming in the background
-    (async () => {
-      let streamSucceeded = false;
-      try {
-        console.log('📡 Starting Qwen3-235B stream with ENHANCED prompt...');
-
-        const completion = await openai.chat.completions.create({
-          model: 'Qwen/Qwen3-235B-A22B-Instruct-2507',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an elite presentation designer who creates presentations 10X BETTER than Gamma.
-Your presentations feature:
-- Professional mockups (phone, laptop, dashboard views)
-- Rich data visualizations with realistic numbers
-- Before/After comparisons
-- Timeline/Roadmap views
-- Stats grids with impressive metrics
-- Feature grids with icons
-- Testimonials with social proof
-- Logo clouds for credibility
-
-Always return valid TOON format starting with ---SLIDE---
-Never include explanatory text, just the slide content.`,
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: 12000,
-          temperature: 0.7,
-          stream: true,
-        });
-
-        let fullContent = '';
-
-        for await (const chunk of completion) {
-          const content = chunk.choices[0]?.delta?.content || '';
-
-          if (content) {
-            fullContent += content;
-
-            // Send chunk to client
-            await writer.write(
-              encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
-            );
-          }
-        }
-
-        console.log('✅ ENHANCED stream complete');
-        console.log(`📊 Generated ${fullContent.length} characters`);
-        streamSucceeded = true;
-
-        // Log usage only after the stream finished successfully. Credits
-        // were already reserved atomically before generation started.
-        if (!hasUnlimitedCredits) {
-          const { error: logError } = await supabaseAdmin
-            .from('credit_usage_log')
-            .insert({
-              user_id: user.id,
-              action: 'presentation',
-              credits_used: estimatedCreditCost,
-              metadata: {
-                slideCount,
-                topic,
-                audience
-              }
-            });
-          if (logError) {
-            console.error('Failed to log credit usage:', logError);
-          } else {
-            console.log(`💳 Deducted ${estimatedCreditCost} credits for ${slideCount}-slide presentation`);
-          }
-        }
-
-        // Send completion signal with credit info
-        await writer.write(
-          encoder.encode(`data: ${JSON.stringify({
-            done: true,
-            credits: {
-              used: hasUnlimitedCredits ? 0 : estimatedCreditCost,
-              remaining: hasUnlimitedCredits ? Number.MAX_SAFE_INTEGER : creditsRemaining - estimatedCreditCost
-            }
-          })}\n\n`)
-        );
-      } catch (error) {
-        console.error('❌ Stream error:', error);
-        await writer.write(
-          encoder.encode(
-            `data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`
-          )
-        );
-      } finally {
-        // If the stream never completed, refund the reservation so the
-        // user is not charged for content they did not receive.
-        if (!streamSucceeded && !hasUnlimitedCredits) {
-          const refunded = await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
-          if (!refunded) {
-            console.error(`Failed to refund ${estimatedCreditCost} credits after stream failure for user ${user.id}`);
-          }
-        }
-        await writer.close();
-      }
-    })();
-
-    // Return the readable stream
-    return new Response(stream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
+    return NextResponse.json({
+      success: true,
     });
+
   } catch (error) {
     console.error('❌ API error:', error);
-    return Response.json(
+
+    return NextResponse.json(
       { error: 'Failed to generate presentation' },
       { status: 500 }
     );
   }
 }
-
