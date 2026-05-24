@@ -100,6 +100,37 @@ STRIPE_SECRET_KEY=your_stripe_key
 
 ---
 
+## 🐳 Docker Quick Start
+
+Run the entire application with one command — no manual Node.js installation required.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Muneerali199/Draftdeckai.git
+cd Draftdeckai
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Build and start (development mode with hot reload)
+docker compose up
+
+# For production build:
+docker compose -f docker-compose.yml up
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+The development setup mounts your local files for hot reload — changes to the source code automatically refresh the app.
+
+---
+
 ## 🏗️ Tech Stack
 
 | Category | Technology |

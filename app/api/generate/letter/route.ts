@@ -1,38 +1,55 @@
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 export const maxDuration = 60; // Allow 60 seconds for AI generation (Vercel Hobby limit)
 
-import { NextResponse } from 'next/server';
-import { generateLetterWithMistral, generateCoverLetterFromJob } from '@/lib/mistral';
-import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
-import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { NextResponse } from "next/server";
+import {
+  generateLetterWithMistral,
+  generateCoverLetterFromJob,
+} from "@/lib/mistral";
+import { createClient } from "@supabase/supabase-js";
+import {
+  ACTION_COSTS,
+  TIER_LIMITS,
+  getCreditsResetDate,
+  shouldResetCredits,
+  calculateRemainingCredits,
+  hasUnlimitedDeveloperCredits,
+} from "@/lib/credits-service";
+import {
+  reserveCredits,
+  refundCredits,
+  creditReservationConflictResponse,
+} from "@/lib/credit-operations";
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export async function POST(request: Request) {
   try {
     // ✅ AUTHENTICATION CHECK
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Authentication required. Please sign in to create letters.' },
-        { status: 401 }
+        { error: "Authentication required. Please sign in to create letters." },
+        { status: 401 },
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required. Please sign in to create letters.' },
-        { status: 401 }
+        { error: "Authentication required. Please sign in to create letters." },
+        { status: 401 },
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
@@ -50,43 +67,46 @@ export async function POST(request: Request) {
       jobUrl,
       fromEmail,
       skills,
-      experience
+      experience,
+      tone,
+      length,
+      lockedSections,
     } = body;
 
     // Determine which action type to use for credit calculation
     // Cover letters require both job description and sender name to be present
     const isCoverLetter = jobDescription && fromName;
-    const actionType = isCoverLetter ? 'cover_letter' : 'letter';
+    const actionType = isCoverLetter ? "cover_letter" : "letter";
 
     // Check user credits
     const creditCost = ACTION_COSTS[actionType];
 
     // Get or create user credits
     let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
+      .from("user_credits")
+      .select("*")
+      .eq("user_id", user.id)
       .single();
 
     // If no credits record exists, create one
     if (!userCredits) {
       const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
+        .from("user_credits")
         .insert({
           user_id: user.id,
-          tier: 'free',
+          tier: "free",
           credits_total: TIER_LIMITS.free,
           credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
+          credits_reset_at: getCreditsResetDate(),
         })
         .select()
         .single();
 
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        console.error("Failed to create credits record:", insertError);
         return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
+          { error: "Failed to initialize credits" },
+          { status: 500 },
         );
       }
       userCredits = newCredits;
@@ -96,12 +116,12 @@ export async function POST(request: Request) {
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
       const resetAt = getCreditsResetDate();
       const { data: updatedCredits } = await supabaseAdmin
-        .from('user_credits')
+        .from("user_credits")
         .update({
           credits_used: 0,
           credits_reset_at: resetAt,
         })
-        .eq('user_id', user.id)
+        .eq("user_id", user.id)
         .select()
         .single();
 
@@ -113,18 +133,21 @@ export async function POST(request: Request) {
     // Check if user has enough credits
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
-      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
+      : calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used,
+        );
 
     if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
         {
-          error: 'Not enough credits',
-          message: `You need ${creditCost} credits to generate a ${isCoverLetter ? 'cover letter' : 'letter'}. You have ${creditsRemaining} credits remaining.`,
+          error: "Not enough credits",
+          message: `You need ${creditCost} credits to generate a ${isCoverLetter ? "cover letter" : "letter"}. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
           currentTier: userCredits.tier,
-          creditsRemaining
+          creditsRemaining,
         },
-        { status: 402 }
+        { status: 402 },
       );
     }
 
@@ -132,8 +155,8 @@ export async function POST(request: Request) {
     // reserving credits, so a missing-fields error doesn't charge anyone.
     if (!isCoverLetter && (!prompt || !fromName || !toName || !letterType)) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
+        { error: "Missing required fields" },
+        { status: 400 },
       );
     }
 
@@ -144,12 +167,12 @@ export async function POST(request: Request) {
         supabaseAdmin,
         user.id,
         userCredits.credits_used,
-        creditCost
+        creditCost,
       );
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(creditCost, userCredits.tier),
-          { status: 402 }
+          { status: 402 },
         );
       }
       userCredits = reserved;
@@ -157,7 +180,9 @@ export async function POST(request: Request) {
 
     // Cover-letter branch
     if (isCoverLetter) {
-      console.log('📝 Generating cover letter from job description with Mistral...');
+      console.log(
+        "📝 Generating cover letter from job description with Mistral...",
+      );
 
       let coverLetter;
       try {
@@ -168,7 +193,10 @@ export async function POST(request: Request) {
           fromEmail,
           fromAddress,
           skills,
-          experience
+          experience,
+          tone,
+          length,
+          lockedSections,
         });
       } catch (err) {
         if (!hasUnlimitedCredits) {
@@ -179,18 +207,20 @@ export async function POST(request: Request) {
 
       if (!hasUnlimitedCredits) {
         const { error: logError } = await supabaseAdmin
-          .from('credit_usage_log')
+          .from("credit_usage_log")
           .insert({
             user_id: user.id,
-            action: actionType,
+            action_type: actionType,
             credits_used: creditCost,
-            metadata: { type: 'cover_letter', has_job_description: true }
+            metadata: { type: "cover_letter", has_job_description: true },
           });
 
         if (logError) {
-          console.error('Failed to log credit usage:', logError);
+          console.error("Failed to log credit usage:", logError);
         } else {
-          console.log(`💳 Deducted ${creditCost} credits for cover letter generation`);
+          console.log(
+            `💳 Deducted ${creditCost} credits for cover letter generation`,
+          );
         }
       }
 
@@ -221,35 +251,37 @@ export async function POST(request: Request) {
     const formattedResponse = {
       from: {
         name: letter.from?.name || fromName,
-        address: letter.from?.address || fromAddress || ""
+        address: letter.from?.address || fromAddress || "",
       },
       to: {
         name: letter.to?.name || toName,
-        address: letter.to?.address || toAddress || ""
+        address: letter.to?.address || toAddress || "",
       },
-      date: letter.date || new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
+      date:
+        letter.date ||
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
       subject: letter.subject || "Re: " + prompt.substring(0, 30) + "...",
-      content: letter.content || "Letter content not available."
+      content: letter.content || "Letter content not available.",
     };
 
-    console.log('✅ Letter generated successfully with Mistral');
+    console.log("✅ Letter generated successfully with Mistral");
 
     if (!hasUnlimitedCredits) {
       const { error: logError } = await supabaseAdmin
-        .from('credit_usage_log')
+        .from("credit_usage_log")
         .insert({
           user_id: user.id,
-          action: actionType,
+          action_type: actionType,
           credits_used: creditCost,
-          metadata: { letter_type: letterType, prompt_length: prompt.length }
+          metadata: { letter_type: letterType, prompt_length: prompt.length },
         });
 
       if (logError) {
-        console.error('Failed to log credit usage:', logError);
+        console.error("Failed to log credit usage:", logError);
       } else {
         console.log(`💳 Deducted ${creditCost} credits for letter generation`);
       }
@@ -257,10 +289,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json(formattedResponse);
   } catch (error) {
-    console.error('Error generating letter:', error);
+    console.error("Error generating letter:", error);
     return NextResponse.json(
-      { error: 'Failed to generate letter', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      {
+        error: "Failed to generate letter",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }

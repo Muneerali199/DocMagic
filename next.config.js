@@ -42,7 +42,6 @@ trailingSlash: false,
   experimental: {
     optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
     scrollRestoration: true,
-    workerThreads: true,
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
@@ -75,16 +74,10 @@ trailingSlash: false,
 webpack: (config, { isServer }) => {
     config.module.rules.push({
       test: /\.pdf$/,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/files',
-            outputPath: 'static/files',
-            name: '[name].[ext]',
-          },
-        },
-      ],
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/files/[name][ext]',
+      },
     });
     
     // Bundle size optimizations

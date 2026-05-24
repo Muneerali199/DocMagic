@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { ResumePreview } from "@/components/resume/resume-preview";
+import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 import { ResumeTemplates } from "@/components/resume/resume-templates";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
@@ -23,6 +24,7 @@ import {
   Minimize2,
   Download,
   User,
+  Code,
   Mail,
   Wand2,
   Palette,
@@ -275,6 +277,27 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       title: "Coming Soon",
       description: "Word export will be available in the next update.",
     });
+  };
+
+  const downloadLaTeX = async () => {
+    if (!resumeData) return;
+    setIsExporting(true);
+    try {
+      await exportToLaTeXFile(resumeData as any);
+      toast({
+        title: "Resume downloaded!",
+        description: "Your LaTeX source has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Error exporting to LaTeX:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export resume to LaTeX. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Share functions
@@ -545,6 +568,15 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                       Download DOCX
                     </Button>
                     <Button
+                      onClick={downloadLaTeX}
+                      disabled={isExporting}
+                      variant="outline"
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+                    >
+                      {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                      Download LaTeX
+                    </Button>
+                    <Button
                       onClick={saveAndShareResume}
                       disabled={isSaving}
                       variant="outline"
@@ -686,6 +718,17 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                         >
                           <Download className="mr-2 h-4 w-4" />
                           Download DOCX
+                        </Button>
+                      </TooltipWithShortcut>
+                      <TooltipWithShortcut content="Download as LaTeX source for advanced editing">
+                        <Button
+                          onClick={downloadLaTeX}
+                          disabled={isExporting}
+                          variant="outline"
+                          className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 w-full sm:w-auto"
+                        >
+                          {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                          Download LaTeX
                         </Button>
                       </TooltipWithShortcut>
                       <TooltipWithShortcut content="Create a shareable link for your resume">

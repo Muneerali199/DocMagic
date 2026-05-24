@@ -40,6 +40,14 @@ export interface DocumentChange {
   timestamp: string;
 }
 
+export interface DiagramChange {
+  id: string;
+  session_id: string;
+  mermaid_code: string;
+  diagram_type: string;
+  timestamp: string;
+}
+
 export interface SharePermission {
   id?: string;
   document_id: string;
@@ -54,6 +62,8 @@ export class CollaborationService {
   private supabase = createClient();
   private channel: RealtimeChannel | null = null;
   private sessionId: string | null = null;
+  private diagramChangeCallbacks: Array<(change: DiagramChange) => void> = [];
+  private diagramChangeListenerAttached = false;
 
   /**
    * Create a new collaboration session
@@ -159,12 +169,19 @@ export class CollaborationService {
     onParticipantJoin: (participant: Participant) => void,
     onParticipantLeave: (userId: string) => void
   ): void {
+    if (this.channel) {
+      this.channel.unsubscribe();
+    }
+
     this.channel = this.supabase.channel(`collaboration:${sessionId}`);
+    this.diagramChangeListenerAttached = false;
 
     // Listen for document changes
     this.channel.on('broadcast', { event: 'document_change' }, (payload) => {
       onDocumentChange(payload.payload as DocumentChange);
     });
+
+    this.listenForDiagramChanges();
 
     // Listen for cursor movements
     this.channel.on('broadcast', { event: 'cursor_move' }, (payload) => {
@@ -204,6 +221,60 @@ export class CollaborationService {
 
     // Save to database for history
     await this.supabase.from('document_changes').insert(fullChange);
+  }
+
+  /**
+   * Broadcast diagram change
+   */
+  async broadcastDiagramChange(sessionId: string, mermaidCode: string, diagramType: string): Promise<void> {
+    if (!this.channel) return;
+
+    const fullChange: DiagramChange = {
+      id: crypto.randomUUID(),
+      session_id: sessionId,
+      mermaid_code: mermaidCode,
+      diagram_type: diagramType,
+      timestamp: new Date().toISOString(),
+    };
+
+    await this.channel.send({
+      type: 'broadcast',
+      event: 'diagram_change',
+      payload: fullChange,
+    });
+  }
+
+  /**
+   * Subscribe to diagram changes
+   */
+  subscribeToDiagramChanges(sessionId: string, callback: (change: DiagramChange) => void): () => void {
+    this.diagramChangeCallbacks.push(callback);
+
+    if (!this.channel) {
+      this.channel = this.supabase.channel(`collaboration:${sessionId}`);
+      this.listenForDiagramChanges();
+      this.channel.subscribe();
+    } else {
+      this.listenForDiagramChanges();
+    }
+
+    return () => {
+      this.diagramChangeCallbacks = this.diagramChangeCallbacks.filter(
+        (existingCallback) => existingCallback !== callback
+      );
+    };
+  }
+
+  private listenForDiagramChanges(): void {
+    if (!this.channel || this.diagramChangeListenerAttached) return;
+
+    this.channel.on('broadcast', { event: 'diagram_change' }, (payload) => {
+      this.diagramChangeCallbacks.forEach((callback) => {
+        callback(payload.payload as DiagramChange);
+      });
+    });
+
+    this.diagramChangeListenerAttached = true;
   }
 
   /**
@@ -342,7 +413,20 @@ export class CollaborationService {
       this.channel = null;
     }
     this.sessionId = null;
+    this.diagramChangeCallbacks = [];
+    this.diagramChangeListenerAttached = false;
   }
 }
 
 export const collaborationService = new CollaborationService();
+
+export const broadcastDiagramChange = (
+  sessionId: string,
+  mermaidCode: string,
+  diagramType: string
+) => collaborationService.broadcastDiagramChange(sessionId, mermaidCode, diagramType);
+
+export const subscribeToDiagramChanges = (
+  sessionId: string,
+  callback: (change: DiagramChange) => void
+) => collaborationService.subscribeToDiagramChanges(sessionId, callback);

@@ -42,6 +42,9 @@ export default function EditableResume({ data, onUpdate }: EditableResumeProps) 
     const requestKey = `${experienceIndex}-${pointIndex}`;
     setEnhancingPoint(requestKey);
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
     try {
       const experience = data.experience[experienceIndex];
       const response = await fetch('/api/resume/enhance-bullet', {
@@ -57,6 +60,7 @@ export default function EditableResume({ data, onUpdate }: EditableResumeProps) 
             data.skills.tools,
           ].filter(Boolean).join(', '),
         }),
+        signal: controller.signal,
       });
 
       const result = await response.json();
@@ -64,18 +68,29 @@ export default function EditableResume({ data, onUpdate }: EditableResumeProps) 
         throw new Error(result.error || 'Failed to enhance bullet point');
       }
 
-      const latestData = latestDataRef.current;
-      const newExp = [...latestData.experience];
-      newExp[experienceIndex] = {
-        ...newExp[experienceIndex],
-        points: [...newExp[experienceIndex].points],
-      };
-      newExp[experienceIndex].points[pointIndex] = result.enhancedBullet;
-      onUpdate({ ...latestData, experience: newExp });
-      toast.success('Bullet point enhanced');
+      const enhancedBullet = typeof result?.enhancedBullet === 'string' ? result.enhancedBullet.trim() : '';
+
+      if (enhancedBullet) {
+        const latestData = latestDataRef.current;
+        const newExp = [...latestData.experience];
+        newExp[experienceIndex] = {
+          ...newExp[experienceIndex],
+          points: [...newExp[experienceIndex].points],
+        };
+        newExp[experienceIndex].points[pointIndex] = enhancedBullet;
+        onUpdate({ ...latestData, experience: newExp });
+        toast.success('Bullet point enhanced');
+      } else {
+        throw new Error('AI did not return a valid enhanced bullet');
+      }
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to enhance bullet point');
+      if (error?.name === 'AbortError') {
+        toast.error('Enhancement timed out (15s limit reached). Please try again.');
+      } else {
+        toast.error(error?.message || 'Failed to enhance bullet point');
+      }
     } finally {
+      window.clearTimeout(timeoutId);
       setEnhancingPoint(null);
     }
   };

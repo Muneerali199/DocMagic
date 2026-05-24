@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createRoute } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -7,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -46,7 +45,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
