@@ -56,17 +56,33 @@ export async function POST(request: Request) {
 
     if (error) {
       logger.error({ route: 'app/api/auth/register/route.ts' }, 'Signup error:', error);
-      // ... (keep your existing error handling logic for 422/user_already_exists here)
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      
+      // Handle existing user error gracefully
+      if (error.status === 422 || error.message.includes('User already registered')) {
+        return new Response(
+          JSON.stringify({ error: 'User already exists. Please log in.' }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: error.message }), 
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // ... (keep your existing success return logic)
     const requiresVerification = !data.session;
-    return new Response(JSON.stringify({ message: 'Registration successful!', requiresVerification }), { status: 200 });
+    return new Response(
+      JSON.stringify({ message: 'Registration successful!', requiresVerification }), 
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     logger.error({ route: 'app/api/auth/register/route.ts' }, 'Unexpected error in registration:', error);
-    return new Response(JSON.stringify({ error: error.message || 'An unexpected error occurred' }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: error.message || 'An unexpected error occurred' }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 
