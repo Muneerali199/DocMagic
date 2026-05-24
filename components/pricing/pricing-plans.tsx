@@ -27,6 +27,9 @@ import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { TIER_LIMITS, ACTION_COSTS } from '@/lib/credits-service';
 
+// 1. Import our custom tracker
+import { useTrackEvent } from '@/hooks/useTrackEvent';
+
 const features = {
   free: [
     `${TIER_LIMITS.free} credits per month`,
@@ -142,6 +145,9 @@ export default function PricingPlans() {
   const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
+  
+  // 2. Initialize the tracker
+  const { trackEvent } = useTrackEvent();
 
   const plans: PricingPlan[] = [
     {
@@ -194,6 +200,13 @@ export default function PricingPlans() {
   ];
 
   const handleSubscribe = async (plan: PricingPlan) => {
+    // 3. Track the click and attach the specific plan data!
+    trackEvent("Pricing CTA Clicked", { 
+      plan_name: plan.name, 
+      billing: plan.billing_period,
+      price: plan.price
+    });
+
     if (plan.price === 0) {
       router.push('/auth/register');
       return;
@@ -276,8 +289,7 @@ export default function PricingPlans() {
               <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
                 <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
                   <Crown className="w-3 h-3 mr-1" />
-                  Most Popular
-                </Badge>
+                  Most Popular</Badge>
               </div>
             )}
 

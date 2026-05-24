@@ -8,6 +8,8 @@ import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import { FeedbackPopup } from "@/components/feedback-popup";
 import type { Metadata } from "next";
+import PlausibleProvider from 'next-plausible';
+import { useUTMCapture } from "@/hooks/useUTMCapture";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -64,6 +66,15 @@ export default function RootLayout({
       <head>
         {/* Blocking theme script -- must be first in <head> to prevent FOUC */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        
+        {/* Plausible Analytics setup */}
+        <PlausibleProvider 
+          domain="draftdeckai.com"
+          src="https://plausible.io/js/script.tagged-events.outbound-links.js"
+          trackOutboundLinks={true}
+          taggedEvents={true}
+        />
+        
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
