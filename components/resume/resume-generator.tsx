@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ import jsPDF from 'jspdf';
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 import { ResumeTemplates } from "@/components/resume/resume-templates";
+import { TemplateSwitcher } from "@/components/resume/template-switcher";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
 import { TextColorPanel } from "@/components/resume/text-color-panel";
@@ -59,7 +60,14 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const [email, setEmail] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [resumeData, setResumeData] = useState<any>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState("professional");
+  // Persist selected template across sessions (#430)
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("draftdeck:selectedTemplate") ?? "professional";
+    }
+    return "professional";
+  });
+  const [previewKey, setPreviewKey] = useState(0); // bumped on template switch for fade animation
   const [isFullView, setIsFullView] = useState(false);
   const [shareUrl, setShareUrl] = useState<string>("");
   const [resumeId, setResumeId] = useState<string>("");
@@ -69,6 +77,15 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const { toast } = useToast();
   const { isPro } = useSubscription();
   const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
+
+  /** Switches template, persists choice to localStorage, triggers fade animation (#430) */
+  const handleTemplateSwitch = useCallback((id: string) => {
+    setSelectedTemplate(id);
+    setPreviewKey((k) => k + 1);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("draftdeck:selectedTemplate", id);
+    }
+  }, []);
 
   const generateResume = async () => {
     if (!prompt.trim()) {
@@ -498,13 +515,22 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                   </Button>
                 </div>
 
-                <div className={`glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white transition-all duration-300 ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : ""
+                <div
+                  key={previewKey}
+                  className={`glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white transition-all duration-300 animate-fade-in ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : ""
                   }`}>
                   <div className="absolute inset-0 shimmer opacity-10"></div>
                   <div className="relative z-10">
                     <ResumePreview resume={resumeData} template={selectedTemplate} customColors={customColors} />
                   </div>
                 </div>
+
+                {/* Template Switcher (#430) */}
+                <TemplateSwitcher
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={handleTemplateSwitch}
+                  className="mt-4"
+                />
 
                 {/* Text Color Controls (#429) */}
                 <div className="mt-4">
@@ -756,19 +782,29 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                 </div>
 
                 {resumeData ? (
-                  <div
-                    className={`glass-effect border border-yellow-400/20 rounded-xl overflow-y-auto bg-white transition-all duration-300 ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : "overflow-hidden"
-                      }`}
-                  >
-                    <div className="absolute inset-0 shimmer opacity-10"></div>
-                    <div className="relative z-10">
-                      <ResumePreview
-                        resume={resumeData}
-                        template={selectedTemplate}
-                        customColors={customColors}
-                      />
+                  <>
+                    <div
+                      key={previewKey}
+                      className={`glass-effect border border-yellow-400/20 rounded-xl overflow-y-auto bg-white transition-all duration-300 animate-fade-in ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : "overflow-hidden"
+                        }`}
+                    >
+                      <div className="absolute inset-0 shimmer opacity-10"></div>
+                      <div className="relative z-10">
+                        <ResumePreview
+                          resume={resumeData}
+                          template={selectedTemplate}
+                          customColors={customColors}
+                        />
+                      </div>
                     </div>
-                  </div>
+
+                    {/* Template Switcher (#430) */}
+                    <TemplateSwitcher
+                      selectedTemplate={selectedTemplate}
+                      onSelectTemplate={handleTemplateSwitch}
+                      className="mt-4"
+                    />
+                  </>
                 ) : (
                   <Card className="glass-effect border border-yellow-400/20 flex items-center justify-center min-h-[500px] relative overflow-hidden">
                     <div className="absolute inset-0 shimmer opacity-10"></div>

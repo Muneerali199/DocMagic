@@ -25,6 +25,7 @@ import { ATSScoreDisplay } from "./ats-score-display";
 import { AIResumeChat } from "./ai-resume-chat";
 import { TextColorPanel } from "./text-color-panel";
 import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
+import { TemplateSwitcher } from "./template-switcher";
 import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { userProfileService } from "@/lib/user-profile-service";
 import { TemplateCustomizationPanel } from "@/components/templates/template-customization-panel";
@@ -62,7 +63,22 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [isPublished, setIsPublished] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("modern");
+  // Persist selected template across sessions — shared key with desktop (#430)
+  const [selectedTemplate, setSelectedTemplateRaw] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("draftdeck:selectedTemplate") ?? "modern";
+    }
+    return "modern";
+  });
+
+  /** Persists template choice and updates state (#430) */
+  const setSelectedTemplate = (id: string) => {
+    setSelectedTemplateRaw(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("draftdeck:selectedTemplate", id);
+    }
+  };
+
   const [scale, setScale] = useState(1);
   const isMobile = useIsMobile(); // Automatically detect mobile
   const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
@@ -2511,6 +2527,14 @@ Certified AWS Solutions Architect
                     <div className="mt-4">
                       <TextColorPanel colors={customColors} onChange={setCustomColors} compact />
                     </div>
+
+                    {/* Template Switcher (#430) — compact horizontal strip */}
+                    <TemplateSwitcher
+                      selectedTemplate={selectedTemplate}
+                      onSelectTemplate={setSelectedTemplate}
+                      compact
+                      className="mt-4"
+                    />
 
                     {/* Download & Edit Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4">
