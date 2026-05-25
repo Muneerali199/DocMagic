@@ -23,7 +23,9 @@ import {
 import { ResumePreview, ResumePreviewRef } from "./resume-preview";
 import { ATSScoreDisplay } from "./ats-score-display";
 import { AIResumeChat } from "./ai-resume-chat";
+import { TextColorPanel } from "./text-color-panel";
 import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
+import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { userProfileService } from "@/lib/user-profile-service";
 import { TemplateCustomizationPanel } from "@/components/templates/template-customization-panel";
 import { VersionHistoryPanel } from "@/components/templates/version-history-panel";
@@ -66,6 +68,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
   const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null); // Track uploaded PDF file
   const containerRef = useRef<HTMLDivElement>(null);
+  const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
 
   const supabase = createClient();
 
@@ -2467,6 +2470,7 @@ Certified AWS Solutions Architect
                           isCV={isCV}
                           layoutMode='responsive'
                           viewType='mobile'
+                          customColors={customColors}
                         />
                       </div>
                     ) : (
@@ -2497,10 +2501,16 @@ Certified AWS Solutions Architect
                             isCV={isCV}
                             layoutMode={viewMode === 'fit' ? 'fixed' : 'responsive'}
                             viewType='print'
+                            customColors={customColors}
                           />
                         </div>
                       </div>
                     )}
+
+                    {/* Text Color Controls (#429) */}
+                    <div className="mt-4">
+                      <TextColorPanel colors={customColors} onChange={setCustomColors} compact />
+                    </div>
 
                     {/* Download & Edit Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4">

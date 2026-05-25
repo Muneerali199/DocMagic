@@ -15,6 +15,8 @@ import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 import { ResumeTemplates } from "@/components/resume/resume-templates";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
+import { TextColorPanel } from "@/components/resume/text-color-panel";
+import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { useToast } from "@/hooks/use-toast";
 import { useShare } from "@/hooks/use-share";
 import {
@@ -66,6 +68,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { isPro } = useSubscription();
+  const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
 
   const generateResume = async () => {
     if (!prompt.trim()) {
@@ -137,7 +140,8 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               content: data,
               template: selectedTemplate,
               prompt: prompt || `Resume for ${data.name || name}`,
-              isPublic: false
+              isPublic: false,
+              customColors: customColors,
             }),
           });
           logger.info(null, '✅ Resume saved to history');
@@ -498,8 +502,13 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                   }`}>
                   <div className="absolute inset-0 shimmer opacity-10"></div>
                   <div className="relative z-10">
-                    <ResumePreview resume={resumeData} template={selectedTemplate} />
+                    <ResumePreview resume={resumeData} template={selectedTemplate} customColors={customColors} />
                   </div>
+                </div>
+
+                {/* Text Color Controls (#429) */}
+                <div className="mt-4">
+                  <TextColorPanel colors={customColors} onChange={setCustomColors} />
                 </div>
 
                 <div className="glass-effect p-4 rounded-xl border border-yellow-400/20 mt-6">
@@ -756,6 +765,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                       <ResumePreview
                         resume={resumeData}
                         template={selectedTemplate}
+                        customColors={customColors}
                       />
                     </div>
                   </div>

@@ -11,6 +11,7 @@ import { saveAs } from 'file-saver';
 import { RESUME_TEMPLATES } from '@/lib/resume-template-data';
 import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 import { logger } from "@/lib/logger";
+import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from '@/lib/resume-style-colors';
 
 interface ResumeData {
   name?: string;
@@ -72,6 +73,7 @@ interface ResumePreviewProps {
   layoutMode?: 'responsive' | 'fixed'; // 'responsive' reflows, 'fixed' keeps A4 width
   viewType?: 'mobile' | 'print'; // 'mobile' optimized for reading, 'print' exact A4 layout
   enableEditing?: boolean; // Force editing mode on init
+  customColors?: ResumeStyleColors; // User-specified text color overrides (#429)
 }
 
 export interface ResumePreviewRef {
@@ -83,7 +85,7 @@ export interface ResumePreviewRef {
 }
 
 export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
-  ({ resume, template, onChange, showControls = false, isCV = false, layoutMode = 'responsive', viewType = 'print', enableEditing = false }, ref) => {
+  ({ resume, template, onChange, showControls = false, isCV = false, layoutMode = 'responsive', viewType = 'print', enableEditing = false, customColors }, ref) => {
   
   // Handle null/undefined resume
   const safeResume = resume || {
@@ -104,6 +106,14 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
   const primaryColor = currentTemplate.colorScheme[0];
   const secondaryColor = currentTemplate.colorScheme[2] || currentTemplate.colorScheme[0];
   const accentColor = currentTemplate.colorScheme[3] || '#F0F9FF';
+
+  // Merge custom text colors with defaults (#429)
+  const textColors: ResumeStyleColors = {
+    ...DEFAULT_STYLE_COLORS,
+    ...customColors,
+  };
+  // Convenience aliases used in template renderers
+  const tc = textColors;
   
   const [isEditing, setIsEditing] = useState(enableEditing);
   const [isExporting, setIsExporting] = useState(false);
@@ -809,10 +819,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
             </>
           ) : (
             <>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 print:text-2xl" style={{ color: primaryColor }}>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 print:text-2xl" style={{ color: tc.headerColor }}>
                 {safeResume.name || "Your Name"}
               </h1>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-2 print:text-xs" style={{ color: '#4b5563' }}>
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-2 print:text-xs" style={{ color: tc.bodyColor }}>
                 {safeResume.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="h-3 w-3" />
@@ -835,27 +845,27 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
               
               {/* Professional Links */}
               {(safeResume.linkedin || safeResume.github || safeResume.website || safeResume.portfolio) && (
-                <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-3 print:text-xs" style={{ color: '#4b5563' }}>
+                <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-3 print:text-xs" style={{ color: tc.bodyColor }}>
                   {safeResume.linkedin && (
-                    <a href={safeResume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
+                    <a href={safeResume.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline" style={{ color: tc.linkColor }}>
                       <Linkedin className="h-3 w-3" />
                       <span>LinkedIn</span>
                     </a>
                   )}
                   {safeResume.github && (
-                    <a href={safeResume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-700 hover:underline">
+                    <a href={safeResume.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline" style={{ color: tc.linkColor }}>
                       <Github className="h-3 w-3" />
                       <span>GitHub</span>
                     </a>
                   )}
                   {safeResume.website && (
-                    <a href={safeResume.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-600 hover:underline">
+                    <a href={safeResume.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline" style={{ color: tc.linkColor }}>
                       <Globe className="h-3 w-3" />
                       <span>Website</span>
                     </a>
                   )}
                   {safeResume.portfolio && (
-                    <a href={safeResume.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-purple-600 hover:underline">
+                    <a href={safeResume.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline" style={{ color: tc.linkColor }}>
                       <Globe className="h-3 w-3" />
                       <span>Portfolio</span>
                     </a>
@@ -869,7 +879,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Summary Section */}
         {(editableResume.summary || safeResume.summary) && (
           <div className="mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Professional Summary
             </h2>
             {isEditing ? (
@@ -880,7 +890,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 className="text-sm text-gray-700 leading-relaxed"
               />
             ) : (
-              <p className="text-sm text-gray-700 leading-relaxed print:text-xs" style={{ color: '#374151' }}>
+              <p className="text-sm text-gray-700 leading-relaxed print:text-xs" style={{ color: tc.bodyColor }}>
                 {safeResume.summary}
               </p>
             )}
@@ -890,7 +900,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Experience Section */}
         {(editableResume.experience?.length || safeResume.experience?.length) ? (
           <div className="mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Work Experience
             </h2>
             <div className="space-y-4">
@@ -926,10 +936,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                         </>
                       ) : (
                         <>
-                          <h3 className="font-medium text-gray-800 text-base print:text-sm" style={{ color: primaryColor }}>
+                          <h3 className="font-medium text-gray-800 text-base print:text-sm" style={{ color: tc.headerColor }}>
                             {exp.title || "Job Title"}
                           </h3>
-                          <p className="text-sm text-gray-600 print:text-xs" style={{ color: '#4b5563' }}>
+                          <p className="text-sm text-gray-600 print:text-xs" style={{ color: tc.bodyColor }}>
                             {exp.company || "Company Name"}
                             {exp.location && ` • ${exp.location}`}
                           </p>
@@ -946,7 +956,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                           className="text-sm text-gray-500"
                         />
                       ) : (
-                        <span className="text-sm text-gray-500 print:text-xs" style={{ color: '#6b7280' }}>
+                        <span className="text-sm text-gray-500 print:text-xs" style={{ color: tc.bodyColor }}>
                           {exp.date || "Date Range"}
                         </span>
                       )}
@@ -967,7 +977,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                           }}
                         />
                       ) : (
-                        <ul className="list-disc text-sm text-gray-700 pl-5 mt-2 space-y-1 print:text-xs" style={{ color: '#374151' }}>
+                        <ul className="list-disc text-sm text-gray-700 pl-5 mt-2 space-y-1 print:text-xs" style={{ color: tc.bodyColor }}>
                           {exp.description.map((item, j) => (
                             <li key={j}>{item}</li>
                           ))}
@@ -984,7 +994,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Education Section */}
         {(editableResume.education?.length || safeResume.education?.length) ? (
           <div className="mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Education
             </h2>
             <div className="space-y-3">
@@ -1037,10 +1047,10 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                       </>
                     ) : (
                       <>
-                        <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: primaryColor }}>
+                        <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: tc.headerColor }}>
                           {edu.degree || "Degree"}
                         </h3>
-                        <p className="text-sm text-gray-600 print:text-xs" style={{ color: '#4b5563' }}>
+                        <p className="text-sm text-gray-600 print:text-xs" style={{ color: tc.bodyColor }}>
                           {edu.institution || "Institution"}
                           {edu.location && ` • ${edu.location}`}
                         </p>
@@ -1079,7 +1089,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Skills Section */}
         {(editableResume.skills || safeResume.skills) && (
           <div className="mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Skills
             </h2>
             
@@ -1126,7 +1136,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Projects Section */}
         {(editableResume.projects?.length || safeResume.projects?.length) ? (
           <div className="mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-2 sm:mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Projects
             </h2>
             {isEditing ? (
@@ -1178,7 +1188,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                 {safeResume.projects?.map((project, i) => (
                   <div key={i} className="border-l-2 border-gray-200 pl-4">
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: primaryColor }}>
+                      <h3 className="font-medium text-gray-800 print:text-sm" style={{ color: tc.headerColor }}>
                         {project.name || "Project Name"}
                       </h3>
                       {project.link && (
@@ -1186,14 +1196,14 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
                           href={project.link} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline print:text-xs"
-                          style={{ color: '#2563eb' }}
+                          className="text-xs hover:underline print:text-xs"
+                          style={{ color: tc.linkColor }}
                         >
                           View Project
                         </a>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700 print:text-xs" style={{ color: '#374151' }}>
+                    <p className="text-sm text-gray-700 print:text-xs" style={{ color: tc.bodyColor }}>
                       {project.description || "Project description"}
                     </p>
                     {project.technologies && project.technologies.length > 0 && (
@@ -1220,7 +1230,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         {/* Certifications Section */}
         {(editableResume.certifications?.length || safeResume.certifications?.length) ? (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: primaryColor, borderColor: secondaryColor }}>
+            <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3 print:text-base" style={{ color: tc.sectionHeadingColor, borderColor: secondaryColor }}>
               Certifications
             </h2>
             {isEditing ? (
