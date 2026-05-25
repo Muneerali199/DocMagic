@@ -1,4 +1,4 @@
-const DEFAULT_REDIRECT_PATH = "/";
+export const DEFAULT_REDIRECT_PATH = "/";
 
 /**
  * Restrict post-auth redirects to the current application origin.
@@ -18,22 +18,31 @@ export function getSafeRedirectPath(
     return fallbackPath;
   }
 
+  if (trimmedNext.startsWith("//") || trimmedNext.startsWith("\\\\")) {
+    return fallbackPath;
+  }
+
   try {
     const appUrl = new URL(origin);
+    const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmedNext);
+
+    if (hasScheme) {
+      const candidateUrl = new URL(trimmedNext);
+
+      if (candidateUrl.origin !== appUrl.origin) {
+        return fallbackPath;
+      }
+
+      return `${candidateUrl.pathname}${candidateUrl.search}${candidateUrl.hash}`;
+    }
+
+    if (!trimmedNext.startsWith("/")) {
+      return fallbackPath;
+    }
+
     const candidateUrl = new URL(trimmedNext, appUrl);
-
-    if (candidateUrl.origin !== appUrl.origin) {
-      return fallbackPath;
-    }
-
-    if (!candidateUrl.pathname.startsWith("/")) {
-      return fallbackPath;
-    }
-
     return `${candidateUrl.pathname}${candidateUrl.search}${candidateUrl.hash}`;
   } catch {
     return fallbackPath;
   }
 }
-
-export { DEFAULT_REDIRECT_PATH };

@@ -39,4 +39,10 @@ describe("getSafeRedirectPath", () => {
   it("falls back when the redirect is blank", () => {
     expect(getSafeRedirectPath("   ", origin)).toBe(DEFAULT_REDIRECT_PATH);
   });
+
+  it("falls back for non-root relative paths", () => {
+    expect(getSafeRedirectPath("dashboard", origin)).toBe(
+      DEFAULT_REDIRECT_PATH,
+    );
+  });
 });
