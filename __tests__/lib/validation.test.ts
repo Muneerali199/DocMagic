@@ -188,7 +188,7 @@ describe('emailSchema', () => {
 
 describe('passwordSchema', () => {
   it('accepts a valid password (upper, lower, digit)', () => {
-    expect(passwordSchema.safeParse('Abcde1fgh').success).toBe(true);
+    expect(passwordSchema.safeParse('Testpass123!').success).toBe(true);
   });
 
   it('rejects a password shorter than PASSWORD_MIN', () => {
@@ -250,7 +250,7 @@ describe('registrationSchema', () => {
       registrationSchema.safeParse({
         name: 'Jane Doe',
         email: 'jane@example.com',
-        password: 'Secure1pass',
+        password: 'SafePass99!',
       }).success
     ).toBe(true);
   });
@@ -266,7 +266,7 @@ describe('registrationSchema', () => {
       registrationSchema.safeParse({
         name: 'Jane',
         email: 'jane@example.com',
-        password: 'weak',
+        password: 'bad',
       }).success
     ).toBe(false);
   });
