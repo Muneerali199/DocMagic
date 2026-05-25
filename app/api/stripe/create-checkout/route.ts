@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require("next/server");
 import { stripe } from "@/lib/stripe";
 import { createRoute } from "@/lib/supabase/server";
@@ -52,7 +53,7 @@ export async function POST() {
 
     return NextResponse.json({ url: stripeSession.url });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    logger.error({ route: 'app/api/stripe/create-checkout/route.ts' }, "Error creating checkout session:", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }

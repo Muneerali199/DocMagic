@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Star, ThumbsUp, ThumbsDown } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export function FeedbackPopup() {
     const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +39,7 @@ export function FeedbackPopup() {
         try {
             // Here you can send feedback to your backend
             // For now, we'll just log it and show success
-            console.log('Feedback submitted:', { rating, feedback });
+            logger.info(null, 'Feedback submitted:', { rating, feedback });
 
             // You can implement a proper API endpoint:
             // await fetch('/api/feedback', {
@@ -57,7 +58,7 @@ export function FeedbackPopup() {
                 setShowTrigger(false);
             }, 2000);
         } catch (error) {
-            console.error('Error submitting feedback:', error);
+            logger.error(null, 'Error submitting feedback:', error);
             toast.error('Failed to submit feedback. Please try again.');
         } finally {
             setIsSubmitting(false);

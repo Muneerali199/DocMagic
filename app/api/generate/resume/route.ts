@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput, sanitizeObject } from '@/lib/validation';
+import { resumeGenerationSchema, detectSqlInjection, sanitizeObject, safeParseBody, RequestValidationError } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
@@ -11,6 +11,7 @@ import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/securit
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { generateResume } from '@/lib/gemini';
 import { withErrorHandling } from '@/lib/error-handler';
 
 // Service role client for credit operations
@@ -260,27 +261,18 @@ async function postHandler(request: Request) {
       );
     }
 
-    // Validate request body exists
-    let rawBody;
-    try {
-      rawBody = await request.json();
-    } catch (parseError) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
-    // Validate and sanitize input
     let prompt, name, email;
     try {
-      const validatedData = validateAndSanitize(resumeGenerationSchema, rawBody);
+      const validatedData = await safeParseBody(request, resumeGenerationSchema);
       prompt = validatedData.prompt;
       name = validatedData.name;
       email = validatedData.email;
-    } catch (validationError: any) {
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return NextResponse.json(
-        { error: 'Invalid input data', details: validationError.message },
+        { error: validationError.message, details: validationError.details },
         { status: 400 }
       );
     }
@@ -326,22 +318,42 @@ async function postHandler(request: Request) {
       userCredits = reserved;
     }
 
-    // Generate resume with Mistral
+    // Generate resume - Try Gemini 2.0 Flash first (Enhanced ATS), fallback to Mistral
     let resume;
     try {
-      log.info('🚀 Generating resume with Mistral...');
-      resume = await generateResumeWithMistral({
+      log.info('🚀 Generating resume with Gemini 2.0 Flash (Enhanced ATS)...');
+      
+      // Use a race to ensure Gemini doesn't hang the request
+      const geminiPromise = generateResume({
         prompt: sanitizedPrompt,
         name: sanitizedName,
         email: sanitizedEmail
       });
-      log.info('✅ Resume generated with Mistral');
-    } catch (mistralError: any) {
-      log.error('❌ Mistral failed:', mistralError.message);
-      if (!hasUnlimitedCredits) {
-        await refundCredits(supabaseAdmin, user.id, creditCost);
+      
+      // 25-second timeout for Gemini specifically (within the 30s overall limit)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Gemini request timed out')), 25000)
+      );
+      
+      resume = await Promise.race([geminiPromise, timeoutPromise]) as any;
+      log.info('✅ Resume generated with Gemini');
+    } catch (geminiError: any) {
+      log.warn('⚠️ Gemini failed or timed out, falling back to Mistral:', geminiError.message);
+      try {
+        log.info('🚀 Generating resume with Mistral fallback...');
+        resume = await generateResumeWithMistral({
+          prompt: sanitizedPrompt,
+          name: sanitizedName,
+          email: sanitizedEmail
+        });
+        log.info('✅ Resume generated with Mistral');
+      } catch (mistralError: any) {
+        log.error('❌ Both Gemini and Mistral failed');
+        if (!hasUnlimitedCredits) {
+          await refundCredits(supabaseAdmin, user.id, creditCost);
+        }
+        throw new Error('Unable to generate resume. Please try again later.');
       }
-      throw new Error('Unable to generate resume. Please try again later.');
     }
 
     // Log usage only after the AI call succeeded. Credits were already

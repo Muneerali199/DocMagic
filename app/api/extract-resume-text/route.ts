@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
           .trim();
           
       } catch (pdfError) {
-        console.error('PDF parsing with pdf-parse failed:', pdfError);
+        logger.error({ route: 'app/api/extract-resume-text/route.ts' }, 'PDF parsing with pdf-parse failed:', pdfError);
         
         // Fallback: Try basic text extraction from PDF
         try {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
             }
           }
         } catch (fallbackError) {
-          console.error('Fallback PDF extraction failed:', fallbackError);
+          logger.error({ route: 'app/api/extract-resume-text/route.ts' }, 'Fallback PDF extraction failed:', fallbackError);
         }
       }
       
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (docError) {
-        console.error('DOC parsing error:', docError);
+        logger.error({ route: 'app/api/extract-resume-text/route.ts' }, 'DOC parsing error:', docError);
       }
       
     } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx')) {
@@ -134,7 +135,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (docxError) {
-        console.error('DOCX parsing error:', docxError);
+        logger.error({ route: 'app/api/extract-resume-text/route.ts' }, 'DOCX parsing error:', docxError);
       }
     }
 
@@ -164,7 +165,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Text extraction error:', error);
+    logger.error({ route: 'app/api/extract-resume-text/route.ts' }, 'Text extraction error:', error);
     return NextResponse.json(
       { error: 'Failed to extract text from file. Please paste your resume text manually.' },
       { status: 500 }

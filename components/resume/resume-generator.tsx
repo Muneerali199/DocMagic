@@ -16,6 +16,7 @@ import { ResumeTemplates } from "@/components/resume/resume-templates";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
 import { useToast } from "@/hooks/use-toast";
+import { useShare } from "@/hooks/use-share";
 import {
   File as FileIcon,
   Loader2,
@@ -46,6 +47,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { TooltipWithShortcut } from "../ui/tooltip";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
+import { logger } from "@/lib/logger";
 
 export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const supabaseClient = createClient();
@@ -138,7 +140,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               isPublic: false
             }),
           });
-          console.log('✅ Resume saved to history');
+          logger.info(null, '✅ Resume saved to history');
         }
       } catch (saveError) {
         console.error('Failed to auto-save resume:', saveError);
@@ -165,7 +167,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   };
 
   const handleLinkedInImport = (profile: any) => {
-    console.log('LinkedIn profile received:', profile);
+    logger.info(null, 'LinkedIn profile received:', profile);
 
     // Convert LinkedIn profile to resume format
     // Handle both 'name' and 'fullName' field
@@ -186,7 +188,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       languages: profile.languages || [],
     };
 
-    console.log('Converted resume data:', resume);
+    logger.info(null, 'Converted resume data:', resume);
 
     setResumeData(resume);
     setName(fullName);
@@ -194,7 +196,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
     // Log to verify state was updated
     setTimeout(() => {
-      console.log('Resume data state after update:', resume);
+      logger.info(null, 'Resume data state after update:', resume);
     }, 100);
 
     toast({
@@ -209,6 +211,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
     setIsExporting(true);
     try {
+      // First try the new @react-pdf/renderer vector PDF export for highest quality
+      try {
+        const { generateReactPDF } = await import('@/lib/resume/pdf-exporter');
+        await generateReactPDF(resumeData, selectedTemplate);
+        
+        toast({
+          title: "Resume downloaded!",
+          description: "Your resume has been downloaded as a high-quality PDF.",
+        });
+        return; // Success! Exit early.
+      } catch (reactPdfError) {
+        console.error('Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
+        // Fall back to html2canvas if React PDF fails
+      }
+
       const resumeElement = document.getElementById('resume-content');
       if (!resumeElement) {
         throw new Error('Resume content not found');
@@ -359,80 +376,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     }
   };
 
-  const copyShareLink = async () => {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Share link has been copied to your clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to copy",
-        description: "Please copy the URL manually",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const shareViaEmail = () => {
-    const subject = encodeURIComponent('Check out my resume!');
-    const body = encodeURIComponent(`I wanted to share my professional resume with you:\\n\\n${shareUrl}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const shareViaWhatsApp = () => {
-    const text = encodeURIComponent(`Check out my resume: ${shareUrl}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  const shareViaTwitter = () => {
-    const text = encodeURIComponent('Check out my professional resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-  };
-
-  const shareViaLinkedIn = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-  };
-
-  const shareViaFacebook = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-  };
-
-  const shareViaTelegram = () => {
-    const text = encodeURIComponent('Check out my resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
-  };
-
-  const shareViaWebShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My Resume',
-          text: 'Check out my professional resume!',
-          url: shareUrl
-        });
-        toast({
-          title: "Shared successfully!",
-          description: "Resume shared via Web Share API",
-        });
-      } catch (error) {
-        // User cancelled sharing
-      }
-    } else {
-      toast({
-        title: "Not supported",
-        description: "Web Share API is not supported on this device",
-        variant: "destructive",
-      });
-    }
-  };
+  const {
+    copyToClipboard: copyShareLink,
+    shareViaEmail,
+    shareViaWhatsApp,
+    shareViaTwitter,
+    shareViaLinkedIn,
+    shareViaFacebook,
+    shareViaTelegram,
+    shareViaWebShare,
+  } = useShare(shareUrl, {
+    emailSubject: "Check out my resume!",
+    emailBody: `I wanted to share my professional resume with you:\n\n${shareUrl}`,
+    text: "Check out my professional resume!",
+    title: "My Resume",
+  });
 
   return (
     <>

@@ -9,7 +9,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import { FeedbackPopup } from "@/components/feedback-popup";
+import { DeploymentStatusBanner } from "@/components/deployment-status-banner";
 import type { Metadata } from "next";
+import PlausibleProvider from 'next-plausible';
+import { useUTMCapture } from "@/hooks/useUTMCapture";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -22,7 +25,40 @@ export const metadata: Metadata = {
   title: "DraftDeckAI - AI Document Creation Platform",
   description:
     "Create beautiful resumes, presentations, CVs and letters with AI",
+  openGraph: {
+    title: "DraftDeckAI - AI Document Creation Platform",
+    description: "Create beautiful resumes, presentations, CVs and letters with AI",
+    siteName: "DraftDeckAI",
+    url: "https://draftdeckai.com",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "DraftDeckAI - AI Document Creation Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DraftDeckAI - AI Document Creation Platform",
+    description: "Create beautiful resumes, presentations, CVs and letters with AI",
+    images: ["/og-image.png"],
+  },
 };
+
+/**
+ * Inline script injected into <head> to apply the correct theme class
+ * before the first paint, preventing a flash of the wrong color scheme.
+ *
+ * It reads the same localStorage key ("theme") that next-themes uses,
+ * so the two are always in sync. The script must be a plain string
+ * (not a module) so the browser executes it synchronously.
+ */
+const themeScript = `(function(){try{var s=localStorage.getItem('theme');var d=document.documentElement;if(s==='dark'){d.classList.add('dark');}else if(s==='light'){d.classList.remove('dark');}else{if(window.matchMedia('(prefers-color-scheme: dark)').matches){d.classList.add('dark');}else{d.classList.remove('dark');}}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -31,6 +67,17 @@ export default function RootLayout({
   return (
     <html>
       <head>
+        {/* Blocking theme script -- must be first in <head> to prevent FOUC */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        
+        {/* Plausible Analytics setup */}
+        <PlausibleProvider 
+          domain="draftdeckai.com"
+          src="https://plausible.io/js/script.tagged-events.outbound-links.js"
+          trackOutboundLinks={true}
+          taggedEvents={true}
+        />
+        
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
@@ -58,20 +105,22 @@ export default function RootLayout({
           content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
         />
       </head>
-      <body suppressHydrationWarning={true} className={`${inter.className} ${poppins.variable}`}>
-        <div id="root">
-          <Providers>
-            <ThemeToggle />
-            <CursorProvider>
-              <LenisProvider> {/* Yahan wrap karo */}
-                {children}
-                <PWABanner />
-                <FeedbackPopup />
-                <Footer />
-              </LenisProvider>
-            </CursorProvider>
-          </Providers>
-        </div>
+<body suppressHydrationWarning={true} className={`${inter.className} ${poppins.variable}`}>
+  <div id="root">
+    <DeploymentStatusBanner />
+    <Providers>
+      <ThemeToggle />
+      <CursorProvider>
+        <LenisProvider>
+          {children}
+          <PWABanner />
+          <FeedbackPopup />
+          <Footer />
+        </LenisProvider>
+      </CursorProvider>
+    </Providers>
+  </div>
+</body>
       </body>
     </html>
   );

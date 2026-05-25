@@ -12,7 +12,8 @@
 
 **Create stunning resumes, presentations, letters, and diagrams with AI magic ✨**
 
-[Live Demo](https://draftdeckai.com) • [Documentation](#-documentation) • [Contributing](#-contributing)
+ [Documentation](#-documentation) • [Contributing](#-contributing)
+ > ⚠️ **Live Demo temporarily unavailable** — production deployment is currently down. See [#631](https://github.com/Muneerali199/Draftdeckai/issues/631).
 
 </div>
 

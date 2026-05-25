@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import type { NextRequest } from 'next/server';
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
         } else {
           // API returned non-PDF (likely error HTML or text)
           const errorText = await response.text();
-          console.error('LaTeX.Online returned non-PDF:', errorText.substring(0, 500));
+          logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX.Online returned non-PDF:', errorText.substring(0, 500));
 
           // Check for common LaTeX errors
           let errorMessage = 'Compilation failed - check your LaTeX syntax';
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         const errorText = await response.text();
-        console.error('LaTeX.Online API error:', response.status, errorText.substring(0, 200));
+        logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX.Online API error:', response.status, errorText.substring(0, 200));
 
         // Try alternative endpoint
         console.log('Trying alternative compilation method...');
@@ -137,14 +138,14 @@ export async function POST(request: NextRequest) {
             }
           }
         } catch (altError) {
-          console.error('Alternative compilation also failed:', altError);
+          logger.error({ route: 'app/api/latex/compile/route.ts' }, 'Alternative compilation also failed:', altError);
         }
 
         throw new Error(`LaTeX.Online API error: ${response.status}`);
       }
     } catch (fetchError: any) {
       if (fetchError.name === 'AbortError') {
-        console.error('LaTeX compilation timed out');
+        logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX compilation timed out');
         return NextResponse.json({
           success: false,
           message: 'Compilation timed out. Try simplifying your document or download the .tex file to compile locally.',
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
         }, { status: 408 });
       }
 
-      console.error('LaTeX compilation error:', fetchError.message);
+      logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX compilation error:', fetchError.message);
 
       // Return fallback message
       return NextResponse.json({
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error('Error in LaTeX compilation:', error);
+    logger.error({ route: 'app/api/latex/compile/route.ts' }, 'Error in LaTeX compilation:', error);
     return NextResponse.json(
       {
         success: false,

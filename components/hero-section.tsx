@@ -8,15 +8,21 @@ import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Zap, Star, Wand2, Clock, Users, Trophy } from "lucide-react";
 
-export function HeroSection() {
-  const [jobTitle, setJobTitle] = useState("");
-  const router = useRouter();
+// 1. Import our custom tracker
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
-  const handleGenerate = () => {
-    if (jobTitle.trim()) {
-      router.push(`/resume/create?role=${encodeURIComponent(jobTitle)}`);
-    }
-  };
+export function HeroSection() {
+const [jobTitle, setJobTitle] = useState("");
+const router = useRouter();
+
+// 2. Initialize the tracker
+const { trackEvent } = useTrackEvent();
+
+const handleGenerate = () => {
+  if (jobTitle.trim()) {
+    router.push(`/resume/create?role=${encodeURIComponent(jobTitle)}`);
+  }
+};
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
@@ -118,71 +124,61 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced CTA Buttons */}
-          <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full max-w-4xl mx-auto">
-
-  {/* Start Creating Now */}
-  <Link
-    href="#document-types"
-    className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-extrabold text-base text-gray-800
-      bg-[#f0f0f0] dark:bg-[#e0e0e0] dark:shadow-none shadow-[9px_9px_16px_#bebebe,-9px_-9px_16px_#ffffff]
-      hover:scale-105 active:shadow-[inset_4px_4px_8px_#d1d1d1,inset_-4px_-4px_8px_#ffffff] active:scale-95
-      transition-all duration-300 w-full sm:w-auto whitespace-nowrap"
-  >
-    <Sparkles className="h-5 w-5 flex-shrink-0" />
-    Start Creating Now
-    <ArrowRight className="h-5 w-5" />
-  </Link>
-
-  {/* Input + Generate Now */}
-  <input
-    type="text"
-    value={jobTitle}
-    placeholder="Enter your job title..."
-    className="h-14 px-5 rounded-full bg-white/10 border border-white/20 dark:border-white/10
-      text-foreground placeholder:text-muted-foreground
-      focus:outline-none focus:ring-2 focus:ring-blue-400/50
-      backdrop-blur-sm w-full sm:w-64"
-    onChange={(e) => setJobTitle(e.target.value)}
-    onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-  />
-
-  <button
-    onClick={handleGenerate}
-    disabled={!jobTitle.trim()}
-    className="inline-flex items-center justify-center h-14 px-8 rounded-full
-      bolt-gradient text-white font-bold text-base
-      disabled:opacity-50 disabled:cursor-not-allowed
-      hover:scale-105 transition-all duration-300
-      w-full sm:w-auto whitespace-nowrap"
-  >
-    Generate Now
-  </button>
-
-  {/* Watch Demo */}
-  <a
-    href="#how-it-works"
-    onClick={(e) => {
-      e.preventDefault();
-      const target = document.getElementById("how-it-works");
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth" });
-      } else {
-        window.location.hash = "how-it-works";
-      }
-    }}
-    className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full
-      bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
-      font-extrabold text-base shadow-xl
-      hover:from-red-700 hover:to-neutral-900 hover:scale-105
-      hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)]
-      focus:outline-none focus:ring-4 focus:ring-red-400
-      transition-all duration-300 w-full sm:w-auto whitespace-nowrap"
-  >
-    <Star className="text-yellow-400 h-5 w-5" />
-    Watch Demo
-  </a>
-
-</div>
+          <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full max-w-2xl mx-auto">
+            <Button
+              asChild
+              size="lg"
+              className="bolt-gradient text-white font-bold px-10 sm:px-12 py-5 sm:py-6 rounded-full hover:scale-110 focus:ring-4 focus:ring-blue-400 focus:outline-none transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden shadow-2xl text-base sm:text-xl group"
+              style={{ animation: "gradient-shift 4s ease infinite" }}
+              aria-label="Start Creating Documents"
+            >
+              <Link
+                href="#document-types"
+                className="flex items-center justify-center gap-3 sm:gap-4"
+                tabIndex={0}
+                // 3. Attach the tracker to the primary CTA
+                onClick={() => trackEvent("Landing CTA Clicked")} 
+              >
+                <Sparkles
+                  className="h-5 w-5 sm:h-6 sm:w-6 group-hover:animate-spin transition-transform"
+                  aria-hidden="true"
+                />
+                <span className="font-extrabold">
+                  Start Creating Now
+                </span>
+                <ArrowRight
+                  className="h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-2 transition-transform duration-300"
+                  aria-hidden="true"
+                />
+              </Link>
+            </Button>
+            {/*Enhanced watch demo button*/}
+              <Button
+              asChild
+              variant="outline"
+              size="lg"
+             className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group
+             bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
+             hover:from-red-700 hover:to-neutral-900
+             hover:scale-110 hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:z-20"
+            aria-label="Watch Demo"
+>
+            <Link
+            href="#how-it-works"
+            className="flex items-center justify-center gap-3 sm:gap-4"
+            tabIndex={0}
+            // 4. Attach the tracker to the secondary CTA
+            onClick={() => trackEvent("Watch Demo Clicked")}
+          >
+    <Star
+  
+  className="text-yellow-400 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-700 ease-in-out group-hover:fill-yellow-400 group-hover:rotate-[360deg]"
+  aria-hidden="true"
+/>
+      <span className="text-white font-extrabold">Watch Demo</span>
+       </Link>
+      </Button>
+       </div>
           {/* Social Proof Banner */}
           <div className="mt-8 sm:mt-10 animate-fade-in-up delay-350">
             <p className="text-sm text-muted-foreground mb-4">

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
       documents: docs
     });
   } catch (error: any) {
-    console.error('Error in general analytics API:', error);
+    logger.error({ route: 'app/api/analytics/route.ts' }, 'Error in general analytics API:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

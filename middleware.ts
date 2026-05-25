@@ -5,6 +5,32 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
   .map((o) => o.trim());
 
+const DEPLOYMENT_ERROR_PATTERNS = [
+  /DEPLOYMENT_NOT_FOUND/i,
+  /503|504/,
+  /service unavailable/i,
+  /deployment.*error/i,
+];
+
+function isDeploymentError(response: Response): boolean {
+  const status = response.status;
+  if (status === 503 || status === 504 || status >= 500) {
+    return true;
+  }
+  return false;
+}
+
+async function logError(
+  pathname: string,
+  error: string,
+  status: number,
+  timestamp: number
+) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[ERROR] ${pathname}: ${error} (${status}) at ${new Date(timestamp).toISOString()}`);
+  }
+}
+
 const CORS_HDRS = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-Id',
@@ -32,8 +58,9 @@ setInterval(() => {
 }, 60_000);
 
 function rlKey(p: string): RLKey {
-  if (p.startsWith('/api/auth/'))     return 'AUTH';
-  if (p.startsWith('/api/generate/')) return 'GENERATE';
+  const norm = p.replace(/^\/api\/v\d+(?:\/|$)/, '/api/');
+  if (norm.startsWith('/api/auth/'))     return 'AUTH';
+  if (norm.startsWith('/api/generate/')) return 'GENERATE';
   return 'API';
 }
 
@@ -87,6 +114,7 @@ export function middleware(req: NextRequest) {
     const rl = checkRL(ip, pathname);
     if (!rl.allowed) {
       const ra = Math.ceil((rl.reset - Date.now()) / 1000);
+      logError(pathname, 'Rate limit exceeded', 429, Date.now());
       return NextResponse.json(
         { error: 'Rate limit exceeded', retryAfter: ra },
         {
@@ -101,11 +129,40 @@ export function middleware(req: NextRequest) {
         }
       );
     }
+
     const r = NextResponse.next();
     for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
     r.headers.set('X-RateLimit-Limit', String(rl.limit));
     r.headers.set('X-RateLimit-Remaining', String(rl.remaining));
     r.headers.set('X-RateLimit-Reset', String(Math.ceil(rl.reset / 1000)));
+
+    const versionMatch = pathname.match(/^\/api\/(v\d+)(?:\/|$)/);
+    r.headers.set('X-API-Version', versionMatch ? versionMatch[1] : 'v2');
+
+    if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
+      r.headers.set('X-Endpoint-Type', 'ai-generation');
+    }
+
+    if (isDeploymentError(r)) {
+      logError(pathname, 'Deployment error detected', r.status, Date.now());
+      r.headers.set('X-Deployment-Error', 'true');
+    }
+
+    return r;
+  }
+
+  if (!pathname.includes('.')) {
+    const r = NextResponse.next();
+    secHdrs(r);
+    r.headers.set('X-DNS-Prefetch-Control', 'on');
+    r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
+    r.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+    if (isDeploymentError(r)) {
+      logError(pathname, 'Deployment error on page load', r.status, Date.now());
+      r.headers.set('X-Deployment-Error', 'true');
+    }
+
     return r;
   }
 
@@ -116,5 +173,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)', ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
 };

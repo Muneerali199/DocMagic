@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 import { isPrivateUrl } from '@/lib/validate-fetch-url';
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
 
       pageContent = await response.text();
     } catch (fetchError: any) {
-      console.error('Error fetching job URL:', fetchError);
+      logger.error({ route: 'app/api/extract-job/route.ts' }, 'Error fetching job URL:', fetchError);
       
       // Provide more helpful error messages
       let errorMessage = 'Failed to fetch job listing.';
@@ -125,7 +126,7 @@ Return ONLY the JSON object, no markdown formatting or additional text.`;
 
     if (!mistralResponse.ok) {
       const errorData = await mistralResponse.text();
-      console.error('Mistral API error:', errorData);
+      logger.error({ route: 'app/api/extract-job/route.ts' }, 'Mistral API error:', errorData);
       throw new Error(`Mistral API error: ${mistralResponse.status}`);
     }
 
@@ -149,7 +150,7 @@ Return ONLY the JSON object, no markdown formatting or additional text.`;
         throw new Error('No JSON found in response');
       }
     } catch (parseError) {
-      console.error('Error parsing job data:', parseError);
+      logger.error({ route: 'app/api/extract-job/route.ts' }, 'Error parsing job data:', parseError);
       // Return a basic structure if parsing fails
       jobData = {
         title: 'Unable to extract job title',
@@ -163,7 +164,7 @@ Return ONLY the JSON object, no markdown formatting or additional text.`;
 
     return NextResponse.json(jobData);
   } catch (error) {
-    console.error('Error extracting job data:', error);
+    logger.error({ route: 'app/api/extract-job/route.ts' }, 'Error extracting job data:', error);
     return NextResponse.json(
       { error: 'Failed to extract job data. Please try again.' },
       { status: 500 }

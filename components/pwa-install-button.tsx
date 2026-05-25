@@ -56,9 +56,10 @@ export const PWAInstallButton = React.forwardRef<HTMLButtonElement, PWAInstallBu
         ref={ref}
         variant={variant}
         size={size}
-        className={className}
+        className={cn(className, 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2')}
         onClick={handleInstall}
         disabled={isInstalling}
+        aria-label={isInstalling ? "Installing app, please wait" : "Install DraftDeckAI as an app"}
       >
         {isInstalling ? (
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-transparent border-t-current" />

@@ -1,15 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Zap, Users, Crown, Building2, Coins } from 'lucide-react';
+import {
+  Building2,
+  Check,
+  Coins,
+  CreditCard,
+  Crown,
+  FileSignature,
+  FileText,
+  Mail,
+  Monitor,
+  ShieldCheck,
+  Smartphone,
+  Target,
+  type LucideIcon,
+  Workflow,
+  Zap,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { TIER_LIMITS, ACTION_COSTS } from '@/lib/credits-service';
+
+// 1. Import our custom tracker
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 
 const features = {
   free: [
@@ -59,10 +78,76 @@ interface PricingPlan {
   popular?: boolean;
 }
 
+const creditCostItems: Array<{
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}> = [
+  {
+    icon: FileText,
+    label: 'Resume',
+    value: `${ACTION_COSTS.resume} credit`,
+  },
+  {
+    icon: Monitor,
+    label: 'Presentation',
+    value: `${ACTION_COSTS.presentation} credit/slide`,
+  },
+  {
+    icon: Workflow,
+    label: 'Diagram',
+    value: `${ACTION_COSTS.diagram} credits`,
+  },
+  {
+    icon: Mail,
+    label: 'Letter',
+    value: `${ACTION_COSTS.letter} credits`,
+  },
+  {
+    icon: FileSignature,
+    label: 'Cover Letter',
+    value: `${ACTION_COSTS.cover_letter} credits`,
+  },
+  {
+    icon: Target,
+    label: 'ATS Check',
+    value: `${ACTION_COSTS.ats_check} credits`,
+  },
+];
+
+const paymentMethods: Array<{
+  icon: LucideIcon;
+  label: string;
+}> = [
+  {
+    icon: CreditCard,
+    label: 'All Major Cards',
+  },
+  {
+    icon: Smartphone,
+    label: 'Apple Pay',
+  },
+  {
+    icon: Smartphone,
+    label: 'Google Pay',
+  },
+  {
+    icon: Zap,
+    label: 'Link',
+  },
+  {
+    icon: ShieldCheck,
+    label: 'PCI Secure',
+  },
+];
+
 export default function PricingPlans() {
   const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
+  
+  // 2. Initialize the tracker
+  const { trackEvent } = useTrackEvent();
 
   const plans: PricingPlan[] = [
     {
@@ -115,6 +200,13 @@ export default function PricingPlans() {
   ];
 
   const handleSubscribe = async (plan: PricingPlan) => {
+    // 3. Track the click and attach the specific plan data!
+    trackEvent("Pricing CTA Clicked", { 
+      plan_name: plan.name, 
+      billing: plan.billing_period,
+      price: plan.price
+    });
+
     if (plan.price === 0) {
       router.push('/auth/register');
       return;
@@ -124,8 +216,9 @@ export default function PricingPlans() {
       setLoading(plan.id);
 
       const supabase = createClient();
-      // Use getSession() for rate limit avoidance
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const user = session?.user;
 
       if (!user) {
@@ -133,13 +226,12 @@ export default function PricingPlans() {
         return;
       }
 
-      // Create checkout session
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // ← This sends cookies!
+        credentials: 'include',
         body: JSON.stringify({
           priceId: plan.stripe_price_id,
           planType: plan.plan_type,
@@ -153,7 +245,6 @@ export default function PricingPlans() {
         return;
       }
 
-      // Redirect to Stripe Checkout
       if (data.url) {
         window.location.href = data.url;
       }
@@ -176,7 +267,6 @@ export default function PricingPlans() {
         </p>
       </div>
 
-      {/* Billing Period Toggle */}
       <div className="flex justify-center mb-8 sm:mb-12 px-4 sm:px-0">
         <Tabs value={billingPeriod} onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'yearly')} className="w-full sm:w-auto">
           <TabsList className="grid w-full grid-cols-2 h-auto">
@@ -189,7 +279,6 @@ export default function PricingPlans() {
         </Tabs>
       </div>
 
-      {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto px-4 sm:px-0">
         {plans.map((plan) => (
           <Card
@@ -200,8 +289,7 @@ export default function PricingPlans() {
               <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
                 <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
                   <Crown className="w-3 h-3 mr-1" />
-                  Most Popular
-                </Badge>
+                  Most Popular</Badge>
               </div>
             )}
 
@@ -261,7 +349,6 @@ export default function PricingPlans() {
         ))}
       </div>
 
-      {/* Credit Costs Info */}
       <div className="mt-12 max-w-3xl mx-auto px-4 sm:px-0">
         <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-blue-200/50 dark:border-blue-800/50">
           <CardHeader className="pb-4">
@@ -275,101 +362,38 @@ export default function PricingPlans() {
               Each document type uses a different amount of credits. Credits reset monthly on your billing date.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">📄</span>
-                <div>
-                  <p className="text-sm font-medium">Resume</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.resume} credit</p>
+              {creditCostItems.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
+                  <Icon className="h-5 w-5 text-blue-600 flex-shrink-0" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-medium">{label}</p>
+                    <p className="text-xs text-muted-foreground">{value}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">📊</span>
-                <div>
-                  <p className="text-sm font-medium">Presentation</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.presentation} credit/slide</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">📐</span>
-                <div>
-                  <p className="text-sm font-medium">Diagram</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.diagram} credits</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">✉️</span>
-                <div>
-                  <p className="text-sm font-medium">Letter</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.letter} credits</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">📝</span>
-                <div>
-                  <p className="text-sm font-medium">Cover Letter</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.cover_letter} credits</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-background/50 rounded-lg">
-                <span className="text-lg">🎯</span>
-                <div>
-                  <p className="text-sm font-medium">ATS Check</p>
-                  <p className="text-xs text-muted-foreground">{ACTION_COSTS.ats_check} credits</p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Payment Methods Section */}
       <div className="mt-12 sm:mt-16 text-center px-4 sm:px-0">
         <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">Secure Payment Methods</h3>
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-muted-foreground">
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg hover:border-blue-500 transition-colors">
-            <span className="text-xl sm:text-2xl">💳</span>
-            <span className="text-xs sm:text-sm font-medium">All Major Cards</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">🍎</span>
-            <span className="text-sm font-medium">Apple Pay</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">🔵</span>
-            <span className="text-sm font-medium">Google Pay</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">⚡</span>
-            <span className="text-sm font-medium">Link</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">🔒</span>
-            <span className="text-sm font-medium">PCI Secure</span>
-          </div>
+          {paymentMethods.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg hover:border-blue-500 transition-colors"
+            >
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-medium">{label}</span>
+            </div>
+          ))}
         </div>
         <p className="text-sm text-muted-foreground mt-3">
-          Powered by Stripe • Digital wallets (Apple Pay, Google Pay) available in production
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">💳</span>
-            <span className="text-sm font-medium">All Major Cards</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">�</span>
-            <span className="text-sm font-medium">PCI Compliant</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 border rounded-lg">
-            <span className="text-2xl">⚡</span>
-            <span className="text-sm font-medium">Instant Activation</span>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground mt-3">
-          Powered by Stripe • Visa, Mastercard, Amex, Discover, and more accepted worldwide
+          Powered by Stripe - Digital wallets (Apple Pay, Google Pay) available in production
         </p>
       </div>
 
-      {/* FAQ Section */}
       <div className="mt-20 max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
         <div className="grid gap-6">

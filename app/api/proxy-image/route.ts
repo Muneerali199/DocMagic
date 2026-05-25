@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { isPrivateUrl } from '@/lib/validate-fetch-url';
 export async function GET(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
       headers: headers,
     });
   } catch (error) {
-    console.error('Error proxying image:', error);
+    logger.error({ route: 'app/api/proxy-image/route.ts' }, 'Error proxying image:', error);
     return new NextResponse('Failed to fetch image', { status: 500 });
   }
 }

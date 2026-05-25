@@ -91,6 +91,11 @@ export function ATSAnalyzer() {
   };
 
   const displayAnalysis = analysis;
+  const getSectionFeedback = (score: number) => {
+  if (score >= 80) return "Strong ATS alignment";
+  if (score >= 60) return "Needs optimization";
+  return "Critical improvements required";
+};
 
   return (
     <div className="space-y-6">
@@ -185,6 +190,9 @@ export function ATSAnalyzer() {
                             <span>{String(score)}%</span>
                           </div>
                           <Progress value={score as number} />
+                          <p className="text-xs text-muted-foreground mt-1">
+  {getSectionFeedback(score as number)}
+</p>
                         </div>
                       )
                     )}

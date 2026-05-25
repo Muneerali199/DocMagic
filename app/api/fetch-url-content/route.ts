@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 import { isPrivateUrl } from '@/lib/validate-fetch-url';
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
     });
     
   } catch (error: any) {
-    console.error('Error fetching URL content:', error);
+    logger.error({ route: 'app/api/fetch-url-content/route.ts' }, 'Error fetching URL content:', error);
     
     if (error.name === 'AbortError') {
       return NextResponse.json(

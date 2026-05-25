@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { analyticsService } from '@/lib/analytics-service';
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
   } catch (error: any) {
-    console.error('Error in analytics track API:', error);
+    logger.error({ route: 'app/api/analytics/track/route.ts' }, 'Error in analytics track API:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

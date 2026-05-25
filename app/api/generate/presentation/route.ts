@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -6,6 +7,7 @@ import { generatePresentation, generatePresentationOutline } from '@/lib/gemini'
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -36,25 +38,18 @@ export async function POST(request: NextRequest) {
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
-    const body = await request.json();
-    const { prompt, pageCount = 8, template } = body;
-
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    let prompt, validatedPageCount, template;
+    try {
+      const body = await safeParseBody(request, presentationGenerationSchema);
+      prompt = body.prompt;
+      validatedPageCount = body.pageCount;
+      template = body.template;
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return NextResponse.json(
-        { error: 'Missing or invalid prompt' },
-        { status: 400 }
-      );
-    }
-
-    // Validate pageCount
-    const validatedPageCount = Number(pageCount);
-    if (
-      !Number.isInteger(validatedPageCount) ||
-      validatedPageCount < 1 ||
-      validatedPageCount > 100
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid pageCount. Please provide an integer between 1 and 100.' },
+        { error: validationError.message, details: validationError.details },
         { status: 400 }
       );
     }
@@ -81,7 +76,7 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -180,7 +175,7 @@ export async function POST(request: NextRequest) {
     if (overReserved > 0) {
       const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
       if (!refunded) {
-        console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+        logger.error({ route: 'app/api/generate/presentation/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
       }
     }
 
@@ -198,7 +193,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (logError) {
-      console.error('Failed to log credit usage:', logError);
+      logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Failed to log credit usage:', logError);
     } else {
       console.log(`💳 Deducted ${actualCreditCost} credits for ${slides.length}-slide presentation`);
     }
@@ -214,7 +209,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error generating presentation:', error);
+    logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Error generating presentation:', error);
     return NextResponse.json(
       { error: 'Failed to generate presentation' },
       { status: 500 }

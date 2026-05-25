@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
         .single();
       
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
     try {
       diagram = await generateDiagramWithMistral({ prompt, diagramType });
     } catch (genError) {
-      console.error('Diagram generation failed:', genError);
+      logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Diagram generation failed:', genError);
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
       }
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
 
     // Validate diagram response
     if (!diagram || !diagram.code) {
-      console.error('Invalid diagram response:', diagram);
+      logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Invalid diagram response:', diagram);
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
       }
@@ -179,7 +180,7 @@ export async function POST(request: Request) {
     const hasValidStart = validDiagramTypes.some(type => diagramCode.toLowerCase().startsWith(type.toLowerCase()));
 
     if (!hasValidStart) {
-      console.error('Invalid diagram type in code:', diagramCode.substring(0, 50));
+      logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Invalid diagram type in code:', diagramCode.substring(0, 50));
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
       }
@@ -224,7 +225,7 @@ export async function POST(request: Request) {
         });
 
       if (logError) {
-        console.error('Failed to log credit usage:', logError);
+        logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Failed to log credit usage:', logError);
       } else {
         console.log(`💳 Deducted ${creditCost} credits for diagram generation`);
       }
@@ -232,7 +233,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(diagram);
   } catch (error) {
-    console.error('Error generating diagram:', error);
+    logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Error generating diagram:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { 

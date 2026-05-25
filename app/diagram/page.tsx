@@ -3,52 +3,27 @@ import { SiteHeader } from "@/components/site-header";
 import { DiagramGenerator } from "@/components/diagram/diagram-generator";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, Workflow, Zap, Star, Wand2, Share2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { DiagramGeneratorSkeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { useShare } from "@/hooks/use-share";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function DiagramPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+
+  const { copied, shareViaWebShare } = useShare();
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
-  const handleShare = async () => {
-    try {
-      const shareData = {
-        title: 'DraftDeckAI Diagram Studio',
-        text: 'Create visual diagrams and flowcharts with AI guidance!',
-        url: window.location.href
-      };
-      
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-        toast({
-          title: "Link copied!",
-          description: "Diagram Studio link has been copied to your clipboard",
-        });
-      }
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        toast({
-          title: "Share failed",
-          description: "Failed to share diagram studio link. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+
+  const handleShare = useCallback(() => {
+    shareViaWebShare({
+      title: "DraftDeckAI Diagram Studio",
+      text: "Create visual diagrams and flowcharts with AI guidance!",
+    });
+  }, [shareViaWebShare]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
