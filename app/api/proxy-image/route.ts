@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if(isPrivateUrl(url)){
+    if(await isPrivateUrl(url)){
       return new NextResponse("Forbidden", { status: 403 });
     }
     const response = await fetch(url);

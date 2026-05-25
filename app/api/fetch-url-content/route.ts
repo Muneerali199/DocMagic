@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    if(isPrivateUrl(url)){
+    if(await isPrivateUrl(url)){
       return NextResponse.json(
         { error: 'Forbidden URL' },
         { status: 403 }
