@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import type { NextRequest } from 'next/server';
 
-export const maxDuration = 60; // Allow up to 60 seconds for compilation
+export const maxDuration = 60;
 
 interface CompileRequest {
   latex: string;
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate LaTeX has basic structure
     if (!latex.includes('\\documentclass') || !latex.includes('\\begin{document}')) {
       return NextResponse.json(
         {
@@ -44,12 +43,11 @@ export async function POST(request: NextRequest) {
 
     console.log('Attempting LaTeX compilation via LaTeX.Online...');
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+      timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      // LaTeX.Online uses GET with query parameter, not POST
-      // URL encode the LaTeX content
       const encodedLatex = encodeURIComponent(latex);
       const compileUrl = `https://latexonline.cc/compile?text=${encodedLatex}&command=${engine}`;
 
@@ -58,15 +56,12 @@ export async function POST(request: NextRequest) {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       if (response.ok) {
         const contentType = response.headers.get('content-type');
 
         if (contentType?.includes('application/pdf')) {
           console.log('LaTeX compiled successfully!');
           const pdfBuffer = await response.arrayBuffer();
-
           return new NextResponse(pdfBuffer, {
             headers: {
               'Content-Type': 'application/pdf',
@@ -75,13 +70,10 @@ export async function POST(request: NextRequest) {
             },
           });
         } else {
-          // API returned non-PDF (likely error HTML or text)
           const errorText = await response.text();
           logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX.Online returned non-PDF:', errorText.substring(0, 500));
 
-          // Check for common LaTeX errors
           let errorMessage = 'Compilation failed - check your LaTeX syntax';
-
           if (errorText.includes('Undefined control sequence')) {
             errorMessage = 'Undefined command in LaTeX. Check for typos in command names.';
           } else if (errorText.includes('Missing')) {
@@ -101,10 +93,15 @@ export async function POST(request: NextRequest) {
         const errorText = await response.text();
         logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX.Online API error:', response.status, errorText.substring(0, 200));
 
-        // Try alternative endpoint
+        if (controller.signal.aborted) {
+          throw new Error('Timeout');
+        }
+
         console.log('Trying alternative compilation method...');
 
-        // Try latex.ytotech.com as fallback
+        const altController = new AbortController();
+        const altTimeoutId = setTimeout(() => altController.abort(), 45000);
+
         try {
           const altResponse = await fetch('https://latex.ytotech.com/builds/sync', {
             method: 'POST',
@@ -113,14 +110,9 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify({
               compiler: engine,
-              resources: [
-                {
-                  main: true,
-                  content: latex,
-                }
-              ]
+              resources: [{ main: true, content: latex }]
             }),
-            signal: controller.signal,
+            signal: altController.signal,
           });
 
           if (altResponse.ok) {
@@ -139,12 +131,14 @@ export async function POST(request: NextRequest) {
           }
         } catch (altError) {
           logger.error({ route: 'app/api/latex/compile/route.ts' }, 'Alternative compilation also failed:', altError);
+        } finally {
+          clearTimeout(altTimeoutId);
         }
 
         throw new Error(`LaTeX.Online API error: ${response.status}`);
       }
     } catch (fetchError: any) {
-      if (fetchError.name === 'AbortError') {
+      if (fetchError.name === 'AbortError' || fetchError.message === 'Timeout') {
         logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX compilation timed out');
         return NextResponse.json({
           success: false,
@@ -155,13 +149,14 @@ export async function POST(request: NextRequest) {
 
       logger.error({ route: 'app/api/latex/compile/route.ts' }, 'LaTeX compilation error:', fetchError.message);
 
-      // Return fallback message
       return NextResponse.json({
         success: false,
         message: 'PDF compilation service temporarily unavailable. Please download the .tex file and compile in Overleaf or locally.',
         errors: [{ message: fetchError.message, type: 'error' as const }],
         previewUrl: null,
       }, { status: 503 });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
 
   } catch (error: any) {
