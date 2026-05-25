@@ -158,6 +158,8 @@
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
     "@jest/globals": "^30.4.1",
+    "@emnapi/core": "^1.10.0",
+    "@emnapi/runtime": "^1.10.0",
     "@netlify/plugin-nextjs": "^5.11.6",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
