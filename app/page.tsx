@@ -48,6 +48,11 @@ export const metadata: Metadata = {
     description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
   },
 };
+/**
+ * Structured data for SEO purposes.
+ * Combines Organization and SoftwareApplication JSON-LD schemas
+ * to enhance search engine visibility for Draftdeck AI.
+ */
 const schemaData = {
   "@context": "https://schema.org",
   "@graph": [
