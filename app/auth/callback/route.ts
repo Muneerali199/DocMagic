@@ -1,8 +1,9 @@
 import { createRoute } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { sendWelcomeEmail } from "@/lib/email";
 import { createClient } from '@supabase/supabase-js';
 import { logger } from "@/lib/logger";
+import { DEFAULT_REDIRECT_PATH, getSafeRedirectPath } from "@/lib/redirect-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -104,7 +105,12 @@ async function processReferral(referralCode: string, newUserId: string) {
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") || "/";
+  const next = requestUrl.searchParams.get("next");
+  const safeRedirectPath = getSafeRedirectPath(
+    next,
+    requestUrl.origin,
+    DEFAULT_REDIRECT_PATH,
+  );
   const type = requestUrl.searchParams.get("type");
   const referralCode = requestUrl.searchParams.get("ref");
 
@@ -189,7 +195,7 @@ export async function GET(request: NextRequest) {
       }
       
       // Default redirect
-      const nextUrl = new URL(next, requestUrl.origin);
+      const nextUrl = new URL(safeRedirectPath, requestUrl.origin);
       return Response.redirect(nextUrl.toString());
     } catch (err) {
       logger.error("Auth callback exception:", err);
