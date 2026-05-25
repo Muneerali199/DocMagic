@@ -69,7 +69,11 @@ describe('sanitizeHtml', () => {
   it('escapes all entities in a combined string', () => {
     const input = `<a href="/path?q=1&r=2" onclick='do()'>click</a>`;
     const output = sanitizeHtml(input);
-    expect(output).not.toMatch(/[<>"'\/&]/);
+    expect(output).not.toMatch(/[<>"'\/]/);
+    expect(output).toContain('&lt;');
+    expect(output).toContain('&gt;');
+    expect(output).toContain('&amp;');
+    expect(output).toContain('&quot;');
   });
 });
 
@@ -297,25 +301,25 @@ describe('resumeGenerationSchema', () => {
 describe('presentationGenerationSchema', () => {
   it('accepts a valid presentation request', () => {
     expect(
-      presentationGenerationSchema.safeParse({ topic: 'React Hooks', slides: 10 }).success
+      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 10 }).success
     ).toBe(true);
   });
 
-  it('rejects slides = 0', () => {
+  it('rejects pageCount = 0', () => {
     expect(
-      presentationGenerationSchema.safeParse({ topic: 'React', slides: 0 }).success
+      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 0 }).success
     ).toBe(false);
   });
 
-  it('rejects slides > 50', () => {
+  it('rejects pageCount > 100', () => {
     expect(
-      presentationGenerationSchema.safeParse({ topic: 'React', slides: 51 }).success
+      presentationGenerationSchema.safeParse({ prompt: 'a'.repeat(LIMITS.PROMPT_MIN), pageCount: 101 }).success
     ).toBe(false);
   });
 
-  it('rejects an invalid style value', () => {
+  it('rejects a prompt shorter than PROMPT_MIN', () => {
     expect(
-      presentationGenerationSchema.safeParse({ topic: 'React', slides: 5, style: 'neon' }).success
+      presentationGenerationSchema.safeParse({ prompt: 'short', pageCount: 5 }).success
     ).toBe(false);
   });
 });
@@ -324,26 +328,23 @@ describe('letterGenerationSchema', () => {
   it('accepts a valid cover letter input', () => {
     expect(
       letterGenerationSchema.safeParse({
-        type: 'cover',
-        recipient: 'Hiring Manager',
-        content: 'a'.repeat(50),
+        jobDescription: 'a'.repeat(20),
+        fromName: 'Jane Doe',
       }).success
     ).toBe(true);
   });
 
-  it('rejects an unknown letter type', () => {
+  it('rejects when required general letter fields are missing', () => {
     expect(
       letterGenerationSchema.safeParse({
-        type: 'unknown',
-        recipient: 'HR',
-        content: 'a'.repeat(50),
+        prompt: 'a'.repeat(LIMITS.PROMPT_MIN),
       }).success
     ).toBe(false);
   });
 
-  it('rejects content shorter than 50 characters', () => {
+  it('rejects a jobDescription shorter than 20 characters', () => {
     expect(
-      letterGenerationSchema.safeParse({ type: 'cover', recipient: 'HR', content: 'Hi' }).success
+      letterGenerationSchema.safeParse({ jobDescription: 'short', fromName: 'Jane' }).success
     ).toBe(false);
   });
 });
@@ -425,7 +426,7 @@ describe('safeParseBody', () => {
   it('throws when Content-Type is not application/json', async () => {
     const req = makeRequest({ limit: 10 }, 'text/plain');
     await expect(safeParseBody(req, paginationSchema)).rejects.toThrow(
-      'Content-Type must be application/json'
+      'Invalid request body'
     );
   });
 
@@ -453,12 +454,12 @@ describe('safeParseBody', () => {
         throw new SyntaxError('Unexpected token');
       },
     } as unknown as Request;
-    await expect(safeParseBody(req, paginationSchema)).rejects.toThrow('Invalid JSON body');
+    await expect(safeParseBody(req, paginationSchema)).rejects.toThrow('Invalid JSON payload');
   });
 
   it('throws when schema validation fails', async () => {
     const req = makeRequest({ limit: 9999 });
-    await expect(safeParseBody(req, paginationSchema)).rejects.toThrow('Validation failed');
+    await expect(safeParseBody(req, paginationSchema)).rejects.toThrow('Invalid request body');
   });
 });
 

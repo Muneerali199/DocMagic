@@ -129,7 +129,7 @@ async function retryWithBackoff<T>(
         const retryDelay = error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay;
         const waitTime = retryDelay ? parseInt(retryDelay) * 1000 : initialDelay * Math.pow(2, i);
         
-        console.log(`Rate limited. Retrying in ${waitTime / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
+        
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
       }

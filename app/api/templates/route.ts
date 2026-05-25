@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       }
       const { data: templates, error: templatesError } = await query;
       if (templatesError) {
-        console.log('Database error:', templatesError.message);
+        console.error('Database error:', templatesError.message);
         return new Response(JSON.stringify([]), {
           headers: { 'Content-Type': 'application/json' }
         });
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
     // Just return user's templates
     const { data: templates, error: templatesError } = await query;
     if (templatesError) {
-      console.log('Database error:', templatesError.message);
+      console.error('Database error:', templatesError.message);
       return new Response(JSON.stringify([]), {
         headers: { 'Content-Type': 'application/json' }
       });

@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       .single();
 
     if (referrerError || !referrer) {
-      console.log('Invalid referral code:', referralCode);
+      console.error('Invalid referral code:', referralCode);
       return NextResponse.json(
         { success: false, message: 'Invalid referral code' },
         { status: 200 } // Don't fail the signup for invalid referral

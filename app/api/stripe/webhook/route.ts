@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     ];
 
     if (!allowedEventTypes.includes(event.type)) {
-      console.log(`Unhandled event type: ${event.type}`);
+      
       return new NextResponse(null, { status: 200 });
     }
 
