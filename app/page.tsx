@@ -62,14 +62,14 @@ const schemaData = {
       "name": "DraftdeckAI",
       "url": "https://draftdeckai.com",
       "logo": "https://draftdeckai.com/draftdeckai-logo.svg",
-      "description": "An open-source AI platform for developers."
+      "description": "An open-source platform to build presentations and documents with AI."
     },
     {
       "@type": "SoftwareApplication",
       "@id": "https://draftdeckai.com/#software",
       "name": "DraftdeckAI",
       "url": "https://draftdeckai.com",
-      "description": "An open-source AI platform for developers.",
+      "description": "An open-source platform to build presentations and documents with AI.",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "All"
     }
