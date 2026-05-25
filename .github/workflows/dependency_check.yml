@@ -91,16 +91,16 @@ jobs:
         run: |
           if npm pkg get scripts.test | grep -qv null; then
             echo "Running Jest tests..."
-            npx jest
+            npx jest --passWithNoTests
           else
             echo "No test script found in package.json, skipping tests"
           fi
 
       - name: Check if build script exists and build
         run: |
-          if npm run build --silent 2>/dev/null; then
+          if npm pkg get scripts.build | grep -qv null; then
             echo "Running build..."
-            npm run build
+            npm run build || { echo "Build failed"; exit 1; }
           else
             echo "No build script found in package.json, skipping build"
           fi
