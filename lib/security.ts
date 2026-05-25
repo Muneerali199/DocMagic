@@ -192,7 +192,7 @@ export function isAllowedOrigin(origin: string | null, host: string): boolean {
   const allowedOrigins = [
     `https://${host}`,
     'https://draftdeckai.com',
-    'https://your-vercel-url.vercel.app',
+    ...(process.env.NEXT_PUBLIC_VERCEL_URL ? [`https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/^https?:\/\//, '')}`] : []),
   ];
 
   if (process.env.NODE_ENV === 'development') {
