@@ -58,24 +58,23 @@ const schemaData = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://draftdeck.ai/#organization", // Draftdeck ke hisab se URL set kar diya
+      "@id": "https://draftdeckai.com/#organization",
       "name": "Draftdeck AI",
-      "url": "https://draftdeck.ai",
-      "logo": "https://draftdeck.ai/logo.png", // Agar logo path badalna ho toh baad mein badal sakte hain
-      "description": "An open-source AI platform for developers." 
+      "url": "https://draftdeckai.com",
+      "logo": "https://draftdeckai.com/logo.png",
+      "description": "An open-source AI platform for developers."
     },
     {
       "@type": "SoftwareApplication",
-      "@id": "https://draftdeck.ai/#software",
+      "@id": "https://draftdeckai.com/#software",
       "name": "Draftdeck AI App",
-      "url": "https://draftdeck.ai",
-      "description": "Draftdeck AI software application.",
+      "url": "https://draftdeckai.com",
+      "description": "An open-source AI platform for developers.",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "All"
     }
   ]
 };
-
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
