@@ -6,6 +6,7 @@ import { TestimonialsSection } from "@/components/testimonials-section";
 import { DocumentCard } from "@/components/document-card";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import Script from 'next/script';
 import Link from "next/link";
 import {
   File as FileIcon,
@@ -46,6 +47,28 @@ export const metadata: Metadata = {
     title: "DraftDeckAI - Best AI Document Creator",
     description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
   },
+};
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://draftdeck.ai/#organization", // Draftdeck ke hisab se URL set kar diya
+      "name": "Draftdeck AI",
+      "url": "https://draftdeck.ai",
+      "logo": "https://draftdeck.ai/logo.png", // Agar logo path badalna ho toh baad mein badal sakte hain
+      "description": "An open-source AI platform for developers." 
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://draftdeck.ai/#software",
+      "name": "Draftdeck AI App",
+      "url": "https://draftdeck.ai",
+      "description": "Draftdeck AI software application.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All"
+    }
+  ]
 };
 
 export const dynamic = 'force-dynamic';
@@ -328,6 +351,11 @@ export default async function Home() {
         <TestimonialsSection />
         <ScrollToTop />
       </main>
+      <Script
+        id="structured-data"
+       type="application/ld+json"
+       dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
     </div>
   );
 }
