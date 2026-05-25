@@ -4,9 +4,10 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { resumeGenerationSchema, detectSqlInjection, sanitizeObject, safeParseBody, RequestValidationError } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
@@ -180,67 +181,14 @@ async function postHandler(request: Request) {
     // Check user credits
     const creditCost = ACTION_COSTS.resume;
 
-    // Get or create user credits
-    let { data: userCredits, error: creditsError } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        log.error('Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits, error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        log.warn('Failed to reset credits in database, applying local reset instead:', updateError);
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      } else if (updatedCredits) {
-        userCredits = updatedCredits;
-      } else {
-        log.warn('Credits reset did not return an updated record, applying local reset instead');
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      }
+      log.error('Failed to load or initialize credits record');
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     // Check if user has enough credits
@@ -309,13 +257,13 @@ async function postHandler(request: Request) {
         userCredits!.credits_used,
         creditCost
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
-          creditReservationConflictResponse(creditCost, userCredits!.tier),
+          creditReservationConflictResponse(creditCost, userCredits.tier),
           { status: 402 }
         );
       }
-      userCredits = reserved;
     }
 
     // Generate resume - Try Gemini 2.0 Flash first (Enhanced ATS), fallback to Mistral
@@ -329,12 +277,12 @@ async function postHandler(request: Request) {
         name: sanitizedName,
         email: sanitizedEmail
       });
-      
+
       // 25-second timeout for Gemini specifically (within the 30s overall limit)
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Gemini request timed out')), 25000)
       );
-      
+
       resume = await Promise.race([geminiPromise, timeoutPromise]) as any;
       log.info('✅ Resume generated with Gemini');
     } catch (geminiError: any) {
@@ -351,28 +299,18 @@ async function postHandler(request: Request) {
         log.error('❌ Both Gemini and Mistral failed');
         if (!hasUnlimitedCredits) {
           await refundCredits(supabaseAdmin, user.id, creditCost);
+          invalidateUserCredits(user.id);
         }
         throw new Error('Unable to generate resume. Please try again later.');
       }
     }
 
-    // Log usage only after the AI call succeeded. Credits were already
-    // deducted atomically above.
+    // Fire-and-forget: log write does not block the response
     if (!hasUnlimitedCredits) {
-      const { error: logError } = await supabaseAdmin
+      supabaseAdmin
         .from('credit_usage_log')
-        .insert({
-          user_id: user.id,
-          action: 'resume',
-          credits_used: creditCost,
-          metadata: { prompt_length: sanitizedPrompt.length }
-        });
-
-      if (logError) {
-        log.error('Failed to log credit usage:', logError);
-      } else {
-        log.info(`💳 Deducted ${creditCost} credits for resume generation`);
-      }
+        .insert({ user_id: user.id, action_type: 'resume', credits_used: creditCost, metadata: { prompt_length: sanitizedPrompt.length } })
+        .then(({ error }) => { if (error) log.error('Failed to log credit usage:', error); });
     }
 
     // Save resume to documents table for history

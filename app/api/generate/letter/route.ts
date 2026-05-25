@@ -11,9 +11,6 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import {
   ACTION_COSTS,
-  TIER_LIMITS,
-  getCreditsResetDate,
-  shouldResetCredits,
   calculateRemainingCredits,
   hasUnlimitedDeveloperCredits,
 } from "@/lib/credits-service";
@@ -27,6 +24,7 @@ import {
   RequestValidationError,
   safeParseBody,
 } from "@/lib/validation";
+import { getCachedUserCredits, invalidateUserCredits } from "@/lib/cached-queries";
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -96,56 +94,26 @@ export async function POST(request: Request) {
     const isCoverLetter = jobDescription && fromName;
     const actionType = isCoverLetter ? "cover_letter" : "letter";
 
+    // Validate required fields for the standard-letter branch BEFORE
+    // touching credits — getCachedUserCredits can lazy-create/reset the
+    // user_credits row, so a malformed request must be rejected first.
+    if (!isCoverLetter && (!prompt || !fromName || !toName || !letterType)) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
     // Check user credits
     const creditCost = ACTION_COSTS[actionType];
 
-    // Get or create user credits
-    let { data: userCredits } = await supabaseAdmin
-      .from("user_credits")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from("user_credits")
-        .insert({
-          user_id: user.id,
-          tier: "free",
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate(),
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to create credits record:", insertError);
-        return NextResponse.json(
-          { error: "Failed to initialize credits" },
-          { status: 500 },
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits } = await supabaseAdmin
-        .from("user_credits")
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        userCredits = updatedCredits;
-      }
+      return NextResponse.json(
+        { error: "Failed to initialize credits" },
+        { status: 500 },
+      );
     }
 
     // Check if user has enough credits
@@ -178,13 +146,13 @@ export async function POST(request: Request) {
         userCredits.credits_used,
         creditCost,
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(creditCost, userCredits.tier),
           { status: 402 },
         );
       }
-      userCredits = reserved;
     }
 
     // Cover-letter branch
@@ -213,27 +181,17 @@ export async function POST(request: Request) {
       } catch (err) {
         if (!hasUnlimitedCredits) {
           await refundCredits(supabaseAdmin, user.id, creditCost);
+          invalidateUserCredits(user.id);
         }
         throw err;
       }
 
+      // Fire-and-forget: log write does not block the response
       if (!hasUnlimitedCredits) {
-        const { error: logError } = await supabaseAdmin
+        supabaseAdmin
           .from("credit_usage_log")
-          .insert({
-            user_id: user.id,
-            action_type: actionType,
-            credits_used: creditCost,
-            metadata: { type: "cover_letter", has_job_description: true },
-          });
-
-        if (logError) {
-          logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to log credit usage:", logError);
-        } else {
-          console.log(
-            `💳 Deducted ${creditCost} credits for cover letter generation`,
-          );
-        }
+          .insert({ user_id: user.id, action_type: actionType, credits_used: creditCost, metadata: { type: "cover_letter", has_job_description: true } })
+          .then(({ error }) => { if (error) console.error("Failed to log credit usage:", error); });
       }
 
       return NextResponse.json(coverLetter);
@@ -259,6 +217,7 @@ export async function POST(request: Request) {
     } catch (err) {
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
+        invalidateUserCredits(user.id);
       }
       throw err;
     }
@@ -286,21 +245,12 @@ export async function POST(request: Request) {
 
     console.log("✅ Letter generated successfully with Mistral");
 
+    // Fire-and-forget: log write does not block the response
     if (!hasUnlimitedCredits) {
-      const { error: logError } = await supabaseAdmin
+      supabaseAdmin
         .from("credit_usage_log")
-        .insert({
-          user_id: user.id,
-          action_type: actionType,
-          credits_used: creditCost,
-          metadata: { letter_type: standardLetterType, prompt_length: standardPrompt.length },
-        });
-
-      if (logError) {
-        logger.error({ route: 'app/api/generate/letter/route.ts' }, "Failed to log credit usage:", logError);
-      } else {
-        console.log(`💳 Deducted ${creditCost} credits for letter generation`);
-      }
+        .insert({ user_id: user.id, action_type: actionType, credits_used: creditCost, metadata: { letter_type: standardLetterType, prompt_length: standardPrompt.length } })
+        .then(({ error }) => { if (error) console.error("Failed to log credit usage:", error); });
     }
 
     return NextResponse.json(formattedResponse);

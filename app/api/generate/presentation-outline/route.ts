@@ -9,8 +9,9 @@ import {
 } from '@/lib/mistral';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -271,67 +272,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get or create user credits
-    let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits, error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to reset credits in database, applying local reset instead:', updateError);
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      } else if (updatedCredits) {
-        userCredits = updatedCredits;
-      } else {
-        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Credits reset did not return an updated record, applying local reset instead');
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      }
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     // Check if user has enough credits - use validated page count for calculation
@@ -367,13 +314,13 @@ export async function POST(request: Request) {
         userCredits.credits_used,
         estimatedCreditCost
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
           { status: 402 }
         );
       }
-      userCredits = reserved;
     }
 
     console.log('📝 Step 1: Generating slide text content...');
@@ -410,16 +357,25 @@ export async function POST(request: Request) {
     } catch (err) {
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
+        invalidateUserCredits(user.id);
       }
       throw err;
     }
-    
+
     console.log(`✅ Generated ${outlines.length} slides`);
 
-    // If outlineOnly is requested, return here without generating images/charts
+    // If outlineOnly is requested, reconcile credits then return early.
     if (outlineOnly) {
       console.log('🚀 Returning outline only as requested');
-      return NextResponse.json({ 
+      if (!hasUnlimitedCredits) {
+        const actualCost = outlines.length * creditsPerSlide;
+        const overReserved = estimatedCreditCost - actualCost;
+        if (overReserved > 0) {
+          await refundCredits(supabaseAdmin, user.id, overReserved);
+        }
+        invalidateUserCredits(user.id);
+      }
+      return NextResponse.json({
         outlines: outlines,
         stats: {
           totalSlides: outlines.length,
@@ -505,25 +461,14 @@ export async function POST(request: Request) {
         } else {
           creditsUsedAfter -= overReserved;
         }
+        invalidateUserCredits(user.id);
       }
 
-      const { error: logError } = await supabaseAdmin
+      // Fire-and-forget: log write does not block the response
+      supabaseAdmin
         .from('credit_usage_log')
-        .insert({
-          user_id: user.id,
-          action: 'presentation',
-          credits_used: actualCreditCost,
-          metadata: {
-            pageCount: enhancedOutlines.length,
-            prompt_length: prompt.length
-          }
-        });
-
-      if (logError) {
-        logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Failed to log credit usage:', logError);
-      } else {
-        console.log(`💳 Deducted ${actualCreditCost} credits for ${enhancedOutlines.length}-slide presentation`);
-      }
+        .insert({ user_id: user.id, action_type: 'presentation', credits_used: actualCreditCost, metadata: { pageCount: enhancedOutlines.length, prompt_length: prompt.length } })
+        .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
     }
 
     return NextResponse.json({

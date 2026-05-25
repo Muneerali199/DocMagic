@@ -5,8 +5,9 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { generateDiagramWithMistral } from '@/lib/mistral';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -50,53 +51,13 @@ export async function POST(request: Request) {
     // Check user credits
     const creditCost = ACTION_COSTS.diagram;
     
-    // Get or create user credits
-    let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        userCredits = updatedCredits;
-      }
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     // Check if user has enough credits
@@ -126,13 +87,13 @@ export async function POST(request: Request) {
         userCredits.credits_used,
         creditCost
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(creditCost, userCredits.tier),
           { status: 402 }
         );
       }
-      userCredits = reserved;
     }
 
     console.log(`📊 Generating ${diagramType} diagram with Mistral...`);
@@ -144,6 +105,7 @@ export async function POST(request: Request) {
       logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Diagram generation failed:', genError);
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
+        invalidateUserCredits(user.id);
       }
       const errorMsg = genError instanceof Error ? genError.message : 'Unknown error during generation';
       return NextResponse.json(
@@ -162,6 +124,7 @@ export async function POST(request: Request) {
       logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Invalid diagram response:', diagram);
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
+        invalidateUserCredits(user.id);
       }
       return NextResponse.json(
         {
@@ -183,6 +146,7 @@ export async function POST(request: Request) {
       logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Invalid diagram type in code:', diagramCode.substring(0, 50));
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
+        invalidateUserCredits(user.id);
       }
       return NextResponse.json(
         {
@@ -199,6 +163,7 @@ export async function POST(request: Request) {
     if (diagramCode.length < 10) {
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, creditCost);
+        invalidateUserCredits(user.id);
       }
       return NextResponse.json(
         {
@@ -212,23 +177,12 @@ export async function POST(request: Request) {
 
     console.log('✅ Diagram generated successfully with Mistral');
 
-    // Credits were already reserved atomically before generation. Just log
-    // the usage now that generation succeeded.
+    // Fire-and-forget: log write does not block the response
     if (!hasUnlimitedCredits) {
-      const { error: logError } = await supabaseAdmin
+      supabaseAdmin
         .from('credit_usage_log')
-        .insert({
-          user_id: user.id,
-          action: 'diagram',
-          credits_used: creditCost,
-          metadata: { diagram_type: diagramType, prompt_length: prompt.length }
-        });
-
-      if (logError) {
-        logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Failed to log credit usage:', logError);
-      } else {
-        console.log(`💳 Deducted ${creditCost} credits for diagram generation`);
-      }
+        .insert({ user_id: user.id, action_type: 'diagram', credits_used: creditCost, metadata: { diagram_type: diagramType, prompt_length: prompt.length } })
+        .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
     }
 
     return NextResponse.json(diagram);

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, getCreditsResetDate, shouldResetCredits, type Tier, type ActionType } from '@/lib/credits-service';
 import { reserveCredits } from '@/lib/credit-operations';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,64 +34,13 @@ export async function GET(request: Request) {
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
 
-    // Get user credits
-    let { data: credits, error } = await supabase
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record, create one
-    if (error?.code === 'PGRST116' || !credits) {
-      const resetDate = getCreditsResetDate();
-
-      const { data: newCredits, error: insertError } = await supabase
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: resetDate,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        logger.error({ route: 'app/api/credits/route.ts' }, 'Error creating credits:', insertError);
-        // Return default free tier info
-        return NextResponse.json({
-          tier: 'free',
-          tierName: TIER_NAMES.free,
-          creditsTotal: TIER_LIMITS.free,
-          creditsUsed: 0,
-          creditsRemaining: TIER_LIMITS.free,
-          features: TIER_FEATURES.free,
-          resetDate: resetDate,
-          actionCosts: ACTION_COSTS,
-        });
-      }
-
-      credits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (credits && shouldResetCredits(credits.credits_reset_at)) {
-      const resetDate = getCreditsResetDate();
-
-      const { data: updatedCredits } = await supabase
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetDate,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        credits = updatedCredits;
-      }
+    // Get user credits (cached, 15 s TTL)
+    const credits = await getCachedUserCredits(supabase, user.id);
+    if (!credits) {
+      return NextResponse.json(
+        { error: 'Failed to load credits' },
+        { status: 500 }
+      );
     }
 
     const tier = (credits?.tier || 'free') as Tier;
@@ -155,56 +105,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get user credits
-    let { data: credits, error } = await supabase
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record, create one
-    if (error?.code === 'PGRST116' || !credits) {
-      const resetDate = getCreditsResetDate();
-
-      const { data: newCredits, error: insertError } = await supabase
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: resetDate,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-
-      credits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (credits && shouldResetCredits(credits.credits_reset_at)) {
-      const resetDate = getCreditsResetDate();
-
-      const { data: updatedCredits } = await supabase
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetDate,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        credits = updatedCredits;
-      }
+    // Get user credits (cached, 15 s TTL)
+    const credits = await getCachedUserCredits(supabase, user.id);
+    if (!credits) {
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     const creditsRemaining = credits.credits_total - credits.credits_used;
@@ -242,6 +149,7 @@ export async function POST(request: Request) {
       credits.credits_used,
       creditsRequired
     );
+    invalidateUserCredits(user.id);
 
     if (!reserved) {
       return NextResponse.json({
@@ -255,15 +163,11 @@ export async function POST(request: Request) {
       }, { status: 402 });
     }
 
-    // Log the usage
-    await supabase
+    // Fire-and-forget: log write does not block the response
+    supabase
       .from('credit_usage_log')
-      .insert({
-        user_id: user.id,
-        credits_used: creditsRequired,
-        action_type: action,
-        metadata: metadata || {},
-      });
+      .insert({ user_id: user.id, credits_used: creditsRequired, action_type: action, metadata: metadata || {} })
+      .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
 
     return NextResponse.json({
       success: true,
