@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 /**
  * Structured data for SEO purposes.
  * Combines Organization and SoftwareApplication JSON-LD schemas
- * to enhance search engine visibility for Draftdeck AI.
+ * to enhance search engine visibility for DraftdeckAI.
  */
 const schemaData = {
   "@context": "https://schema.org",
@@ -59,18 +59,18 @@ const schemaData = {
     {
       "@type": "Organization",
       "@id": "https://draftdeckai.com/#organization",
-      "name": "Draftdeck AI",
+      "name": "DraftdeckAI",
       "url": "https://draftdeckai.com",
-      "logo": "https://draftdeckai.com/logo.png",
+      "logo": "https://draftdeckai.com/draftdeckai-logo.svg",
       "description": "An open-source AI platform for developers."
     },
     {
       "@type": "SoftwareApplication",
       "@id": "https://draftdeckai.com/#software",
-      "name": "Draftdeck AI App",
+      "name": "DraftdeckAI",
       "url": "https://draftdeckai.com",
       "description": "An open-source AI platform for developers.",
-      "applicationCategory": "DeveloperApplication",
+      "applicationCategory": "BusinessApplication",
       "operatingSystem": "All"
     }
   ]
