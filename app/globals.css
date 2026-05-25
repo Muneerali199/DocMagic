@@ -3089,6 +3089,32 @@ section {
     font-size: 11pt;
     line-height: 1.2;
 }
+/* Lenis Smooth Scroll Fix */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+/* Mobile Menu Buttery Scroll Fix */
+[data-lenis-prevent] {
+  overscroll-behavior: contain; /* Ye mobile par menu ke scroll ko lock karega */
+  -webkit-overflow-scrolling: touch; /* iOS buttery scrolling */
+}
+@layer utilities {
+  .orb-blur {
+    filter: blur(100px);
+    will-change: transform;
+  }
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;    /* Firefox */
+}
 
 /* ============================================
    END LATEX PREVIEW STYLES

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import {
   File as FileIcon,
   FileText,
@@ -23,13 +24,13 @@ import {
   Send,
   Layout,
   BookOpen,
-  MoreHorizontal,
+  ChevronRight,
 } from "lucide-react";
+import Lenis from "lenis";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PWAInstallButton } from "@/components/pwa-install-button";
-import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,26 @@ export function SiteHeader() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
+  const [lenis, setLenis] = useState<Lenis | null>(null);
+  useEffect(() => {
+    // Page load hote hi Lenis instance create karo
+    const lenisInstance = new Lenis();
+    setLenis(lenisInstance);
+    
+    return () => lenisInstance.destroy();
+  }, []);
+  // Menu Open/Close hone par ye function call hoga
+  const handleOpenChange = (open: boolean) => {
+    setIsSheetOpen(open);
+    
+    if (lenis) {
+      if (open) {
+        lenis.stop(); // Menu khulne par scroll roko
+      } else {
+        lenis.start(); // Menu band hone par scroll chalu karo
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,10 +95,11 @@ export function SiteHeader() {
   // useCredits already fetches on mount and has debouncing built-in
 
   return (
-    <header className="sticky top-0 z-50 w-full nav-professional">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 sm:h-16 items-center justify-between">
-          <div className="flex items-center gap-4 lg:gap-8">
+    <header className="fixed top-0 inset-x-0 z-50 pointer-events-none">
+     <div className="pointer-events-auto bg-background/80 backdrop-blur-md border-b border-border/40">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="flex h-14 sm:h-16 items-center gap-4">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* Logo with tooltip for desktop only */}
             <TooltipWithShortcut
               content="Return to homepage"
@@ -91,14 +113,14 @@ export function SiteHeader() {
                   <FileText className="h-6 w-6 sm:h-7 sm:w-7 bolt-gradient-text group-hover:scale-110 transition-transform duration-300" />
                   <Sparkles className="absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 text-yellow-500 animate-pulse" />
                 </div>
-                <span className="font-bold text-lg sm:text-xl bolt-gradient-text hidden xs:block truncate max-w-[80px] sm:max-w-none">
-                  DraftDeckAI
-                </span>
+                <span className="font-bold text-base sm:text-xl bolt-gradient-text hidden xs:block truncate max-w-[80px] sm:max-w-none">
+                DraftDeckAI
+               </span>
               </Link>
             </TooltipWithShortcut>
 
-            {/* Mobile Navigation Sheet */}
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            {/* Mobile Sheet Trigger */}
+            <Sheet open={isSheetOpen} onOpenChange={handleOpenChange}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -109,11 +131,14 @@ export function SiteHeader() {
                   <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </SheetTrigger>
+
+              {/* ── Mobile Sheet Content ── */}
               <SheetContent
                 side="left"
-                className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-xl border-border/50"
+                data-lenis-prevent
+                className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-xl border-border/50 overflow-y-auto [&>button]:hidden"
               >
-                <SheetHeader className="text-left pb-4 border-b border-border/20">
+                <SheetHeader className="text-left pb-4 border-b border-border/20 relative pr-10">
                   <SheetTitle className="flex items-center gap-2 text-lg">
                     <div className="relative">
                       <FileText className="h-5 w-5 bolt-gradient-text" />
@@ -124,12 +149,17 @@ export function SiteHeader() {
                   <SheetDescription className="text-sm text-muted-foreground">
                     Access all document creation tools
                   </SheetDescription>
-                </SheetHeader>
+                  <SheetClose className="absolute right-4 top-2 rounded-lg opacity-70 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                     <div className="h-10 w-10 flex items-center justify-center border border-border rounded-lg bg-background hover:bg-accent transition-colors">
+                      <X className="h-5 w-5" />
+                    </div>
+                 </SheetClose>
+                 </SheetHeader>
 
                 <div className="mt-6 space-y-6">
-                  {/* Navigation Items */}
-                  <nav className="space-y-1">
-                    <ul>
+                  {/* Primary nav links */}
+                  <nav className="px-2">
+                    <ul className="space-y-1">
                       {navItems.map((item) => (
                         <li key={item.href}>
                           <SheetClose asChild>
@@ -157,9 +187,7 @@ export function SiteHeader() {
                               <span className="font-medium">{item.label}</span>
 
                               {pathname === item.href && (
-                                <div className="ml-auto">
-                                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                </div>
+                                <div className="ml-auto w-2 h-2 rounded-full bg-yellow-500" />
                               )}
                             </Link>
                           </SheetClose>
@@ -169,11 +197,8 @@ export function SiteHeader() {
 
                     {/* Secondary Navigation */}
                     <div className="mt-4 pt-4 border-t border-border/20">
-                      <div className="text-xs font-semibold text-muted-foreground mb-2 px-3">
-                        Resources
-                      </div>
-
-                      <ul>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 px-3">Resources</p>
+                      <ul className="space-y-1">
                         {secondaryNavItems.map((item) => (
                           <li key={item.href}>
                             <SheetClose asChild>
@@ -192,7 +217,9 @@ export function SiteHeader() {
                               <span>{item.label}</span>
                             </Link>
                           </SheetClose>
+                          </li>
                         ))}
+                      </ul>
                       </div>
                     </nav>
 
@@ -258,7 +285,7 @@ export function SiteHeader() {
                       <SheetClose asChild>
                         <Link
                           href="/auth/signin"
-                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                          className="w-full bolt-gradient text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-all duration-200"
                         >
                           <Zap className="h-4 w-4" />
                           Sign In to DraftDeckAI
@@ -269,99 +296,85 @@ export function SiteHeader() {
                 </div>
               </SheetContent>
             </Sheet>
+            </div>
 
             {/* Desktop Navigation with Tooltips */}
-            <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
+           <div className="relative hidden md:flex flex-1 min-w-0">
+<nav className="flex w-full overflow-x-auto scrollbar-hide items-center gap-5 lg:gap-6 mx-4">
               {navItems.map((item) => (
-                <TooltipWithShortcut key={item.href} content={item.tooltip}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "text-sm lg:text-base font-medium transition-all duration-300 hover:bolt-gradient-text hover:scale-105 flex items-center gap-2 relative group whitespace-nowrap",
-                      pathname === item.href
-                        ? "bolt-gradient-text"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    <span
+                <>
+                  <TooltipWithShortcut key={item.href} content={item.tooltip}>
+                    <Link
+                      href={item.href}
                       className={cn(
-                        "transition-transform duration-200",
-                        "group-hover:scale-110"
+                        "text-sm lg:text-base font-medium transition-all duration-300 hover:bolt-gradient-text hover:scale-105 flex items-center gap-1.5 relative group whitespace-nowrap flex-shrink-0",
+                        pathname === item.href ? "bolt-gradient-text" : "text-muted-foreground"
                       )}
                     >
-                      {item.icon}
-                    </span>
-                    <span className="hidden lg:inline">{item.label}</span>
-                    {pathname === item.href && (
-                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-0.5 rounded-full bg-yellow-500"></div>
-                    )}
-                  </Link>
-                </TooltipWithShortcut>
+                      <span className="group-hover:scale-110 transition-transform duration-200">
+                        {item.icon}
+                      </span>
+                      <span className="hidden lg:inline">{item.label}</span>
+                      {pathname === item.href && (
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-0.5 rounded-full bg-yellow-500" />
+                      )}
+                    </Link>
+                  </TooltipWithShortcut>
+                  {item.href === "/dashboard/history" && (
+                    <div className="flex items-center flex-shrink-0 px-1">
+                      <ChevronRight className="h-4 w-4 text-muted-foreground animate-pulse" />
+                    </div>
+                  )}
+                </>
               ))}
+
               
               {/* Secondary Navigation Dropdown */}
-              <DropdownMenu>
-                <TooltipWithShortcut content="More resources and information">
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-yellow-600 transition-colors"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </TooltipWithShortcut>
-                <DropdownMenuContent align="end" className="w-48">
-                  {secondaryNavItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {secondaryNavItems.map((item) => (
+  <TooltipWithShortcut key={item.href} content={item.tooltip}>
+    <Link
+      href={item.href}
+      className={cn(
+        "text-sm lg:text-base font-medium transition-all duration-300 hover:bolt-gradient-text hover:scale-105 flex items-center gap-1.5 relative group whitespace-nowrap flex-shrink-0",
+        pathname === item.href ? "bolt-gradient-text" : "text-muted-foreground"
+      )}
+    >
+      <span className="group-hover:scale-110 transition-transform duration-200">
+        {item.icon}
+      </span>
+      <span className="hidden lg:inline">{item.label}</span>
+      {pathname === item.href && (
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full bg-yellow-500" />
+      )}
+    </Link>
+  </TooltipWithShortcut>
+))}
+ 
+  <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-background/80 to-transparent" />
             </nav>
-          </div>
+            </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
-            {/* PWA Install Button */}
-            <TooltipWithShortcut content="Install DraftDeckAI as an app on your device">
-              <PWAInstallButton variant="ghost" size="sm" showText={false} />
-            </TooltipWithShortcut>
-
-            {/* Theme Toggle - Simple version for testing */}
-            <SimpleThemeToggle />
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2 min-w-[145px]">
 
             {/* Credits Badge - Desktop Only */}
             {user && !creditsLoading && credits && (
               <TooltipWithShortcut content={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUpgradeModalOpen(true)}
-                  className={cn(
-                    "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
-                    credits.creditsRemaining < 3
-                      ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
-                      : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                  )}
-                >
-                  <Coins className="h-3.5 w-3.5" />
-                  <span className="text-xs font-semibold">{credits.creditsRemaining}</span>
-                  {credits.tier !== 'free' && (
-                    <Crown className="h-3 w-3 text-yellow-500" />
-                  )}
-                </Button>
+        variant="ghost"
+        size="sm"
+        onClick={() => setUpgradeModalOpen(true)}
+        className="hidden md:flex items-center gap-1.5 px-2.5 h-9 rounded-full bg-yellow-500/10 text-yellow-600"
+      >
+        <Coins className="h-4 w-4" />
+        <span className="text-xs font-semibold">{credits.creditsRemaining}</span>
+      </Button>
               </TooltipWithShortcut>
             )}
 
             {/* Desktop User Menu */}
             {loading ? (
-              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse hidden md:flex"></div>
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse hidden md:flex" />
             ) : user ? (
               <DropdownMenu>
                 <TooltipWithShortcut content="View account settings and profile">
@@ -378,7 +391,7 @@ export function SiteHeader() {
                         <AvatarFallback className="bolt-gradient text-white font-semibold text-xs">
                           {(
                             user.user_metadata?.name?.[0] ||
-                            user.email?.[0] ||
+                            user.email?.[0] || 
                             "U"
                           ).toUpperCase()}
                         </AvatarFallback>
@@ -390,6 +403,7 @@ export function SiteHeader() {
                   align="end"
                   className="w-56 bg-background/95 backdrop-blur-xl border-border/50"
                 >
+                  {/*User Info Header*/}
                   <div className="flex items-center gap-2 p-2 border-b border-border/20">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
@@ -460,19 +474,22 @@ export function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              /* Desktop Sign In Button */
-              <TooltipWithShortcut content="Sign in to save and manage your documents">
-                <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
-                  <Link href="/auth/signin">
-                  <Link href="/auth/signin" className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span>Sign In</span>
-                  </Link>
-                </Button>
-              </TooltipWithShortcut>
-            )}
+              !loading && (
+                <>
+                  <TooltipWithShortcut content="Sign in to save and manage your documents">
+                    <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
+                      <Link href="/auth/signin" className="flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        <span>Sign In</span>
+                      </Link>
+                    </Button>
+                  </TooltipWithShortcut>
+                  <ThemeToggle />
+                </>
+              ))}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Upgrade Modal */}

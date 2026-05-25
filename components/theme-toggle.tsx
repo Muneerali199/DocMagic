@@ -17,7 +17,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
 
   if (!mounted) {
     return (
-      <Button ref={ref} variant="outline" size="icon" className="rounded-full" {...props}>
+      <Button ref={ref} variant="outline" size="icon" className="fixed top-4 right-4 z-[60] rounded-full cursor-pointer bg-white/20 backdrop-blur-md border-white/20" {...props}>
         <Sun className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Toggle theme</span>
       </Button>
@@ -35,7 +35,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
       ref={ref}
       variant="outline"
       size="icon"
-      className="rounded-full cursor-pointer relative z-10"
+      className="fixed top-4 right-4 z-[60] rounded-full cursor-pointer bg-white/20 backdrop-blur-md border-white/20"
       onClick={handleToggle}
       aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
       style={{ pointerEvents: 'auto' }}

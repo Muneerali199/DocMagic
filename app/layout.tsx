@@ -1,9 +1,11 @@
 import "./globals.css";
 import type { ReactNode } from "react";
-
+import LenisProvider from "@/components/LenisProvider";
+import { ReactLenis } from '@studio-freight/react-lenis';
 import Footer from "@/components/ui/Footer";
 import { Inter, Poppins } from "next/font/google";
 import { Providers } from "./providers";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { CursorProvider } from "@phazr/custom-cursor";
 import { PWABanner } from "@/components/pwa-banner";
 import { FeedbackPopup } from "@/components/feedback-popup";
@@ -24,10 +26,10 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -56,15 +58,20 @@ export default function RootLayout({
           content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
         />
       </head>
-      <body className={`${inter.className} ${poppins.variable}`}>
-        <Providers>
-          <CursorProvider>
-            {children}
-            <PWABanner />
-            <FeedbackPopup />
-            <Footer />
-          </CursorProvider>
-        </Providers>
+      <body suppressHydrationWarning={true} className={`${inter.className} ${poppins.variable}`}>
+        <div id="root">
+          <Providers>
+            <ThemeToggle />
+            <CursorProvider>
+              <LenisProvider> {/* Yahan wrap karo */}
+                {children}
+                <PWABanner />
+                <FeedbackPopup />
+                <Footer />
+              </LenisProvider>
+            </CursorProvider>
+          </Providers>
+        </div>
       </body>
     </html>
   );

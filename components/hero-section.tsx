@@ -1,4 +1,7 @@
 'use client';
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { StatCounter } from "./ui/stat-counter";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
@@ -6,16 +9,32 @@ import Link from "next/link";
 import { Sparkles, ArrowRight, Zap, Star, Wand2, Clock, Users, Trophy } from "lucide-react";
 
 export function HeroSection() {
+  const [jobTitle, setJobTitle] = useState("");
+  const router = useRouter();
+
+  const handleGenerate = () => {
+    if (jobTitle.trim()) {
+      router.push(`/resume/create?role=${encodeURIComponent(jobTitle)}`);
+    }
+  };
   return (
-    <div className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }}
+      className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">  
       {/* Enhanced animated background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20"></div>
       <div className="absolute inset-0 mesh-gradient-alt opacity-20"></div>
 
       {/* Enhanced floating orbs with better positioning and animations */}
-      <div className="floating-orb w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bolt-gradient opacity-20 top-1/4 -left-20 sm:-left-32 animate-float" />
-      <div className="floating-orb w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 sunset-gradient opacity-15 top-3/4 -right-20 sm:-right-28 animate-float-delayed" />
-      <div className="floating-orb w-48 h-48 sm:w-60 sm:h-60 md:w-72 md:h-72 ocean-gradient opacity-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+      {/* Orb 1 */}
+<div className="floating-orb absolute w-64 h-64 bolt-gradient opacity-30 orb-blur mix-blend-multiply top-1/4 -left-20 animate-float" />
+
+{/* Orb 2 */}
+<div className="floating-orb absolute w-56 h-56 sunset-gradient opacity-25 orb-blur mix-blend-multiply top-3/4 -right-20 animate-float-delayed" />
+
+{/* Orb 3 */}
+<div className="floating-orb absolute w-48 h-48 ocean-gradient opacity-20 orb-blur mix-blend-multiply top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
 
       {/* Enhanced grid pattern overlay */}
       <div
@@ -99,57 +118,71 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced CTA Buttons */}
-          <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full max-w-2xl mx-auto">
-            <Button
-              asChild
-              size="lg"
-              className="bolt-gradient text-white font-bold px-10 sm:px-12 py-5 sm:py-6 rounded-full hover:scale-110 focus:ring-4 focus:ring-blue-400 focus:outline-none transition-all duration-300 bolt-glow w-full sm:w-auto relative overflow-hidden shadow-2xl text-base sm:text-xl group"
-              style={{ animation: "gradient-shift 4s ease infinite" }}
-              aria-label="Start Creating Documents"
-            >
-              <Link
-                href="#document-types"
-                className="flex items-center justify-center gap-3 sm:gap-4"
-                tabIndex={0}
-              >
-                <Sparkles
-                  className="h-5 w-5 sm:h-6 sm:w-6 group-hover:animate-spin transition-transform"
-                  aria-hidden="true"
-                />
-                <span className="font-extrabold">
-                  Start Creating Now
-                </span>
-                <ArrowRight
-                  className="h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-2 transition-transform duration-300"
-                  aria-hidden="true"
-                />
-              </Link>
-            </Button>
-            {/*Enhanced watch demo button*/}
-              <Button
-             asChild
-             variant="outline"
-             size="lg"
-            className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group
-             bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
-             hover:from-red-700 hover:to-neutral-900
-             hover:scale-110 hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:z-20"
-            aria-label="Watch Demo"
->
-            <Link
-            href="#how-it-works"
-            className="flex items-center justify-center gap-3 sm:gap-4"
-            tabIndex={0}
-          >
-    <Star
-  
-  className="text-yellow-400 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-700 ease-in-out group-hover:fill-yellow-400 group-hover:rotate-[360deg]"
-  aria-hidden="true"
-/>
-      <span className="text-white font-extrabold">Watch Demo</span>
-       </Link>
-      </Button>
-       </div>
+          <div className="mt-12 sm:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0 animate-fade-in-up delay-300 will-change-transform w-full max-w-4xl mx-auto">
+
+  {/* Start Creating Now */}
+  <Link
+    href="#document-types"
+    className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-extrabold text-base text-gray-800
+      bg-[#f0f0f0] dark:bg-[#e0e0e0] dark:shadow-none shadow-[9px_9px_16px_#bebebe,-9px_-9px_16px_#ffffff]
+      hover:scale-105 active:shadow-[inset_4px_4px_8px_#d1d1d1,inset_-4px_-4px_8px_#ffffff] active:scale-95
+      transition-all duration-300 w-full sm:w-auto whitespace-nowrap"
+  >
+    <Sparkles className="h-5 w-5 flex-shrink-0" />
+    Start Creating Now
+    <ArrowRight className="h-5 w-5" />
+  </Link>
+
+  {/* Input + Generate Now */}
+  <input
+    type="text"
+    value={jobTitle}
+    placeholder="Enter your job title..."
+    className="h-14 px-5 rounded-full bg-white/10 border border-white/20 dark:border-white/10
+      text-foreground placeholder:text-muted-foreground
+      focus:outline-none focus:ring-2 focus:ring-blue-400/50
+      backdrop-blur-sm w-full sm:w-64"
+    onChange={(e) => setJobTitle(e.target.value)}
+    onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+  />
+
+  <button
+    onClick={handleGenerate}
+    disabled={!jobTitle.trim()}
+    className="inline-flex items-center justify-center h-14 px-8 rounded-full
+      bolt-gradient text-white font-bold text-base
+      disabled:opacity-50 disabled:cursor-not-allowed
+      hover:scale-105 transition-all duration-300
+      w-full sm:w-auto whitespace-nowrap"
+  >
+    Generate Now
+  </button>
+
+  {/* Watch Demo */}
+  <a
+    href="#how-it-works"
+    onClick={(e) => {
+      e.preventDefault();
+      const target = document.getElementById("how-it-works");
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.hash = "how-it-works";
+      }
+    }}
+    className="inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full
+      bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
+      font-extrabold text-base shadow-xl
+      hover:from-red-700 hover:to-neutral-900 hover:scale-105
+      hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)]
+      focus:outline-none focus:ring-4 focus:ring-red-400
+      transition-all duration-300 w-full sm:w-auto whitespace-nowrap"
+  >
+    <Star className="text-yellow-400 h-5 w-5" />
+    Watch Demo
+  </a>
+
+</div>
           {/* Social Proof Banner */}
           <div className="mt-8 sm:mt-10 animate-fade-in-up delay-350">
             <p className="text-sm text-muted-foreground mb-4">
@@ -167,11 +200,16 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced Professional Stats with Better Visual Hierarchy */}
-          <div className="mt-16 sm:mt-20 lg:mt-24 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 px-4 sm:px-0">
+          <motion.div
+             initial={{ x: -100, opacity: 0 }}
+             whileInView={{ x: 0, opacity: 1 }}
+             viewport={{ once: true }}
+             transition={{ duration: 0.8, ease: "easeOut" }}
+          className="mt-16 sm:mt-20 lg:mt-24 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 px-4 sm:px-0">
             <TooltipWithShortcut content="Over 10,000 professional documents successfully created by our users worldwide">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-400/30 to-orange-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-coral hover-glow-coral p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 sunset-glow animate-fade-in-up delay-400 will-change-transform cursor-pointer border-2 border-amber-200/40 dark:border-amber-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] p-8 rounded-[2rem]">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={10000} suffix="+" />
@@ -190,7 +228,7 @@ export function HeroSection() {
             <TooltipWithShortcut content="98% of our users successfully achieve their goals with DraftDeckAI-generated documents">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/30 to-cyan-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-sky hover-glow-sky p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 bolt-glow animate-fade-in-up delay-500 will-change-transform cursor-pointer border-2 border-blue-200/40 dark:border-blue-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] p-8 rounded-[2rem]">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={98} suffix="%" />
@@ -209,7 +247,7 @@ export function HeroSection() {
             <TooltipWithShortcut content="Average 5-star rating from thousands of satisfied users across all platforms">
               <div className="group relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/30 to-teal-400/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                <div className="relative card-mint hover-glow-mint p-8 sm:p-10 rounded-3xl hover:scale-110 transition-all duration-500 ocean-glow animate-fade-in-up delay-600 will-change-transform cursor-pointer border-2 border-emerald-200/40 dark:border-emerald-500/30 shadow-xl hover:shadow-2xl">
+                <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] p-8 sm:p-10 rounded-[2rem]">
                   <div className="text-center">
                     <div className="bolt-gradient-text text-4xl sm:text-5xl lg:text-6xl font-extrabold animate-text-glow text-shadow-professional mb-3">
                       <StatCounter target={5} suffix="★" />
@@ -224,9 +262,9 @@ export function HeroSection() {
                 </div>
               </div>
             </TooltipWithShortcut>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
