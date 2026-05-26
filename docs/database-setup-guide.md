@@ -122,6 +122,11 @@ SELECT * FROM storage.buckets WHERE id = 'avatars';
 - ✅ Allows profile picture uploads
 - ✅ Sets up proper security policies
 - ✅ Creates necessary indexes for performance
+## Soft Delete Support
+
+The application now supports soft delete functionality using a `deleted_at` timestamp column.
+
+Soft deleted records are not permanently removed and can be restored in future implementations.
 
 ## After Setup
 
