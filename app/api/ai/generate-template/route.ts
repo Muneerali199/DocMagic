@@ -1,18 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
+import { NextRequest } from 'next/server';
+const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
+import { validateGenerationRequest } from '@/lib/validators/aiRequestValidator';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, type } = await request.json();
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
 
-    if (!prompt || !type) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Prompt and type are required' },
-        { status: 400 }
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
       );
     }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+  const body = await request.json();
+
+const validation = validateGenerationRequest(body);
+
+if (!validation.valid) {
+  return NextResponse.json(
+    {
+      error: 'Invalid request payload',
+      details: validation.errors,
+    },
+    { status: 400 }
+  );
+}
+
+const { prompt, type } = body;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
@@ -27,7 +62,7 @@ Make the template modern, ATS-friendly, and professional.`,
 
       cv: `You are an expert CV template creator. Create an academic CV template based on the user's description. Return a JSON object with:
 - title: A descriptive title for the template
-- description: A brief description of the template  
+- description: A brief description of the template
 - content: A structured object with CV sections like personalInfo, summary, education, research, publications, awards, etc.
 
 Make the template suitable for academic and research positions.`,
@@ -61,18 +96,16 @@ Please return only valid JSON without any markdown formatting or additional text
     // Try to parse the JSON response
     let generatedTemplate;
     try {
-      // Remove any markdown formatting if present
       const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       generatedTemplate = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', text);
+      logger.error({ route: 'app/api/ai/generate-template/route.ts' }, 'Failed to parse AI response:', text);
       return NextResponse.json(
         { error: 'Failed to generate valid template structure' },
         { status: 500 }
       );
     }
 
-    // Validate the response structure
     if (!generatedTemplate.title || !generatedTemplate.content) {
       return NextResponse.json(
         { error: 'Invalid template structure generated' },
@@ -83,7 +116,7 @@ Please return only valid JSON without any markdown formatting or additional text
     return NextResponse.json(generatedTemplate);
 
   } catch (error) {
-    console.error('Error generating AI template:', error);
+    logger.error({ route: 'app/api/ai/generate-template/route.ts' }, 'Error generating AI template:', error);
     return NextResponse.json(
       { error: 'Failed to generate template' },
       { status: 500 }

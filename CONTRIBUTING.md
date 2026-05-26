@@ -42,10 +42,10 @@ Whether you're a seasoned developer, a design enthusiast, a documentation wizard
 
 ### 🛠️ **Tech Stack**
 
-- **Frontend**: Next.js 15 + React 18 + TypeScript
+- **Frontend**: Next.js 14.2 + React 18 + TypeScript
 - **Styling**: Tailwind CSS + Framer Motion
 - **Backend**: Supabase (PostgreSQL + Auth)
-- **AI**: Google Gemini AI
+- **AI**: Google Gemini AI (Primary), Mistral AI (Optional)
 - **Payments**: Stripe
 - **Deployment**: Netlify/Vercel
 
@@ -101,19 +101,26 @@ npm install
 
 ### 3️⃣ **Set Up Environment**
 
-DraftDeckAI requires several API keys for full functionality. Follow these steps:
+DraftDeckAI requires several API keys for full functionality. 
 
-#### **Create Environment File**
+📖 **Detailed Setup Guide:** For comprehensive setup instructions with step-by-step API key generation, troubleshooting, and common issues, see [**docs/SETUP.md**](docs/SETUP.md).
 
-Create a new file named `.env.local` in your project root directory (same level as `package.json`)
+**Quick Summary:**
+1. Create `.env.local` in your project root
+2. Add required environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` - From [supabase.com](https://supabase.com)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - From Supabase dashboard
+   - `SUPABASE_SERVICE_ROLE_KEY` - From Supabase dashboard
+   - `GEMINI_API_KEY` - From [ai.google.dev](https://ai.google.dev) (free tier)
 
 #### **Add Required Environment Variables**
 
 Copy the following into your `.env.local` file and replace the placeholder values:
+MAKE SURE TO RENAME `.env.local.example` file to `.env.local` , else npm will keep showing problems. 
 
 ```bash
 # App Configuration
-NEXT_PUBLIC_APP_NAME=DraftDeckAI
+NEXT_PUBLIC_APP_NAME=DocMagic
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Supabase (Database & Auth) - Required
@@ -142,6 +149,7 @@ PEXELS_API_KEY=your_pexels_api_key
 2. Create a new project
 3. Go to Settings → API
 4. Copy your Project URL and anon public key
+5. Make sure to not give spaces will copying into `.env.local` file
 
 **Google Gemini AI** (Required):
 1. Visit [Google AI Studio](https://ai.google.dev/)
@@ -153,6 +161,8 @@ PEXELS_API_KEY=your_pexels_api_key
 2. Get test keys from Dashboard → Developers → API keys
 
 **Need Help?** 🤝 Contact our mentors and Project Admins:
+**Need Help?** 🤝 
+- Check [docs/SETUP.md](docs/SETUP.md) for detailed instructions
 - Comment on your assigned issue or PR
 - Reach out on Discord: [DraftDeckAI Community Server]
 - Connect on LinkedIn: [Project Admin Profiles]

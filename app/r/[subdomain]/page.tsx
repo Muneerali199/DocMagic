@@ -1,123 +1,222 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { ResumePreview } from "@/components/resume/resume-preview";
-import { Button } from "@/components/ui/button";
-import { Download, ExternalLink, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { getBaseUrl } from "@/lib/config";
+import { PublicResumeClient } from "./public-resume-client";
 
-export default function PublicResumePage() {
-  const params = useParams();
-  const subdomain = params.subdomain as string;
-  const [resumeData, setResumeData] = useState<any>(null);
-  const [isCV, setIsCV] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type ResumeData = {
+  name?: string;
+  summary?: string;
+  [key: string]: unknown;
+  experience?: Array<{
+    title?: string;
+    company?: string;
+  }>;
+};
 
-  useEffect(() => {
-    const fetchResume = async () => {
-      try {
-        const response = await fetch(`/api/resume/publish?subdomain=${subdomain}`);
-        const data = await response.json();
+type PublishedResume = {
+  resume_data: ResumeData;
+  is_cv: boolean;
+  updated_at: string;
+};
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to load resume");
-        }
+type PublicResumePageProps = {
+  params: {
+    subdomain: string;
+  };
+};
 
-        setResumeData(data.data.resume_data);
-        setIsCV(data.data.is_cv);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+const defaultOgImage = "/android-chrome-512x512.png";
 
-    if (subdomain) {
-      fetchResume();
+const demoPublishedResume: PublishedResume = {
+  is_cv: false,
+  updated_at: new Date().toISOString(),
+  resume_data: {
+    name: "Demo Candidate",
+    summary:
+      "Product-minded software engineer with experience building polished web applications, AI-assisted document workflows, and user-focused interfaces.",
+    experience: [
+      {
+        title: "Frontend Engineer",
+        company: "DraftDeckAI",
+      },
+    ],
+    email: "demo@example.com",
+    location: "Remote",
+    skills: {
+      technical: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
+      programming: ["JavaScript", "TypeScript"],
+      tools: ["Supabase", "Vercel", "GitHub"],
+      soft: ["Product thinking", "Collaboration", "Communication"],
+    },
+    projects: [
+      {
+        name: "Public Resume Showcase",
+        description:
+          "A shareable resume page with social previews, share links, and a lightweight create-resume CTA.",
+        technologies: ["Next.js", "Supabase", "Open Graph"],
+      },
+    ],
+    education: [
+      {
+        degree: "B.S. Computer Science",
+        institution: "Demo University",
+        date: "2024",
+      },
+    ],
+  },
+};
+
+function hasSupabaseConfig() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project-id") &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "your-supabase-anon-key-here"
+  );
+}
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        fetch: fetchWithTimeout,
+      },
     }
-  }, [subdomain]);
+  );
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-lg text-gray-600">Loading {isCV ? 'CV' : 'resume'}...</p>
-        </div>
-      </div>
-    );
+async function getPublishedResume(subdomain: string): Promise<PublishedResume | null> {
+  if (!hasSupabaseConfig() && process.env.NODE_ENV !== "production") {
+    return demoPublishedResume;
   }
 
-  if (error || !resumeData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ExternalLink className="h-8 w-8 text-red-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Resume Not Found</h1>
-          <p className="text-gray-600 mb-6">
-            {error || "This resume doesn't exist or has been removed."}
-          </p>
-          <Link href="/resume">
-            <Button className="bolt-gradient text-white">
-              Create Your Own Resume
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
+  const { data, error } = await getSupabaseClient()
+    .from("published_resumes")
+    .select("resume_data, is_cv, updated_at")
+    .eq("subdomain", subdomain)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as PublishedResume;
+}
+
+function getResumeTitle(resume: ResumeData | undefined, isCV?: boolean) {
+  const name = resume?.name?.trim();
+  return name
+    ? `${name}'s ${isCV ? "CV" : "Resume"}`
+    : `Professional ${isCV ? "CV" : "Resume"}`;
+}
+
+function getResumeDescription(resume: ResumeData | undefined) {
+  const summary = resume?.summary?.trim();
+  if (summary) {
+    return summary.length > 160 ? `${summary.slice(0, 157).trim()}...` : summary;
+  }
+
+  const headline = resume?.experience?.find((item) => item.title || item.company);
+  if (headline?.title && headline.company) {
+    return `View ${headline.title} experience at ${headline.company}, shared with DraftDeckAI.`;
+  }
+
+  if (headline?.title) {
+    return `View ${headline.title} experience, shared with DraftDeckAI.`;
+  }
+
+  return "View this professional resume created and shared with DraftDeckAI.";
+}
+
+function getPublicResumeUrl(subdomain: string) {
+  return `${getBaseUrl()}/r/${encodeURIComponent(subdomain)}`;
+}
+
+export async function generateMetadata({
+  params,
+}: PublicResumePageProps): Promise<Metadata> {
+  const publishedResume = await getPublishedResume(params.subdomain);
+  const canonicalUrl = getPublicResumeUrl(params.subdomain);
+  const imageUrl = new URL(defaultOgImage, getBaseUrl()).toString();
+
+  if (!publishedResume) {
+    return {
+      title: "Resume Not Found | DraftDeckAI",
+      description: "This public resume does not exist or has been removed.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = `${getResumeTitle(publishedResume.resume_data, publishedResume.is_cv)} | DraftDeckAI`;
+  const description = getResumeDescription(publishedResume.resume_data);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: canonicalUrl,
+      siteName: "DraftDeckAI",
+      images: [
+        {
+          url: imageUrl,
+          width: 512,
+          height: 512,
+          alt: "DraftDeckAI",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function PublicResumePage({ params }: PublicResumePageProps) {
+  const publishedResume = await getPublishedResume(params.subdomain);
+
+  if (!publishedResume) {
+    notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">
-              {resumeData.name || "Professional Resume"}
-            </h1>
-            <p className="text-sm text-gray-600">
-              {subdomain}.draftdeckai.app
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/resume">
-              <Button variant="outline" size="sm">
-                Create Your Own
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Resume Content */}
-      <main className="max-w-5xl mx-auto p-4 md:p-8">
-        <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-          <ResumePreview 
-            resume={resumeData} 
-            template="modern"
-            showControls={false}
-            isCV={isCV}
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-600 mb-4">
-            Powered by <Link href="/" className="font-semibold text-blue-600 hover:underline">DraftDeckAI</Link>
-          </p>
-          <Link href="/resume">
-            <Button className="bolt-gradient text-white shadow-lg hover:scale-105 transition-transform">
-              <Download className="mr-2 h-4 w-4" />
-              Create Your Professional Resume
-            </Button>
-          </Link>
-        </div>
-      </main>
-    </div>
+    <PublicResumeClient
+      resumeData={publishedResume.resume_data}
+      isCV={publishedResume.is_cv}
+      subdomain={params.subdomain}
+      publicUrl={getPublicResumeUrl(params.subdomain)}
+    />
   );
 }

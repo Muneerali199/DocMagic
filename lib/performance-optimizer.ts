@@ -16,6 +16,42 @@ interface PerformanceMetric {
 const performanceMetrics: PerformanceMetric[] = [];
 const MAX_METRICS = 1000;
 
+// Query-level timing — tracks individual DB query latency by label.
+// Separate from trackPerformance (which tracks full HTTP request duration).
+interface QueryMetric {
+  label: string;
+  durationMs: number;
+}
+
+const queryMetrics: QueryMetric[] = [];
+const MAX_QUERY_METRICS = 2000;
+
+export function trackQuery(label: string, durationMs: number): void {
+  queryMetrics.push({ label, durationMs });
+  if (queryMetrics.length > MAX_QUERY_METRICS) queryMetrics.shift();
+}
+
+export function getQueryStats(): Array<{ label: string; avgMs: number; count: number; maxMs: number }> {
+  const byLabel = new Map<string, { total: number; count: number; max: number }>();
+
+  for (const m of queryMetrics) {
+    const s = byLabel.get(m.label) ?? { total: 0, count: 0, max: 0 };
+    s.total += m.durationMs;
+    s.count += 1;
+    if (m.durationMs > s.max) s.max = m.durationMs;
+    byLabel.set(m.label, s);
+  }
+
+  return Array.from(byLabel.entries())
+    .map(([label, s]) => ({
+      label,
+      avgMs: Math.round(s.total / s.count),
+      count: s.count,
+      maxMs: s.max,
+    }))
+    .sort((a, b) => b.avgMs - a.avgMs);
+}
+
 export function trackPerformance(route: string, duration: number, success: boolean): void {
   performanceMetrics.push({
     route,

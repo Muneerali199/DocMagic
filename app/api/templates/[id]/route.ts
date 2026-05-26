@@ -1,5 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
+import { createRoute } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server.js';
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function GET(
 
     return new NextResponse('Not Found', { status: 404 });
   } catch (error) {
-    console.error('Error fetching template:', error);
+    logger.error({ route: 'app/api/templates/[id]/route.ts' }, 'Error fetching template:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -51,7 +51,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -89,7 +89,7 @@ export async function PUT(
 
     return NextResponse.json(template);
   } catch (error) {
-    console.error('Error updating template:', error);
+    logger.error({ route: 'app/api/templates/[id]/route.ts' }, 'Error updating template:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -99,7 +99,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -136,7 +136,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Error deleting template:', error);
+    logger.error({ route: 'app/api/templates/[id]/route.ts' }, 'Error deleting template:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

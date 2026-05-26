@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      logger.error({ route: 'app/api/presentations/route.ts' }, 'Auth error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error saving presentation:', error);
+      logger.error({ route: 'app/api/presentations/route.ts' }, 'Error saving presentation:', error);
       return NextResponse.json(
         { error: 'Failed to save presentation' },
         { status: 500 }
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       shareUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://doc-magic-heob.vercel.app'}/presentation/view/${data.id}`
     });
   } catch (error) {
-    console.error('Error in presentations API:', error);
+    logger.error({ route: 'app/api/presentations/route.ts' }, 'Error in presentations API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

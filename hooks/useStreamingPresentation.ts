@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -73,7 +74,7 @@ export function useStreamingPresentation() {
           const { done, value } = await reader.read();
 
           if (done) {
-            console.log('✅ Stream complete');
+            logger.info(null, '✅ Stream complete')
             break;
           }
 
@@ -108,7 +109,7 @@ export function useStreamingPresentation() {
                   }));
                   
                   if (data.credits) {
-                    console.log(`💳 Credits used: ${data.credits.used}, Remaining: ${data.credits.remaining}`);
+                    logger.info(null, `💳 Credits used: ${data.credits.used}, Remaining: ${data.credits.remaining}`)
                   }
                 }
 

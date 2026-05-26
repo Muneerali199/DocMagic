@@ -736,6 +736,22 @@
     animation: blob 7s infinite;
 }
 
+/* Template switch fade-in animation (#430) */
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.25s ease-out both;
+}
+
 .animation-delay-2000 {
     animation-delay: 2s;
 }

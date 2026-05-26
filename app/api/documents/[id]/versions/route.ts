@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -58,7 +59,7 @@ export async function GET(
       .limit(50);
 
     if (error) {
-      console.error('Error fetching versions:', error);
+      logger.error({ route: 'app/api/documents/[id]/versions/route.ts' }, 'Error fetching versions:', error);
       return NextResponse.json(
         { error: 'Failed to fetch versions' },
         { status: 500 }
@@ -68,7 +69,7 @@ export async function GET(
     return NextResponse.json(versions);
 
   } catch (error) {
-    console.error('Error in GET /api/documents/[id]/versions:', error);
+    logger.error({ route: 'app/api/documents/[id]/versions/route.ts' }, 'Error in GET /api/documents/[id]/versions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error creating version:', error);
+      logger.error({ route: 'app/api/documents/[id]/versions/route.ts' }, 'Error creating version:', error);
       return NextResponse.json(
         { error: 'Failed to create version' },
         { status: 500 }
@@ -164,7 +165,7 @@ export async function POST(
     return NextResponse.json(version);
 
   } catch (error) {
-    console.error('Error in POST /api/documents/[id]/versions:', error);
+    logger.error({ route: 'app/api/documents/[id]/versions/route.ts' }, 'Error in POST /api/documents/[id]/versions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error('⚠️ Webhook signature verification failed:', err.message);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, '⚠️ Webhook signature verification failed:', err.message);
     return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
   }
 
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error processing webhook:', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }
@@ -82,7 +83,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const subscriptionId = session.subscription as string;
 
   if (!userId) {
-    console.error('No userId in session metadata');
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in session metadata');
     return;
   }
 
@@ -100,7 +101,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     .single();
 
   if (!plan) {
-    console.error('No plan found for price:', priceId);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No plan found for price:', priceId);
     return;
   }
 
@@ -121,7 +122,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
 
   if (error) {
-    console.error('Error updating subscription:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription:', error);
   }
 }
 
@@ -129,7 +130,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
-    console.error('No userId in subscription metadata');
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in subscription metadata');
     return;
   }
 
@@ -145,7 +146,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .single();
 
   if (!plan) {
-    console.error('No plan found for price:', priceId);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No plan found for price:', priceId);
     return;
   }
 
@@ -164,7 +165,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     });
 
   if (error) {
-    console.error('Error updating subscription:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription:', error);
   }
 }
 
@@ -172,7 +173,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
-    console.error('No userId in subscription metadata');
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in subscription metadata');
     return;
   }
 
@@ -188,7 +189,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .eq('user_id', userId);
 
   if (error) {
-    console.error('Error canceling subscription:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error canceling subscription:', error);
   }
 }
 
@@ -204,7 +205,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     .single();
 
   if (!subscription) {
-    console.error('No subscription found for customer:', customerId);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No subscription found for customer:', customerId);
     return;
   }
 
@@ -227,7 +228,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     });
 
   if (error) {
-    console.error('Error recording payment:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error recording payment:', error);
   }
 }
 
@@ -242,7 +243,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     .single();
 
   if (!subscription) {
-    console.error('No subscription found for customer:', customerId);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No subscription found for customer:', customerId);
     return;
   }
 
@@ -255,7 +256,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     .eq('user_id', subscription.user_id);
 
   if (subError) {
-    console.error('Error updating subscription status:', subError);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription status:', subError);
   }
 
   // Record failed payment
@@ -274,6 +275,6 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     });
 
   if (error) {
-    console.error('Error recording failed payment:', error);
+    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error recording failed payment:', error);
   }
 }

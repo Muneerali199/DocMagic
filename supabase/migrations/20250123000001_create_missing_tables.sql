@@ -56,10 +56,21 @@ ALTER TABLE public.presentations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resumes ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for letters
-CREATE POLICY "Users can view their own letters" ON public.letters FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own letters" ON public.letters FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own letters" ON public.letters FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own letters" ON public.letters FOR DELETE USING (auth.uid() = user_id);
+DO $$ BEGIN
+    CREATE POLICY "Users can view their own letters" ON public.letters FOR SELECT USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can insert their own letters" ON public.letters FOR INSERT WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can update their own letters" ON public.letters FOR UPDATE USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Users can delete their own letters" ON public.letters FOR DELETE USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Create policies for diagrams (if not exist)
 DO $$ BEGIN
