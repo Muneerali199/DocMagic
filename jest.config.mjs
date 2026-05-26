@@ -1,17 +1,23 @@
-export default {
-  preset: 'ts-jest/presets/default-esm',
+import { webcrypto } from 'node:crypto';
+
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+  });
+}
+
+const { default: nextJest } = await import('next/jest.js');
+
+const createJestConfig = nextJest({ dir: './' });
+
+const config = {
   testEnvironment: 'jsdom',
-  moduleNameMapper: {
-    '^@/components/(.*)$': '<rootDir>/components/$1',
-    '^@/lib/(.*)$': '<rootDir>/lib/$1',
-  },
+  testMatch: ['**/__tests__/**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+  setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-      useESM: true,
-    }],
-  },
-  transformIgnorePatterns: ['/node_modules/(?!react|react-dom|next|@testing-library)'],
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  collectCoverageFrom: ['lib/**/*.ts', 'app/api/**/*.ts', '!**/__tests__/**'],
 };
+
+export default createJestConfig(config);

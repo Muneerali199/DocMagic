@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -97,7 +98,7 @@ Please provide an improved version that addresses the instruction while maintain
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Mistral API error:', error);
+      logger.error({ route: 'app/api/documents/[id]/improve/route.ts' }, 'Mistral API error:', error);
       return NextResponse.json(
         { error: 'Failed to improve document with AI' },
         { status: 500 }
@@ -154,7 +155,7 @@ Please provide an improved version that addresses the instruction while maintain
       .single();
 
     if (updateError) {
-      console.error('Error updating document:', updateError);
+      logger.error({ route: 'app/api/documents/[id]/improve/route.ts' }, 'Error updating document:', updateError);
       return NextResponse.json(
         { error: 'Failed to save improved document' },
         { status: 500 }
@@ -168,7 +169,7 @@ Please provide an improved version that addresses the instruction while maintain
     });
 
   } catch (error) {
-    console.error('Error in POST /api/documents/[id]/improve:', error);
+    logger.error({ route: 'app/api/documents/[id]/improve/route.ts' }, 'Error in POST /api/documents/[id]/improve:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

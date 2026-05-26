@@ -29,9 +29,14 @@ export const POST = apiHandler(async (req: NextRequest) => {
     .insert({
       user_id: user.id,
       title,
+      type: 'generated',
       document_type: body.documentType,
       content: body.content ?? {},
-      metadata: body.metadata ?? {},
+      metadata: {
+        ...(body.metadata ?? {}),
+        sections: body.sections ?? [],
+        generated_at: new Date().toISOString(),
+      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })

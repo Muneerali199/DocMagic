@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PresentationPreview } from "./presentation-preview";
 import { Button } from "@/components/ui/button";
-import { Download, ArrowLeft, Share2, Eye, Lock, Globe } from "lucide-react";
+import { Download, ArrowLeft, Share2, Eye, Lock, Globe, Mic, Timer, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -153,6 +153,47 @@ export function PresentationViewer({ presentation }: PresentationViewerProps) {
               />
             </div>
           </div>
+          {/* Speaker Coach */}
+<div className="mt-6">
+  <div className="glass-effect p-6 rounded-xl border border-border">
+    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+      <Mic className="h-5 w-5 text-primary" />
+      AI Speaker Coach
+    </h2>
+
+    <div className="grid gap-4 md:grid-cols-3">
+      <div className="p-4 rounded-lg bg-background/50 border border-border">
+        <div className="flex items-center gap-2 mb-2">
+          <Timer className="h-4 w-4 text-yellow-500" />
+          <h3 className="font-medium">Pacing Tip</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Spend around 1-2 minutes explaining each slide clearly.
+        </p>
+      </div>
+
+      <div className="p-4 rounded-lg bg-background/50 border border-border">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageSquare className="h-4 w-4 text-blue-500" />
+          <h3 className="font-medium">Engagement Tip</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Ask questions and maintain eye contact while presenting.
+        </p>
+      </div>
+
+      <div className="p-4 rounded-lg bg-background/50 border border-border">
+        <div className="flex items-center gap-2 mb-2">
+          <Mic className="h-4 w-4 text-green-500" />
+          <h3 className="font-medium">Delivery Tip</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Keep your voice confident and avoid reading directly from slides.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
           {/* Share info for public presentations */}
           {isPublic && (
@@ -160,13 +201,19 @@ export function PresentationViewer({ presentation }: PresentationViewerProps) {
               <div className="glass-effect p-4 rounded-lg max-w-md mx-auto">
                 <p className="text-sm text-muted-foreground mb-2">Share this presentation:</p>
                 <div className="flex items-center gap-2">
+                  <label htmlFor="share-url" className="sr-only">
+                    Share link
+                  </label>
                   <input
+                    id="share-url"
                     type="text"
                     value={shareUrl}
                     readOnly
+                    placeholder="Presentation share link"
+                    title="Presentation share link"
                     className="flex-1 px-3 py-2 text-xs bg-background border border-border rounded text-center"
                   />
-                  <Button onClick={handleShare} size="sm">
+                  <Button onClick={handleShare} size="sm" title="Copy share link">
                     <Share2 className="h-3 w-3" />
                   </Button>
                 </div>

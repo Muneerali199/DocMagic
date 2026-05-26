@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { generateWebsite, improveWebsite } from '@/lib/website-generator';
 
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
         });
       }
     } catch (dbError) {
-      console.error('Error saving website to database:', dbError);
+      logger.error({ route: 'app/api/generate/website/route.ts' }, 'Error saving website to database:', dbError);
       // Don't fail the request if database save fails
     }
 
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       ...websiteCode
     });
   } catch (error) {
-    console.error('Error generating website:', error);
+    logger.error({ route: 'app/api/generate/website/route.ts' }, 'Error generating website:', error);
     return NextResponse.json(
       { error: 'Failed to generate website. Please try again.' },
       { status: 500 }

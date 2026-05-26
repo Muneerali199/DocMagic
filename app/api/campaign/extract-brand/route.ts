@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { JSDOM } from 'jsdom';
 import axios from 'axios';
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error extracting brand DNA:', error);
+    logger.error({ route: 'app/api/campaign/extract-brand/route.ts' }, 'Error extracting brand DNA:', error);
     return NextResponse.json({ 
       error: 'Failed to extract brand information',
       details: error.message 

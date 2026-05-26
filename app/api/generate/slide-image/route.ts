@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * API Route for generating AI images for presentation slides
  * Uses FLUX model via Nebius for high-quality image generation
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
           };
 
         } catch (error: any) {
-          console.error(
+          logger.error({ route: 'app/api/generate/slide-image/route.ts' }, 
             `❌ Error generating image ${index + 1}:`,
             error.message
           );
@@ -269,7 +270,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('❌ Image generation API error:', error);
+    logger.error({ route: 'app/api/generate/slide-image/route.ts' }, '❌ Image generation API error:', error);
 
     return Response.json(
       { error: error.message || 'Failed to generate images' },
