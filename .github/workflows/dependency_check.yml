@@ -65,6 +65,10 @@ jobs:
       matrix:
         node-version: [18.x, 20.x]
 
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: "https://dummy-project.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy-anon-key"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
