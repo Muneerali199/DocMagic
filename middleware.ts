@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { ratelimit } from "@/lib/upstash";
 
 // Enhanced rate limiting configuration
 const RATE_LIMITS = {
@@ -10,8 +11,14 @@ const RATE_LIMITS = {
 };
 
 // In-memory stores
-const rateLimitStore = new Map<string, { count: number; reset: number }>();
-const ipBlocklist = new Set<string>();
+function getRateLimitConfig(pathname: string) {
+  if (pathname.startsWith('/api/auth/')) {
+    return RATE_LIMITS.AUTH;
+  } else if (pathname.startsWith('/api/generate/')) {
+    return RATE_LIMITS.GENERATE;
+  } else if (pathname.startsWith('/api/export/')) {
+    return RATE_LIMITS.EXPORT;
+  }
 
 function getRateLimitConfig(pathname: string) {
   if (pathname.startsWith('/api/auth/')) {
@@ -37,11 +44,14 @@ function checkRateLimit(ip: string, pathname: string): { allowed: boolean; remai
   let data = rateLimitStore.get(key);
   
   // Reset if window expired
-  if (!data || now > data.reset) {
-    data = { count: 1, reset: now + config.windowMs };
-    rateLimitStore.set(key, data);
-    return { allowed: true, remaining: config.max - 1, reset: data.reset };
-  }
+ const { success } = await ratelimit.limit(ip);
+
+if (!success) {
+  return NextResponse.json(
+    { error: "Too many requests" },
+    { status: 429 }
+  );
+}
 
   // Check if limit exceeded
   if (data.count >= config.max) {
