@@ -1,6 +1,13 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -22,6 +29,25 @@ interface CampaignIdea {
 
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in.' },
+        { status: 401 }
+      );
+    }
+
     const { brandDNA, goal, platforms } = await req.json();
 
     if (!brandDNA || !goal) {
@@ -59,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error generating campaign:', error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, 'Error generating campaign:', error);
     
     // Handle specific error types
     if (error.message?.includes('QUOTA_EXCEEDED')) {
@@ -103,7 +129,7 @@ async function retryWithBackoff<T>(
         const retryDelay = error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay;
         const waitTime = retryDelay ? parseInt(retryDelay) * 1000 : initialDelay * Math.pow(2, i);
         
-        console.log(`Rate limited. Retrying in ${waitTime / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
+        
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
       }
@@ -154,7 +180,7 @@ Return ONLY a JSON array with this structure:
 
     return [];
   } catch (error) {
-    console.error('Error generating ideas:', error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, 'Error generating ideas:', error);
     return [];
   }
 }
@@ -214,7 +240,7 @@ Return ONLY a JSON object:
       cta: 'Learn more',
     };
   } catch (error) {
-    console.error(`Error generating ${platform} post:`, error);
+    logger.error({ route: 'app/api/campaign/generate/route.ts' }, `Error generating ${platform} post:`, error);
     return {
       caption: idea.summary,
       hashtags: [],

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Get API key with fallback for build time - support both env var names
@@ -49,7 +50,7 @@ async function retryWithBackoff<T>(
       
       // Exponential backoff: 1s, 2s, 4s
       const delay = initialDelay * Math.pow(2, i);
-      console.log(`⏳ API overloaded, retrying in ${delay}ms... (attempt ${i + 1}/${maxRetries})`);
+      logger.info(null, `⏳ API overloaded, retrying in ${delay}ms... (attempt ${i + 1}/${maxRetries})`)
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -104,8 +105,8 @@ export async function generateResume({
   email: string;
 }) {
   try {
-    console.log("🚀 Starting resume generation with Gemini 2.0 Flash...");
-    console.log("Input:", { prompt: prompt.substring(0, 100), name, email });
+    logger.info(null, "🚀 Starting resume generation with Gemini 2.0 Flash...")
+    
 
     await validateApiConnection();
     const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -216,7 +217,7 @@ export async function generateResume({
 
     CRITICAL: Return ONLY valid JSON. No markdown, no explanations, ONLY the JSON object.`;
 
-    console.log("📤 Sending request to Gemini API...");
+    
     
     // Use retry logic for the main generation request
     const result = await retryWithBackoff(async () => {
@@ -228,16 +229,16 @@ export async function generateResume({
     }
 
     const response = result.response;
-    console.log("✅ Gemini API response received");
+    logger.info(null, "✅ Gemini API response received")
     
     const rawText = response.text();
-    console.log("📝 Raw response length:", rawText.length);
+    logger.info(null, "📝 Raw response length:", rawText.length)
     
     const jsonText = extractJsonFromMarkdown(rawText);
-    console.log("🔍 Extracted JSON length:", jsonText.length);
+    logger.info(null, "🔍 Extracted JSON length:", jsonText.length)
     
     const parsedResume = JSON.parse(jsonText);
-    console.log("✅ Resume JSON parsed successfully");
+    logger.info(null, "✅ Resume JSON parsed successfully")
     
     // VALIDATE and ENHANCE the generated resume
     const validatedResume = {
@@ -279,7 +280,7 @@ export async function generateResume({
       certifications: parsedResume.certifications || []
     };
 
-    console.log("🎉 Resume generation completed successfully");
+    
     return validatedResume;
     
   } catch (error: any) {
@@ -539,7 +540,7 @@ export async function generatePresentation({
         
         // Combine for maximum relevance: Topic + Slide Title + AI suggestion
         const uniqueQuery = `${prompt.split(' ').slice(0, 3).join(' ')} ${slide.title.split(' ').slice(0, 4).join(' ')} ${mistralQuery}`.trim();
-        console.log(`Slide ${index + 1} - Topic: "${prompt}" | Searching: "${uniqueQuery}"`);
+        
         
         // Fetch more images for better variety and relevance
         const unsplashImages = await searchImages(uniqueQuery, 10);
@@ -549,7 +550,7 @@ export async function generatePresentation({
           const imageIndex = index % unsplashImages.length;
           const imageUrl = unsplashImages[imageIndex].urls.regular;
           
-          console.log(`Selected image ${imageIndex + 1} of ${unsplashImages.length} for slide ${index + 1}`);
+          
           
           // Convert to base64 for reliable export
           try {

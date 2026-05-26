@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle2, Send, Copy, Download, Mail, Loader2, Sparkles, Wand2, FileText, User, MapPin, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 
 export function LetterGenerator() {
   const [prompt, setPrompt] = useState("");
@@ -67,8 +68,8 @@ export function LetterGenerator() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (process.env.NODE_ENV !== "production") {
-        console.log('DEBUG: Generating letter, Session User:', session?.user?.email);
-        console.log('DEBUG: Access Token Present:', !!session?.access_token);
+        logger.info(null, 'DEBUG: Generating letter, Session User:', session?.user?.email);
+        logger.info(null, 'DEBUG: Access Token Present:', !!session?.access_token);
       }
 
       if (!session?.access_token) {

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -68,7 +69,7 @@ export async function GET(
       }
     );
   } catch (error) {
-    console.error('Error in PDF preview route:', error);
+    logger.error({ route: 'app/api/pdf-preview/[filename]/route.ts' }, 'Error in PDF preview route:', error);
     return new NextResponse(
       JSON.stringify({ error: 'Error processing request' }),
       { 

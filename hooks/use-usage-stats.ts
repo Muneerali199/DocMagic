@@ -42,48 +42,32 @@ export function useUsageStats() {
       let templatesCreated = 0;
       let templatesUsed = 0;
 
-      // Get documents count
-      try {
-        const { data: documents, error: docsError } = await supabase
-          .from('documents')
-          .select('id, type')
-          .eq('user_id', user.id);
+      // Both queries are independent — run them in parallel
+      const [docsResult, templatesResult] = await Promise.allSettled([
+        supabase.from('documents').select('id, type').eq('user_id', user.id),
+        supabase.from('templates').select('id').eq('user_id', user.id),
+      ]);
 
-        if (docsError) {
-          console.warn('Documents table not accessible:', docsError);
-        } else {
-          documentsCreated = documents?.length || 0;
-
-          // Count unique template types used (rough estimate of templates used)
-          const uniqueTypes = new Set(documents?.map(doc => doc.type) || []);
-          templatesUsed = uniqueTypes.size;
-        }
-      } catch (error) {
-        console.warn('Error fetching documents:', error);
+      if (docsResult.status === 'fulfilled' && !docsResult.value.error) {
+        documentsCreated = docsResult.value.data?.length || 0;
+        const uniqueTypes = new Set(docsResult.value.data?.map(doc => doc.type) || []);
+        templatesUsed = uniqueTypes.size;
+      } else {
+        console.warn('Documents table not accessible');
       }
 
-      // Get templates created by user
-      try {
-        const { data: templates, error: templatesError } = await supabase
-          .from('templates')
-          .select('id')
-          .eq('user_id', user.id);
-
-        if (templatesError) {
-          console.warn('Templates table not accessible:', templatesError);
-        } else {
-          templatesCreated = templates?.length || 0;
-        }
-      } catch (error) {
-        console.warn('Error fetching templates:', error);
+      if (templatesResult.status === 'fulfilled' && !templatesResult.value.error) {
+        templatesCreated = templatesResult.value.data?.length || 0;
+      } else {
+        console.warn('Templates table not accessible');
       }
 
-      // Calculate success rate (simplified - assume high success rate if user has documents)
-      const successRate = documentsCreated > 0 ? Math.min(95 + Math.random() * 5, 100) : 100;
+      const docsQueryFailed = docsResult.status === 'rejected' || docsResult.value?.error;
+      const successRate = docsQueryFailed ? 0 : documentsCreated > 0 ? Math.min(95 + Math.random() * 5, 100) : 100;
 
       setStats({
         documentsCreated,
-        templatesUsed: Math.max(templatesUsed, templatesCreated), // At least as many as created
+        templatesUsed: Math.max(templatesUsed, templatesCreated),
         templatesCreated,
         successRate: Math.round(successRate),
         loading: false,

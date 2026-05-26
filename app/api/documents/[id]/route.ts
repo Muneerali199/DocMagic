@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -26,7 +27,7 @@ export async function GET(
       .single();
 
     if (error) {
-      console.error('Error fetching document:', error);
+      logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error fetching document:', error);
       return NextResponse.json(
         { error: 'Document not found' },
         { status: 404 }
@@ -53,7 +54,7 @@ export async function GET(
     return NextResponse.json(document);
 
   } catch (error) {
-    console.error('Error in GET /api/documents/[id]:', error);
+    logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error in GET /api/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,7 +127,7 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Error updating document:', updateError);
+      logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error updating document:', updateError);
       return NextResponse.json(
         { error: 'Failed to update document' },
         { status: 500 }
@@ -136,7 +137,7 @@ export async function PUT(
     return NextResponse.json(updatedDocument);
 
   } catch (error) {
-    console.error('Error in PUT /api/documents/[id]:', error);
+    logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error in PUT /api/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -189,7 +190,7 @@ export async function DELETE(
       .eq('id', params.id);
 
     if (deleteError) {
-      console.error('Error deleting document:', deleteError);
+      logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error deleting document:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete document' },
         { status: 500 }
@@ -199,7 +200,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('Error in DELETE /api/documents/[id]:', error);
+    logger.error({ route: 'app/api/documents/[id]/route.ts' }, 'Error in DELETE /api/documents/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

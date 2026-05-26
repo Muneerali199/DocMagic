@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -304,17 +305,13 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      console.log(`📄 Exporting ${slides.length} slides to PDF...`);
+      
       
       for (let i = 0; i < slides.length; i++) {
         if (i > 0) pdf.addPage();
         
         const slide = slides[i];
-        console.log(`📄 Slide ${i + 1}:`, { 
-          title: slide.title, 
-          hasImage: !!slide.image,
-          imageUrl: slide.image?.substring(0, 50) + '...'
-        });
+        
         
         // Add background based on template
         const templateStyles = getTemplateBackground(selectedTemplate);
@@ -350,7 +347,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             // Check if image needs conversion from URL to base64
             if (slide.image.startsWith('http')) {
               try {
-                console.log(`🖼️ Fetching image via proxy for slide ${i + 1}...`);
+                logger.info(null, `🖼️ Fetching image via proxy for slide ${i + 1}...`)
                 
                 // Use proxy API to bypass CSP/CORS
                 const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
@@ -363,15 +360,15 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
                 
                 const proxyData = await proxyResponse.json();
                 
-                console.log(`🔍 Proxy response for slide ${i + 1}:`, {
+                logger.info(null, `🔍 Proxy response for slide ${i + 1}:`, {
                   success: proxyData.success,
                   hasDataUrl: !!proxyData.dataUrl,
                   dataUrlStart: proxyData.dataUrl?.substring(0, 50)
-                });
+                })
                 
                 if (proxyData.success && proxyData.dataUrl) {
                   imageData = proxyData.dataUrl;
-                  console.log(`✅ Image fetched via proxy for slide ${i + 1}`);
+                  logger.info(null, `✅ Image fetched via proxy for slide ${i + 1}`)
                 } else {
                   throw new Error('Invalid proxy response');
                 }
@@ -382,12 +379,12 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
               }
             }
             
-            console.log(`🔍 Image data check for slide ${i + 1}:`, {
+            logger.info(null, `🔍 Image data check for slide ${i + 1}:`, {
               hasImageData: !!imageData,
               isString: typeof imageData === 'string',
               startsWithData: imageData?.startsWith('data:'),
               first50: imageData?.substring(0, 50)
-            });
+            })
             
             // Add image to PDF with better positioning
             if (imageData && typeof imageData === 'string' && imageData.startsWith('data:')) {
@@ -407,7 +404,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
               pdf.rect(imgX - 2, imgY - 2, imgWidth + 4, imgHeight + 4);
               
               pdf.addImage(imageData, format, imgX, imgY, imgWidth, imgHeight);
-              console.log(`✅ Image added to PDF for slide ${i + 1}`);
+              logger.info(null, `✅ Image added to PDF for slide ${i + 1}`)
             } else {
               console.warn(`⚠️ No valid image data for slide ${i + 1}`, {
                 imageData: imageData?.substring(0, 100)
@@ -576,9 +573,9 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         pdf.text(`${i + 1} / ${slides.length}`, pdfWidth - 80, pdfHeight - 25);
       }
 
-      console.log(`✅ PDF generation complete! Saving file...`);
+      logger.info(null, `✅ PDF generation complete! Saving file...`)
       pdf.save(`${prompt.slice(0, 30)}-presentation.pdf`);
-      console.log(`🎉 PDF saved successfully!`);
+      
       
       toast({
         title: "📄 PDF Exported with Images!",
@@ -731,7 +728,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       // Define master slide with template colors
       const templateStyles = getTemplateColors(selectedTemplate);
 
-      console.log(`📊 Exporting ${slides.length} slides to PPTX...`);
+      logger.info(null, `📊 Exporting ${slides.length} slides to PPTX...`)
       
       // Generate slides
       for (let index = 0; index < slides.length; index++) {
@@ -748,12 +745,12 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         const isCover = index === 0;
 
         // DEBUG: Log image status
-        console.log(`📊 Slide ${index + 1}:`, {
+        logger.info(null, `📊 Slide ${index + 1}:`, {
           hasImage,
           imageUrl: slide.image?.substring(0, 60) + '...',
           hasBullets,
           hasChart
-        });
+        })
 
         // --- COVER SLIDE LAYOUT ---
         if (isCover) {
@@ -802,7 +799,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
               
               if (slide.image.startsWith('http')) {
                 try {
-                  console.log(`🖼️ Fetching cover image via proxy...`);
+                  logger.info(null, `🖼️ Fetching cover image via proxy...`)
                   const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
                   const proxyResponse = await fetch(proxyUrl);
                   
@@ -811,7 +808,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
                     if (proxyData.success && proxyData.dataUrl) {
                       imagePath = proxyData.dataUrl;
                       isBase64 = true;
-                      console.log(`✅ Cover image fetched via proxy`);
+                      logger.info(null, `✅ Cover image fetched via proxy`)
                     }
                   }
                 } catch (e) {
@@ -922,7 +919,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
               
               if (slide.image.startsWith('http')) {
                 try {
-                  console.log(`🖼️ Fetching slide ${index + 1} image via proxy...`);
+                  logger.info(null, `🖼️ Fetching slide ${index + 1} image via proxy...`)
                   const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(slide.image)}`;
                   const proxyResponse = await fetch(proxyUrl);
                   
@@ -931,7 +928,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
                     if (proxyData.success && proxyData.dataUrl) {
                       imagePath = proxyData.dataUrl;
                       isBase64 = true;
-                      console.log(`✅ Slide ${index + 1} image fetched via proxy`);
+                      logger.info(null, `✅ Slide ${index + 1} image fetched via proxy`)
                     }
                   }
                 } catch (e) {
@@ -992,11 +989,11 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         });
       }
 
-      console.log(`✅ PPT generation complete! Saving file...`);
+      logger.info(null, `✅ PPT generation complete! Saving file...`)
       await pptx.writeFile({
         fileName: `${prompt.slice(0, 30).trim() || 'Presentation'}.pptx`
       });
-      console.log(`🎉 PPT saved successfully!`);
+      
 
       toast({
         title: "📊 PowerPoint Exported!",
@@ -1037,7 +1034,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
       
       if (sessionError || !session) {
         console.error('Session error:', sessionError);
-        console.log('Session:', session);
+        
         toast({
           title: "Authentication Required",
           description: "Please sign in to save and share presentations.",
