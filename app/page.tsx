@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
@@ -5,6 +6,7 @@ import { TestimonialsSection } from "@/components/testimonials-section";
 import { DocumentCard } from "@/components/document-card";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import Script from 'next/script';
 import Link from "next/link";
 import {
   File as FileIcon,
@@ -30,31 +32,53 @@ import {
   Trophy,
 } from "lucide-react";
 import ScrollToTop from "@/components/scroll-to-top";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServer } from "@/lib/supabase/server";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
 
+export const metadata: Metadata = {
+  title: "DraftDeckAI - Best AI Document Creator",
+  description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+  openGraph: {
+    title: "DraftDeckAI - Best AI Document Creator",
+    description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+    url: "https://draftdeckai.com",
+  },
+  twitter: {
+    title: "DraftDeckAI - Best AI Document Creator",
+    description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
+  },
+};
+/**
+ * Structured data for SEO purposes.
+ * Combines Organization and SoftwareApplication JSON-LD schemas
+ * to enhance search engine visibility for DraftdeckAI.
+ */
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://draftdeckai.com/#organization",
+      "name": "DraftdeckAI",
+      "url": "https://draftdeckai.com",
+      "logo": "https://draftdeckai.com/draftdeckai-logo.svg",
+      "description": "An open-source platform to build presentations and documents with AI."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://draftdeckai.com/#software",
+      "name": "DraftdeckAI",
+      "url": "https://draftdeckai.com",
+      "description": "An open-source platform to build presentations and documents with AI.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All"
+    }
+  ]
+};
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options?: any) {
-          // No-op in this read-only context
-        },
-        remove(name: string, options?: any) {
-          // No-op in this read-only context
-        },
-      },
-    }
-  );
+  const supabase = await createServer();
   const { data: { session } } = await supabase.auth.getSession();
 
   return (
@@ -331,6 +355,11 @@ export default async function Home() {
         <TestimonialsSection />
         <ScrollToTop />
       </main>
+      <Script
+        id="structured-data"
+       type="application/ld+json"
+       dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
     </div>
   );
 }

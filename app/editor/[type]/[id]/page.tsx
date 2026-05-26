@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user';
 import { EnhancedEditorToolbar } from '@/components/editor/enhanced-toolbar';
@@ -98,15 +98,28 @@ export default function UnifiedEditorPage() {
     }
   }, [templateId, templateType, user]);
 
+  const lastSavedContent = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!documentData || !canvas) return;
+
+    lastSavedContent.current = JSON.stringify(canvas.toJSON());
+  }, [canvas, documentData]);
+
   // Auto-save functionality
   const handleSave = useCallback(async () => {
     if (!canvas || !documentData || isSaving) return;
     
     try {
-      setIsSaving(true);
-      
       // Get canvas data
       const canvasData = canvas.toJSON();
+      const serializedData = JSON.stringify(canvasData);
+      
+      if (lastSavedContent.current === serializedData) {
+        return; // Skip saving if no changes
+      }
+      
+      setIsSaving(true);
       
       // Save to database
       const response = await fetch(`/api/documents/${templateId}`, {
@@ -120,6 +133,8 @@ export default function UnifiedEditorPage() {
       });
       
       if (!response.ok) throw new Error('Failed to save');
+      
+      lastSavedContent.current = serializedData;
       
       // Broadcast change to collaborators
       if (sessionId && user) {
@@ -215,7 +230,7 @@ export default function UnifiedEditorPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Enhanced Toolbar with Save/Export/Share */}
       <div className="flex-none">
-        <EnhancedEditorToolbar />
+        <EnhancedEditorToolbar sessionId={sessionId ?? undefined} />
         <div className="bg-gray-800/90 border-b border-gray-700/50 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">

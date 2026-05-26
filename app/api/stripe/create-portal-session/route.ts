@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 import { createPortalSession } from '@/lib/stripe';
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Error creating portal session:', error);
+    logger.error({ route: 'app/api/stripe/create-portal-session/route.ts' }, 'Error creating portal session:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

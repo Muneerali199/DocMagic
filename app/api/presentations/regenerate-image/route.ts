@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
       success: true
     });
   } catch (error) {
-    console.error('Error regenerating image:', error);
+    logger.error({ route: 'app/api/presentations/regenerate-image/route.ts' }, 'Error regenerating image:', error);
     return NextResponse.json(
       { error: 'Failed to regenerate image' },
       { status: 500 }

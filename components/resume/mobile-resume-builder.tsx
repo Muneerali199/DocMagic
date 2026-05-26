@@ -23,12 +23,16 @@ import {
 import { ResumePreview, ResumePreviewRef } from "./resume-preview";
 import { ATSScoreDisplay } from "./ats-score-display";
 import { AIResumeChat } from "./ai-resume-chat";
+import { TextColorPanel } from "./text-color-panel";
 import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
+import { TemplateSwitcher } from "./template-switcher";
+import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { userProfileService } from "@/lib/user-profile-service";
 import { TemplateCustomizationPanel } from "@/components/templates/template-customization-panel";
 import { VersionHistoryPanel } from "@/components/templates/version-history-panel";
 import { CollaborationPanel } from "@/components/templates/collaboration-panel";
 import { versionHistoryService } from "@/lib/version-history-service";
+import { logger } from "@/lib/logger";
 
 interface MobileResumeBuilderProps {
   templateId?: string | null;
@@ -59,21 +63,37 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [isPublished, setIsPublished] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("modern");
+  // Persist selected template across sessions — shared key with desktop (#430)
+  const [selectedTemplate, setSelectedTemplateRaw] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("draftdeck:selectedTemplate") ?? "modern";
+    }
+    return "modern";
+  });
+
+  /** Persists template choice and updates state (#430) */
+  const setSelectedTemplate = (id: string) => {
+    setSelectedTemplateRaw(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("draftdeck:selectedTemplate", id);
+    }
+  };
+
   const [scale, setScale] = useState(1);
   const isMobile = useIsMobile(); // Automatically detect mobile
   const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
   const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null); // Track uploaded PDF file
   const containerRef = useRef<HTMLDivElement>(null);
+  const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
 
   const supabase = createClient();
 
   // Load template data if templateId is provided
   useEffect(() => {
-    console.log('Template ID received:', templateId);
+    logger.info(null, 'Template ID received:', templateId);
     if (templateId) {
       const template = RESUME_TEMPLATES.find(t => t.id === templateId);
-      console.log('Template found:', template);
+      logger.info(null, 'Template found:', template);
       if (template) {
         // Initialize with template data - create a basic resume structure
         const templateResume = {
@@ -117,7 +137,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           certifications: []
         };
 
-        console.log('Setting resume data:', templateResume);
+        logger.info(null, 'Setting resume data:', templateResume);
         setResumeData(templateResume);
         setSelectedTemplate(template.id);
         setCurrentStep('preview');
@@ -142,7 +162,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
     const loadSavedResume = async () => {
       if (!resumeId) return;
 
-      console.log('📄 Loading saved resume:', resumeId);
+      logger.info(null, '📄 Loading saved resume:', resumeId);
 
       try {
         // First try documents table using raw query to avoid type issues
@@ -153,7 +173,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           .single()) as { data: any; error: any };
 
         if (docResult && !docError) {
-          console.log('📄 Loaded from documents table:', docResult);
+          logger.info(null, '📄 Loaded from documents table:', docResult);
           const content = docResult.content;
 
           // Extract resume data from content
@@ -195,7 +215,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           .single()) as { data: any; error: any };
 
         if (resumeResult && !resumeError) {
-          console.log('📄 Loaded from resumes table:', resumeResult);
+          logger.info(null, '📄 Loaded from resumes table:', resumeResult);
 
           const savedContent = resumeResult.content || {};
 
@@ -340,7 +360,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         // If extraction failed, offer fallback
         if (extractData.text && extractData.text.length > 20) {
           // Partial extraction - use what we got
-          console.log("Partial PDF extraction, using available text");
+          logger.info(null, "Partial PDF extraction, using available text");
         } else {
           throw new Error(extractData.error || "Could not extract text from PDF. Please use the Text tab to paste your resume content manually.");
         }
@@ -392,7 +412,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         });
       }
 
-      console.log(`Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`);
+      logger.info(null, `Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`);
 
       // Step 3: Call the resume generation API with extracted text as prompt
       const response = await fetch("/api/generate/resume", {
@@ -2466,6 +2486,7 @@ Certified AWS Solutions Architect
                           isCV={isCV}
                           layoutMode='responsive'
                           viewType='mobile'
+                          customColors={customColors}
                         />
                       </div>
                     ) : (
@@ -2496,10 +2517,24 @@ Certified AWS Solutions Architect
                             isCV={isCV}
                             layoutMode={viewMode === 'fit' ? 'fixed' : 'responsive'}
                             viewType='print'
+                            customColors={customColors}
                           />
                         </div>
                       </div>
                     )}
+
+                    {/* Text Color Controls (#429) */}
+                    <div className="mt-4">
+                      <TextColorPanel colors={customColors} onChange={setCustomColors} compact />
+                    </div>
+
+                    {/* Template Switcher (#430) — compact horizontal strip */}
+                    <TemplateSwitcher
+                      selectedTemplate={selectedTemplate}
+                      onSelectTemplate={setSelectedTemplate}
+                      compact
+                      className="mt-4"
+                    />
 
                     {/* Download & Edit Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4">

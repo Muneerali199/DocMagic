@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import { createClient } from '@supabase/supabase-js';
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      logger.error({ route: 'app/api/linkedin/parse-text/route.ts' }, 'Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ profile });
   } catch (error: any) {
-    console.error("Text parsing error:", error);
+    logger.error({ route: 'app/api/linkedin/parse-text/route.ts' }, "Text parsing error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to parse profile data" },
       { status: 500 }
@@ -176,7 +177,7 @@ If any section is not found in the text, use empty arrays [] or empty strings ""
     const profileData = JSON.parse(content);
     return profileData;
   } catch (error: any) {
-    console.error("Gemini parsing error:", error);
+    logger.error({ route: 'app/api/linkedin/parse-text/route.ts' }, "Gemini parsing error:", error);
     throw new Error(`Failed to parse profile with Gemini: ${error.message}`);
   }
 }
@@ -273,7 +274,7 @@ Infer missing information where reasonable (e.g., if someone says "currently wor
 
     return profileData;
   } catch (error: any) {
-    console.error("AI extraction error:", error);
+    logger.error({ route: 'app/api/linkedin/parse-text/route.ts' }, "AI extraction error:", error);
     throw new Error("Failed to extract profile data: " + error.message);
   }
 }
