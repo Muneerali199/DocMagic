@@ -19,7 +19,16 @@ import {
   Coins,
   Crown,
   Gift,
+ feature/session-management
   Shield,
+
+  Info,
+  Send,
+  Layout,
+  BookOpen,
+  MoreHorizontal,
+  Trophy
+ main
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +38,7 @@ import { SimpleThemeToggle } from "@/components/simple-theme-toggle";
 import { useAuth } from "@/components/auth-provider";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { useUTMCapture } from "@/hooks/useUTMCapture";
 import { UpgradeModal, useCredits } from "@/components/upgrade-modal";
 import {
   Sheet,
@@ -48,6 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -57,6 +68,9 @@ export function SiteHeader() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
 
+  useUTMCapture();
+  const { trackEvent } = useTrackEvent();
+
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
@@ -65,9 +79,6 @@ export function SiteHeader() {
   const handleNavClick = () => {
     setIsSheetOpen(false);
   };
-
-  // Note: Removed redundant refetchCredits on user change - 
-  // useCredits already fetches on mount and has debouncing built-in
 
   return (
     <header className="sticky top-0 z-50 w-full nav-professional">
@@ -125,37 +136,72 @@ export function SiteHeader() {
                 <div className="mt-6 space-y-6">
                   {/* Navigation Items */}
                   <nav className="space-y-1">
-                    {navItems.map((item) => (
-                      <SheetClose asChild key={item.href}>
-                        <Link
-                          href={item.href}
-                          onClick={handleNavClick}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
-                            pathname === item.href
-                              ? "bg-accent text-accent-foreground shadow-sm"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "transition-colors duration-200",
-                              pathname === item.href
-                                ? "text-yellow-600"
-                                : "group-hover:text-yellow-500"
-                            )}
-                          >
-                            {item.icon}
-                          </span>
-                          <span className="font-medium">{item.label}</span>
-                          {pathname === item.href && (
-                            <div className="ml-auto">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            </div>
-                          )}
-                        </Link>
-                      </SheetClose>
-                    ))}
+                    <ul>
+                      {navItems.map((item) => (
+                        <li key={item.href}>
+                          <SheetClose asChild>
+                            <Link
+                              href={item.href}
+                              onClick={handleNavClick}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
+                                pathname === item.href
+                                  ? "bg-accent text-accent-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "transition-colors duration-200",
+                                  pathname === item.href
+                                    ? "text-yellow-600"
+                                    : "group-hover:text-yellow-500"
+                                )}
+                              >
+                                {item.icon}
+                              </span>
+
+                              <span className="font-medium">{item.label}</span>
+
+                              {pathname === item.href && (
+                                <div className="ml-auto">
+                                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                </div>
+                              )}
+                            </Link>
+                          </SheetClose>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Secondary Navigation */}
+                    <div className="mt-4 pt-4 border-t border-border/20">
+                      <div className="text-xs font-semibold text-muted-foreground mb-2 px-3">
+                        Resources
+                      </div>
+
+                      <ul>
+                        {secondaryNavItems.map((item) => (
+                          <li key={item.href}>
+                            <SheetClose asChild>
+                              <Link
+                                href={item.href}
+                                onClick={handleNavClick}
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground group w-full",
+                                  pathname === item.href
+                                    ? "bg-accent text-accent-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                <span className="text-muted-foreground group-hover:text-yellow-500">{item.icon}</span>
+                                <span>{item.label}</span>
+                              </Link>
+                            </SheetClose>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </nav>
 
                   {/* User Section in Mobile */}
@@ -218,18 +264,14 @@ export function SiteHeader() {
                   {!user && (
                     <div className="pt-4 border-t border-border/20">
                       <SheetClose asChild>
-                        <Button
-                          asChild
-                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
+                        <Link
+                          href="/auth/signin"
+                          className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 flex items-center gap-2 px-4 py-2 rounded-md"
+                          onClick={() => trackEvent("Header Sign In Clicked")}
                         >
-                          <Link
-                            href="/auth/signin"
-                            className="flex items-center gap-2"
-                          >
-                            <Zap className="h-4 w-4" />
-                            Sign In to DraftDeckAI
-                          </Link>
-                        </Button>
+                          <Zap className="h-4 w-4" />
+                          Sign In to DraftDeckAI
+                        </Link>
                       </SheetClose>
                     </div>
                   )}
@@ -265,6 +307,31 @@ export function SiteHeader() {
                   </Link>
                 </TooltipWithShortcut>
               ))}
+              
+              {/* Secondary Navigation Dropdown */}
+              <DropdownMenu>
+                <TooltipWithShortcut content="More resources and information">
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-yellow-600 transition-colors"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipWithShortcut>
+                <DropdownMenuContent align="end" className="w-48">
+                  {secondaryNavItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="flex items-center gap-2 cursor-pointer">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
           </div>
 
@@ -285,8 +352,10 @@ export function SiteHeader() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setUpgradeModalOpen(true)}
+                  aria-label={`${credits.creditsRemaining} credits remaining. Click to upgrade.`}
                   className={cn(
                     "hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full transition-all",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2",
                     credits.creditsRemaining < 3
                       ? "bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400"
                       : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
@@ -310,7 +379,8 @@ export function SiteHeader() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative h-8 w-8 rounded-full hidden md:flex"
+                      aria-label="Open user menu"
+                      className="relative h-8 w-8 rounded-full hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-yellow-400/20 hover:ring-yellow-400/40 transition-all duration-200">
                         <AvatarImage
@@ -404,8 +474,12 @@ export function SiteHeader() {
             ) : (
               /* Desktop Sign In Button */
               <TooltipWithShortcut content="Sign in to save and manage your documents">
-                <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex">
-                  <Link href="/auth/signin" className="flex items-center gap-2">
+                <Button asChild className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm px-4 h-9 hidden md:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
+                  <Link 
+                    href="/auth/signin" 
+                    className="flex items-center gap-2"
+                    onClick={() => trackEvent("Header Sign In Clicked")}
+                  >
                     <Zap className="h-4 w-4" />
                     <span>Sign In</span>
                   </Link>
@@ -458,6 +532,18 @@ const navItems = [
     tooltip: "Create flowcharts, architectures, and Mermaid diagrams",
   },
   {
+    href: "/templates",
+    label: "Templates",
+    icon: <Layout className="h-4 w-4" />,
+    tooltip: "Browse and manage document templates",
+  },
+  {
+    href: "/showcase",
+    label: "Showcase",
+    icon: <Trophy className="h-4 w-4" />,
+    tooltip: "Discover resumes and presentations from the community",
+  },
+  {
     href: "/dashboard/history",
     label: "History",
     icon: <History className="h-4 w-4" />,
@@ -474,5 +560,26 @@ const navItems = [
     label: "Pricing",
     icon: <DollarSign className="h-4 w-4" />,
     tooltip: "View pricing plans and upgrade options",
+  },
+];
+
+const secondaryNavItems = [
+  {
+    href: "/about",
+    label: "About",
+    icon: <Info className="h-4 w-4" />,
+    tooltip: "Learn about DraftDeckAI",
+  },
+  {
+    href: "/contact",
+    label: "Contact",
+    icon: <Send className="h-4 w-4" />,
+    tooltip: "Get in touch with us",
+  },
+  {
+    href: "/documentation",
+    label: "Documentation",
+    icon: <BookOpen className="h-4 w-4" />,
+    tooltip: "Browse guides and documentation",
   },
 ];

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -102,8 +103,8 @@ IMPORTANT: Return ONLY the JSON object, nothing else.`;
     try {
       data = JSON.parse(text);
     } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Text that failed to parse:', text.substring(0, 500));
+      logger.error({ route: 'app/api/generate/modify-presentation/route.ts' }, 'JSON parse error:', parseError);
+      logger.error({ route: 'app/api/generate/modify-presentation/route.ts' }, 'Text that failed to parse:', text.substring(0, 500));
       throw new Error('Failed to parse AI response as JSON');
     }
 
@@ -124,11 +125,11 @@ IMPORTANT: Return ONLY the JSON object, nothing else.`;
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error('Error modifying presentation:', error);
+    logger.error({ route: 'app/api/generate/modify-presentation/route.ts' }, 'Error modifying presentation:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : '';
     
-    console.error('Error details:', { errorMessage, errorStack });
+    logger.error({ route: 'app/api/generate/modify-presentation/route.ts' }, 'Error details:', { errorMessage, errorStack });
     
     return NextResponse.json(
       { 

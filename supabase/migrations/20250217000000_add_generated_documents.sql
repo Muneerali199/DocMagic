@@ -15,9 +15,9 @@ CREATE INDEX IF NOT EXISTS idx_documents_document_type ON documents(document_typ
 
 -- Create document_versions table for version history
 CREATE TABLE IF NOT EXISTS document_versions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   version_number INTEGER NOT NULL,
   content JSONB NOT NULL,
   change_summary TEXT,
@@ -32,15 +32,17 @@ CREATE INDEX IF NOT EXISTS idx_document_versions_created_at ON document_versions
 ALTER TABLE document_versions ENABLE ROW LEVEL SECURITY;
 
 -- Policies for document_versions
+DROP POLICY IF EXISTS "Users can view versions of own documents" ON document_versions;
 CREATE POLICY "Users can view versions of own documents"
   ON document_versions
   FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Users can insert versions for own documents" ON document_versions;
 CREATE POLICY "Users can insert versions for own documents"
   ON document_versions
   FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = created_by);
 
 -- Function to get next version number
 CREATE OR REPLACE FUNCTION get_next_version_number(doc_id UUID)

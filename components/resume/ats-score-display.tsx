@@ -41,13 +41,13 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 90) return 'bg-green-100 border-green-300';
-    if (score >= 85) return 'bg-green-50 border-green-200';
-    if (score >= 80) return 'bg-blue-100 border-blue-300';
-    if (score >= 75) return 'bg-blue-50 border-blue-200';
-    if (score >= 70) return 'bg-yellow-100 border-yellow-300';
-    if (score >= 60) return 'bg-orange-100 border-orange-300';
-    return 'bg-red-100 border-red-300';
+    if (score >= 90) return 'bg-green-100 border-green-300 dark:bg-green-900/20 dark:border-green-800';
+    if (score >= 85) return 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800/50';
+    if (score >= 80) return 'bg-blue-100 border-blue-300 dark:bg-blue-900/20 dark:border-blue-800';
+    if (score >= 75) return 'bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800/50';
+    if (score >= 70) return 'bg-yellow-100 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-800';
+    if (score >= 60) return 'bg-orange-100 border-orange-300 dark:bg-orange-900/20 dark:border-orange-800';
+    return 'bg-red-100 border-red-300 dark:bg-red-900/20 dark:border-red-800';
   };
 
   const getProgressColor = (score: number) => {
@@ -82,7 +82,9 @@ export function ATSScoreDisplay({ atsScore }: { atsScore: ATSScoreProps }) {
     <Card className="glass-effect border-2 border-green-200/50 shadow-xl overflow-hidden dark:bg-gray-800 dark:border-green-700/50">
       <CardHeader className={cn(
         "bg-gradient-to-r border-b transition-colors dark:from-gray-800 dark:to-gray-800",
-        atsScore.score >= 85 ? "from-green-50 to-blue-50" : "from-orange-50 to-yellow-50"
+        atsScore.score >= 85 
+          ? "from-green-50 to-blue-50 dark:from-green-900/10 dark:to-blue-900/10" 
+          : "from-orange-50 to-yellow-50 dark:from-orange-900/10 dark:to-yellow-900/10"
       )}>
         <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span className="flex items-center gap-2 text-base sm:text-lg">

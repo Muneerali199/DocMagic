@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         
         // Log recommendations for debugging
         if (data.recommendations && data.recommendations.length > 0) {
-          console.log('💡 Setup recommendations:', data.recommendations);
+          
         }
         return;
       }
@@ -146,7 +147,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
       // Success! Handle the imported data
       if (data.success && data.data) {
-        console.log('✅ LinkedIn data received from API:', data.data);
+        logger.info(null, '✅ LinkedIn data received from API:', data.data)
         
         // Transform the scraped data to match our profile format
         const profileData = {
@@ -164,8 +165,8 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
           profileUrl: data.data.profileUrl || '',
         };
 
-        console.log('✅ Transformed profile data:', profileData);
-        console.log('✅ Calling onImport with profile data...');
+        logger.info(null, '✅ Transformed profile data:', profileData)
+        logger.info(null, '✅ Calling onImport with profile data...')
         
         onImport(profileData);
 

@@ -322,6 +322,10 @@ export class VersionHistoryService {
       );
     };
 
+    if( this.autoSaveTimeout) {
+      clearInterval(this.autoSaveTimeout);
+      this.autoSaveTimeout = null;
+    }
     this.autoSaveTimeout = setInterval(autoSave, intervalMs);
 
     // Return cleanup function

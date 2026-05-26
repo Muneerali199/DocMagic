@@ -2,7 +2,7 @@ import withPWACore from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
 images: {
     unoptimized: false,
@@ -40,9 +40,8 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
     scrollRestoration: true,
-    workerThreads: true,
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
@@ -75,16 +74,10 @@ trailingSlash: false,
 webpack: (config, { isServer }) => {
     config.module.rules.push({
       test: /\.pdf$/,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/files',
-            outputPath: 'static/files',
-            name: '[name].[ext]',
-          },
-        },
-      ],
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/files/[name][ext]',
+      },
     });
     
     // Bundle size optimizations

@@ -1,9 +1,11 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Drop existing documents table if it exists (to recreate with correct schema)
 DROP TABLE IF EXISTS documents CASCADE;
 
 -- Create documents table for storing user documents created from templates
 CREATE TABLE documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('resume', 'presentation', 'cv', 'letter', 'website')),

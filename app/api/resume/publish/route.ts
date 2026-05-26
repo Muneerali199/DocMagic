@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (checkError) {
-      console.error("Database check error:", checkError);
+      logger.error({ route: 'app/api/resume/publish/route.ts' }, "Database check error:", checkError);
       
       // Check if table doesn't exist
       if (checkError.message?.includes('relation') || checkError.code === '42P01') {
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error("Database upsert error:", error);
+      logger.error({ route: 'app/api/resume/publish/route.ts' }, "Database upsert error:", error);
       return NextResponse.json(
         { 
           error: "Failed to publish resume",
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Publish error:", error);
+    logger.error({ route: 'app/api/resume/publish/route.ts' }, "Publish error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -177,7 +178,7 @@ export async function GET(request: Request) {
       data,
     });
   } catch (error) {
-    console.error("Get resume error:", error);
+    logger.error({ route: 'app/api/resume/publish/route.ts' }, "Get resume error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

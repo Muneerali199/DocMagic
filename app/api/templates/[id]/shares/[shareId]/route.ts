@@ -1,5 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
+import { createRoute } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function DELETE(
@@ -7,7 +7,7 @@ export async function DELETE(
   { params }: { params: { id: string; shareId: string } }
 ) {
   const { id, shareId } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Error deleting template share:', error);
+    logger.error({ route: 'app/api/templates/[id]/shares/[shareId]/route.ts' }, 'Error deleting template share:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -51,7 +51,7 @@ export async function PATCH(
   { params }: { params: { id: string; shareId: string } }
 ) {
   const { id, shareId } = params;
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createRoute();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -89,7 +89,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedShare);
   } catch (error) {
-    console.error('Error updating template share:', error);
+    logger.error({ route: 'app/api/templates/[id]/shares/[shareId]/route.ts' }, 'Error updating template share:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

@@ -1,3 +1,19 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Documentation | DraftDeckAI",
+  description: "Learn how to use DraftDeckAI to create stunning resumes, presentations, and letters. Comprehensive guides and API documentation.",
+  openGraph: {
+    title: "Documentation | DraftDeckAI",
+    description: "Learn how to use DraftDeckAI to create stunning resumes, presentations, and letters. Comprehensive guides and API documentation.",
+    url: "https://draftdeckai.com/documentation",
+  },
+  twitter: {
+    title: "Documentation | DraftDeckAI",
+    description: "Learn how to use DraftDeckAI to create stunning resumes, presentations, and letters. Comprehensive guides and API documentation.",
+  },
+};
+
 export default function DocumentationPage() {
   return (
     <div className="container py-12">

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
-  const { setTheme, theme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,9 +25,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
   }
 
   const handleToggle = () => {
-    console.log("Theme toggle clicked!", { resolvedTheme });
-    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -38,7 +36,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
       className="rounded-full cursor-pointer relative z-10"
       onClick={handleToggle}
       aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-      style={{ pointerEvents: 'auto' }}
+      style={{ pointerEvents: "auto" }}
       {...props}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

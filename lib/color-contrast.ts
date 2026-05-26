@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 /**
  * Color Contrast Utility
  * Calculates optimal text color based on background luminance
@@ -122,22 +123,22 @@ export function getTailwindColorHex(colorName: string): string | null {
 export function getOptimalTextColor(background: string): string {
   let rgb: { r: number; g: number; b: number } | null = null;
   
-  console.log('🎨 getOptimalTextColor called with:', background);
+  logger.info(null, '🎨 getOptimalTextColor called with:', background)
   
   // Try to parse as hex color
   if (background.startsWith('#')) {
     rgb = hexToRgb(background);
-    console.log('  → Parsed as hex:', rgb);
+    
   }
   // Try to parse as Tailwind gradient class
   else if (background.includes('gradient') || background.includes('from-') || background.includes('to-')) {
     const dominantColor = extractDominantColorFromGradient(background);
-    console.log('  → Extracted dominant color:', dominantColor);
+    
     const hex = getTailwindColorHex(dominantColor);
-    console.log('  → Converted to hex:', hex);
+    
     if (hex) {
       rgb = hexToRgb(hex);
-      console.log('  → Parsed RGB:', rgb);
+      
     }
   }
   // Try to parse as Tailwind color class (e.g., "bg-blue-500")
@@ -151,27 +152,27 @@ export function getOptimalTextColor(background: string): string {
   
   // If we couldn't parse the color, check for keywords
   if (!rgb) {
-    console.log('  → Could not parse color, checking keywords');
+    
     // Check if it contains 'black' or very dark keywords
     const lowerBg = background.toLowerCase();
     if (lowerBg.includes('black') || lowerBg.includes('900') || lowerBg.includes('950')) {
-      console.log('  → Detected dark background keyword, returning white text');
+      
       return '#ffffff';
     }
     // Default to white text for safety (works on most backgrounds)
-    console.log('  → Using default white text');
+    
     return '#ffffff';
   }
   
   // Calculate luminance
   const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
-  console.log('  → Calculated luminance:', luminance);
+  
   
   // WCAG recommends 4.5:1 contrast ratio for normal text
   // If luminance > 0.5, background is light, use dark text
   // If luminance <= 0.5, background is dark, use light text
   const textColor = luminance > 0.5 ? '#000000' : '#ffffff';
-  console.log('  → Final text color:', textColor);
+  
   
   return textColor;
 }
