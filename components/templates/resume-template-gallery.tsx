@@ -225,7 +225,7 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
 
   const handleUseTemplate = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('🎯 Opening template:', template.id, 'Type:', template.type);
+    
     
     // Route to appropriate editor based on template type
     let url = '';
@@ -240,7 +240,7 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
       url = `/resume-builder?template=${encodeURIComponent(template.id)}`;
     }
     
-    console.log('📍 Navigating to:', url);
+    
     router.push(url);
   };
 

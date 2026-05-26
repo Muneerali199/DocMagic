@@ -27,7 +27,7 @@ export function TestimonialsSection() {
     }, [currentIndex, autoSlide, autoSlideInterval]);
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 dark:from-purple-950/20 dark:via-background dark:to-blue-950/20 py-20 sm:py-28 lg:py-36">
+    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-background to-blue-50/50 dark:from-purple-950/20 dark:via-background dark:to-blue-950/20 py-10 sm:py-14 lg:py-16">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 mesh-gradient opacity-30"></div>
       <div className="floating-orb w-64 h-64 sm:w-96 sm:h-96 sunset-gradient opacity-15 top-20 -right-32"></div>
@@ -35,7 +35,7 @@ export function TestimonialsSection() {
       <div className="floating-orb w-56 h-56 sm:w-80 sm:h-80 cosmic-gradient opacity-15 top-1/2 left-1/4"></div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="mx-auto max-w-4xl text-center mb-16 sm:mb-20">
+        <div className="mx-auto max-w-5xl text-center mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-effect mb-8 border-2 border-pink-200/40 dark:border-pink-500/30 shadow-lg hover:scale-105 transition-all duration-300">
             <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-pink-600 dark:text-pink-400 animate-pulse" />
             <span className="text-base sm:text-lg font-bold bolt-gradient-text">Customer Love</span>
@@ -71,7 +71,7 @@ export function TestimonialsSection() {
         {/* Enhanced testimonials carousel */}
         <div className="relative">
           {/* Testimonial Cards Container */}
-          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-4 sm:px-6 lg:px-0">
+          <div className="overflow-hidden relative min-h-[450px] sm:min-h-[500px] md:min-h-[450px] flex items-center justify-center px-6 sm:px-8 lg:px-12">
             {testimonials.map((testimonial, i) => {
               let positionClass = 'translate-x-full opacity-0'; // Off-screen to the right
               if (i === currentIndex) {
@@ -91,11 +91,11 @@ export function TestimonialsSection() {
                 {/* Enhanced background glow */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
 
-                <Card className="relative professional-card glass-effect group w-full max-w-4xl flex flex-col rounded-3xl border-2 border-blue-200/40 dark:border-blue-500/30 hover:scale-105 transition-all duration-500 shadow-2xl hover:shadow-3xl">
+                <Card className="relative professional-card glass-effect group w-full max-w-5xl flex flex-col rounded-3xl border-2 border-blue-200/40 dark:border-blue-500/30 hover:scale-105 transition-all duration-500 shadow-2xl hover:shadow-3xl">
                   <CardHeader className="pb-3 sm:pb-4 p-5 sm:p-7 md:p-8">
                     <div className="flex items-center space-x-3 sm:space-x-5">
                       <div className="relative flex-shrink-0">
-                        <Avatar className="ring-2 ring-blue-400/30 h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 group-hover:ring-blue-400/50 transition-all duration-300">
+                        <Avatar className="ring-2 ring-blue-400/30 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 group-hover:ring-blue-400/50 transition-all duration-300">
                           <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
                           <AvatarFallback className="bolt-gradient text-white font-bold text-base sm:text-lg">
                             {testimonial.name.charAt(0)}
@@ -155,7 +155,7 @@ export function TestimonialsSection() {
               {testimonials.map((_, i) => (
                 <button
                   key={i}
-                  className={`rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-blue-600 dark:bg-blue-400 w-10 h-2.5 sm:w-12 sm:h-3' : 'bg-gray-300 dark:bg-gray-600 w-2.5 h-2.5 sm:w-3 sm:h-3 hover:bg-gray-400 dark:hover:bg-gray-500'}`}
+                  className={`rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-blue-600 dark:bg-blue-400 w-3 h-3 sm:w-4 sm:h-4' : 'bg-gray-300 dark:bg-gray-600 w-2.5 h-2.5 sm:w-3 sm:h-3 hover:bg-gray-400 dark:hover:bg-gray-500'}`}
                   onClick={() => setCurrentIndex(i)}
                   aria-label={`Go to testimonial ${i + 1}`}
                 />

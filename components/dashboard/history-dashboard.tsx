@@ -31,6 +31,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getThemeById } from "@/lib/presentation-themes";
 import { SlideCard, Slide } from "@/components/presentation/real-time-generator";
 import { ResumePreview } from "@/components/resume/resume-preview";
+import { logger } from "@/lib/logger";
 
 type ContentType = "resume" | "presentation" | "diagram" | "letter" | "generated";
 
@@ -335,7 +336,7 @@ export function HistoryDashboard() {
         return;
       }
 
-      console.log('📋 Fetching history for user:', user.id);
+      logger.info(null, '📋 Fetching history for user:', user.id);
 
       // Fetch from all sources in parallel
       const [documentsResult, resumes, presentations, diagrams, letters] = await Promise.all([
@@ -381,7 +382,7 @@ export function HistoryDashboard() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       // DEBUG: Log the final merged items
-      console.log('📊 Final History Items:', allItems.length, 'items');
+      logger.info(null, '📊 Final History Items:', allItems.length, 'items');
       
       setItems(allItems);
 
@@ -423,7 +424,7 @@ export function HistoryDashboard() {
       const content = doc.content || {};
       
       // DEBUG: Log the raw content structure
-      console.log('📄 Raw Resume Document:', doc.id, content);
+      logger.info(null, '📄 Raw Resume Document:', doc.id, content);
       
       // Pass the full content object which contains resumeData
       // The preview component will unwrap it properly

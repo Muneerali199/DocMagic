@@ -1,14 +1,13 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'dummy_key_to_prevent_build_errors';
+
+// Warn instead of throwing to prevent crashing the app at module load
+if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('your_str')) {
+  console.warn('⚠️ STRIPE_SECRET_KEY is missing or using a placeholder. Stripe features will not work until this is updated in .env');
 }
 
-if (process.env.STRIPE_SECRET_KEY.includes('your_str')) {
-  throw new Error('STRIPE_SECRET_KEY is still set to placeholder value. Please update your .env file with your actual Stripe secret key from https://dashboard.stripe.com/apikeys');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2023-10-16",
   typescript: true,
 });

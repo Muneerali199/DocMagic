@@ -18,7 +18,7 @@ const ExampleForm = () => {
   const { register, handleSubmit } = useForm<{ input: string }>();
 
   const onSubmit = (data: { input: string }) => {
-    console.log(data);
+    console.log(data); // eslint-disable-line no-console
   };
 
   return (

@@ -2,6 +2,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { LetterDashboard } from "@/components/letter/letter-dashboard";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Sparkles, Mail, Zap, Star, Wand2, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LetterGeneratorSkeleton } from "@/components/ui/skeleton";
@@ -115,7 +116,9 @@ export default function LetterPage() {
 
             <div className="relative z-10">
               <CreateDocumentGuard>
-                {isLoading ? <LetterGeneratorSkeleton /> : <LetterDashboard />}
+                <ErrorBoundary>
+                  {isLoading ? <LetterGeneratorSkeleton /> : <LetterDashboard />}
+                </ErrorBoundary>
               </CreateDocumentGuard>
             </div>
           </div>

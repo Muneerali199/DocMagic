@@ -13,14 +13,17 @@ export function SimpleThemeToggle() {
   }, []);
 
   const handleClick = () => {
-    console.log("Simple theme toggle clicked!", { resolvedTheme });
     const newTheme = resolvedTheme === "dark" ? "light" : "dark";
     setTheme(newTheme);
   };
 
-  if (!mounted) {
+ if (!mounted) {
     return (
-      <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
+      <button
+        className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
         <Sun className="h-5 w-5" />
       </button>
     );
@@ -29,7 +32,7 @@ export function SimpleThemeToggle() {
   return (
     <button
       onClick={handleClick}
-      className="w-10 h-10 rounded-full border border-gray-300 hover:border-gray-400 flex items-center justify-center bg-white dark:bg-gray-800 transition-colors cursor-pointer"
+      className="w-10 h-10 rounded-full border border-gray-300 hover:border-gray-400 flex items-center justify-center bg-white dark:bg-gray-800 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2"
       style={{ 
         pointerEvents: 'auto',
         zIndex: 100,

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
@@ -173,7 +174,7 @@ async function scrapeWithMCP(profileUrl: string) {
     };
 
   } catch (error: any) {
-    console.error('❌ MCP scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, '❌ MCP scraping failed:', error.message);
     throw new Error(`MCP scraping failed: ${error.message}`);
   }
 }
@@ -298,7 +299,7 @@ async function scrapeWithCheerio(profileUrl: string) {
       note: 'Limited data extracted. LinkedIn restricts public profile access. For complete data, please use PDF Export method.'
     };
   } catch (error: any) {
-    console.error('Cheerio scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'Cheerio scraping failed:', error.message);
     throw error;
   }
 }
@@ -371,7 +372,7 @@ ${html.substring(0, 5000)}`
 
     throw new Error('Could not parse AI response');
   } catch (error: any) {
-    console.error('AI scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'AI scraping failed:', error.message);
     throw error;
   }
 }
@@ -406,7 +407,7 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
@@ -520,7 +521,7 @@ export async function POST(req: Request) {
       message: `✅ Profile imported successfully using ${method}`
     });
   } catch (error: any) {
-    console.error("LinkedIn URL import error:", error);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, "LinkedIn URL import error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to import LinkedIn profile" },
       { status: 500 }
