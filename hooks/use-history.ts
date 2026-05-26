@@ -30,6 +30,9 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
       return;
     }
 
+    // Immediately clear future stack when a new change starts
+    setFuture([]);
+
     const timer = setTimeout(() => {
       const valToCommit = presentRef.current;
       setPast((prevPast) => {
@@ -39,7 +42,6 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
         }
         return newPast;
       });
-      setFuture([]);
       lastCommittedRef.current = valToCommit;
     }, debounceMs);
 
@@ -68,20 +70,28 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
     });
   }, [maxDepth]);
 
-  // Reverts the last state snapshot.
+  // Reverts the last state snapshot or uncommitted changes.
   const undo = useCallback(() => {
-    setPast((prevPast) => {
-      if (prevPast.length === 0) return prevPast;
-      
-      const previous = prevPast[prevPast.length - 1];
-      const newPast = prevPast.slice(0, -1);
-      
-      setFuture((prevFuture) => [presentRef.current, ...prevFuture]);
-      setPresent(previous);
-      lastCommittedRef.current = previous;
-      
-      return newPast;
-    });
+    const hasUncommitted = JSON.stringify(presentRef.current) !== JSON.stringify(lastCommittedRef.current);
+    
+    if (hasUncommitted) {
+      const currentPresent = presentRef.current;
+      setFuture((prevFuture) => [currentPresent, ...prevFuture]);
+      setPresent(lastCommittedRef.current);
+    } else {
+      setPast((prevPast) => {
+        if (prevPast.length === 0) return prevPast;
+        
+        const previous = prevPast[prevPast.length - 1];
+        const newPast = prevPast.slice(0, -1);
+        
+        setFuture((prevFuture) => [presentRef.current, ...prevFuture]);
+        setPresent(previous);
+        lastCommittedRef.current = previous;
+        
+        return newPast;
+      });
+    }
   }, []);
 
   // Re-applies an undone state snapshot.
@@ -108,12 +118,14 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
     lastCommittedRef.current = newValue;
   }, []);
 
+  const hasUncommitted = JSON.stringify(present) !== JSON.stringify(lastCommittedRef.current);
+
   return {
     value: present,
     setValue: updateValue,
     undo,
     redo,
-    canUndo: past.length > 0,
+    canUndo: past.length > 0 || hasUncommitted,
     canRedo: future.length > 0,
     reset,
   };
