@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+
 // Enhanced rate limiting configuration
 const RATE_LIMITS = {
   API: { windowMs: 60 * 1000, max: 100 }, // 1 minute, 100 requests
@@ -59,12 +60,20 @@ function checkRateLimit(ip: string, pathname: string): { allowed: boolean; remai
 }
 
 export function middleware(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+
+requestHeaders.set('x-request-id', requestId);
   const { pathname } = request.nextUrl;
   const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
   
   // Static asset optimization
   if (pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
-    const response = NextResponse.next();
+const response = NextResponse.next({
+  request: {
+    headers: requestHeaders,
+  },
+});
     
     // Aggressive caching for static assets
     response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
@@ -109,6 +118,7 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
       response.headers.set('X-Endpoint-Type', 'ai-generation');
     }
+    response.headers.set('x-request-id', requestId);
     
     return response;
   }
