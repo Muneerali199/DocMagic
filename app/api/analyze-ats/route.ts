@@ -7,18 +7,14 @@ import { reserveCredits, refundCredits, creditReservationConflictResponse } from
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
-// Service role client for credit operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
   try {
+    // Safely initialized at runtime, bypassing the CI build error
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+    
     // ✅ CHECK API KEY FIRST - fail fast if service is misconfigured
     if (!MISTRAL_API_KEY) {
       logger.error({ route: 'app/api/analyze-ats/route.ts' }, 'MISTRAL_API_KEY is not configured');
@@ -301,7 +297,8 @@ ${resumeText}`;
       if (logError) {
         logger.error({ route: 'app/api/analyze-ats/route.ts' }, 'Failed to log credit usage:', logError);
       } else {
-        // console.log(`💳 Deducted ${creditCost} credits for ATS analysis`);
+// Swapped console.log to logger.info to clear the ESLint warning
+        logger.info({ route: 'app/api/analyze-ats/route.ts' }, `💳 Deducted ${creditCost} credits for ATS analysis`);
       }
     }
 
@@ -324,4 +321,3 @@ ${resumeText}`;
     );
   }
 }
-

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
@@ -7,13 +8,13 @@ import { validateGenerationRequest } from '@/lib/validators/aiRequestValidator';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 
@@ -33,21 +34,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  const body = await request.json();
+    const body = await request.json();
 
-const validation = validateGenerationRequest(body);
+    const validation = validateGenerationRequest(body);
 
-if (!validation.valid) {
-  return NextResponse.json(
-    {
-      error: 'Invalid request payload',
-      details: validation.errors,
-    },
-    { status: 400 }
-  );
-}
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          error: 'Invalid request payload',
+          details: validation.errors,
+        },
+        { status: 400 }
+      );
+    }
 
-const { prompt, type } = body;
+    const { prompt, type } = body;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
