@@ -15,6 +15,10 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     // ✅ CHECK API KEY FIRST - fail fast if service is misconfigured
     if (!MISTRAL_API_KEY) {
       logger.error({ route: 'app/api/analyze-ats/route.ts' }, 'MISTRAL_API_KEY is not configured');
