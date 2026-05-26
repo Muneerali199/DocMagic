@@ -32,7 +32,15 @@ import {
 import ScrollToTop from "@/components/scroll-to-top";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { ResumeGenerator } from "@/components/resume/resume-generator";
+import nextDynamic from "next/dynamic";
+
+const ResumeGenerator = nextDynamic(
+  () => import("@/components/resume/resume-generator").then((mod) => mod.ResumeGenerator),
+  {
+    ssr: false,
+    loading: () => <p>Loading...</p>,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 
