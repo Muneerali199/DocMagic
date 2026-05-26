@@ -89,11 +89,11 @@ export function CollaborationPanel({
       documentId,
       (change) => {
         // Handle document changes
-        console.log('Document changed:', change);
+        
       },
       (userId, position) => {
         // Handle cursor movements
-        console.log('Cursor moved:', userId, position);
+        
       },
       (participant) => {
         setParticipants(prev => [...prev, participant]);

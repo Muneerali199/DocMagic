@@ -23,6 +23,8 @@ import {
   Copy,
   Scissors,
   Clipboard,
+  Bold,
+Italic,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -263,6 +265,40 @@ export function EditorToolbar() {
             </TooltipContent>
           </Tooltip>
         </div>
+        {/* Text Formatting */}
+<div className="flex items-center gap-1">
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-9 h-9 p-0"
+      >
+        <Bold className="w-4 h-4" />
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>Bold</p>
+    </TooltipContent>
+  </Tooltip>
+
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-9 h-9 p-0"
+      >
+        <Italic className="w-4 h-4" />
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>Italic</p>
+    </TooltipContent>
+  </Tooltip>
+</div>
+
+<Separator orientation="vertical" className="h-8" />
 
         <Separator orientation="vertical" className="h-8" />
 

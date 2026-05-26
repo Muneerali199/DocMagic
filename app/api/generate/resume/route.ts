@@ -2,10 +2,18 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
+import { resumeGenerationSchema, detectSqlInjection, sanitizeObject, safeParseBody, RequestValidationError } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
+
+import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { generateResume } from '@/lib/gemini';
+import { withErrorHandling } from '@/lib/error-handler';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -72,7 +80,7 @@ Create realistic, relevant content based on the job description. Use action verb
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Mistral API error:', errorText);
+    // Scoped logger will handle context
     throw new Error(`Mistral API error: ${response.status}`);
   }
 
@@ -90,7 +98,11 @@ Create realistic, relevant content based on the job description. Use action verb
   return JSON.parse(jsonMatch[0]);
 }
 
-export async function POST(request: Request) {
+async function postHandler(request: Request) {
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
+
   try {
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -139,10 +151,29 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      log.error('Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
+      );
+    }
+
+    // Apply Rate Limiting
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimit = checkRateLimit(user.id, SECURITY_CONFIG.RATE_LIMITS.GENERATE);
+    
+    if (!rateLimit.allowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED_RESUME', { userId: user.id, ip }, ip);
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded', 
+          message: `Please wait ${rateLimit.retryAfter} seconds before trying again.`,
+          retryAfter: rateLimit.retryAfter 
+        },
+        { 
+          status: 429,
+          headers: { 'Retry-After': rateLimit.retryAfter.toString() }
+        }
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
@@ -150,67 +181,14 @@ export async function POST(request: Request) {
     // Check user credits
     const creditCost = ACTION_COSTS.resume;
 
-    // Get or create user credits
-    let { data: userCredits, error: creditsError } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits, error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      } else if (updatedCredits) {
-        userCredits = updatedCredits;
-      } else {
-        console.error('Credits reset did not return an updated record, applying local reset instead');
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      }
+      log.error('Failed to load or initialize credits record');
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     // Check if user has enough credits
@@ -231,27 +209,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate request body exists
-    let rawBody;
-    try {
-      rawBody = await request.json();
-    } catch (parseError) {
-      return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
-      );
-    }
-
-    // Validate and sanitize input
     let prompt, name, email;
     try {
-      const validatedData = validateAndSanitize(resumeGenerationSchema, rawBody);
+      const validatedData = await safeParseBody(request, resumeGenerationSchema);
       prompt = validatedData.prompt;
       name = validatedData.name;
       email = validatedData.email;
-    } catch (validationError: any) {
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return NextResponse.json(
-        { error: 'Invalid input data', details: validationError.message },
+        { error: validationError.message, details: validationError.details },
         { status: 400 }
       );
     }
@@ -262,17 +231,20 @@ export async function POST(request: Request) {
     // that naturally contain words like "SELECT candidates" which trigger false positives.
     // The prompt is only passed to the AI model, not used in SQL queries.
     if (detectSqlInjection(name) || detectSqlInjection(email)) {
-      console.warn('Potential SQL injection attempt detected in name/email');
+      log.warn('Potential SQL injection attempt detected in name/email');
       return NextResponse.json(
         { error: 'Invalid input detected' },
         { status: 400 }
       );
     }
 
-    // Sanitize inputs
-    const sanitizedPrompt = sanitizeInput(prompt);
-    const sanitizedName = sanitizeInput(name);
-    const sanitizedEmail = sanitizeInput(email);
+    // Sanitize all inputs consistently
+    const sanitizedInput = sanitizeObject({ prompt, name, email });
+    const { 
+      prompt: sanitizedPrompt, 
+      name: sanitizedName, 
+      email: sanitizedEmail 
+    } = sanitizedInput;
 
     // Atomically reserve credits BEFORE generation to prevent the
     // TOCTOU race documented in issue #477. If a concurrent request beat
@@ -285,50 +257,60 @@ export async function POST(request: Request) {
         userCredits!.credits_used,
         creditCost
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
-          creditReservationConflictResponse(creditCost, userCredits!.tier),
+          creditReservationConflictResponse(creditCost, userCredits.tier),
           { status: 402 }
         );
       }
-      userCredits = reserved;
     }
 
-    // Generate resume with Mistral
+    // Generate resume - Try Gemini 2.0 Flash first (Enhanced ATS), fallback to Mistral
     let resume;
     try {
-      console.log('🚀 Generating resume with Mistral...');
-      resume = await generateResumeWithMistral({
+      log.info('🚀 Generating resume with Gemini 2.0 Flash (Enhanced ATS)...');
+      
+      // Use a race to ensure Gemini doesn't hang the request
+      const geminiPromise = generateResume({
         prompt: sanitizedPrompt,
         name: sanitizedName,
         email: sanitizedEmail
       });
-      console.log('✅ Resume generated with Mistral');
-    } catch (mistralError: any) {
-      console.error('❌ Mistral failed:', mistralError.message);
-      if (!hasUnlimitedCredits) {
-        await refundCredits(supabaseAdmin, user.id, creditCost);
+
+      // 25-second timeout for Gemini specifically (within the 30s overall limit)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Gemini request timed out')), 25000)
+      );
+
+      resume = await Promise.race([geminiPromise, timeoutPromise]) as any;
+      log.info('✅ Resume generated with Gemini');
+    } catch (geminiError: any) {
+      log.warn('⚠️ Gemini failed or timed out, falling back to Mistral:', geminiError.message);
+      try {
+        log.info('🚀 Generating resume with Mistral fallback...');
+        resume = await generateResumeWithMistral({
+          prompt: sanitizedPrompt,
+          name: sanitizedName,
+          email: sanitizedEmail
+        });
+        log.info('✅ Resume generated with Mistral');
+      } catch (mistralError: any) {
+        log.error('❌ Both Gemini and Mistral failed');
+        if (!hasUnlimitedCredits) {
+          await refundCredits(supabaseAdmin, user.id, creditCost);
+          invalidateUserCredits(user.id);
+        }
+        throw new Error('Unable to generate resume. Please try again later.');
       }
-      throw new Error('Unable to generate resume. Please try again later.');
     }
 
-    // Log usage only after the AI call succeeded. Credits were already
-    // deducted atomically above.
+    // Fire-and-forget: log write does not block the response
     if (!hasUnlimitedCredits) {
-      const { error: logError } = await supabaseAdmin
+      supabaseAdmin
         .from('credit_usage_log')
-        .insert({
-          user_id: user.id,
-          action: 'resume',
-          credits_used: creditCost,
-          metadata: { prompt_length: sanitizedPrompt.length }
-        });
-
-      if (logError) {
-        console.error('Failed to log credit usage:', logError);
-      } else {
-        console.log(`💳 Deducted ${creditCost} credits for resume generation`);
-      }
+        .insert({ user_id: user.id, action_type: 'resume', credits_used: creditCost, metadata: { prompt_length: sanitizedPrompt.length } })
+        .then(({ error }) => { if (error) log.error('Failed to log credit usage:', error); });
     }
 
     // Save resume to documents table for history
@@ -348,7 +330,7 @@ export async function POST(request: Request) {
         .single();
 
       if (docError) {
-        console.error('Failed to save to documents table:', docError);
+        log.error('Failed to save to documents table:', docError);
 
         // Fallback: Try saving to resumes table
         const { error: resumeError } = await supabaseAdmin
@@ -367,22 +349,23 @@ export async function POST(request: Request) {
           });
 
         if (resumeError) {
-          console.error('Failed to save to resumes table:', resumeError);
+          log.error('Failed to save to resumes table:', resumeError);
         } else {
-          console.log('📄 Resume saved to resumes table');
+          log.info('📄 Resume saved to resumes table');
         }
       } else {
-        console.log('📄 Resume saved to documents table:', savedDoc?.id);
+        log.info('📄 Resume saved to documents table:', savedDoc?.id);
       }
     } catch (saveError) {
-      console.error('Error saving resume:', saveError);
+      log.error('Error saving resume:', saveError);
       // Don't fail the request if saving fails
     }
 
     return NextResponse.json(resume, { status: 200 });
 
   } catch (error: any) {
-    console.error('❌ Resume generation error:', {
+    incrementErrorCount();
+    log.error('❌ Resume generation error:', {
       message: error.message,
       name: error.name,
       stack: error.stack?.split('\n').slice(0, 3)
@@ -401,21 +384,10 @@ export async function POST(request: Request) {
     } else if (error.message?.includes('timeout')) {
       errorMessage = 'Request timeout';
       errorDetails = 'The request took too long. Please try again with a shorter prompt.';
-    } else if (error.message?.includes('JSON')) {
-      errorMessage = 'AI response parsing error';
-      errorDetails = 'The AI generated an invalid response. Please try rephrasing your input.';
-    } else if (error.message?.includes('network')) {
-      errorMessage = 'Network error';
-      errorDetails = 'Unable to connect to AI service. Please check your internet connection.';
     }
-
-    return NextResponse.json(
-      {
-        error: errorMessage,
-        message: errorDetails,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      },
-      { status: 500 }
-    );
+    // Re-throw so the global error handler captures request context and stack trace
+    throw error;
   }
 }
+
+export const POST = withErrorHandling(postHandler);

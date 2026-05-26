@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in POST /api/documents/export:', error);
+    logger.error({ route: 'app/api/documents/export/route.ts' }, 'Error in POST /api/documents/export:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createRoute } from '@/lib/supabase/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
       }
       const { data: templates, error: templatesError } = await query;
       if (templatesError) {
-        console.log('Database error:', templatesError.message);
+        console.error('Database error:', templatesError.message);
         return new Response(JSON.stringify([]), {
           headers: { 'Content-Type': 'application/json' }
         });
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
     // Just return user's templates
     const { data: templates, error: templatesError } = await query;
     if (templatesError) {
-      console.log('Database error:', templatesError.message);
+      console.error('Database error:', templatesError.message);
       return new Response(JSON.stringify([]), {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -74,7 +75,7 @@ export async function GET(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
+    logger.error({ route: 'app/api/templates/route.ts' }, 'Error fetching templates:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to fetch templates' }), 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -131,7 +132,7 @@ export async function POST(request: Request) {
       .select()
       .single();
     if (error) {
-      console.error('Error creating template:', error);
+      logger.error({ route: 'app/api/templates/route.ts' }, 'Error creating template:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to create template', details: error.message }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Error creating template:', error);
+    logger.error({ route: 'app/api/templates/route.ts' }, 'Error creating template:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to create template' }), 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
