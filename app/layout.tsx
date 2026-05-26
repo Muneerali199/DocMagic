@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+import PwaUpdatePrompt from "@/components/pwa-update-prompt";
 
 import Footer from "@/components/ui/Footer";
 import { Inter, Poppins } from "next/font/google";
@@ -57,8 +58,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
-        <Providers>
-          <CursorProvider>
+       <Providers>
+  <PwaUpdatePrompt />
+  <CursorProvider>
             {children}
             <PWABanner />
             <FeedbackPopup />
