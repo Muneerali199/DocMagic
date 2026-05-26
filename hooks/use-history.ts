@@ -30,9 +30,6 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
       return;
     }
 
-    // Immediately clear future stack when a new change starts
-    setFuture([]);
-
     const timer = setTimeout(() => {
       const valToCommit = presentRef.current;
       setPast((prevPast) => {
@@ -62,12 +59,19 @@ export function useHistory<T>(initialValue: T, maxDepth = 50, debounceMs = 500) 
             }
             return newPast;
           });
-          setFuture([]);
           lastCommittedRef.current = resolved;
         }
       }
       return resolved;
     });
+
+    const resolvedValue = typeof newValue === 'function' 
+      ? (newValue as Function)(presentRef.current) 
+      : newValue;
+
+    if (JSON.stringify(resolvedValue) !== JSON.stringify(presentRef.current)) {
+      setFuture((prevFuture) => (prevFuture.length > 0 ? [] : prevFuture));
+    }
   }, [maxDepth]);
 
   // Reverts the last state snapshot or uncommitted changes.
