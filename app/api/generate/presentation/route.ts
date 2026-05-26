@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     // Atomically reserve the estimated credit cost BEFORE generation to
     // prevent the TOCTOU race documented in issue #477. If the model returns
     // fewer slides than requested we refund the difference below.
+    let creditsUsedAfterReserve = userCredits.credits_used;
     if (!hasUnlimitedCredits) {
       const reserved = await reserveCredits(
         supabaseAdmin,
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
+      creditsUsedAfterReserve = reserved.credits_used;
     }
 
     // Generate presentation outline first
@@ -134,10 +136,13 @@ export async function POST(request: NextRequest) {
 
     // If fewer slides were generated than reserved, refund the difference.
     const overReserved = estimatedCreditCost - actualCreditCost;
+    let creditsUsedAfterRefund = creditsUsedAfterReserve;
     if (overReserved > 0) {
       const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
       if (!refunded) {
         logger.error({ route: 'app/api/generate/presentation/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+      } else {
+        creditsUsedAfterRefund = Math.max(0, creditsUsedAfterReserve - overReserved);
       }
       invalidateUserCredits(user.id);
     }
@@ -154,7 +159,7 @@ export async function POST(request: NextRequest) {
         used: actualCreditCost,
         remaining: calculateRemainingCredits(
           userCredits.credits_total,
-          userCredits.credits_used - overReserved
+          creditsUsedAfterRefund
         )
       }
     });
