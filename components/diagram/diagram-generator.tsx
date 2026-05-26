@@ -229,8 +229,7 @@ export function DiagramGenerator() {
   }, []);
 
   // Debounce ref for manual edits linting
-  const lintDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  const lintDebounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Debounced linter function
   const debouncedLint = useCallback((code: string) => {
     if (lintDebounceTimeoutRef.current) {
@@ -913,7 +912,7 @@ export function DiagramGenerator() {
                 <div className="absolute inset-0 shimmer opacity-20"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
                 <div className="relative z-10 h-full">
-                  <DiagramPreview code={diagramCode} onRenderError={setRenderError} />
+                  <DiagramPreview code={renderedCode} onRenderError={setRenderError} />
                 </div>
               </div>
 
