@@ -2,6 +2,7 @@ import withPWACore from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
   reactStrictMode: false,
   allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
 images: {
