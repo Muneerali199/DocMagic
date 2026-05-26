@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { CSP_HEADER } from '@/lib/csp';
 
+<<<<<<< HEAD
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
   .map((o) => o.trim());
@@ -36,6 +37,15 @@ const CORS_HDRS = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-Id',
   'Access-Control-Max-Age': '86400',
+=======
+
+// Enhanced rate limiting configuration
+const RATE_LIMITS = {
+  API: { windowMs: 60 * 1000, max: 100 }, // 1 minute, 100 requests
+  AUTH: { windowMs: 15 * 60 * 1000, max: 10 }, // 15 minutes, 10 requests
+  GENERATE: { windowMs: 5 * 60 * 1000, max: 20 }, // 5 minutes, 20 requests
+  EXPORT: { windowMs: 2 * 60 * 1000, max: 30 }, // 2 minutes, 30 requests
+>>>>>>> 8d1e1e7 (feat: add request ID propagation for tracing)
 };
 
 function corsHeaders(origin: string | null): Record<string, string> {
@@ -58,6 +68,7 @@ function pruneStore() {
   for (const [k, d] of store) if (now > d.reset) store.delete(k);
 }
 
+<<<<<<< HEAD
 function rlKey(p: string): RLKey {
   const norm = p.replace(/^\/api\/v\d+(?:\/|$)/, '/api/');
   if (norm.startsWith('/api/auth/'))     return 'AUTH';
@@ -107,6 +118,32 @@ export function middleware(req: NextRequest) {
     const r = NextResponse.next();
     r.headers.set('Cache-Control', 'public,max-age=31536000,immutable');
     return r;
+=======
+export function middleware(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+
+requestHeaders.set('x-request-id', requestId);
+  const { pathname } = request.nextUrl;
+  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  
+  // Static asset optimization
+  if (pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+const response = NextResponse.next({
+  request: {
+    headers: requestHeaders,
+  },
+});
+    
+    // Aggressive caching for static assets
+    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    response.headers.set('Vary', 'Accept-Encoding');
+    
+    // Performance headers
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    
+    return response;
+>>>>>>> 8d1e1e7 (feat: add request ID propagation for tracing)
   }
 
   if (pathname.startsWith('/api/')) {
@@ -146,6 +183,7 @@ export function middleware(req: NextRequest) {
     if (pathname.startsWith('/api/generate/') || pathname.startsWith('/api/analyze-ats')) {
       r.headers.set('X-Endpoint-Type', 'ai-generation');
     }
+<<<<<<< HEAD
 
     if (isDeploymentError(r)) {
       logError(pathname, 'Deployment error detected', r.status, Date.now());
@@ -153,6 +191,11 @@ export function middleware(req: NextRequest) {
     }
 
     return r;
+=======
+    response.headers.set('x-request-id', requestId);
+    
+    return response;
+>>>>>>> 8d1e1e7 (feat: add request ID propagation for tracing)
   }
 
   if (!pathname.includes('.')) {
