@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFetchUrl } from '@/lib/validate-fetch-url';
+import { logger } from '@/lib/logger';
 
 // Only allow actual image types through the proxy
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(blob, { status: 200, headers });
 
   } catch (error: any) {
-    console.error('Error proxying image:', error);
+    logger.error('Error proxying image:', error);
 
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {
       return new NextResponse('Request timed out', { status: 408 });
