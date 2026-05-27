@@ -88,13 +88,19 @@ describe('isAllowedOrigin', () => {
 
   it('allows localhost origins in development mode', () => {
     const originalEnv = process.env.NODE_ENV;
-    try {
+jest.isolateModules(() => {
+      // Bypass TypeScript's read-only protection just for this test
       (process.env as any).NODE_ENV = 'development';
+      
+      // Dynamically require the module so it catches the 'development' environment!
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { isAllowedOrigin: dynamicIsAllowedOrigin } = require('@/lib/security');
+      
       const host = 'localhost:3000';
-      expect(isAllowedOrigin('http://localhost:3000', host)).toBe(true);
-    } finally {
-      (process.env as any).NODE_ENV = originalEnv;
-    }
+      expect(dynamicIsAllowedOrigin('http://localhost:3000', host)).toBe(true);
+    });
+
+    (process.env as any).NODE_ENV = originalEnv;
   });
 });
 
@@ -103,31 +109,30 @@ describe('isAllowedOrigin', () => {
 // ──────────────────────────────────────────────────────────────
 describe('getSecurityHeaders', () => {
   it('includes X-Frame-Options', () => {
-    const headers = getSecurityHeaders();
+    const headers = getSecurityHeaders() as Record<string, string>;
     expect(headers['X-Frame-Options']).toBe('DENY');
   });
 
   it('CSP contains form-action directive', () => {
-    const headers = getSecurityHeaders();
+    const headers = getSecurityHeaders() as Record<string, string>;
     expect(headers['Content-Security-Policy']).toContain('form-action');
   });
 
   it('CSP contains frame-ancestors directive', () => {
-    const headers = getSecurityHeaders();
+    const headers = getSecurityHeaders() as Record<string, string>;
     expect(headers['Content-Security-Policy']).toContain('frame-ancestors');
   });
 
   it('omits HSTS in development mode', () => {
-    const devHeaders = getSecurityHeaders(true);
+    const devHeaders = getSecurityHeaders(true) as Record<string, string>;
     expect(devHeaders['Strict-Transport-Security']).toBeUndefined();
   });
 
   it('includes HSTS in production mode', () => {
-    const prodHeaders = getSecurityHeaders(false);
+    const prodHeaders = getSecurityHeaders(false) as Record<string, string>;
     expect(prodHeaders['Strict-Transport-Security']).toContain('max-age=');
   });
 });
-
 // ──────────────────────────────────────────────────────────────
 // validateEnvironmentVariables
 // ──────────────────────────────────────────────────────────────

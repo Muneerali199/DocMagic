@@ -4,6 +4,9 @@
  * Covers: get, set, delete, invalidateByTag, TTL expiry, LRU eviction,
  * invalidateByPrefix, flush, and the memoizeAsync helper.
  */
+/**
+ * @jest-environment node
+ */
 
 import { cache, aiCache, userCache, memoizeAsync } from '@/lib/cache';
 

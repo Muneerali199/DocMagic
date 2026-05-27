@@ -23,4 +23,18 @@ const config = {
     '<rootDir>/lib/__tests__/export.test.ts',
   ],
 };
-export default createJestConfig(config);
+
+// THE FIX: Intercept the Next.js config and force our compile rules
+export default async function customJestConfig() {
+  // 1. Let Next.js build its default config
+  const nextConfig = await createJestConfig(config)();
+  
+  // 2. Override the Next.js rules to compile Upstash and Uncrypto
+  nextConfig.transformIgnorePatterns = [
+    '/node_modules/(?!(@upstash|uncrypto)/)',
+    '^.+\\.module\\.(css|sass|scss)$',
+  ];
+  
+  // 3. Return the hacked config to Jest
+  return nextConfig;
+}

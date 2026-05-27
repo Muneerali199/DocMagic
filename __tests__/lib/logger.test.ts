@@ -5,11 +5,15 @@
 import { logger as testModeLogger } from '@/lib/logger';
 
 // Helper to load a fresh logger with a specific NODE_ENV.
+// Helper to load a fresh logger with a specific NODE_ENV.
 function loadLoggerWithEnv(env: string) {
   let loggerModule: any;
   jest.isolateModules(() => {
     const original = process.env.NODE_ENV;
+// Bypass TypeScript's read-only protection just for this test
     (process.env as any).NODE_ENV = env;
+    
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     loggerModule = require('@/lib/logger');
     (process.env as any).NODE_ENV = original;
   });
