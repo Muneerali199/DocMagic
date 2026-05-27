@@ -1,12 +1,17 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
 import { ResumeTemplateGalleryNew } from "@/components/templates/resume-template-gallery-new";
 import { SiteHeader } from "@/components/site-header";
 import { Sparkles, FileText, Zap, Star, Wand2, BookOpen, Crown, TrendingUp } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Resume Templates",
+  description:
+    "Browse professional editable resume templates.",
+};
+
+export const revalidate = 300; 
 
 export default function TemplatesPage() {
-  const router = useRouter();
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#F3E9DC' }}>
