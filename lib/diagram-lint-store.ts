@@ -129,7 +129,11 @@ export const useDiagramLintStore = create<DiagramLintState>((set, get) => ({
         if (autoFixableErrors.length > 0) {
           // At least some errors are fixable → show diff viewer
           const fixResult = autoFixFn(source, errorSeverity);
-          set({ lintErrors: errors, fixResult, lintState: 'diff-pending' });
+          const newState = fixResult.appliedFixes.length > 0
+            ? 'diff-pending'
+            : 'error';
+          set({ lintErrors: errors, fixResult, 
+                lintState: newState });
           return { proceed: false, source };
         }
 
