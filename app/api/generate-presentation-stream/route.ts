@@ -1,16 +1,18 @@
+export const dynamic = 'force-dynamic';
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createEnhancedPresentationPrompt } from '@/lib/prompts/enhanced-presentation-prompt';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: NextRequest) {
   try {
+    // Initialized safely inside the handler
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = req.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

@@ -15,11 +15,6 @@ import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/ro
 import { generateResume } from '@/lib/gemini';
 import { withErrorHandling } from '@/lib/error-handler';
 
-// Service role client for credit operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Mistral-based resume generation as fallback
 async function generateResumeWithMistral({ prompt, name, email }: { prompt: string; name: string; email: string }) {
@@ -104,6 +99,13 @@ async function postHandler(request: Request) {
   incrementRequestCount();
 
   try {
+    // 3. Initialized safely inside the POST handler
+    // Service role client for credit operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');

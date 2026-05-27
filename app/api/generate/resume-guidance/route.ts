@@ -6,13 +6,14 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateResumeStepGuidance } from '@/lib/gemini';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
   try {
+    // 1. Initialized safely inside the POST handler
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

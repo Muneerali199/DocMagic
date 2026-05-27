@@ -5,64 +5,67 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-  const body = await req.text();
-  const signature = headers().get('stripe-signature');
-
-  if (!signature) {
-    return NextResponse.json({ error: 'No signature' }, { status: 400 });
-  }
-
-  let event: Stripe.Event;
-
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+    // 1. Initialize Supabase safely inside the POST handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-  } catch (err: any) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, '⚠️ Webhook signature verification failed:', err.message);
-    return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
-  }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Webhook event received:', event.type);
+const body = await req.text();
+    const signature = headers().get('stripe-signature');
 
-  try {
+    if (!signature) {
+      return NextResponse.json({ error: 'No signature' }, { status: 400 });
+    }
+
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+    } catch (err: any) {
+      logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, '⚠️ Webhook signature verification failed:', err.message);
+      return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
+    }
+
+    logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Webhook event received:', event.type);
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutSessionCompleted(session);
+        await handleCheckoutSessionCompleted(session, supabase);
         break;
       }
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdate(subscription);
+        await handleSubscriptionUpdate(subscription, supabase);
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionDeleted(subscription);
+        await handleSubscriptionDeleted(subscription, supabase);
         break;
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        await handleInvoicePaymentSucceeded(invoice);
+        await handleInvoicePaymentSucceeded(invoice, supabase);
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        await handleInvoicePaymentFailed(invoice);
+        await handleInvoicePaymentFailed(invoice, supabase);
         break;
       }
 
@@ -77,7 +80,8 @@ export async function POST(req: Request) {
   }
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+// Pass Supabase as an argument to the helpers
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, supabase: any) {
   const userId = session.metadata?.userId;
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
@@ -126,7 +130,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 }
 
-async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription, supabase: any) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
@@ -169,7 +173,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   }
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supabase: any) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
@@ -193,9 +197,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
   const customerId = invoice.customer as string;
-  const subscriptionId = invoice.subscription as string;
 
   // Get user from customer ID
   const { data: subscription } = await supabase
@@ -232,7 +235,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 }
 
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   const customerId = invoice.customer as string;
 
   // Get user from customer ID

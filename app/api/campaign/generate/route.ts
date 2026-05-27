@@ -1,15 +1,11 @@
+export const dynamic = 'force-dynamic';
 import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Initialize Gemini AI
+// Initialize Gemini AI globally (this is fine as long as GEMINI_API_KEY is available)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // Use Gemini 2.0 Flash model (experimental - latest model)
@@ -29,6 +25,12 @@ interface CampaignIdea {
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Move createClient INSIDE the POST handler
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
     const authHeader = req.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

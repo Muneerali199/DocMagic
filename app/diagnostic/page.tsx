@@ -2,10 +2,9 @@ import { notFound } from 'next/navigation';
 import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
- restrict-diagnostic-page
 
-    // Restrict diagnostic page in production
-  if (process.env.NODE_ENV === 'production') {
+  // Bulletproof TS bypass for the environment check
+  if ((process.env.NODE_ENV as unknown as string) === 'production') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <h1 className="text-2xl font-bold">
@@ -14,17 +13,18 @@ export default async function DiagnosticPage() {
       </div>
     );
   }
-  const supabase = createClient();
+  
+  // FIX: We must 'await' createServer() 
+  const supabase = await createServer();
 
   const diagnosticsEnabled =
-    process.env.NODE_ENV !== 'production' &&
+    (process.env.NODE_ENV as unknown as string) !== 'production' &&
     process.env.ENABLE_DIAGNOSTIC_PAGE === 'true';
 
   if (!diagnosticsEnabled) {
     notFound();
   }
 
- main
 
   // Check if tables exist by trying to query them
   let tablesStatus = {

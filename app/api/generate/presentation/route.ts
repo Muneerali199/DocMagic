@@ -10,18 +10,19 @@ import { reserveCredits, refundCredits, creditReservationConflictResponse } from
 import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
-// Service role client for credit operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+
 
 export async function POST(request: NextRequest) {
   try {
+    // Service role client for credit operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     // ✅ AUTHENTICATION CHECK
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in to create presentations.' },
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
       : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
+
     if (!hasUnlimitedCredits && creditsRemaining < estimatedCreditCost) {
       const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
       const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';

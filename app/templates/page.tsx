@@ -2,7 +2,7 @@ import { ResumeTemplateGalleryNew } from "@/components/templates/resume-template
 import { SiteHeader } from "@/components/site-header";
 import { Sparkles, FileText, Zap, Star, Wand2, BookOpen, Crown, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
-
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: "Resume Templates",
   description:

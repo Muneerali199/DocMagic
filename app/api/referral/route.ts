@@ -2,16 +2,19 @@ import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic';
 
 const REFERRAL_BONUS_CREDITS = 5;
 
 // GET: Get user's referral info
 export async function GET(request: Request) {
   try {
+    // 1. Initialized safely inside the GET handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 
@@ -80,6 +83,12 @@ export async function GET(request: Request) {
 // POST: Process a referral (called after successful signup)
 export async function POST(request: Request) {
   try {
+    // 2. Initialized safely inside the POST handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const body = await request.json();
     const { referralCode, newUserId } = body;
 
@@ -114,11 +123,7 @@ export async function POST(request: Request) {
     }
 
     // Check if this user was already referred
-    const { data: existingReferral } = await supabase
-      .from('referrals')
-      .select('id')
-      .eq('referred_id', newUserId)
-      .single();
+    const { data: existingReferral } = await existingReferralCheck(supabase, newUserId);
 
     if (existingReferral) {
       return NextResponse.json(
@@ -180,4 +185,10 @@ export async function POST(request: Request) {
   }
 }
 
-export const dynamic = 'force-dynamic';
+async function existingReferralCheck(supabase: any, newUserId: string) {
+    return await supabase
+      .from('referrals')
+      .select('id')
+      .eq('referred_id', newUserId)
+      .single();
+}

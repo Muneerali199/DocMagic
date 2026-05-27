@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -5,14 +6,15 @@ import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDevel
 import { reserveCredits } from '@/lib/credit-operations';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // GET: Get user's credit info
 export async function GET(request: Request) {
   try {
+    // 1. Initialized safely inside the GET handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 
@@ -74,6 +76,12 @@ export async function GET(request: Request) {
 // POST: Use credits for an action
 export async function POST(request: Request) {
   try {
+    // 2. Initialized safely inside the POST handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

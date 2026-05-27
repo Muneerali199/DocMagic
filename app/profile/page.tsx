@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +50,7 @@ interface UserStats {
   last_activity: string;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -585,7 +585,9 @@ export default function ProfilePage() {
               </Card>
 
               {/* Referral Program */}
-              <ReferralSection />
+              <Suspense fallback={<div className="h-32 bg-gray-200 animate-pulse rounded-xl"></div>}>
+                <ReferralSection />
+              </Suspense>
 
               {/* Account Information */}
               <Card>
@@ -644,4 +646,12 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div>Loading profile...</div>}>
+      <ProfileContent />
+    </Suspense>
+  )
 }

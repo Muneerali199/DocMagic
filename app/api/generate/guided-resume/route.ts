@@ -14,13 +14,14 @@ import {
   hasUnlimitedDeveloperCredits
 } from '@/lib/credits-service';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
   try {
+    // 1. Move createClient INSIDE the POST handler
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

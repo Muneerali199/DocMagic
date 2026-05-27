@@ -9,18 +9,19 @@ import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits }
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
-// Service role client for credit operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+
 
 export async function POST(request: Request) {
   try {
+    // Service role client for credit operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     // ✅ AUTHENTICATION CHECK
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in to create diagrams.' },
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in to create diagrams.' },
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
     // Check user credits
     const creditCost = ACTION_COSTS.diagram;
-    
+
     // Get or create user credits (cached, 15 s TTL)
     const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
       : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
+
     if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
         {
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     logger.error({ route: 'app/api/generate/diagram/route.ts' }, 'Error generating diagram:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to generate diagram',
         message: 'An unexpected error occurred. Please try again.',
         details: errorMessage

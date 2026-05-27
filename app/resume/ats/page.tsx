@@ -1,6 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { ATSAnalyzer } from "@/components/resume/ats-analyzer";
-
+export const dynamic = 'force-dynamic';
 export default function ATSPage() {
   return (
     <div className="min-h-screen flex flex-col">

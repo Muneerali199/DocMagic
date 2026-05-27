@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { HistoryDashboard } from "@/components/dashboard/history-dashboard";
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: "History | DraftDeckAI",

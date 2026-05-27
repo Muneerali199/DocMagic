@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description: "Explore our flexible pricing plans for individuals and teams. Get started for free and upgrade as you grow.",
   },
 };
-
+export const dynamic = 'force-dynamic';
 export default function PricingPage() {
   return (
     <div className='min-h-screen flex flex-col relative overflow-hidden'>

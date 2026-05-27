@@ -5,11 +5,6 @@ import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -50,6 +45,12 @@ export async function POST(request: Request) {
   incrementRequestCount();
 
   try {
+    // 1. Move createClient INSIDE the POST handler
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
 

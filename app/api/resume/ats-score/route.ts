@@ -1,17 +1,19 @@
 import { logger } from '@/lib/logger';
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
-// Service role client for credit operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+
 
 export async function POST(req: Request) {
   try {
+    // Service role client for credit operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     // Get authorization header
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
@@ -38,7 +40,7 @@ export async function POST(req: Request) {
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
 
     // Check user credits
     const creditCost = ACTION_COSTS.ats_check;
-    
+
     // Get or create user credits
     let { data: userCredits } = await supabaseAdmin
       .from('user_credits')
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
         })
         .select()
         .single();
-      
+
       if (insertError) {
         logger.error({ route: 'app/api/resume/ats-score/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
@@ -112,7 +114,7 @@ export async function POST(req: Request) {
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
       : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
+
     if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
         {
@@ -188,7 +190,7 @@ async function calculateATSScore(resumeData: any, jobDescription?: string): Prom
   // Prioritize Gemini, fallback to OpenAI
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!geminiApiKey && !openaiApiKey) {
     throw new Error("AI API key not configured. Please add GEMINI_API_KEY or OPENAI_API_KEY to your .env file");
   }

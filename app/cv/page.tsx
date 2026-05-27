@@ -1,19 +1,18 @@
 "use client";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { ResumeGenerator } from "@/components/resume/resume-generator";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, FileText, Zap, Star, Wand2, Award } from "lucide-react";
 
-export default function CVPage() {
+function CVContent() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background elements matching landing page */}
       <div className="absolute inset-0 mesh-gradient opacity-20"></div>
       <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-15 top-20 -left-24"></div>
       <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18"></div>
       <div className="floating-orb w-40 h-40 sm:w-56 sm:h-56 bolt-gradient opacity-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
       
-      {/* Grid pattern overlay */}
       <div 
         className="absolute inset-0 opacity-[0.02]"
         style={{
@@ -24,7 +23,6 @@ export default function CVPage() {
       <SiteHeader />
       <main className="flex-1 relative z-10 flex items-center justify-center">
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-          {/* Enhanced Header */}
           <div className="text-center mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer">
               <FileText className="h-4 w-4 text-yellow-500" />
@@ -51,7 +49,6 @@ export default function CVPage() {
               <span className="font-semibold bolt-gradient-text">career progression</span>
             </p>
 
-            {/* Stats bar */}
             <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-4 sm:gap-6">
               <div className="glass-effect px-4 py-2 rounded-full hover:scale-105 transition-transform duration-300">
                 <span className="bolt-gradient-text font-bold text-sm">Academic</span>
@@ -68,12 +65,8 @@ export default function CVPage() {
             </div>
           </div>
           
-          {/* Enhanced Generator Container */}
           <div className="glass-effect p-6 sm:p-8 rounded-2xl border border-yellow-400/20 relative overflow-hidden">
-            {/* Background shimmer effect */}
             <div className="absolute inset-0 shimmer opacity-20"></div>
-            
-            {/* Decorative elements */}
             <div className="absolute top-4 right-4">
               <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
             </div>
@@ -88,7 +81,6 @@ export default function CVPage() {
             </div>
           </div>
 
-          {/* Call to action */}
           <div className="text-center mt-12 sm:mt-16">
             <div className="glass-effect p-6 sm:p-8 rounded-2xl max-w-2xl mx-auto hover:scale-105 transition-transform duration-300 relative overflow-hidden">
               <div className="absolute inset-0 shimmer opacity-30"></div>
@@ -117,5 +109,13 @@ export default function CVPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CVPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <CVContent />
+    </Suspense>
   );
 }
