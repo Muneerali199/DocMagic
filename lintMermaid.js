@@ -155,7 +155,7 @@ function checkReservedKeywords(lines) {
     let match;
     while ((match = tokenRe.exec(line)) !== null) {
       const word = match[1];
-      if (!reserved.has(word)) continue;
+      if (!reserved.has(word.toLowerCase()) continue;
       if (isInsideQuotes(line, match.index)) continue;
 
       // Only flag when the reserved word is immediately followed by an arrow
@@ -471,7 +471,7 @@ function checkInvalidSequenceArrow(lines, diagramType) {
         errors.push(makeError(
           'invalid-sequence-arrow',
           'error',
-          `Arrow "${match[0]}" is not valid in sequence diagrams. Use ->, -->, ->>, or ->> instead.`,
+          `Arrow "${match[0]}" is not valid in sequence diagrams. Use ->, --->, ->>, -->>, -x, --x, -), or --) instead.`,
           idx + 1,
           match.index + 1,
           false,
