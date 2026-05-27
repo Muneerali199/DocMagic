@@ -1564,11 +1564,27 @@ export default function RealTimeGenerator() {
       ?.issues ?? [])
       .filter(i => ruleIds.includes(i.ruleId));
     const { fixedSlides } = autoFixSlide(slide, issues);
-    const newSlides = [...slides];
-    newSlides.splice(slideIndex, 1, ...fixedSlides);
-    setSlides(newSlides);
-    const newReports = newSlides.map(analyzeSlideQuality);
-    setQualityReports(newReports);
+    setSlides(prevSlides => {
+      const idx = prevSlides.findIndex(
+        s => s.slideNumber === slideNumber
+      );
+      if (idx === -1) return prevSlides;
+      const updated = [...prevSlides];
+      updated.splice(idx, 1, ...fixedSlides);
+      return updated;
+    });
+    setQualityReports(prev => {
+      const updated = [...prev];
+      const reportIdx = updated.findIndex(
+        r => r.slideNumber === slideNumber
+      );
+      if (reportIdx !== -1) {
+        updated[reportIdx] = analyzeSlideQuality(
+          fixedSlides[0]
+        );
+      }
+      return updated;
+    });
   };
 
   const handleExport = async (format: 'png' | 'pdf' | 'pptx') => {
