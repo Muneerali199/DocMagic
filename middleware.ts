@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { CSP_HEADER } from '@/lib/csp';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
@@ -88,6 +89,8 @@ function secHdrs(r: NextResponse) {
   r.headers.set('X-XSS-Protection', '1; mode=block');
   r.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   r.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // Source of truth: lib/csp.ts
+  r.headers.set('Content-Security-Policy', CSP_HEADER);
 }
 
 export function middleware(req: NextRequest) {
