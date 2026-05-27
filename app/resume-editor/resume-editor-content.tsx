@@ -121,7 +121,7 @@ export default function ResumeEditorContent() {
     reset: resetResumeData,
   } = useHistory(defaultResumeData);
 
-  // Keyboard shortcuts for Undo/Redo (Ctrl+Z / Cmd+Z and Ctrl+Y / Cmd+Y)
+  // Keyboard shortcuts for Undo/Redo (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Y, and Ctrl+Shift+Z / Cmd+Shift+Z)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check if command/ctrl key is pressed
@@ -421,7 +421,7 @@ export default function ResumeEditorContent() {
               className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
               onClick={undo}
               disabled={!canUndo}
-              title="Undo (Ctrl+Z)"
+              title="Undo (Ctrl+Z / Cmd+Z)"
             >
               <Undo2 className="w-4 h-4 mr-1.5" />
               Undo
@@ -433,7 +433,7 @@ export default function ResumeEditorContent() {
               className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
               onClick={redo}
               disabled={!canRedo}
-              title="Redo (Ctrl+Y)"
+              title="Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)"
             >
               <Redo2 className="w-4 h-4 mr-1.5" />
               Redo
