@@ -1,4 +1,5 @@
 'use client';
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { exportPremiumPresentation } from '@/lib/premium-presentation-export';
@@ -38,7 +39,8 @@ import {
   ChevronRight,
   Minus,
   Wand2,
-  PenTool
+  PenTool,
+  Share2
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
@@ -54,6 +56,7 @@ import {
   isWheelNavigationLocked,
   PRESENTATION_WHEEL_LOCK_MS,
 } from '@/lib/presentation-motion';
+import { PublishModal } from "@/components/showcase/publish-modal";
 
 // Circuit Pattern Component (inline for now)
 export const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -1085,7 +1088,7 @@ export default function RealTimeGenerator() {
           // Switch to presentation view
           setView('presentation');
 
-          console.log('✅ Loaded presentation:', data.title);
+          logger.info(null, '✅ Loaded presentation:', data.title)
         }
       } catch (error) {
         console.error('Error loading presentation:', error);
@@ -1139,7 +1142,7 @@ export default function RealTimeGenerator() {
         };
         return newSlides;
       });
-      console.log(`✅ Added ${imageType} image to slide ${imageGeneratorSlideIndex + 1}`);
+      logger.info(null, `✅ Added ${imageType} image to slide ${imageGeneratorSlideIndex + 1}`)
     }
     setShowImageGenerator(false);
     setImageGeneratorSlideIndex(null);
@@ -1168,6 +1171,7 @@ export default function RealTimeGenerator() {
   const presentWheelLockRef = useRef(0);
   const prefersReducedMotion = useReducedMotion();
   const visiblePresentationId = presentationId || editId;
+  const [publishOpen, setPublishOpen] = useState(false);
 
   const handleCopyLink = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -1264,7 +1268,7 @@ export default function RealTimeGenerator() {
         setShowShareModal(true);
       }
 
-      console.log(isAutoSave ? '🤖 Presentation auto-saved' : '✅ Presentation saved:', result?.id);
+      logger.info(null, isAutoSave ? '🤖 Presentation auto-saved' : '✅ Presentation saved:', result?.id)
     } catch (error) {
       console.error('❌ Error saving presentation:', error);
       if (!isAutoSave) alert('Failed to save presentation. Please try again.');
@@ -1346,7 +1350,7 @@ export default function RealTimeGenerator() {
 
   // Debug view changes
   useEffect(() => {
-    console.log('🎬 VIEW CHANGED TO:', view);
+    
   }, [view]);
 
   // Update structured outline when raw text changes (debounced or on blur ideally, but simple here)
@@ -1360,8 +1364,8 @@ export default function RealTimeGenerator() {
   const handleGenerateOutline = async () => {
     if (!topic.trim()) return;
 
-    console.log('🎯 handleGenerateOutline called with topic:', topic);
-    console.log('🎯 Requesting', slideCount, 'cards');
+    
+    
 
     setIsGeneratingOutline(true);
 
@@ -1375,7 +1379,7 @@ export default function RealTimeGenerator() {
         return;
       }
 
-      console.log('📡 Calling /api/generate/presentation-outline...');
+      
       const response = await fetch('/api/generate/presentation-outline', {
         method: 'POST',
         headers: {
@@ -1389,7 +1393,7 @@ export default function RealTimeGenerator() {
         })
       });
 
-      console.log('📡 Response status:', response.status);
+      
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -1408,12 +1412,12 @@ export default function RealTimeGenerator() {
       }
 
       const data = await response.json();
-      console.log('📦 Received data:', data);
+      
 
       if (data.outlines && Array.isArray(data.outlines)) {
-        console.log('✅ Setting', data.outlines.length, 'outlines');
+        logger.info(null, '✅ Setting', data.outlines.length, 'outlines')
         setOutline(data.outlines);
-        console.log('✅ Switching to outline-review view');
+        logger.info(null, '✅ Switching to outline-review view')
         setView('outline-review');
       } else {
         console.error('❌ Invalid outline format:', data);
@@ -1428,10 +1432,10 @@ export default function RealTimeGenerator() {
   };
 
   const handleFinalGenerate = async () => {
-    console.log('handleFinalGenerate called');
-    console.log('Topic:', topic);
-    console.log('Outline length:', outline.length);
-    console.log('Settings:', { textDensity, audience, tone, theme, imageSource });
+    
+    
+    
+    
 
     setSlides([]);
     setCurrentSlideText('');
@@ -1439,7 +1443,7 @@ export default function RealTimeGenerator() {
     setError(null);
     setProgress(10);
     setIsStreaming(true);
-    console.log('View set to: presentation');
+    
 
     let finalOutline = outline;
     if (outlineMode === 'freeform') {
@@ -1618,7 +1622,7 @@ export default function RealTimeGenerator() {
         }
       );
 
-      console.log(`✅ Premium exported as ${format.toUpperCase()}`);
+      logger.info(null, `✅ Premium exported as ${format.toUpperCase()}`)
     } catch (error) {
       console.error('Export error:', error);
       alert(`Failed to export as ${format.toUpperCase()}. Please try again.`);
@@ -1717,6 +1721,8 @@ export default function RealTimeGenerator() {
     const themeConfig = getThemeById(selectedThemeId);
     return themeConfig.colors.gradient;
   };
+
+   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground selection:bg-blue-500/30">
@@ -2537,6 +2543,14 @@ export default function RealTimeGenerator() {
                           <span className="hidden sm:inline">Share</span>
                         </>
                       )}
+                    </button>
+
+                    {/* Publish to Showcase Button */}
+                    <button
+                      onClick={() => setPublishOpen(true)}
+                    >
+                      <Share2 className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Publish</span>
                     </button>
 
                     {/* Export Button */}

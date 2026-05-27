@@ -1,58 +1,42 @@
+/**
+ * lib/logger.ts  —  Fix #9 (structured logging)
+ */
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-interface LogContext {
-  requestId?: string;
-  userId?: string;
-  [key: string]: unknown;
+export interface LogContext {
+  requestId?: string; userId?: string; route?: string;
+  durationMs?: number; statusCode?: number; [key: string]: unknown;
 }
-
-const isProduction = process.env.NODE_ENV === 'production';
-const isDebugEnabled = process.env.DEBUG === 'true';
-
-function formatLog(level: LogLevel, args: unknown[], context?: LogContext) {
-  const timestamp = new Date().toISOString();
-  
-  if (isProduction) {
-    // Structured JSON logging for production
-    return JSON.stringify({
-      timestamp,
-      level: level.toUpperCase(),
-      message: args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' '),
-      ...context,
-    });
-  }
-
-  // Pretty logging for development
-  const contextStr = context ? ` [${JSON.stringify(context)}]` : '';
-  return `[${timestamp}] ${level.toUpperCase()}:${contextStr} ${args.map(arg => 
-    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-  ).join(' ')}`;
+const IS_PROD = process.env.NODE_ENV === 'production';
+const IS_TEST = process.env.NODE_ENV === 'test';
+const COLOURS: Record<LogLevel,string> = { debug:'\x1b[90m', info:'\x1b[36m', warn:'\x1b[33m', error:'\x1b[31m' };
+const RESET = '\x1b[0m';
+function serialize(v: unknown): string {
+  if (v === null || v === undefined) return String(v);
+  if (typeof v === 'string') return v;
+  if (v instanceof Error) return JSON.stringify({ message: v.message, stack: v.stack });
+  try { return JSON.stringify(v); } catch { return String(v); }
 }
-
+function buildEntry(level: LogLevel, ctx: LogContext|null, args: unknown[]): string {
+  const ts = new Date().toISOString();
+  const msg = args.map(serialize).join(' ');
+  if (IS_PROD) return JSON.stringify({ timestamp: ts, level: level.toUpperCase(), message: msg, ...(ctx ?? {}) });
+  const c = COLOURS[level]; const ctxStr = ctx ? ` ${JSON.stringify(ctx)}` : '';
+  return `[${ts}] ${c}${level.toUpperCase()}${RESET}${ctxStr} ${msg}`;
+}
+function out(level: LogLevel, entry: string) {
+  if (IS_TEST) return;
+  if (level === 'error') console.error(entry);
+  else if (level === 'warn') console.warn(entry);
+  else if (level === 'debug') console.debug(entry);
+  else console.info(entry);
+}
 export const logger = {
-  debug: (context: LogContext | null, ...args: unknown[]) => {
-    if (!isProduction || isDebugEnabled) {
-      console.log(formatLog('debug', args, context || undefined));
-    }
+  debug(ctx: LogContext|null, ...a: unknown[]) { if (!IS_PROD) out('debug', buildEntry('debug',ctx,a)); },
+  info (ctx: LogContext|null, ...a: unknown[]) { out('info',  buildEntry('info', ctx,a)); },
+  warn (ctx: LogContext|null, ...a: unknown[]) { out('warn',  buildEntry('warn', ctx,a)); },
+  error(ctx: LogContext|null, ...a: unknown[]) { out('error', buildEntry('error',ctx,a)); },
+  withContext(ctx: LogContext) {
+    return { debug:(...a:unknown[])=>logger.debug(ctx,...a), info:(...a:unknown[])=>logger.info(ctx,...a),
+             warn:(...a:unknown[])=>logger.warn(ctx,...a),  error:(...a:unknown[])=>logger.error(ctx,...a) };
   },
-
-  info: (context: LogContext | null, ...args: unknown[]) => {
-    console.info(formatLog('info', args, context || undefined));
-  },
-
-  warn: (context: LogContext | null, ...args: unknown[]) => {
-    console.warn(formatLog('warn', args, context || undefined));
-  },
-
-  error: (context: LogContext | null, ...args: unknown[]) => {
-    console.error(formatLog('error', args, context || undefined));
-  },
-
-  // Helper to create a request-scoped logger
-  withContext: (context: LogContext) => ({
-    debug: (...args: unknown[]) => logger.debug(context, ...args),
-    info: (...args: unknown[]) => logger.info(context, ...args),
-    warn: (...args: unknown[]) => logger.warn(context, ...args),
-    error: (...args: unknown[]) => logger.error(context, ...args),
-  }),
-};
+};

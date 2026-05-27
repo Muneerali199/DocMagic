@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 import axios from 'axios';
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
 
   } catch (error: any) {
-    console.error('Error parsing LinkedIn profile:', error);
+    logger.error({ route: 'app/api/linkedin/parse-profile/route.ts' }, 'Error parsing LinkedIn profile:', error);
     return NextResponse.json({ 
       error: error.message || 'Failed to parse LinkedIn profile',
       details: 'Please try using the manual import or JSON export option'
@@ -96,7 +97,7 @@ async function scrapeLinkedInProfile(url: string) {
 
     return profileData;
   } catch (error: any) {
-    console.error('Error scraping profile:', error.message);
+    logger.error({ route: 'app/api/linkedin/parse-profile/route.ts' }, 'Error scraping profile:', error.message);
     
     // LinkedIn blocks automated requests with status 999
     if (error.response?.status === 999) {

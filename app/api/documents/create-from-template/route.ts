@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRoute } from '@/lib/supabase/server';
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating document:', createError);
+      logger.error({ route: 'app/api/documents/create-from-template/route.ts' }, 'Error creating document:', createError);
       return NextResponse.json(
         { error: 'Failed to create document' },
         { status: 500 }
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newDocument);
 
   } catch (error) {
-    console.error('Error in POST /api/documents/create-from-template:', error);
+    logger.error({ route: 'app/api/documents/create-from-template/route.ts' }, 'Error in POST /api/documents/create-from-template:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

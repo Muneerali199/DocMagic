@@ -1,5 +1,20 @@
+import { Metadata } from "next";
 import { SiteHeader } from '@/components/site-header';
 import PricingPlans from '@/components/pricing/pricing-plans';
+
+export const metadata: Metadata = {
+  title: "Pricing | DraftDeckAI",
+  description: "Explore our flexible pricing plans for individuals and teams. Get started for free and upgrade as you grow.",
+  openGraph: {
+    title: "Pricing | DraftDeckAI",
+    description: "Explore our flexible pricing plans for individuals and teams. Get started for free and upgrade as you grow.",
+    url: "https://draftdeckai.com/pricing",
+  },
+  twitter: {
+    title: "Pricing | DraftDeckAI",
+    description: "Explore our flexible pricing plans for individuals and teams. Get started for free and upgrade as you grow.",
+  },
+};
 
 export default function PricingPage() {
   return (

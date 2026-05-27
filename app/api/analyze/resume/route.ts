@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -292,7 +293,7 @@ export async function POST(request: Request) {
       { headers }
     );
   } catch (error) {
-    console.error('Server error:', error);
+    logger.error({ route: 'app/api/analyze/resume/route.ts' }, 'Server error:', error);
 
     return NextResponse.json(
       {

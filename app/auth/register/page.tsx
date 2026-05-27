@@ -11,6 +11,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+// 1. Import our custom tracker
+import { useTrackEvent } from "@/hooks/useTrackEvent";
+
 import {
   Sparkles,
   Zap,
@@ -60,8 +64,6 @@ const GitHubIcon = () => (
   </svg>
 );
 
-
-
 function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,6 +82,9 @@ function RegisterForm() {
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
+  
+  // 2. Initialize the tracker
+  const { trackEvent } = useTrackEvent();
 
   // Animation mount effect
   useEffect(() => {
@@ -103,6 +108,10 @@ function RegisterForm() {
   // OAuth Sign In Handler
   const handleOAuthSignIn = async (provider: "google" | "github") => {
     setIsOAuthLoading(provider);
+    
+    // Track OAuth clicks
+    trackEvent("OAuth Signup Clicked", { provider });
+    
     try {
       const redirectTo = `${window.location.origin}/auth/callback?type=signup${referralCode ? `&ref=${referralCode}` : ""}`;
 
@@ -168,17 +177,38 @@ function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // Call our internal API route to register the user
+      // 3. Grab our trapped UTM data right before sending to the backend
+      let utmData = {};
+      if (typeof window !== "undefined") {
+        const savedUTMs = sessionStorage.getItem("draftdeck_utms");
+        if (savedUTMs) {
+          try {
+            utmData = JSON.parse(savedUTMs);
+          } catch (e) {
+            console.error("Failed to parse UTMs", e);
+          }
+        }
+      }
+
+      // 4. Inject the utmData into the payload
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, referralCode }),
+        body: JSON.stringify({ name, email, password, referralCode, utmData }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
         throw new Error(result.error || "Failed to create account");
+      }
+
+      // 5. Fire the grand finale Signup Completion event!
+      trackEvent("Signup Completed", { method: "email" });
+
+      // Optional: Clean up the session storage since the user has officially converted
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("draftdeck_utms");
       }
 
       toast({
@@ -188,11 +218,9 @@ function RegisterForm() {
           "Please check your email to verify your account before signing in.",
       });
 
-      // Persist success state and show verification instructions instead of redirecting
       setSubmittedEmail(email);
       setSuccess(true);
     } catch (error: any) {
-      // Enhanced error handling for Supabase registration
       let userMessage = "Failed to create account. Please try again.";
       if (error?.message) {
         if (
@@ -615,8 +643,7 @@ function RegisterForm() {
                       ? "text-yellow-500 animate-pulse"
                       : ""
                       }`}
-                  />
-                  Password
+                  />                  Password
                   {passwordStrength >= 3 && (
                     <Shield className="h-3 w-3 text-green-500 animate-scale-in" />
                   )}

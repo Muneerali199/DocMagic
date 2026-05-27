@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,20 @@ import {
   ArrowRight,
   Workflow
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About Us | DraftDeckAI",
+  description: "Learn about DraftDeckAI, our mission to democratize professional document creation, and the open-source community behind our platform.",
+  openGraph: {
+    title: "About Us | DraftDeckAI",
+    description: "Learn about DraftDeckAI, our mission to democratize professional document creation, and the open-source community behind our platform.",
+    url: "https://draftdeckai.com/about",
+  },
+  twitter: {
+    title: "About Us | DraftDeckAI",
+    description: "Learn about DraftDeckAI, our mission to democratize professional document creation, and the open-source community behind our platform.",
+  },
+};
 
 export default function AboutPage() {
   return (

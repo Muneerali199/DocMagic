@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+.env*.local
+.vscode
+.vercel
+coverage
+out
+*.md
+*.ps1
+*.sh
+deploy.ps1

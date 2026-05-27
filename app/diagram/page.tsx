@@ -3,44 +3,27 @@ import { SiteHeader } from "@/components/site-header";
 import { DiagramGenerator } from "@/components/diagram/diagram-generator";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, Workflow, Zap, Star, Wand2, Share2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { DiagramGeneratorSkeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { useShare } from "@/hooks/use-share";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function DiagramPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+
+  const { copied, shareViaWebShare } = useShare();
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClick = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-
-      setCopied(true)
-
-      setTimeout(() => {
-        setCopied(false)
-      }, 2000);
-
-      toast({
-        title: "Copied!",
-        description: "Link copied to clipboard.",
-      });
-
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy link.",
-        variant: "destructive",
-      });
-    }
-  };
+  const handleShare = useCallback(() => {
+    shareViaWebShare({
+      title: "DraftDeckAI Diagram Studio",
+      text: "Create visual diagrams and flowcharts with AI guidance!",
+    });
+  }, [shareViaWebShare]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -63,11 +46,25 @@ export default function DiagramPage() {
         <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
           {/* Enhanced Header */}
           <div className="text-center mb-8 sm:mb-12">
-            <div onClick={handleClick} className="inline-flex items-center cursor-pointer gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer">
-              <Workflow className="h-4 w-4 text-yellow-500" />
-              <span className={`text-sm font-medium ${copied ? "text-green-600" : ""}`}>{copied ? "Link Copied ✓" : "Diagram Studio"}</span>
-              <Share2 className="h-4 w-4 text-blue-500" />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 sm:mb-6 shimmer hover:scale-105 transition-transform cursor-pointer active:scale-95"
+                  >
+                    <Workflow className="h-4 w-4 text-yellow-500" />
+                    <span className={`text-sm font-medium ${copied ? "text-green-600" : ""}`}>
+                      {copied ? "Link Copied ✓" : "Diagram Studio"}
+                    </span>
+                    <Share2 className="h-4 w-4 text-blue-500" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{copied ? "Link Copied!" : "Share Diagram Studio"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight ">
               Create Visual{" "}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/hooks/use-user';
 import { EnhancedEditorToolbar } from '@/components/editor/enhanced-toolbar';
@@ -105,10 +105,7 @@ function EditorContent() {
           toast.success(`Template "${template.title}" loaded! Start editing.`);
         }
       } catch (error) {
-        logger.error(
-          'Error loading content:',
-           error instanceof Error ? error.message : String(error)
-      );
+        logger.error(null, 'Error loading content:', error instanceof Error ? error.message : String(error));
         toast.error('Failed to load content');
       } finally {
         setIsLoading(false);
@@ -117,6 +114,17 @@ function EditorContent() {
 
     loadContent();
   }, [templateId, documentId, user, router]);
+
+  const lastSavedContent = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!canvas || !documentData) return;
+
+    lastSavedContent.current = JSON.stringify({
+      content: canvas.toJSON(),
+      title: documentTitle,
+    });
+  }, [canvas, documentData?.id, documentTitle]);
 
   // Auto-save functionality
   const handleSave = useCallback(async () => {
@@ -128,9 +136,14 @@ function EditorContent() {
     }
     
     try {
-      setIsSaving(true);
-      
       const canvasData = canvas.toJSON();
+      const serializedData = JSON.stringify({ content: canvasData, title: documentTitle });
+      
+      if (lastSavedContent.current === serializedData) {
+        return; // Skip saving if no changes
+      }
+
+      setIsSaving(true);
       
       const response = await fetch(`/api/documents/${documentData.id}`, {
         method: 'PUT',
@@ -142,12 +155,10 @@ function EditorContent() {
         })
       });
       
-      if (!response.ok) {
-        console.error('Save failed:', response.status);
-        // Don't show error for temporary documents
-        return;
-      }
+      if (!response.ok) throw new Error('Failed to save');
       
+      lastSavedContent.current = serializedData;
+
       // Broadcast change to collaborators
       if (sessionId) {
         await collaborationService.broadcastChange({
@@ -160,10 +171,10 @@ function EditorContent() {
         });
       }
       
-      toast.success('Saved successfully', { duration: 2000 });
+      toast.success('Document saved');
     } catch (error) {
       console.error('Error saving:', error);
-      // Silent fail for now since database might not be ready
+      toast.error('Failed to save document');
     } finally {
       setIsSaving(false);
     }

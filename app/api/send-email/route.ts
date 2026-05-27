@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import nodemailer from 'nodemailer';
-import { z } from 'zod';
-import { emailSchema, sanitizeHtml, sanitizeInput, sanitizeObject } from '@/lib/validation';
+import { RequestValidationError, safeParseBody, sanitizeObject, sendEmailSchema } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { withErrorHandling } from '@/lib/error-handler';
 
 
 export const dynamic = 'force-dynamic';
@@ -19,31 +19,7 @@ const EMAIL_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000 // 15 minutes
 };
 
-const sendEmailSchema = z.object({
-  to: emailSchema,
-  subject: z.string().min(1, 'Subject is required').max(200, 'Subject is too long'),
-  content: z.string().max(5000, 'Content is too long').optional().nullable(),
-  fromName: z.string().max(100, 'From name is too long').optional().nullable(),
-  fromEmail: z.string().max(254, 'From email is too long').refine((val: string) => {
-    if (!val) return true;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  }, 'Invalid from email').optional().nullable(),
-  letterContent: z.object({
-    from: z.object({
-      name: z.string().max(100).optional().nullable(),
-      address: z.string().max(200).optional().nullable(),
-    }).optional().nullable(),
-    to: z.object({
-      name: z.string().max(100).optional().nullable(),
-      address: z.string().max(200).optional().nullable(),
-    }).optional().nullable(),
-    date: z.string().max(100).optional().nullable(),
-    subject: z.string().max(200).optional().nullable(),
-    content: z.string().max(10000, 'Letter content is too long').optional().nullable(),
-  }),
-});
-
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const requestId = getRequestId(request.headers);
   const log = logger.withContext({ requestId });
   incrementRequestCount();
@@ -84,26 +60,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Request Body Parsing & Validation (Run before rate limit so malformed requests don't consume quota)
-    let rawBody;
+    let validatedEmail;
     try {
-      rawBody = await request.json();
-    } catch {
+      validatedEmail = await safeParseBody(request, sendEmailSchema);
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
+        JSON.stringify({ error: validationError.message, details: validationError.details }),
         { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
-    const validationResult = sendEmailSchema.safeParse(rawBody);
-    if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors.map((e: any) => e.message).join(', ');
-      return new Response(
-        JSON.stringify({ error: `Validation failed: ${errorMessage}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
-      );
-    }
-
-    const { to, subject, content, fromName, fromEmail, letterContent } = validationResult.data;
+    const { to, subject, content, fromName, fromEmail, letterContent } = validatedEmail;
 
     // 3. Rate Limiting Check using the shared utility
     const rateLimitResult = checkRateLimit(user.id, EMAIL_RATE_LIMIT);
@@ -254,3 +224,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withErrorHandling(postHandler);
