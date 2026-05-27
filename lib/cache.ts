@@ -109,6 +109,30 @@ export const cache = new BoundedCache(1_000, 5 * 60 * 1000);
 export const aiCache = new BoundedCache(500, 30 * 60 * 1000);
 export const userCache = new BoundedCache(2_000, 2 * 60 * 1000);
 
+// ---------------------------------------------------------------------------
+// Distributed cache adapter
+//
+// When UPSTASH_REDIS_URL and UPSTASH_REDIS_TOKEN are set, all consumers that
+// import `distributedCache` share data across multiple server instances.
+// Otherwise, the module falls back to the in-memory BoundedCache so the app
+// works in single-instance environments (local dev, preview deploys, etc.)
+// without any additional configuration.
+//
+// See lib/cache-redis.ts for the RedisCache implementation.
+// ---------------------------------------------------------------------------
+import { RedisCache, isRedisConfigured } from '@/lib/cache-redis';
+
+/**
+ * Unified cache that is Redis-backed when UPSTASH_REDIS_URL is configured
+ * and falls back to an in-memory BoundedCache otherwise.
+ *
+ * Use this instead of `cache` for data that must be shared across multiple
+ * server instances (horizontal scaling).
+ */
+export const distributedCache: BoundedCache | RedisCache = isRedisConfigured()
+  ? new RedisCache(5 * 60 * 1000)
+  : cache;
+
 export function memoizeAsync<A extends unknown[], R>(
   fn: (...a: A) => Promise<R>,
   keyFn: (...a: A) => string,

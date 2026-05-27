@@ -91,6 +91,7 @@
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/fabric": "^5.3.10",
     "@types/file-saver": "^2.0.7",
+    "@upstash/redis": "^1.38.0",
     "axios": "^1.15.2",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.1.2",
