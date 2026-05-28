@@ -14,6 +14,7 @@ const createJestConfig = nextJest({ dir: './' });
 const config = {
   testEnvironment: 'jsdom',
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/a11y/'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
   setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
