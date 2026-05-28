@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
   }
 
-  console.log('✅ Webhook event received:', event.type);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Webhook event received:', event.type);
 
   try {
     switch (event.type) {
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, `Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
@@ -87,7 +87,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     return;
   }
 
-  console.log('💰 Checkout completed for user:', userId);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '💰 Checkout completed for user:', userId);
 
   // Get subscription details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -134,7 +134,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     return;
   }
 
-  console.log('🔄 Subscription updated for user:', userId);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '🔄 Subscription updated for user:', userId);
 
   const priceId = subscription.items.data[0].price.id;
 
@@ -177,7 +177,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return;
   }
 
-  console.log('❌ Subscription deleted for user:', userId);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '❌ Subscription deleted for user:', userId);
 
   // Update subscription status to canceled
   const { error } = await supabase
@@ -209,7 +209,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  console.log('✅ Payment succeeded for user:', subscription.user_id);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Payment succeeded for user:', subscription.user_id);
 
   // Record payment in history
   const { error } = await supabase
@@ -247,7 +247,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     return;
   }
 
-  console.log('❌ Payment failed for user:', subscription.user_id);
+  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '❌ Payment failed for user:', subscription.user_id);
 
   // Update subscription status
   const { error: subError } = await supabase

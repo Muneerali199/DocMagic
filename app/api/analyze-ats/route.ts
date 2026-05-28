@@ -297,7 +297,7 @@ ${resumeText}`;
       if (logError) {
         logger.error({ route: 'app/api/analyze-ats/route.ts' }, 'Failed to log credit usage:', logError);
       } else {
-        console.log(`💳 Deducted ${creditCost} credits for ATS analysis`);
+        // console.log(`💳 Deducted ${creditCost} credits for ATS analysis`);
       }
     }
 

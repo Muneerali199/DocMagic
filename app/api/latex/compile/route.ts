@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Attempting LaTeX compilation via LaTeX.Online...');
+    // console.log('Attempting LaTeX compilation via LaTeX.Online...');
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     try {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         const contentType = response.headers.get('content-type');
 
         if (contentType?.includes('application/pdf')) {
-          console.log('LaTeX compiled successfully!');
+          // console.log('LaTeX compiled successfully!');
           const pdfBuffer = await response.arrayBuffer();
           return new NextResponse(pdfBuffer, {
             headers: {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           throw new Error('Timeout');
         }
 
-        console.log('Trying alternative compilation method...');
+        // console.log('Trying alternative compilation method...');
 
         const altController = new AbortController();
         const altTimeoutId = setTimeout(() => altController.abort(), 45000);
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
           if (altResponse.ok) {
             const altContentType = altResponse.headers.get('content-type');
             if (altContentType?.includes('application/pdf')) {
-              console.log('LaTeX compiled via alternative service!');
+              // console.log('LaTeX compiled via alternative service!');
               const pdfBuffer = await altResponse.arrayBuffer();
               return new NextResponse(pdfBuffer, {
                 headers: {
