@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 const { NextResponse } = require('next/server');
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -98,7 +99,7 @@ Please return only valid JSON without any markdown formatting or additional text
       const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       generatedTemplate = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', text);
+      logger.error({ route: 'app/api/ai/generate-template/route.ts' }, 'Failed to parse AI response:', text);
       return NextResponse.json(
         { error: 'Failed to generate valid template structure' },
         { status: 500 }
@@ -115,7 +116,7 @@ Please return only valid JSON without any markdown formatting or additional text
     return NextResponse.json(generatedTemplate);
 
   } catch (error) {
-    console.error('Error generating AI template:', error);
+    logger.error({ route: 'app/api/ai/generate-template/route.ts' }, 'Error generating AI template:', error);
     return NextResponse.json(
       { error: 'Failed to generate template' },
       { status: 500 }

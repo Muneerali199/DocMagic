@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createRoute } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
@@ -35,7 +36,7 @@ export async function GET(
 
     return NextResponse.json(shares);
   } catch (error) {
-    console.error('Error fetching template shares:', error);
+    logger.error({ route: 'app/api/templates/[id]/shares/route.ts' }, 'Error fetching template shares:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -113,7 +114,7 @@ export async function POST(
 
     return NextResponse.json(share, { status: 201 });
   } catch (error) {
-    console.error('Error sharing template:', error);
+    logger.error({ route: 'app/api/templates/[id]/shares/route.ts' }, 'Error sharing template:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

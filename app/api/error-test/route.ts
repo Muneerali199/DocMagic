@@ -34,7 +34,7 @@ async function handler(request: NextRequest) {
       try {
         throw new DatabaseError(`Mock Spike Error #${i} for alert threshold verification.`);
       } catch (err) {
-        captureException(err, {
+        await captureException(err, {
           requestId: `mock-spike-id-${i}-${Date.now()}`,
           path: '/api/error-test',
           method: 'GET',

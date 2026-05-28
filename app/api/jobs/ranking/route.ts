@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { computeFinalScore, defaultEngagement } from "@/lib/showcase/ranking";
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
       .gte("created_at", burstWindow);
 
     if (burstError) {
-      console.error("[ranking-job] burst detection query failed:", burstError);
+      logger.error({ route: 'app/api/jobs/ranking/route.ts' }, "[ranking-job] burst detection query failed:", burstError);
       throw burstError;
     }
 
@@ -135,7 +136,7 @@ export async function GET(req: NextRequest) {
     return Response.json({ processed: posts.length, elapsed_ms });
 
   } catch (err) {
-    console.error("[ranking-job] error:", err);
+    logger.error({ route: 'app/api/jobs/ranking/route.ts' }, "[ranking-job] error:", err);
     return Response.json({ error: String(err) }, { status: 500 });
   }
 }

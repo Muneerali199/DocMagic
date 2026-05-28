@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from "next/server";
 import { createRoute } from "@/lib/supabase/server";
 import { hashIp, getClientIp } from "@/lib/showcase/ip";
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       .gte("created_at", burstWindow);
 
     if (burstCountError) {
-  console.error("[showcase/engage] burst count error:", burstCountError);
+  logger.error({ route: 'app/api/showcase/[id]/engage/route.ts' }, "[showcase/engage] burst count error:", burstCountError);
 }
 
 if ((count ?? 0) >= BURST_LIKE_THRESHOLD) {
@@ -124,7 +125,7 @@ if ((count ?? 0) >= BURST_LIKE_THRESHOLD) {
     });
 
   if (insertError) {
-    console.error("[showcase/engage] insert error:", insertError);
+    logger.error({ route: 'app/api/showcase/[id]/engage/route.ts' }, "[showcase/engage] insert error:", insertError);
     return Response.json({ error: "Failed to record event" }, { status: 500 });
   }
 

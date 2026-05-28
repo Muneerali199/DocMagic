@@ -3,6 +3,9 @@
  */
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { getPerformanceStats, getQueryStats } from '@/lib/performance-optimizer';
+import { queryCache } from '@/lib/query-cache';
+import { getGlobalQueue } from '@/lib/concurrent-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +74,10 @@ export async function GET() {
         memory: { heapUsedMb: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1) },
         services,
         responseTimeMs: Date.now() - t,
+        performanceStats: getPerformanceStats(),
+        queryStats: getQueryStats(),
+        cacheStats: queryCache.getStats(),
+        queue: getGlobalQueue().getStats(),
       },
       {
         status: overall === 'unhealthy' ? 503 : 200,

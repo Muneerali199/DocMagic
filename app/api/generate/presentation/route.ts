@@ -1,12 +1,14 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
+import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -53,53 +55,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get or create user credits
-    let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    // If no credits record exists, create one
+    // Get or create user credits (cached, 15 s TTL)
+    const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        console.error('Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
-    }
-
-    // Check if credits need reset
-    if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (updatedCredits) {
-        userCredits = updatedCredits;
-      }
+      return NextResponse.json(
+        { error: 'Failed to initialize credits' },
+        { status: 500 }
+      );
     }
 
     // Check if user has enough credits - use validated page count
@@ -128,6 +90,7 @@ export async function POST(request: NextRequest) {
     // Atomically reserve the estimated credit cost BEFORE generation to
     // prevent the TOCTOU race documented in issue #477. If the model returns
     // fewer slides than requested we refund the difference below.
+    let creditsUsedAfterReserve = userCredits.credits_used;
     if (!hasUnlimitedCredits) {
       const reserved = await reserveCredits(
         supabaseAdmin,
@@ -135,13 +98,14 @@ export async function POST(request: NextRequest) {
         userCredits.credits_used,
         estimatedCreditCost
       );
+      invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
           { status: 402 }
         );
       }
-      userCredits = reserved;
+      creditsUsedAfterReserve = reserved.credits_used;
     }
 
     // Generate presentation outline first
@@ -154,6 +118,7 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       if (!hasUnlimitedCredits) {
         await refundCredits(supabaseAdmin, user.id, estimatedCreditCost);
+        invalidateUserCredits(user.id);
       }
       throw err;
     }
@@ -171,31 +136,22 @@ export async function POST(request: NextRequest) {
 
     // If fewer slides were generated than reserved, refund the difference.
     const overReserved = estimatedCreditCost - actualCreditCost;
+    let creditsUsedAfterRefund = creditsUsedAfterReserve;
     if (overReserved > 0) {
       const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
       if (!refunded) {
-        console.error(`Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+        logger.error({ route: 'app/api/generate/presentation/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+      } else {
+        creditsUsedAfterRefund = Math.max(0, creditsUsedAfterReserve - overReserved);
       }
+      invalidateUserCredits(user.id);
     }
 
-    // Log the actual usage now that generation succeeded.
-    const { error: logError } = await supabaseAdmin
+    // Fire-and-forget: log write does not block the response
+    supabaseAdmin
       .from('credit_usage_log')
-      .insert({
-        user_id: user.id,
-        action: 'presentation',
-        credits_used: actualCreditCost,
-        metadata: {
-          pageCount: slides.length,
-          prompt_length: prompt.length
-        }
-      });
-
-    if (logError) {
-      console.error('Failed to log credit usage:', logError);
-    } else {
-      console.log(`💳 Deducted ${actualCreditCost} credits for ${slides.length}-slide presentation`);
-    }
+      .insert({ user_id: user.id, action_type: 'presentation', credits_used: actualCreditCost, metadata: { pageCount: slides.length, prompt_length: prompt.length } })
+      .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
 
     return NextResponse.json({
       slides,
@@ -203,12 +159,12 @@ export async function POST(request: NextRequest) {
         used: actualCreditCost,
         remaining: calculateRemainingCredits(
           userCredits.credits_total,
-          userCredits.credits_used - overReserved
+          creditsUsedAfterRefund
         )
       }
     });
   } catch (error) {
-    console.error('Error generating presentation:', error);
+    logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Error generating presentation:', error);
     return NextResponse.json(
       { error: 'Failed to generate presentation' },
       { status: 500 }

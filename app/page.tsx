@@ -6,6 +6,7 @@ import { TestimonialsSection } from "@/components/testimonials-section";
 import { DocumentCard } from "@/components/document-card";
 import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import Script from 'next/script';
 import Link from "next/link";
 import {
   File as FileIcon,
@@ -47,7 +48,33 @@ export const metadata: Metadata = {
     description: "DraftDeckAI uses advanced AI to create ATS-friendly resumes, stunning presentations, and professional letters in seconds.",
   },
 };
-
+/**
+ * Structured data for SEO purposes.
+ * Combines Organization and SoftwareApplication JSON-LD schemas
+ * to enhance search engine visibility for DraftdeckAI.
+ */
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://draftdeckai.com/#organization",
+      "name": "DraftdeckAI",
+      "url": "https://draftdeckai.com",
+      "logo": "https://draftdeckai.com/draftdeckai-logo.svg",
+      "description": "An open-source platform to build presentations and documents with AI."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://draftdeckai.com/#software",
+      "name": "DraftdeckAI",
+      "url": "https://draftdeckai.com",
+      "description": "An open-source platform to build presentations and documents with AI.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All"
+    }
+  ]
+};
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
@@ -328,6 +355,11 @@ export default async function Home() {
         <TestimonialsSection />
         <ScrollToTop />
       </main>
+      <Script
+        id="structured-data"
+       type="application/ld+json"
+       dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
     </div>
   );
 }

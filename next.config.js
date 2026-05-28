@@ -1,4 +1,5 @@
 import withPWACore from 'next-pwa';
+import { CSP_HEADER } from './lib/csp.mjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -57,8 +58,9 @@ trailingSlash: false,
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
           {
+            // Source of truth: lib/csp.ts (and its JS companion lib/csp.mjs)
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data: https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com https://latexonline.cc https://latex.ytotech.com https://cdn.jsdelivr.net; frame-src 'self' blob: https://js.stripe.com; object-src 'self' blob:; worker-src 'self' blob:; base-uri 'self';"
+            value: CSP_HEADER,
           }
         ]
       }

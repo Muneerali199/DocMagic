@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import nodemailer from 'nodemailer';
 
 // Helper to create a reusable Nodemailer transporter.
@@ -12,7 +13,7 @@ async function createTransporter() {
   const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_FROM || 'noreply@draftdeckai.com';
 
   if (host && user && pass) {
-    console.log(`[Email] Using SMTP: ${host}:${port}`);
+    
     return nodemailer.createTransport({
       host,
       port: parseInt(port),
@@ -25,7 +26,7 @@ async function createTransporter() {
   }
 
   // Fallback: create a test account for local development
-  console.log('[Email] No SMTP config found, using Ethereal test account');
+  logger.info(null, '[Email] No SMTP config found, using Ethereal test account')
   const testAccount = await nodemailer.createTestAccount();
   return nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -114,9 +115,9 @@ export async function sendWelcomeEmail(to: string, name?: string) {
 
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
-      console.log(`[Email] Welcome email preview URL: ${previewUrl}`);
+      
     }
-    console.log(`[Email] Welcome email sent to ${to}`);
+    
     return { info, previewUrl };
   } catch (error) {
     console.error('[Email] Failed to send welcome email:', error);
@@ -199,9 +200,9 @@ export async function sendVerificationEmail(to: string, confirmationUrl: string,
 
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
-      console.log(`[Email] Verification email preview URL: ${previewUrl}`);
+      
     }
-    console.log(`[Email] Verification email sent to ${to}`);
+    
     return { info, previewUrl };
   } catch (error) {
     console.error('[Email] Failed to send verification email:', error);

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import { createClient } from '@supabase/supabase-js';
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      logger.error({ route: 'app/api/linkedin/import-pdf/route.ts' }, 'Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ profile });
   } catch (error: any) {
-    console.error("LinkedIn PDF import error:", error);
+    logger.error({ route: 'app/api/linkedin/import-pdf/route.ts' }, "LinkedIn PDF import error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to parse LinkedIn PDF" },
       { status: 500 }
@@ -81,7 +82,7 @@ async function parsePdfToText(buffer: Buffer): Promise<string> {
     const data = await pdfParse(buffer);
     return data.text;
   } catch (error) {
-    console.error("PDF parsing error:", error);
+    logger.error({ route: 'app/api/linkedin/import-pdf/route.ts' }, "PDF parsing error:", error);
     throw new Error("Failed to parse PDF file");
   }
 }
@@ -175,7 +176,7 @@ Extract as much information as possible. If a field is not found, omit it or use
 
     return profileData;
   } catch (error: any) {
-    console.error("AI extraction error:", error);
+    logger.error({ route: 'app/api/linkedin/import-pdf/route.ts' }, "AI extraction error:", error);
     throw new Error("Failed to extract profile data: " + error.message);
   }
 }

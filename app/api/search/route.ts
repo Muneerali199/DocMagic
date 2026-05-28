@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { searchDocuments, suggestCorrection } from '@/lib/search-engine'
 import type { SearchableDocument } from '@/lib/search-engine'
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
       const { data: documents, error: docError } = await docQuery
       if (docError) {
-        console.error('Error fetching documents:', docError)
+        logger.error({ route: 'app/api/search/route.ts' }, 'Error fetching documents:', docError)
         return NextResponse.json(
           { error: 'Failed to fetch user documents' },
           { status: 500 }
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         .eq('user_id', user.id)
 
       if (templateError) {
-        console.error('Error fetching templates:', templateError)
+        logger.error({ route: 'app/api/search/route.ts' }, 'Error fetching templates:', templateError)
         return NextResponse.json(
           { error: 'Failed to fetch user templates' },
           { status: 500 }
@@ -181,7 +182,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       query,
     })
   } catch (error) {
-    console.error('Search error:', error)
+    logger.error({ route: 'app/api/search/route.ts' }, 'Search error:', error)
     return NextResponse.json(
       { error: 'Search failed. Please try again.' },
       { status: 500 }

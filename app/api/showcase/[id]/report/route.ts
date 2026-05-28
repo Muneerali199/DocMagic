@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from "next/server";
 import { createRoute } from "@/lib/supabase/server";
 import { REPORT_AUTO_HIDE_THRESHOLD } from "@/lib/showcase/ranking.config";
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         { status: 409 }
       );
     }
-    console.error("[showcase/report] error:", reportError);
+    logger.error({ route: 'app/api/showcase/[id]/report/route.ts' }, "[showcase/report] error:", reportError);
     return Response.json({ error: "Failed to submit report" }, { status: 500 });
   }
 

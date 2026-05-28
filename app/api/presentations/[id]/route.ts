@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -26,7 +27,7 @@ export async function GET(
       .single();
 
     if (error || !data) {
-      console.error('Error fetching presentation:', error);
+      logger.error({ route: 'app/api/presentations/[id]/route.ts' }, 'Error fetching presentation:', error);
       return NextResponse.json(
         { error: 'Presentation not found' },
         { status: 404 }
@@ -56,7 +57,7 @@ export async function GET(
       user_id: data.user_id
     });
   } catch (error) {
-    console.error('Error in presentation view API:', error);
+    logger.error({ route: 'app/api/presentations/[id]/route.ts' }, 'Error in presentation view API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

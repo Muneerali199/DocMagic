@@ -13,7 +13,6 @@ export function SimpleThemeToggle() {
   }, []);
 
   const handleClick = () => {
-    console.log("Simple theme toggle clicked!", { resolvedTheme });
     const newTheme = resolvedTheme === "dark" ? "light" : "dark";
     setTheme(newTheme);
   };

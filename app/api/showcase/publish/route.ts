@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from "next/server";
 import { createRoute } from "@/lib/supabase/server";
 import { computeQualityScore } from "@/lib/showcase/quality";
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (postError || !post) {
-    console.error("[showcase/publish] insert error:", postError);
+    logger.error({ route: 'app/api/showcase/publish/route.ts' }, "[showcase/publish] insert error:", postError);
     return Response.json({ error: "Failed to create post" }, { status: 500 });
   }
 
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
       .insert(normalisedTags.map((tag) => ({ post_id: post.id, tag })));
 
     if (tagError) {
-      console.error("[showcase/publish] tag insert error:", tagError);
+      logger.error({ route: 'app/api/showcase/publish/route.ts' }, "[showcase/publish] tag insert error:", tagError);
       // Non-fatal — post is still published
     }
   }
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
     });
 
   if (scoreError) {
-    console.error("[showcase/publish] score upsert error:", scoreError);
+    logger.error({ route: 'app/api/showcase/publish/route.ts' }, "[showcase/publish] score upsert error:", scoreError);
     // Non-fatal
   }
 

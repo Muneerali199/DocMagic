@@ -68,9 +68,9 @@ export const TIER_FEATURES: Record<Tier, string[]> = {
 };
 
 // Developer/testing credit bypass
-const DEVELOPER_BYPASS_EMAILS = new Set([
-  'alimuneerali245@gmail.com',
-]);
+const DEVELOPER_BYPASS_EMAILS = new Set(
+  process.env.DEVELOPER_BYPASS_EMAILS?.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean) ?? []
+);
 
 export function hasUnlimitedDeveloperCredits(email?: string | null): boolean {
   if (!email) return false;

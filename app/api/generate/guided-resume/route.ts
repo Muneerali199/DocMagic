@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
         .single();
 
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/generate/guided-resume/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
         .eq('user_id', user.id);
 
       if (updateError) {
-        console.error('Failed to deduct credits:', updateError);
+        logger.error({ route: 'app/api/generate/guided-resume/route.ts' }, 'Failed to deduct credits:', updateError);
       } else {
         await supabaseAdmin
           .from('credit_usage_log')
@@ -161,7 +162,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(resume);
   } catch (error) {
-    console.error('Error generating guided resume:', error);
+    logger.error({ route: 'app/api/generate/guided-resume/route.ts' }, 'Error generating guided resume:', error);
     return NextResponse.json(
       { error: 'Failed to generate resume' },
       { status: 500 }

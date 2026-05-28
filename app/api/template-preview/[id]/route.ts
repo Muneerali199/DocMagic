@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -33,7 +34,7 @@ export async function GET(
       'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=600&fit=crop&q=80'
     );
   } catch (error) {
-    console.error('Error generating preview:', error);
+    logger.error({ route: 'app/api/template-preview/[id]/route.ts' }, 'Error generating preview:', error);
     return NextResponse.redirect(
       'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=600&fit=crop&q=80'
     );

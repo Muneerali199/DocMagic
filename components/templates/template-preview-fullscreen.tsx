@@ -165,13 +165,16 @@ export function TemplatePreviewFullScreen({
                         className="relative"
                         style={{ transform: `scale(${zoom / 100})` }}
                       >
-                        <Image
-                          src={previewImages[currentSlide]}
-                          alt={`${template.name} - Slide ${currentSlide + 1}`}
-                          className="max-w-full h-auto rounded-lg shadow-2xl"
-                          width={1280}
-                          height={720}
-                        />
+                       <Image
+  src={previewImages[currentSlide]}
+  alt={`${template.name} - Slide ${currentSlide + 1}`}
+  className="max-w-full h-auto rounded-lg shadow-2xl"
+  width={1280}
+  height={720}
+  loading="lazy"
+  placeholder="blur"
+  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+/>
                       </motion.div>
                     ) : (
                       <div

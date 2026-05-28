@@ -163,13 +163,17 @@ export async function dispatchErrorAlert(errorDetails: any) {
   // If Slack Webhook is configured
   if (process.env.SLACK_WEBHOOK_URL) {
     try {
-      await fetch(process.env.SLACK_WEBHOOK_URL, {
+      const res = await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: `*${alertPayload.title}*\n*Endpoint:* ${alertPayload.endpoint}\n*Request ID:* \`${alertPayload.requestId}\`\n*Environment:* \`${alertPayload.environment}\``,
+          text: `...`,
         }),
+        signal: AbortSignal.timeout(5000),
       });
+      if (!res.ok) {
+        logger.error(null, `Slack alert failed: ${res.status} ${res.statusText}`);
+      }
     } catch (e) {
       logger.error(null, 'Failed to dispatch Slack alert', e);
     }
@@ -194,7 +198,7 @@ function dispatchSpikeAlert(rate: number, total: number, errors: number) {
  * ==========================================
  */
 
-export function captureException(error: any, requestContext: {
+export async function captureException(error: any, requestContext: {
   requestId: string;
   path: string;
   method: string;
@@ -277,7 +281,7 @@ export function captureException(error: any, requestContext: {
   }
 
   // 4. Alert Routing
-  dispatchErrorAlert(errorDetails);
+  await dispatchErrorAlert(errorDetails);
 
   return errorDetails;
 }
@@ -359,7 +363,7 @@ export function withErrorHandling(handler: ApiHandler): ApiHandler {
       }
 
       // Capture and track exception details
-      const caughtDetails = captureException(error, requestContext);
+      const caughtDetails = await captureException(error, requestContext);
 
       // Standardized production-grade error response
       const isOperational = error instanceof AppError && error.isOperational;
