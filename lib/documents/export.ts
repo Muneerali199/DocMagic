@@ -329,7 +329,7 @@ function parseContentToParagraphs(content: string): Paragraph[] {
  *   **text**   → bold
  *   *text*     → italic
  */
-function parseInlineFormatting(text: string, fontSize: number = 22): TextRun[] {
+export function parseInlineFormatting(text: string, fontSize: number = 22): TextRun[] {
   const runs: TextRun[] = [];
   // Regex matches: ***bold italic***, **bold**, *italic*, or plain text segments
   const pattern = /(\*{3}(.+?)\*{3})|(\*{2}(.+?)\*{2})|(\*(.+?)\*)|([^*]+)/g;
@@ -398,7 +398,7 @@ function createVisualParagraphs(visual: VisualTag): Paragraph[] {
 /**
  * Format content for HTML export
  */
-function formatContentForHtml(content: string): string {
+export function formatContentForHtml(content: string): string {
   return content
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
@@ -425,7 +425,7 @@ function formatDocumentType(type: string): string {
 /**
  * Sanitize filename
  */
-function sanitizeFilename(title: string): string {
+export function sanitizeFilename(title: string): string {
   return title
     .replace(/[^a-z0-9\s-]/gi, '')
     .replace(/\s+/g, '-')
