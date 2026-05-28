@@ -2,8 +2,6 @@ import { notFound } from 'next/navigation';
 import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
- restrict-diagnostic-page
-
     // Restrict diagnostic page in production
   if (process.env.NODE_ENV === 'production') {
     return (
@@ -23,8 +21,6 @@ export default async function DiagnosticPage() {
   if (!diagnosticsEnabled) {
     notFound();
   }
-
- main
 
   // Check if tables exist by trying to query them
   let tablesStatus = {

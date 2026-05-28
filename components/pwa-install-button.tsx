@@ -38,7 +38,8 @@ export const PWAInstallButton = React.forwardRef<HTMLButtonElement, PWAInstallBu
           ref={ref}
           variant={variant}
           size={size}
-          className={cn('cursor-default', className)}
+          className={cn('cursor-default focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2', className)}
+          aria-label="App already installed"
           disabled
         >
           <Check className="h-4 w-4" />
@@ -52,11 +53,12 @@ export const PWAInstallButton = React.forwardRef<HTMLButtonElement, PWAInstallBu
     }
 
     return (
+      // main install button with focus-visible styles and aria-label for accessibility
       <Button
         ref={ref}
         variant={variant}
         size={size}
-        className={cn(className, 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2')}
+        className={cn('focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2', className)}
         onClick={handleInstall}
         disabled={isInstalling}
         aria-label={isInstalling ? "Installing app, please wait" : "Install DraftDeckAI as an app"}

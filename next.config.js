@@ -43,6 +43,7 @@ trailingSlash: false,
   experimental: {
     optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
     scrollRestoration: true,
+    serverComponentsExternalPackages: ['canvas'],
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
