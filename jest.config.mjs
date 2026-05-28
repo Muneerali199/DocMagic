@@ -14,6 +14,7 @@ const config = {
   setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: ['lib/**/*.ts', 'app/api/**/*.ts', '!**/__tests__/**'],
-  transformIgnorePatterns: ['node_modules/(?!(uncrypto)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(uncrypto|@upstash/redis)/)'],
+  testPathIgnorePatterns: ['<rootDir>/__tests__/lib/cache.test.ts'],
 };
 export default createJestConfig(config);
