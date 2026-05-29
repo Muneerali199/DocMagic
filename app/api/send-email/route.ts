@@ -6,15 +6,20 @@ import {
 
 import { NextRequest } from 'next/server';
 import nodemailer from 'nodemailer';
-import { z } from 'zod';
-import { emailSchema, sanitizeHtml, sanitizeInput } from '@/lib/validation';
+import { RequestValidationError, safeParseBody, sanitizeObject, sendEmailSchema } from '@/lib/validation';
 import { createRoute } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
-import { logSecurityEvent } from '@/lib/security';
+import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
+import { logger } from '@/lib/logger';
+import { getRequestId } from '@/lib/request-id';
+import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { withErrorHandling } from '@/lib/error-handler';
+
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+feat/request-id-tracing
 // Rate limiting store: 5 requests per 15 minutes per user ID
 const rateLimitStore = new Map<string, { count: number; reset: number }>();
 
@@ -46,37 +51,18 @@ function checkRateLimit(userId: string): { allowed: boolean; remaining: number; 
   if (data.count >= MAX_REQUESTS_PER_WINDOW) {
     return { allowed: false, remaining: 0, reset: data.reset };
   }
+// Rate limiting configuration for email endpoint
+const EMAIL_RATE_LIMIT = {
+  requests: 5,
+  windowMs: 15 * 60 * 1000 // 15 minutes
+};
+ main
 
-  data.count++;
-  rateLimitStore.set(userId, data);
-  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - data.count, reset: data.reset };
-}
+async function postHandler(request: NextRequest) {
+  const requestId = getRequestId(request.headers);
+  const log = logger.withContext({ requestId });
+  incrementRequestCount();
 
-const sendEmailSchema = z.object({
-  to: emailSchema,
-  subject: z.string().min(1, 'Subject is required').max(200, 'Subject is too long'),
-  content: z.string().max(5000, 'Content is too long').optional().nullable(),
-  fromName: z.string().max(100, 'From name is too long').optional().nullable(),
-  fromEmail: z.string().max(254, 'From email is too long').refine((val: string) => {
-    if (!val) return true;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  }, 'Invalid from email').optional().nullable(),
-  letterContent: z.object({
-    from: z.object({
-      name: z.string().max(100).optional().nullable(),
-      address: z.string().max(200).optional().nullable(),
-    }).optional().nullable(),
-    to: z.object({
-      name: z.string().max(100).optional().nullable(),
-      address: z.string().max(200).optional().nullable(),
-    }).optional().nullable(),
-    date: z.string().max(100).optional().nullable(),
-    subject: z.string().max(200).optional().nullable(),
-    content: z.string().max(10000, 'Letter content is too long').optional().nullable(),
-  }),
-});
-
-export async function POST(request: NextRequest) {
   const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
   try {
@@ -105,73 +91,65 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      logSecurityEvent('UNAUTHORIZED_EMAIL_ATTEMPT', { authError, ip }, ip);
+      logSecurityEvent('UNAUTHORIZED_EMAIL_ATTEMPT', { authError, ip, requestId }, ip);
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Please sign in to send emails' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { status: 401, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
     // 2. Request Body Parsing & Validation (Run before rate limit so malformed requests don't consume quota)
-    let rawBody;
+    let validatedEmail;
     try {
-      rawBody = await request.json();
-    } catch {
+      validatedEmail = await safeParseBody(request, sendEmailSchema);
+    } catch (validationError) {
+      if (!(validationError instanceof RequestValidationError)) {
+        throw validationError;
+      }
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: validationError.message, details: validationError.details }),
+        { status: 400, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
       );
     }
 
-    const validationResult = sendEmailSchema.safeParse(rawBody);
-    if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors.map((e: any) => e.message).join(', ');
-      return new Response(
-        JSON.stringify({ error: `Validation failed: ${errorMessage}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const { to, subject, content, fromName, fromEmail, letterContent } = validatedEmail;
 
-    const { to, subject, content, fromName, fromEmail, letterContent } = validationResult.data;
-
-    // 3. Rate Limiting Check
-    const rateLimitResult = checkRateLimit(user.id);
+    // 3. Rate Limiting Check using the shared utility
+    const rateLimitResult = checkRateLimit(user.id, EMAIL_RATE_LIMIT);
     if (!rateLimitResult.allowed) {
-      logSecurityEvent('RATE_LIMIT_EXCEEDED_EMAIL', { userId: user.id, ip }, ip);
+      logSecurityEvent('RATE_LIMIT_EXCEEDED_EMAIL', { userId: user.id, ip, requestId }, ip);
       return new Response(
         JSON.stringify({ 
           error: 'Rate limit exceeded. Maximum 5 emails allowed per 15 minutes.',
-          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+          retryAfter: rateLimitResult.retryAfter
         }),
         { 
           status: 429,
           headers: {
             'Content-Type': 'application/json',
             'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+            'x-request-id': requestId,
           }
         }
       );
     }
 
-    // Sanitize string contents to prevent XSS/injection attacks inside HTML email rendering
-    const sanitizedFromName = fromName ? sanitizeHtml(fromName) : '';
-    const sanitizedFromEmail = fromEmail ? sanitizeHtml(fromEmail) : '';
-    const sanitizedSubject = sanitizeHtml(subject);
-    const sanitizedPersonalMessage = content ? sanitizeHtml(content) : '';
-    
-    const sanitizedLetterContent = {
-      from: {
-        name: letterContent.from?.name ? sanitizeHtml(letterContent.from.name) : '',
-        address: letterContent.from?.address ? sanitizeHtml(letterContent.from.address) : '',
-      },
-      to: {
-        name: letterContent.to?.name ? sanitizeHtml(letterContent.to.name) : '',
-        address: letterContent.to?.address ? sanitizeHtml(letterContent.to.address) : '',
-      },
-      date: letterContent.date ? sanitizeHtml(letterContent.date) : '',
-      subject: letterContent.subject ? sanitizeHtml(letterContent.subject) : '',
-      content: letterContent.content ? sanitizeHtml(letterContent.content) : '',
-    };
+    // Use the reusable sanitizeObject helper for consistent sanitization across nested fields
+    const sanitizedBody = sanitizeObject({
+      fromName,
+      fromEmail,
+      subject,
+      content,
+      letterContent
+    });
+
+    const {
+      fromName: sanitizedFromName,
+      fromEmail: sanitizedFromEmail,
+      subject: sanitizedSubject,
+      content: sanitizedPersonalMessage,
+      letterContent: sanitizedLetterContent
+    } = sanitizedBody;
 
     const hasFullSmtpConfig =
       !!process.env.EMAIL_HOST && !!process.env.EMAIL_USER && !!process.env.EMAIL_PASS;
@@ -262,7 +240,7 @@ export async function POST(request: NextRequest) {
 
     // Log successful email dispatch internally without PII
     const recipientDomain = to.split('@')[1];
-    logSecurityEvent('EMAIL_SENT_SUCCESSFULLY', { userId: user.id, messageId: info.messageId, recipientDomain, ip }, ip);
+    logSecurityEvent('EMAIL_SENT_SUCCESSFULLY', { userId: user.id, messageId: info.messageId, recipientDomain, ip, requestId }, ip);
 
     return new Response(
       JSON.stringify({
@@ -270,17 +248,20 @@ export async function POST(request: NextRequest) {
         messageId: info.messageId,
         previewUrl
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
     );
   } catch (error) {
+    incrementErrorCount();
     // Safe error responses: Do not leak raw provider/server internals in API responses.
     // Keep detailed errors only in server logs.
-    console.error('Error sending email:', error);
-    logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip }, ip);
+    log.error('Error sending email:', error);
+    logSecurityEvent('EMAIL_SEND_ERROR', { error: error instanceof Error ? error.message : 'Unknown error', ip, requestId }, ip);
     
     return new Response(
       JSON.stringify({ error: 'Failed to send email. Please try again later.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json', 'x-request-id': requestId } }
     );
   }
 }
+
+export const POST = withErrorHandling(postHandler);
