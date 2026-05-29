@@ -30,18 +30,6 @@ function pruneExpired(now: number) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const body: GenerateLetterRequest = await req.json();
-
-  const response: ApiResponse<GenerateLetterResponse> = {
-    success: true,
-    data: {
-      letter: body.content,
-    },
-  };
-
-  return Response.json(response);
-}
 
 
 function checkRateLimit(userId: string): { allowed: boolean; remaining: number; reset: number } {
