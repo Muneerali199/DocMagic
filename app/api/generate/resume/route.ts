@@ -5,6 +5,11 @@ import { NextResponse } from 'next/server';
 import { validateAndSanitize, resumeGenerationSchema, detectSqlInjection, sanitizeInput } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
 import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import {
+  getUserCredits,
+  createUserCredits,
+  resetUserCredits,
+} from '@/lib/repositories/credits-repository';
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
@@ -150,67 +155,48 @@ export async function POST(request: Request) {
     const creditCost = ACTION_COSTS.resume;
 
     // Get or create user credits
-    let { data: userCredits, error: creditsError } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    let userCredits = await getUserCredits(user.id);
+         
 
     // If no credits record exists, create one
     if (!userCredits) {
-      const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          tier: 'free',
-          credits_total: TIER_LIMITS.free,
-          credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
-        })
-        .select()
-        .single();
+      try {
+            userCredits = await createUserCredits(
+              user.id,
+              TIER_LIMITS.free,
+              getCreditsResetDate()
+            );
+          } catch (error: any) {
+            console.error('Failed to create credits record:', error);
 
-      if (insertError) {
-        console.error('Failed to create credits record:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
-        );
-      }
-      userCredits = newCredits;
+            return NextResponse.json(
+              { error: 'Failed to initialize credits' },
+              { status: 500 }
+            );
+          }
     }
 
     // Check if credits need reset
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
-      const resetAt = getCreditsResetDate();
-      const { data: updatedCredits, error: updateError } = await supabaseAdmin
-        .from('user_credits')
-        .update({
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
+        const resetAt = getCreditsResetDate();
 
-      if (updateError) {
-        console.error('Failed to reset credits in database, applying local reset instead:', updateError);
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
-      } else if (updatedCredits) {
-        userCredits = updatedCredits;
-      } else {
-        console.error('Credits reset did not return an updated record, applying local reset instead');
-        userCredits = {
-          ...userCredits,
-          credits_used: 0,
-          credits_reset_at: resetAt,
-        };
+        try {
+          const updatedCredits = await resetUserCredits(user.id, resetAt);
+
+          userCredits = updatedCredits;
+        } catch (updateError: any) {
+          console.error(
+            'Failed to reset credits in database, applying local reset instead:',
+            updateError
+          );
+
+          userCredits = {
+            ...userCredits,
+            credits_used: 0,
+            credits_reset_at: resetAt,
+          };
+        }
       }
-    }
 
     // Check if user has enough credits
     const creditsRemaining = hasUnlimitedCredits

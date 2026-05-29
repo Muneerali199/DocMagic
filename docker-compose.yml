@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    ports:
+      - "8080:8080"
+
+    restart: unless-stopped
+
+    environment:
+      PORT: 8080
