@@ -15,26 +15,46 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
+	databaseURL, err := getRequiredEnv("DATABASE_URL")
+	if err != nil {
+		return nil, err
+	}
+
+	supabaseURL, err := getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL")
+	if err != nil {
+		return nil, err
+	}
+
+	supabaseAnonKey, err := getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+	if err != nil {
+		return nil, err
+	}
+
+	openAIKey, err := getRequiredEnv("OPENAI_API_KEY")
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
-		DatabaseURL:     getEnv("DATABASE_URL", true),
-		SupabaseURL:     getEnv("NEXT_PUBLIC_SUPABASE_URL", true),
-		SupabaseAnonKey: getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", true),
-		OpenAIAPIKey:    getEnv("OPENAI_API_KEY", true),
-		EmailFrom:       getEnv("EMAIL_FROM", false),
+		DatabaseURL:     databaseURL,
+		SupabaseURL:     supabaseURL,
+		SupabaseAnonKey: supabaseAnonKey,
+		OpenAIAPIKey:    openAIKey,
+		EmailFrom:       os.Getenv("EMAIL_FROM"),
 		Environment:     getEnvWithDefault("NODE_ENV", "development"),
 	}
 
 	return cfg, nil
 }
 
-func getEnv(key string, required bool) string {
+func getRequiredEnv(key string) (string, error) {
 	value := os.Getenv(key)
 
-	if required && value == "" {
-		panic(fmt.Sprintf("missing required environment variable: %s", key))
+	if value == "" {
+		return "", fmt.Errorf("missing required environment variable: %s", key)
 	}
 
-	return value
+	return value, nil
 }
 
 func getEnvWithDefault(key string, fallback string) string {
