@@ -198,7 +198,6 @@ const pwaConfig = withPWA(nextConfig);
 export default withSentryConfig(pwaConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
-  tunnelRoute: "/monitoring",
   hideSourceMaps: true,
   disableLogger: true,
 });
