@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 import { validateFetchUrl } from '@/lib/validate-fetch-url';
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
@@ -120,7 +121,7 @@ const validUrl = new URL(url);
     });
     
   } catch (error: any) {
-    console.error('Error fetching URL content:', error);
+    logger.error({ route: 'fetch-url-content' }, 'Error fetching URL content:', error);
     
     if (error.name === 'AbortError') {
       return NextResponse.json(
