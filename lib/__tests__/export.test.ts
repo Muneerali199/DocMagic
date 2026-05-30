@@ -1,53 +1,72 @@
 import { parseInlineFormatting, sanitizeFilename, formatContentForHtml } from '../documents/export';
 
+// Helper functions to extract data from docx TextRun objects.
+// TextRun stores text in root → w:t → root[1] and formatting in root → w:rPr → root entries.
+function getTextFromRun(run: any): string | undefined {
+  const textEl = run.root?.find?.((el: any) => el.rootKey === 'w:t');
+  return textEl?.root?.[1];
+}
+
+function hasBold(run: any): boolean {
+  const props = run.root?.find?.((el: any) => el.rootKey === 'w:rPr');
+  return props?.root?.some?.((el: any) => el.rootKey === 'w:b') ?? false;
+}
+
+function hasItalics(run: any): boolean {
+  const props = run.root?.find?.((el: any) => el.rootKey === 'w:rPr');
+  return props?.root?.some?.((el: any) => el.rootKey === 'w:i') ?? false;
+}
+
 describe('Document Export Utilities', () => {
   describe('parseInlineFormatting', () => {
     it('should parse bold and italic text', () => {
       const text = '***bold italic***';
       const runs = parseInlineFormatting(text);
       expect(runs).toHaveLength(1);
-      expect(runs[0].bold).toBe(true);
-      expect(runs[0].italics).toBe(true);
-      expect(runs[0].text).toBe('bold italic');
+      expect(hasBold(runs[0])).toBe(true);
+      expect(hasItalics(runs[0])).toBe(true);
+      expect(getTextFromRun(runs[0])).toBe('bold italic');
     });
 
     it('should parse bold text', () => {
       const text = '**bold**';
       const runs = parseInlineFormatting(text);
       expect(runs).toHaveLength(1);
-      expect(runs[0].bold).toBe(true);
-      expect(runs[0].italics).toBeUndefined();
-      expect(runs[0].text).toBe('bold');
+      expect(hasBold(runs[0])).toBe(true);
+      expect(hasItalics(runs[0])).toBe(false);
+      expect(getTextFromRun(runs[0])).toBe('bold');
     });
 
     it('should parse italic text', () => {
       const text = '*italic*';
       const runs = parseInlineFormatting(text);
       expect(runs).toHaveLength(1);
-      expect(runs[0].bold).toBeUndefined();
-      expect(runs[0].italics).toBe(true);
-      expect(runs[0].text).toBe('italic');
+      expect(hasBold(runs[0])).toBe(false);
+      expect(hasItalics(runs[0])).toBe(true);
+      expect(getTextFromRun(runs[0])).toBe('italic');
     });
 
     it('should parse plain text', () => {
       const text = 'plain text';
       const runs = parseInlineFormatting(text);
       expect(runs).toHaveLength(1);
-      expect(runs[0].bold).toBeUndefined();
-      expect(runs[0].italics).toBeUndefined();
-      expect(runs[0].text).toBe('plain text');
+      expect(hasBold(runs[0])).toBe(false);
+      expect(hasItalics(runs[0])).toBe(false);
+      expect(getTextFromRun(runs[0])).toBe('plain text');
     });
 
     it('should parse mixed text', () => {
       const text = 'Hello **world** with *italic* words.';
       const runs = parseInlineFormatting(text);
-      expect(runs).toHaveLength(4);
-      expect(runs[0].text).toBe('Hello ');
-      expect(runs[1].text).toBe('world');
-      expect(runs[1].bold).toBe(true);
-      expect(runs[2].text).toBe(' with ');
-      expect(runs[3].text).toBe('italic');
-      expect(runs[3].italics).toBe(true);
+      // 5 runs: "Hello ", "world" (bold), " with ", "italic" (italic), " words."
+      expect(runs).toHaveLength(5);
+      expect(getTextFromRun(runs[0])).toBe('Hello ');
+      expect(getTextFromRun(runs[1])).toBe('world');
+      expect(hasBold(runs[1])).toBe(true);
+      expect(getTextFromRun(runs[2])).toBe(' with ');
+      expect(getTextFromRun(runs[3])).toBe('italic');
+      expect(hasItalics(runs[3])).toBe(true);
+      expect(getTextFromRun(runs[4])).toBe(' words.');
     });
   });
 
