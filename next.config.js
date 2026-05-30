@@ -82,9 +82,24 @@ webpack: (config, { isServer }) => {
         filename: 'static/files/[name][ext]',
       },
     });
+
+    // Ignore native .node binary addons (e.g. canvas.node from fabric).
+    // These are platform-specific compiled binaries that webpack cannot parse.
+    config.module.rules.push({
+      test: /\.node$/,
+      type: 'asset/resource',
+    });
     
     // Bundle size optimizations
     if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+      };
+
+      // Externalize canvas so fabric's jsdom dependency doesn't pull in the native addon
+      config.externals = [...(config.externals || []), { canvas: 'canvas' }];
+
       config.optimization = {
         ...config.optimization,
         splitChunks: {
