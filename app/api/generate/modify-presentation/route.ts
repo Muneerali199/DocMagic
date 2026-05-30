@@ -24,11 +24,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { slides, instruction, template, originalPrompt } = body;
 
-    // console.log('Modify presentation request:', { 
+// console.log('Modify presentation request:', { 
     //   slideCount: slides?.length, 
     //   instruction, 
     //   template 
-    // });
+    // }); failures)
 
     if (!slides || !instruction) {
       return NextResponse.json(

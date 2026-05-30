@@ -179,7 +179,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+<<<<<<< HEAD
     // console.log(`🎨 Generating ${parsedCount} ${imageType} image(s) for: "${topic || customPrompt}"`);
+=======
+    console.log(
+      `🎨 Generating ${parsedCount} ${imageType} image(s) for: "${topic || customPrompt}"`
+    );
+>>>>>>> 68ce1af (fix: resolve syntax errors in API routes and fix test suite failures)
 
     // Parse size
     const [width, height] = size.split('x').map(Number);
@@ -256,7 +262,7 @@ export async function POST(request: NextRequest) {
 
     const successCount = imageResults.filter(r => r.success).length;
 
-    // console.log(`✅ Generated ${successCount}/${parsedCount} images successfully`);
+// console.log(`✅ Generated ${successCount}/${parsedCount} images successfully`);
 
     return Response.json({ 
       images: imageResults,

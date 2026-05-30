@@ -1,14 +1,10 @@
-import { logger } from '@/lib/logger';
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-export const maxDuration = 60; // Allow 60 seconds for AI generation (Vercel Hobby limit)
-
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { logger } from '@/lib/logger';
 import {
   generateLetterWithMistral,
   generateCoverLetterFromJob,
 } from "@/lib/mistral";
-import { createClient } from "@supabase/supabase-js";
 import {
   ACTION_COSTS,
   calculateRemainingCredits,
@@ -26,7 +22,9 @@ import {
 } from "@/lib/validation";
 import { getCachedUserCredits, invalidateUserCredits } from "@/lib/cached-queries";
 
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const maxDuration = 60; // Allow 60 seconds for AI generation (Vercel Hobby limit)
 
 export async function POST(request: Request) {
   try {
@@ -158,8 +156,7 @@ export async function POST(request: Request) {
 
     // Cover-letter branch
     if (isCoverLetter) {
-      // console.log("📝 Generating cover letter from job description with Mistral...");
-      
+// console.log("📝 Generating cover letter from job description with Mistral...");
       const coverJobDescription = jobDescription as string;
       const coverFromName = fromName as string;
 
