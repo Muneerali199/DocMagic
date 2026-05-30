@@ -13,7 +13,6 @@ Please delete options that are not relevant.
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] This change requires a documentation update
 
-
 ## Changes Made
 
 - Describe the key changes (e.g., new sections, updated components, responsive fixes).
@@ -25,20 +24,22 @@ Please delete options that are not relevant.
 
 # How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
+Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
 
-- [ ] Test A
-- [ ] Test B
+- [ ] Test A (e.g., Verified API endpoint returns 200 OK)
+- [ ] Test B (e.g., Verified UI state changes on button click)
 
 ## Add Screenshots
-If your PR consist of any UI changes, please provide screenshots or video (if requried).
+If your PR consists of any UI changes, please provide screenshots or a video (if required).
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project.
+- [ ] My code follows the style guidelines of this project
 - [ ] I have tested my changes across major browsers/devices
 - [ ] I have tested my changes in development mode (`npm run dev`)
+- [ ] I have successfully run `npm run lint` and resolved all warnings/errors
+- [ ] I have successfully run `npm run typecheck` and resolved all TypeScript errors
+- [ ] New and existing unit tests pass locally with my changes (`npx jest`)
 - [ ] I have written or updated related tests, if necessary
-- [ ] This is already assigned Issue to me, not an unassigned issue.
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] This issue is already assigned to me, not an unassigned issue.
 - [ ] Any dependent changes have been merged and published in downstream modules

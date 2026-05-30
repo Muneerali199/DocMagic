@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { slides, instruction, template, originalPrompt } = body;
 
-    console.log('Modify presentation request:', { 
+    // console.log('Modify presentation request:', { 
       slideCount: slides?.length, 
       instruction, 
       template 
@@ -88,12 +88,12 @@ Return ONLY a valid JSON object (no markdown, no code blocks):
 
 IMPORTANT: Return ONLY the JSON object, nothing else.`;
 
-    console.log('Sending request to Gemini...');
+    // console.log('Sending request to Gemini...');
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text();
     
-    console.log('Raw response from Gemini:', text.substring(0, 200));
+    // console.log('Raw response from Gemini:', text.substring(0, 200));
 
     // Extract and clean JSON
     text = extractJsonFromMarkdown(text);
@@ -121,7 +121,7 @@ IMPORTANT: Return ONLY the JSON object, nothing else.`;
       });
     }
 
-    console.log('Successfully modified presentation');
+    // console.log('Successfully modified presentation');
     return NextResponse.json(data);
 
   } catch (error) {

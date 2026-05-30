@@ -6,7 +6,8 @@ import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink } from 'lucide-react';
+import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink, Undo2, Redo2 } from 'lucide-react';
+import { useHistory } from '@/hooks/use-history';
 import { ResumeFormEditor } from '@/components/resume-editor/form-editor';
 import { ResumeLatexEditor, generateLatexFromData } from '@/components/resume-editor/latex-editor';
 import { ResumeAIEditor } from '@/components/resume-editor/ai-editor';
@@ -108,9 +109,51 @@ export default function ResumeEditorContent() {
   const [isLatexManualMode, setIsLatexManualMode] = useState(false);
   const [showLatexConfirmDialog, setShowLatexConfirmDialog] = useState(false);
 
-  // Resume state
+  // Resume state with Undo/Redo history
   const [resumeId, setResumeId] = useState<string | null>(null);
-  const [resumeData, setResumeData] = useState(defaultResumeData);
+  const {
+    value: resumeData,
+    setValue: setResumeData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetResumeData,
+  } = useHistory(defaultResumeData);
+
+  // Keyboard shortcuts for Undo/Redo (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Y, and Ctrl+Shift+Z / Cmd+Shift+Z)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if command/ctrl key is pressed
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      
+      if (isCmdOrCtrl) {
+        // Z key
+        if (e.key.toLowerCase() === 'z') {
+          if (e.shiftKey) {
+            // Ctrl+Shift+Z / Cmd+Shift+Z (Redo)
+            e.preventDefault();
+            redo();
+          } else {
+            // Ctrl+Z / Cmd+Z (Undo)
+            e.preventDefault();
+            undo();
+          }
+        }
+        // Y key
+        else if (e.key.toLowerCase() === 'y') {
+          // Ctrl+Y / Cmd+Y (Redo)
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undo, redo]);
 
   // Initialize analytics tracking
   const { trackEvent } = useDocumentAnalytics(resumeId);
@@ -162,7 +205,7 @@ export default function ResumeEditorContent() {
 
         // Transform loaded data to resumeData format
         const personalInfo = loadedResumeData.personal_info || loadedResumeData.personalInfo || {};
-        setResumeData({
+        resetResumeData({
           name: personalInfo.name || personalInfo.fullName || '',
           email: personalInfo.email || '',
           phone: personalInfo.phone || '',
@@ -370,7 +413,32 @@ export default function ResumeEditorContent() {
             <p className="text-sm text-blue-100">Create professional resumes in minutes</p>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <div className="flex items-center bg-white/10 rounded-lg p-0.5 border border-white/10 mr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z / Cmd+Z)"
+            >
+              <Undo2 className="w-4 h-4 mr-1.5" />
+              Undo
+            </Button>
+            <div className="w-[1px] h-4 bg-white/20" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)"
+            >
+              <Redo2 className="w-4 h-4 mr-1.5" />
+              Redo
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"

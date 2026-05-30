@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log(`📊 Generating ${diagramType} diagram with Mistral...`);
+    // console.log(`📊 Generating ${diagramType} diagram with Mistral...`);
 
     let diagram;
     try {
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('✅ Diagram generated successfully with Mistral');
+    // console.log('✅ Diagram generated successfully with Mistral');
 
     // Fire-and-forget: log write does not block the response
     if (!hasUnlimitedCredits) {

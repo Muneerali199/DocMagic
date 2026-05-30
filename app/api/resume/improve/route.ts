@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('🤖 AI Improvement request:', userMessage);
+    // console.log('🤖 AI Improvement request:', userMessage);
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
     const openaiApiKey = process.env.OPENAI_API_KEY;

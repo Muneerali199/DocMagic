@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { CSP_HEADER } from '@/lib/csp';
+import { CSP_HEADER, buildCspWithNonce } from '@/lib/csp';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
@@ -89,8 +89,16 @@ function secHdrs(r: NextResponse) {
   r.headers.set('X-XSS-Protection', '1; mode=block');
   r.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   r.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  // Source of truth: lib/csp.ts
-  r.headers.set('Content-Security-Policy', CSP_HEADER);
+}
+
+/**
+ * Generate a cryptographically random nonce for per-request CSP.
+ * The nonce is a base64url-encoded 128-bit random value.
+ */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Buffer.from(bytes).toString('base64');
 }
 
 export function middleware(req: NextRequest) {
@@ -156,8 +164,19 @@ export function middleware(req: NextRequest) {
   }
 
   if (!pathname.includes('.')) {
-    const r = NextResponse.next();
+    // Generate a per-request nonce for HTML page responses.
+    // The nonce is passed to the server component via a request header so that
+    // app/layout.tsx can apply it to inline scripts, eliminating unsafe-inline.
+    const nonce = generateNonce();
+
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-nonce', nonce);
+
+    const r = NextResponse.next({ request: { headers: requestHeaders } });
     secHdrs(r);
+    // Use nonce-based CSP (removes unsafe-inline from script-src).
+    // Source of truth: lib/csp.ts -> buildCspWithNonce()
+    r.headers.set('Content-Security-Policy', buildCspWithNonce(nonce));
     r.headers.set('X-DNS-Prefetch-Control', 'on');
     r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
     r.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
@@ -172,6 +191,7 @@ export function middleware(req: NextRequest) {
 
   const r = NextResponse.next();
   secHdrs(r);
+  r.headers.set('Content-Security-Policy', CSP_HEADER);
   r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
   return r;
 }

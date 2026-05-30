@@ -7,9 +7,19 @@
 
 import { cache, aiCache, userCache, memoizeAsync } from '@/lib/cache';
 
-// Use Jest's fake timers so we can advance time without actually waiting.
-beforeAll(() => jest.useFakeTimers());
-afterAll(() => jest.useRealTimers());
+/// Use Jest's fake timers so we can advance time without actually waiting.
+beforeAll(() => {
+  jest.useFakeTimers();
+});
+
+// Clear any intervals (like the BoundedCache sweep timer) before each test
+beforeEach(() => {
+  jest.clearAllTimers();
+});
+
+afterAll(() => {
+  jest.useRealTimers();
+});
 
 // Reset the shared singletons between tests to avoid cross-contamination.
 afterEach(() => {

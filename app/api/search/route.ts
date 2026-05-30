@@ -93,7 +93,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           if (doc.type === 'presentation') mappedCategory = 'presentation'
           else if (doc.type === 'letter') mappedCategory = 'letter'
           else if (doc.type !== 'resume' && doc.type !== 'cv') {
-            console.warn(`Unknown document type: ${doc.type}, defaulting to resume`)
+            logger.warn({ route: 'app/api/search/route.ts', docType: doc.type }, 'Unknown document type, defaulting to resume')
           }
 
           const textContent = extractTextFromContent(doc.content)

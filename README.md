@@ -203,6 +203,7 @@ Free tier: 50 credits/month
 - **[docs/UTILITIES.md](./docs/UTILITIES.md)** - Development utilities & best practices guide
 
 ### Architecture & Diagrams
+- [docs/DARK_MODE_PERSISTENCE.md](./docs/DARK_MODE_PERSISTENCE.md) - 🌓 Detailed dark mode persistence and FOUC prevention system guide
 - [ARCHITECTURE_DIAGRAM_FEATURE.md](./ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
 - [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md) - Technical system architecture  
 - [ARCHITECTURE_IMPROVEMENTS.md](./ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
@@ -211,6 +212,7 @@ Free tier: 50 credits/month
 - [Code_of_Conduct.md](./Code_of_Conduct.md) - Community standards
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 - [FAQ.md](./FAQ.md) - Frequently asked questions
+- [docs/THEME_FIX.md](./docs/THEME_FIX.md) - Theme-Adaptive presentation fix guide
 
 ---
 

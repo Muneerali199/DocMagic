@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
     }
 
     const elapsed_ms = Date.now() - startedAt;
-    console.log(`[ranking-job] processed ${posts.length} posts in ${elapsed_ms}ms`);
+    // console.log(`[ranking-job] processed ${posts.length} posts in ${elapsed_ms}ms`);
 
     return Response.json({ processed: posts.length, elapsed_ms });
 

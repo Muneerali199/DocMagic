@@ -19,12 +19,16 @@ import {
   Coins,
   Crown,
   Gift,
+ feature/session-management
+  Shield,
+
   Info,
   Send,
   Layout,
   BookOpen,
   MoreHorizontal,
   Trophy
+ main
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -544,6 +548,12 @@ const navItems = [
     icon: <History className="h-4 w-4" />,
     tooltip: "View all your created documents with previews",
   },
+  {
+  href: "/dashboard/sessions",
+  label: "Sessions",
+  icon: <Shield className="h-4 w-4" />,
+  tooltip: "Manage active login sessions",
+},
   {
     href: "/pricing",
     label: "Pricing",

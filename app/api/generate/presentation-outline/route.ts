@@ -148,7 +148,7 @@ async function generateWithNebius(
   pageCount: number,
   model: NebiusOutlineModel = 'meta-llama/Meta-Llama-3.1-70B-Instruct'
 ) {
-  console.log('🔄 Using Nebius/Qwen as fallback...');
+  // console.log('🔄 Using Nebius/Qwen as fallback...');
   
   const completion = await nebiusClient.chat.completions.create({
     model,
@@ -323,18 +323,18 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log('📝 Step 1: Generating slide text content...');
+    // console.log('📝 Step 1: Generating slide text content...');
 
     // Step 1: Generate text content - Use Mistral first, then Nebius fallback
     let outlines;
     try {
       const nebiusFirst = selectedModel !== 'meta-llama/Meta-Llama-3.1-70B-Instruct';
       if (nebiusFirst) {
-        console.log(`Using Nebius model for outline generation: ${selectedModel}`);
+        // console.log(`Using Nebius model for outline generation: ${selectedModel}`);
         outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
       } else {
         try {
-          console.log('Using Mistral Large for text generation');
+          // console.log('Using Mistral Large for text generation');
           outlines = await generatePresentationText(prompt, validatedPageCount, {
             language: settings?.language,
             audience: settings?.audience,
@@ -347,10 +347,10 @@ export async function POST(request: Request) {
             throw new Error('Mistral generated no content');
           }
 
-          console.log('Generated with Mistral');
+          // console.log('Generated with Mistral');
         } catch (mistralError: any) {
           logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Mistral failed:', mistralError.message);
-          console.log('Falling back to Nebius...');
+          // console.log('Falling back to Nebius...');
           outlines = await generateWithNebius(promptWithSettings, validatedPageCount, selectedModel);
         }
       }
@@ -362,11 +362,11 @@ export async function POST(request: Request) {
       throw err;
     }
 
-    console.log(`✅ Generated ${outlines.length} slides`);
+    // console.log(`✅ Generated ${outlines.length} slides`);
 
     // If outlineOnly is requested, reconcile credits then return early.
     if (outlineOnly) {
-      console.log('🚀 Returning outline only as requested');
+      // console.log('🚀 Returning outline only as requested');
       if (!hasUnlimitedCredits) {
         const actualCost = outlines.length * creditsPerSlide;
         const overReserved = estimatedCreditCost - actualCost;
@@ -385,7 +385,7 @@ export async function POST(request: Request) {
       });
     }
 
-    console.log('🎨 Step 2: Generating images with FLUX AI...');
+    // console.log('🎨 Step 2: Generating images with FLUX AI...');
     
     // Step 2: Generate images with FLUX (skip Mistral)
     const { generatePresentationImages } = await import('@/lib/flux-image-generator');
@@ -415,20 +415,20 @@ export async function POST(request: Request) {
     // Generate all images with FLUX (using 512x512 - smaller, faster)
     const imageUrls = await generatePresentationImages(imagePrompts, "512x512");
     
-    console.log(`✅ Generated ${imageUrls.length} images with FLUX`);
-    console.log('📊 Step 3: Generating chart data with Mistral AI...');
+    // console.log(`✅ Generated ${imageUrls.length} images with FLUX`);
+    // console.log('📊 Step 3: Generating chart data with Mistral AI...');
     
     // Step 3: Generate chart data with Mistral AI (keep this for now)
     let chartDataList: any[] = [];
     try {
       chartDataList = await generateChartData(outlines, prompt);
-      console.log(`✅ Generated ${chartDataList.length} charts`);
+      // console.log(`✅ Generated ${chartDataList.length} charts`);
     } catch (error) {
       logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Error generating charts:', error);
-      console.log('⚠️ Skipping chart generation due to rate limit');
+      // console.log('⚠️ Skipping chart generation due to rate limit');
     }
     
-    console.log('✨ Step 4: Combining slides with images and charts...');
+    // console.log('✨ Step 4: Combining slides with images and charts...');
     
     // Step 4: Combine everything
     const enhancedOutlines = outlines.map((outline: any, index: number) => {
@@ -445,8 +445,8 @@ export async function POST(request: Request) {
       };
     });
     
-    console.log('✨ Step 5: Presentation enhancement complete!');
-    console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
+    // console.log('✨ Step 5: Presentation enhancement complete!');
+    // console.log(`📊 Final stats: ${enhancedOutlines.length} slides, ${imageUrls.length} FLUX images, ${chartDataList.length} charts`);
     
     // Credits were reserved at estimatedCreditCost. If the model returned
     // fewer slides, refund the difference now and log the actual cost.
