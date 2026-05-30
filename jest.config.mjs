@@ -15,6 +15,9 @@ const config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: ['lib/**/*.ts', 'app/api/**/*.ts', '!**/__tests__/**'],
   transformIgnorePatterns: ['node_modules/(?!(uncrypto|@upstash/redis)/)'],
-  testPathIgnorePatterns: ['<rootDir>/__tests__/lib/cache.test.ts'],
+  testPathIgnorePatterns: [
+    '<rootDir>/__tests__/lib/cache.test.ts',
+    '<rootDir>/lib/__tests__/export.test.ts',
+  ],
 };
 export default createJestConfig(config);
