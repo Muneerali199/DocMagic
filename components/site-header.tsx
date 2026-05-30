@@ -19,7 +19,6 @@ import {
   Coins,
   Crown,
   Gift,
- feature/session-management
   Shield,
 
   Info,
