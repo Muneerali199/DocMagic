@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(blob, { status: 200, headers });
 
   } catch (error: any) {
-    logger.error('Error proxying image:', error);
+    logger.error({ route: 'proxy-image' }, 'Error proxying image:', error);
 
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {
       return new NextResponse('Request timed out', { status: 408 });
