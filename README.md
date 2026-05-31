@@ -233,6 +233,10 @@ Join our official WhatsApp group to connect with other contributors, get help wi
 
 ---
 
+## Security
+
+If you discover any security vulnerabilities, please refer to our [Security Policy](SECURITY.md) for information on how to responsibly disclose them. Please do not report security vulnerabilities via public GitHub issues.
+
 ## 👥 Contributors
 
 We appreciate all contributors who help improve DraftDeckAI ❤️
