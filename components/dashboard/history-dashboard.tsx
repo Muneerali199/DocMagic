@@ -33,6 +33,7 @@ import { SlideCard, Slide } from "@/components/presentation/real-time-generator"
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { logger } from "@/lib/logger";
 import { DashboardPagination } from "@/components/ui/pagination";
+import { DashboardPageSkeleton } from "@/components/skeletons";
 
 type ContentType = "resume" | "presentation" | "diagram" | "letter" | "generated";
 
@@ -594,12 +595,7 @@ function HistoryDashboardContent() {
           }}>
             <TabsContent value={activeTab} className="space-y-4">
               {isLoading ? (
-                <div className="min-h-[400px] flex items-center justify-center">
-                  <div className="text-center glass-effect p-8 rounded-2xl">
-                    <Loader2 className="h-12 w-12 animate-spin text-yellow-500 mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading documents...</p>
-                  </div>
-                </div>
+                <DashboardPageSkeleton />
               ) : filteredItems.length === 0 ? (
                 <Card className="p-12 text-center glass-effect border border-border/40">
                   <div className="flex flex-col items-center gap-4">
@@ -694,7 +690,7 @@ export function HistoryDashboard() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-yellow-500" />
+        <DashboardPageSkeleton />
       </div>
     }>
       <HistoryDashboardContent />

@@ -35,6 +35,7 @@ import {
   Zap
 } from "lucide-react";
 import { toPng, toSvg } from 'html-to-image';
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 const DIAGRAM_TYPES = [
   { value: 'flowchart', label: 'Flowchart', icon: '📊' },
@@ -777,6 +778,18 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <GenerationLoadingOverlay
+        show={isGenerating}
+        title="Generating diagram"
+        description="Translating your prompt into clean Mermaid syntax and a readable structure..."
+        estimatedTime="Estimated time: 10-30 seconds"
+        tips={[
+          "Mention the diagram type for better structure.",
+          "Include key actors, states, or steps in your prompt.",
+          "You can edit the Mermaid code after generation.",
+        ]}
+        variant="diagram"
+      />
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="flex justify-center mb-4 sm:mb-6 px-2 overflow-x-auto">
           <TabsList role="tablist" className="glass-effect border border-yellow-400/20 p-1 h-auto flex-nowrap"  style={{ scrollbarWidth: 'none' }}>
