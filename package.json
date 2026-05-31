@@ -36,8 +36,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:staged": "lint-staged",
+    "prepare": "husky",
     "test": "jest",
     "test:watch": "jest --watch",
+    "typecheck:changed": "node scripts/typecheck-changed.mjs",
     "setup-db": "node scripts/setup-database.cjs",
     "security-audit": "node scripts/security-audit.js",
     "security-check": "npm audit && npm run security-audit",
@@ -169,12 +172,23 @@
     "babel-jest": "^30.0.5",
     "esbuild": "^0.25.8",
     "eslint-config-next": "^15.4.5",
+    "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jsdom": "^26.1.0",
+    "lint-staged": "^17.0.7",
     "postcss": "8.5.10",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write",
+      "jest --findRelatedTests --passWithNoTests"
+    ],
+    "*.{json,css,md,mdx,yml,yaml}": "prettier --write"
   },
   "overrides": {
     "@babel/plugin-transform-modules-systemjs": "7.29.0",

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+npm run typecheck:changed
+npm test -- --runInBand --passWithNoTests
