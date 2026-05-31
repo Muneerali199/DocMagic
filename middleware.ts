@@ -105,6 +105,20 @@ function generateNonce(): string {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get('host');
+
+  // FIX: Reliable Canonical URL Redirect (Reviewer Request #2)
+  // We explicitly check the host instead of unreliable Vercel environment variables.
+  // This redirects 'www' and the default Vercel URL to the main domain, 
+  // without breaking dynamic Vercel Preview branches!
+  if (host === 'www.draftdeckai.com' || host === 'draftdeckai.vercel.app') {
+    const canonicalUrl = req.nextUrl.clone();
+    canonicalUrl.host = 'draftdeckai.com';
+    canonicalUrl.protocol = 'https:';
+    canonicalUrl.port = '';
+    return NextResponse.redirect(canonicalUrl, 301);
+  }
+
   const origin = req.headers.get('origin');
   const cors = corsHeaders(origin);
 

@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { logEnvStatus } from "@/lib/env-validator";
 
 logEnvStatus();
@@ -13,8 +13,10 @@ import { FeedbackPopup } from "@/components/feedback-popup";
 import { DeploymentStatusBanner } from "@/components/deployment-status-banner";
 import type { Metadata } from "next";
 import PlausibleProvider from 'next-plausible';
-import { useUTMCapture } from "@/hooks/useUTMCapture";
 import { headers } from 'next/headers';
+
+// 2. Import your existing Client Component (adjust the path if it's in a different folder)
+import { UTMTracker } from "@/components/utm-tracker"; 
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -25,8 +27,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "DraftDeckAI - AI Document Creation Platform",
-  description:
-    "Create beautiful resumes, presentations, CVs and letters with AI",
+  description: "Create beautiful resumes, presentations, CVs and letters with AI",
   openGraph: {
     title: "DraftDeckAI - AI Document Creation Platform",
     description: "Create beautiful resumes, presentations, CVs and letters with AI",
@@ -51,14 +52,6 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Inline script injected into <head> to apply the correct theme class
- * before the first paint, preventing a flash of the wrong color scheme.
- *
- * It reads the same localStorage key ("theme") that next-themes uses,
- * so the two are always in sync. The script must be a plain string
- * (not a module) so the browser executes it synchronously.
- */
 const themeScript = `(function(){try{var s=localStorage.getItem('theme');var d=document.documentElement;if(s==='dark'){d.classList.add('dark');}else if(s==='light'){d.classList.remove('dark');}else{if(window.matchMedia('(prefers-color-scheme: dark)').matches){d.classList.add('dark');}else{d.classList.remove('dark');}}}catch(e){}})();`;
 
 export default async function RootLayout({
@@ -66,23 +59,16 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Read the per-request nonce injected by middleware.
-  // The nonce is used to allowlist inline scripts in the Content-Security-Policy
-  // without relying on 'unsafe-inline', which would permit XSS script injection.
   const headersList = await headers();
   const nonce = headersList.get('x-nonce') ?? '';
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Blocking theme script -- must be first in <head> to prevent FOUC.
-            The nonce attribute allows this inline script under the nonce-based CSP
-            set by middleware, without requiring 'unsafe-inline' in script-src. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
-
-        {/* Plausible Analytics setup.
-            scriptProps.nonce ensures the inline init snippet passes the CSP check. */}
+        {/* Plausible Analytics setup. */}
         <PlausibleProvider
+          // @ts-expect-error - domain prop type missing in current next-plausible version
           domain="draftdeckai.com"
           src="https://plausible.io/js/script.tagged-events.outbound-links.js"
           trackOutboundLinks={true}
@@ -92,18 +78,8 @@ export default async function RootLayout({
         
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <meta name="theme-color" content="#3b82f6" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -119,6 +95,12 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.className} ${poppins.variable}`}>
         <DeploymentStatusBanner />
+        
+        {/* 3. FIX: Your existing component properly wrapped in a Suspense boundary */}
+        <Suspense fallback={null}>
+          <UTMTracker />
+        </Suspense>
+
         <Providers>
           <CursorProvider>
             {children}
