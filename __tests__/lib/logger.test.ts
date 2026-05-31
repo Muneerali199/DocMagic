@@ -1,36 +1,24 @@
 /**
  * Unit tests for lib/logger.ts
- *
- * The logger captures IS_PROD and IS_TEST as module-level constants, so tests
- * that need a different NODE_ENV must isolate the module via
- * jest.isolateModules() to get a fresh instance with the desired environment.
  */
 
-// The top-level import gives us the IS_TEST=true instance (Jest default).
 import { logger as testModeLogger } from '@/lib/logger';
 
 // Helper to load a fresh logger with a specific NODE_ENV.
 function loadLoggerWithEnv(env: string) {
-  let loggerModule: typeof import('@/lib/logger');
+  let loggerModule: any;
   jest.isolateModules(() => {
     const original = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: env,
-      writable: true,
-      configurable: true,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (process.env as any).NODE_ENV = env;
     loggerModule = require('@/lib/logger');
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: original,
-      writable: true,
-      configurable: true,
-    });
+    (process.env as any).NODE_ENV = original;
   });
-  return loggerModule!;
+  return loggerModule;
 }
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 // ──────────────────────────────────────────────────────────────
 // Test-mode suppression
@@ -55,8 +43,8 @@ describe('logger - test mode suppression', () => {
 // ──────────────────────────────────────────────────────────────
 describe('logger - development mode output', () => {
   it('calls console.info for info level and includes the message', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.info(null, 'hello world');
 
@@ -66,8 +54,8 @@ describe('logger - development mode output', () => {
   });
 
   it('calls console.warn for warn level', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.warn(null, 'a warning');
 
@@ -76,8 +64,8 @@ describe('logger - development mode output', () => {
   });
 
   it('calls console.error for error level', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.error(null, 'boom');
 
@@ -86,8 +74,8 @@ describe('logger - development mode output', () => {
   });
 
   it('calls console.debug for debug level', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.debug(null, 'dbg');
 
@@ -96,8 +84,8 @@ describe('logger - development mode output', () => {
   });
 
   it('includes context fields in the log entry', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.info({ requestId: 'req-abc', userId: 'usr-xyz' }, 'ctx test');
 
@@ -107,8 +95,8 @@ describe('logger - development mode output', () => {
   });
 
   it('serializes Error objects to include the message', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     logger.error(null, new Error('err-msg'));
 
@@ -121,8 +109,8 @@ describe('logger - development mode output', () => {
 // ──────────────────────────────────────────────────────────────
 describe('logger - production mode output', () => {
   it('outputs a valid JSON string for info level', () => {
-    const { logger } = loadLoggerWithEnv('production');
     const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('production');
 
     logger.info(null, 'prod message');
 
@@ -134,8 +122,8 @@ describe('logger - production mode output', () => {
   });
 
   it('includes context in the JSON output', () => {
-    const { logger } = loadLoggerWithEnv('production');
     const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('production');
 
     logger.info({ requestId: 'r1' }, 'with context');
 
@@ -144,8 +132,8 @@ describe('logger - production mode output', () => {
   });
 
   it('suppresses debug output in production', () => {
-    const { logger } = loadLoggerWithEnv('production');
     const spy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('production');
 
     logger.debug(null, 'hidden');
 
@@ -158,8 +146,8 @@ describe('logger - production mode output', () => {
 // ──────────────────────────────────────────────────────────────
 describe('logger.withContext', () => {
   it('binds context to all subsequent log calls', () => {
-    const { logger } = loadLoggerWithEnv('development');
     const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const { logger } = loadLoggerWithEnv('development');
 
     const bound = logger.withContext({ requestId: 'bound-id' });
     bound.info('from bound logger');

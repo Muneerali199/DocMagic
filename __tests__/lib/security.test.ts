@@ -1,9 +1,5 @@
 /**
  * Unit tests for lib/security.ts
- *
- * Covers: checkRateLimit (allow, block, sliding-window reset),
- * isAllowedOrigin, getSecurityHeaders (presence of form-action and
- * frame-ancestors), and validateEnvironmentVariables.
  */
 
 import {
@@ -31,7 +27,6 @@ describe('checkRateLimit', () => {
   });
 
   it('blocks once the request cap is reached', () => {
-    // Exhaust the remaining two slots (slot 1 used above; new identifier)
     const id = 'ip-B';
     checkRateLimit(id, config);
     checkRateLimit(id, config);
@@ -93,19 +88,13 @@ describe('isAllowedOrigin', () => {
 
   it('allows localhost origins in development mode', () => {
     const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: 'development',
-      writable: true,
-      configurable: true,
-    });
-
-    expect(isAllowedOrigin('http://localhost:3000', host)).toBe(true);
-
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: originalEnv,
-      writable: true,
-      configurable: true,
-    });
+    try {
+      (process.env as any).NODE_ENV = 'development';
+      const host = 'localhost:3000';
+      expect(isAllowedOrigin('http://localhost:3000', host)).toBe(true);
+    } finally {
+      (process.env as any).NODE_ENV = originalEnv;
+    }
   });
 });
 
@@ -143,12 +132,6 @@ describe('getSecurityHeaders', () => {
 // validateEnvironmentVariables
 // ──────────────────────────────────────────────────────────────
 describe('validateEnvironmentVariables', () => {
-  const REQUIRED_VARS = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'GEMINI_API_KEY',
-  ];
-
   it('throws when a required variable is missing', () => {
     const saved = process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -157,7 +140,6 @@ describe('validateEnvironmentVariables', () => {
   });
 
   it('throws when NEXT_PUBLIC_SUPABASE_URL is not a valid URL', () => {
-    // Set all required vars to valid values, then corrupt only the URL.
     const savedUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const savedAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const savedGemini = process.env.GEMINI_API_KEY;

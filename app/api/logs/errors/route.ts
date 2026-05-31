@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,33 +28,18 @@ export async function POST(request: NextRequest) {
 
     console.error('[ERROR LOG]', errorLog);
 
-    // TODO: Send to external monitoring service (Sentry, LogRocket, etc.)
-    // Example with Sentry:
-    // if (process.env.SENTRY_DSN) {
-    //   await fetch(process.env.SENTRY_DSN, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //       event_id: digest || crypto.randomUUID(),
-    //       message,
-    //       exception: {
-    //         values: [
-    //           {
-    //             type: 'Error',
-    //             value: message,
-    //             stacktrace: {
-    //               frames: stack ? [{raw: stack}] : [],
-    //             },
-    //           },
-    //         ],
-    //       },
-    //       request: {
-    //         url,
-    //         user_agent: userAgent,
-    //       },
-    //     }),
-    //   });
-    // }
+    // Send to Sentry
+    Sentry.withScope((scope) => {
+      scope.setExtra('pathname', pathname);
+      scope.setExtra('url', url);
+      scope.setExtra('environment', environment);
+      scope.setExtra('userAgent', userAgent);
+      
+      const error = new Error(message || 'Unknown error');
+      if (stack) error.stack = stack;
+      
+      Sentry.captureException(error);
+    });
 
     // Store in database (optional)
     // const { createClient } = await import('@/lib/supabase/client');

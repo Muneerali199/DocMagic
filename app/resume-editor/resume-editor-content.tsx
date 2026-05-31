@@ -6,6 +6,7 @@ import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink, Undo2, Redo2 } from 'lucide-react';
 import { useHistory } from '@/hooks/use-history';
 import { ResumeFormEditor } from '@/components/resume-editor/form-editor';
@@ -372,13 +373,74 @@ export default function ResumeEditorContent() {
     }
   }, [resumeData]);
 
-  // Show loading state while checking auth
+  // Layout-matching Skeleton Loader
   if (authLoading || isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          <p className="text-gray-600">{isLoading ? 'Loading resume...' : 'Loading...'}</p>
+      <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 border-b shadow-lg px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-12 h-12 rounded-xl bg-white/20" />
+            <div>
+              <Skeleton className="w-40 h-6 bg-white/20 mb-2" />
+              <Skeleton className="w-64 h-4 bg-white/20" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="w-32 h-9 bg-white/20 rounded-md" />
+            <Skeleton className="w-24 h-9 bg-white/20 rounded-md" />
+            <Skeleton className="w-28 h-9 bg-white/20 rounded-md" />
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* LEFT - Editor Panel Skeleton */}
+          <div className="w-1/2 border-r bg-white flex flex-col">
+            {/* Tabs Skeleton */}
+            <div className="flex border-b px-6 py-3 gap-6">
+              <Skeleton className="w-24 h-6 rounded-md" />
+              <Skeleton className="w-24 h-6 rounded-md" />
+              <Skeleton className="w-28 h-6 rounded-md" />
+            </div>
+            
+            {/* Form Content Skeleton */}
+            <div className="flex-1 p-6 space-y-8 overflow-y-auto">
+              {/* Personal Info Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/3 h-6" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                </div>
+              </div>
+              
+              {/* Summary Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/4 h-6" />
+                <Skeleton className="w-full h-32" />
+              </div>
+              
+              {/* Experience Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/4 h-6" />
+                <Skeleton className="w-full h-40" />
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT - Preview Panel Skeleton */}
+          <div className="w-1/2 bg-gradient-to-br from-gray-100 to-gray-200 p-8 flex flex-col items-center">
+            {/* Toolbar skeleton */}
+            <div className="w-full max-w-2xl flex justify-between mb-4">
+               <Skeleton className="w-48 h-10" />
+               <Skeleton className="w-32 h-10" />
+            </div>
+            {/* A4 Document Skeleton */}
+            <Skeleton className="w-full max-w-2xl flex-1 max-h-[850px] bg-white shadow-xl rounded-sm" />
+          </div>
         </div>
       </div>
     );
@@ -478,7 +540,6 @@ export default function ResumeEditorContent() {
           </Button>
         </div>
       </div>
-
       {/* Main Content - Split Screen */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT - Editor Panel */}

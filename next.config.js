@@ -1,4 +1,5 @@
 import withPWACore from 'next-pwa';
+import { withSentryConfig } from '@sentry/nextjs';
 import { CSP_HEADER } from './lib/csp.mjs';
 
 /** @type {import('next').NextConfig} */
@@ -208,4 +209,11 @@ const withPWA = withPWACore({
   ],
 });
 
-export default withPWA(nextConfig);
+const pwaConfig = withPWA(nextConfig);
+
+export default withSentryConfig(pwaConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  hideSourceMaps: true,
+  disableLogger: true,
+});
