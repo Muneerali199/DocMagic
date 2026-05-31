@@ -53,7 +53,14 @@ interface LoaderProps {
   className?: string;
 }
 
+let stylesInjected = false;
 export function Loader({ size = 96, className = "" }: LoaderProps) {
+   if (!stylesInjected && typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = ringStyles;
+    document.head.appendChild(style);
+    stylesInjected = true;
+  }
   return (
     <>
       <style>{ringStyles}</style>
@@ -82,7 +89,8 @@ export function Loader({ size = 96, className = "" }: LoaderProps) {
           strokeDashoffset="-110"
           strokeDasharray="0 220"
           strokeWidth="20"
-          stroke="#7e7e7e"
+          stroke="currentColor"
+          opacity="0.6"
           fill="none"
           r="35"
           cy="120"
@@ -93,7 +101,8 @@ export function Loader({ size = 96, className = "" }: LoaderProps) {
           strokeLinecap="round"
           strokeDasharray="0 440"
           strokeWidth="20"
-          stroke="#686868"
+          stroke="currentColor"
+          opacity="0.4"
           fill="none"
           r="70"
           cy="120"
