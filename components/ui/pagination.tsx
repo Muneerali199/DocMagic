@@ -147,7 +147,6 @@ const DashboardPagination = ({
 
   const createQueryString = React.useCallback(
     (name: string, value: string) => {
-      // FIX: Added optional chaining and a fallback for static rendering
       const params = new URLSearchParams(searchParams?.toString() || '');
       params.set(name, value);
       
@@ -211,6 +210,23 @@ const DashboardPagination = ({
                 <span className="sr-only">Go to previous page</span>
               </Button>
             </PaginationItem>
+
+            {/* NEW: Render numbered page links */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page} className="hidden sm:inline-block">
+                <Button
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handlePageChange(page)}
+                  disabled={currentPage === page}
+                >
+                  {page}
+                  <span className="sr-only">Go to page {page}</span>
+                </Button>
+              </PaginationItem>
+            ))}
+
             <PaginationItem>
               <Button
                 variant="outline"
@@ -239,5 +255,5 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-  DashboardPagination, // Exported for the history dashboard!
+  DashboardPagination,
 };

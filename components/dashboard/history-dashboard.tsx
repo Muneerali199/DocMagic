@@ -237,10 +237,18 @@ function HistoryDashboardContent() {
   const { toast } = useToast();
   const supabase = createClient();
 
-  const currentPage = Number(searchParams?.get("page")) || 1;
-  const pageSize = Number(searchParams?.get("pageSize")) || 20;
+  // Validating and clamping URL parameters
+  const rawPage = Number(searchParams?.get("page"));
+  const rawPageSize = Number(searchParams?.get("pageSize"));
+  const allowedPageSizes = [10, 20, 50];
 
-  const [activeTab, setActiveTab] = useState<ContentType | "all">("all");
+  const currentPage = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const pageSize = Number.isInteger(rawPageSize) && allowedPageSizes.includes(rawPageSize) ? rawPageSize : 20;
+
+  // Persisting tab state from URL
+  const urlTab = (searchParams?.get("tab") as ContentType | "all") || "all";
+  const [activeTab, setActiveTab] = useState<ContentType | "all">(urlTab);
+  
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +262,13 @@ function HistoryDashboardContent() {
     diagram: 0,
     letter: 0,
   });
+
+  // Helper to preserve existing URL search params while making targeted updates
+  const updateQueryParams = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    Object.entries(updates).forEach(([key, value]) => params.set(key, String(value)));
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     fetchHistory();
@@ -299,6 +314,15 @@ function HistoryDashboardContent() {
         .range(from, to);
 
       if (error) throw error;
+
+      // Handle Out-Of-Bounds Pagination
+      if (documents && documents.length === 0 && count && count > 0) {
+        const lastValidPage = Math.ceil(count / pageSize);
+        if (currentPage !== lastValidPage) {
+          updateQueryParams({ page: lastValidPage });
+          return;
+        }
+      }
 
       if (activeTab === "all") {
           const typeCounts = await Promise.all(
@@ -536,7 +560,7 @@ function HistoryDashboardContent() {
                   className={`p-3 sm:p-4 glass-effect border border-border/40 cursor-pointer hover:scale-105 hover:shadow-lg transition-all ${activeTab === type ? 'ring-2 ring-yellow-400 border-yellow-400/50' : ''}`}
                   onClick={() => {
                      setActiveTab(type as ContentType);
-                     router.push(`?page=1&pageSize=${pageSize}`);
+                     updateQueryParams({ tab: type, page: 1, pageSize });
                   }}
                 >
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-2">
@@ -566,7 +590,7 @@ function HistoryDashboardContent() {
 
           <Tabs value={activeTab} onValueChange={(v) => {
               setActiveTab(v as ContentType | "all");
-              router.push(`?page=1&pageSize=${pageSize}`);
+              updateQueryParams({ tab: v, page: 1, pageSize });
           }}>
             <TabsContent value={activeTab} className="space-y-4">
               {isLoading ? (
