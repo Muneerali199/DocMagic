@@ -157,10 +157,8 @@ export async function POST(request: Request) {
 
     // Cover-letter branch
     if (isCoverLetter) {
-      // console.log(
-        "📝 Generating cover letter from job description with Mistral...",
-      );
-
+      // console.log("📝 Generating cover letter from job description with Mistral...");
+      
       const coverJobDescription = jobDescription as string;
       const coverFromName = fromName as string;
 

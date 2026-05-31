@@ -25,10 +25,10 @@ export async function POST(request: Request) {
     const { slides, instruction, template, originalPrompt } = body;
 
     // console.log('Modify presentation request:', { 
-      slideCount: slides?.length, 
-      instruction, 
-      template 
-    });
+    //   slideCount: slides?.length, 
+    //   instruction, 
+    //   template 
+    // });
 
     if (!slides || !instruction) {
       return NextResponse.json(
