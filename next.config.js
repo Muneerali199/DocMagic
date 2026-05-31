@@ -1,119 +1,108 @@
-import withPWACore from 'next-pwa';
-import { withSentryConfig } from '@sentry/nextjs';
-import { CSP_HEADER } from './lib/csp.mjs';
+import withPWACore from "next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
+import { NEXT_SECURITY_HEADERS } from "./lib/security-headers.mjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
-images: {
+  allowedDevOrigins: ["https://kindlier-tawna-nontypographic.ngrok-free.dev"],
+  images: {
     unoptimized: false,
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.unsplash.com',
+        protocol: "https",
+        hostname: "**.unsplash.com",
       },
       {
-        protocol: 'https',
-        hostname: '**.pexels.com',
+        protocol: "https",
+        hostname: "**.pexels.com",
       },
       {
-        protocol: 'https',
-        hostname: '**.pixabay.com',
+        protocol: "https",
+        hostname: "**.pixabay.com",
       },
       {
-        protocol: 'https',
-        hostname: '**.supabase.co',
+        protocol: "https",
+        hostname: "**.supabase.co",
       },
       {
-        protocol: 'https',
-        hostname: '**.nebius.cloud',
+        protocol: "https",
+        hostname: "**.nebius.cloud",
       },
       {
-        protocol: 'https',
-        hostname: 'placehold.co',
+        protocol: "https",
+        hostname: "placehold.co",
       },
     ],
   },
-trailingSlash: false,
+  trailingSlash: false,
   // Optimize for production
   swcMinify: true,
   compress: true,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
+    optimizeCss: process.env.NODE_ENV !== "development", // Disable in dev to prevent critters module error
     scrollRestoration: true,
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
   async headers() {
     return [
       {
-        source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          {
-            // Source of truth: lib/csp.ts (and its JS companion lib/csp.mjs)
-            key: 'Content-Security-Policy',
-            value: CSP_HEADER,
-          }
-        ]
-      }
+        source: "/(.*)",
+        headers: NEXT_SECURITY_HEADERS,
+      },
     ];
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    tsconfigPath: './tsconfig.build.json',
+    tsconfigPath: "./tsconfig.build.json",
     ignoreBuildErrors: true,
   },
-webpack: (config, { isServer }) => {
+  webpack: (config, { isServer }) => {
     config.module.rules.push({
       test: /\.pdf$/,
-      type: 'asset/resource',
+      type: "asset/resource",
       generator: {
-        filename: 'static/files/[name][ext]',
+        filename: "static/files/[name][ext]",
       },
     });
-    
+
     // Bundle size optimizations
     if (!isServer) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
-          chunks: 'all',
+          chunks: "all",
           maxInitialRequests: 25,
           cacheGroups: {
             default: false,
             vendors: false,
             framework: {
-              name: 'framework',
+              name: "framework",
               test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              chunks: 'all',
+              chunks: "all",
               priority: 40,
               enforce: true,
             },
             lib: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'lib',
+              name: "lib",
               priority: 30,
               minChunks: 1,
               reuseExistingChunk: true,
             },
             commons: {
-              name: 'commons',
+              name: "commons",
               minChunks: 2,
               priority: 20,
             },
             shared: {
-              name: 'shared',
+              name: "shared",
               minChunks: 2,
               priority: 10,
               reuseExistingChunk: true,
@@ -122,22 +111,22 @@ webpack: (config, { isServer }) => {
         },
       };
     }
-    
+
     return config;
   },
 };
 
 const withPWA = withPWACore({
-  dest: 'public',
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === "development",
   runtimeCaching: [
     {
       urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'static-resources',
+        cacheName: "static-resources",
         expiration: {
           maxEntries: 64,
           maxAgeSeconds: 24 * 60 * 60 * 30,
@@ -146,9 +135,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'google-fonts-cache',
+        cacheName: "google-fonts-cache",
         expiration: {
           maxEntries: 10,
           maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -157,9 +146,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'gstatic-fonts-cache',
+        cacheName: "gstatic-fonts-cache",
         expiration: {
           maxEntries: 10,
           maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -168,9 +157,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /\/api\/.*$/i,
-      handler: 'NetworkFirst',
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'apis-cache',
+        cacheName: "apis-cache",
         expiration: {
           maxEntries: 16,
           maxAgeSeconds: 24 * 60 * 60,
@@ -180,9 +169,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /.*/i,
-      handler: 'NetworkFirst',
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'others-cache',
+        cacheName: "others-cache",
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60,
