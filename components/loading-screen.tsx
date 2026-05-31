@@ -198,7 +198,7 @@ export function LoadingScreen({
       <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,hsl(var(--background))_72%)]" />
 
-      <div className="relative z-10 mx-auto flex min-h-[inherit] w-full max-w-6xl flex-col items-center justify-center gap-8 px-4 py-12">
+      <div className="relative z-10 mx-auto flex min-h-[inherit] w-full max-w-6xl flex-col items-center justify-center gap-6 px-4 py-8 sm:gap-8 sm:py-10">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="rounded-full bg-card/70 p-4 shadow-xl ring-1 ring-border/50 backdrop-blur">
             <Loader size={104} className="text-blue-600 dark:text-blue-300" />

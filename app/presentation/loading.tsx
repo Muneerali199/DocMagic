@@ -1,10 +1,18 @@
 import { LoadingScreen } from "@/components/loading-screen";
 import { PresentationPageSkeleton } from "@/components/skeletons";
+import { SiteHeader } from "@/components/site-header";
 
 export default function Loading() {
   return (
-    <LoadingScreen variant="presentation">
-      <PresentationPageSkeleton />
-    </LoadingScreen>
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <LoadingScreen
+        variant="presentation"
+        fullScreen={false}
+        className="min-h-[calc(100vh-4rem)] rounded-none"
+      >
+        <PresentationPageSkeleton />
+      </LoadingScreen>
+    </div>
   );
 }

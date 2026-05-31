@@ -40,7 +40,11 @@ export default function ResumePage() {
       <SiteHeader />
       <main className="flex-1 relative z-10">
         <Suspense fallback={
-          <LoadingScreen variant="resume" fullScreen={false}>
+          <LoadingScreen
+            variant="resume"
+            fullScreen={false}
+            className="min-h-[calc(100vh-4rem)] rounded-none"
+          >
             <ResumePageSkeleton />
           </LoadingScreen>
         }>

@@ -10,8 +10,8 @@ import {
 
 function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4" aria-hidden="true">
-      <div className="glass-effect rounded-2xl border border-border/30 p-5 shadow-xl sm:p-8">
+    <div className="mx-auto flex w-full justify-center px-4" aria-hidden="true">
+      <div className="glass-effect w-full max-w-5xl rounded-2xl border border-border/30 p-5 shadow-xl sm:p-8">
         {children}
       </div>
     </div>
