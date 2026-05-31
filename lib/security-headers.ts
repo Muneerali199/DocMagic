@@ -20,8 +20,9 @@ export const SECURITY_HEADERS = {
 } as const;
 
 export const CORS_BASE_HEADERS = {
-  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Request-Id",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Credentials": "true",
   "Access-Control-Max-Age": "86400",
 } as const;
 
@@ -34,9 +35,10 @@ export const NEXT_SECURITY_HEADERS = [
  * Parse the comma-separated CORS allow-list from the environment.
  */
 export function getAllowedOrigins(): string[] {
-  return (process.env.ALLOWED_ORIGINS ?? "http://localhost:3000")
+  return (process.env.ALLOWED_ORIGINS || "http://localhost:3000")
     .split(",")
-    .map((origin) => origin.trim());
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -51,7 +53,11 @@ export function buildCorsHeaders(
   if (!allowedOrigins.includes("*") && !allowedOrigins.includes(origin))
     return {};
 
-  return { "Access-Control-Allow-Origin": origin, ...CORS_BASE_HEADERS };
+  return {
+    "Access-Control-Allow-Origin": origin,
+    Vary: "Origin",
+    ...CORS_BASE_HEADERS,
+  };
 }
 
 /**
