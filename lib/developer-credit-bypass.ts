@@ -41,17 +41,21 @@ function isNextProductionServer(): boolean {
 }
 
 function isLocalDevelopmentRuntime(): boolean {
+  const runtimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
+
   return (
     !isNextProductionServer()
-    && process.env.DRAFTDECK_RUNTIME_ENV?.trim() !== PRODUCTION_ENV
+    && (!runtimeEnv || runtimeEnv === LOCAL_DEVELOPMENT_ENV)
     && (process.env.NODE_ENV?.trim() ?? LOCAL_DEVELOPMENT_ENV) === LOCAL_DEVELOPMENT_ENV
   );
 }
 
 function isProductionLikeRuntime(): boolean {
+  const runtimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
+
   return (
     process.env.NODE_ENV?.trim() === PRODUCTION_ENV
-    || process.env.DRAFTDECK_RUNTIME_ENV?.trim() === PRODUCTION_ENV
+    || (!!runtimeEnv && runtimeEnv !== LOCAL_DEVELOPMENT_ENV)
     || isNextProductionServer()
   );
 }

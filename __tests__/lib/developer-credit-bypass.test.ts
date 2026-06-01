@@ -79,6 +79,16 @@ describe('developer credit bypass', () => {
     );
   });
 
+  it('does not allow bypass when runtime env is staging', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.DRAFTDECK_RUNTIME_ENV = 'staging';
+    process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';
+
+    await expect(import('../../lib/developer-credit-bypass')).rejects.toThrow(
+      /Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production/i,
+    );
+  });
+
   it('does not allow bypass when running the production start script', async () => {
     process.env.NODE_ENV = 'development';
     process.env.npm_lifecycle_event = 'start';

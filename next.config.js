@@ -2,8 +2,9 @@ import withPWACore from 'next-pwa';
 import { withSentryConfig } from '@sentry/nextjs';
 import { CSP_HEADER } from './lib/csp.mjs';
 
+const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
 const isProductionLikeRuntime =
-  process.env.DRAFTDECK_RUNTIME_ENV === 'production'
+  (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== 'development')
   || process.env.NODE_ENV === 'production'
   || process.env.npm_lifecycle_event === 'start';
 
