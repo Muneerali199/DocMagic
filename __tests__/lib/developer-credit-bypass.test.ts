@@ -69,6 +69,26 @@ describe('developer credit bypass', () => {
     expect(hasUnlimitedDeveloperCredits('dev@example.com')).toBe(false);
   });
 
+  it('does not allow bypass when Docker runtime env is production', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.DRAFTDECK_RUNTIME_ENV = 'production';
+    process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';
+
+    await expect(import('../../lib/developer-credit-bypass')).rejects.toThrow(
+      /Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production/i,
+    );
+  });
+
+  it('does not allow bypass when running the production start script', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.npm_lifecycle_event = 'start';
+    process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';
+
+    await expect(import('../../lib/developer-credit-bypass')).rejects.toThrow(
+      /Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production/i,
+    );
+  });
+
   it('throws during module import when bypass is configured outside development', async () => {
     process.env.NODE_ENV = 'production';
     process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';

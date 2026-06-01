@@ -25,11 +25,27 @@ export type DeveloperCreditBypassAuditEvent = {
 };
 
 function currentEnvironment(): string {
-  return process.env.NODE_ENV?.trim() || LOCAL_DEVELOPMENT_ENV;
+  return (
+    process.env.DRAFTDECK_RUNTIME_ENV?.trim()
+    || process.env.NODE_ENV?.trim()
+    || LOCAL_DEVELOPMENT_ENV
+  );
 }
 
 function bypassEmailConfig(): string {
   return process.env.DEVELOPER_BYPASS_EMAILS?.trim() ?? '';
+}
+
+function isNextProductionServer(): boolean {
+  return process.env.npm_lifecycle_event === 'start';
+}
+
+function isLocalDevelopmentRuntime(): boolean {
+  return currentEnvironment() === LOCAL_DEVELOPMENT_ENV && !isNextProductionServer();
+}
+
+function isProductionLikeRuntime(): boolean {
+  return currentEnvironment() === PRODUCTION_ENV || isNextProductionServer();
 }
 
 function configuredBypassEmails(): Set<string> {
@@ -42,7 +58,7 @@ function configuredBypassEmails(): Set<string> {
 }
 
 export function validateDeveloperBypassConfiguration() {
-  if (currentEnvironment() === PRODUCTION_ENV && bypassEmailConfig()) {
+  if (isProductionLikeRuntime() && bypassEmailConfig()) {
     throw new Error(DEVELOPER_BYPASS_PRODUCTION_ERROR);
   }
 }
@@ -56,7 +72,7 @@ export function isDeveloperBypassAllowed(email?: string | null): DeveloperBypass
     return { allowed: false, reason: 'not_configured' };
   }
 
-  if (currentEnvironment() !== LOCAL_DEVELOPMENT_ENV) {
+  if (!isLocalDevelopmentRuntime()) {
     return { allowed: false, reason: 'not_development' };
   }
 
