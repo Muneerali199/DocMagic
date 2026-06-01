@@ -4,7 +4,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { resumeGenerationSchema, detectSqlInjection, sanitizeObject, safeParseBody, RequestValidationError } from '@/lib/validation';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { logSecurityEvent, checkRateLimit, SECURITY_CONFIG } from '@/lib/security';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
@@ -177,6 +178,9 @@ async function postHandler(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
+    }
 
     // Check user credits
     const creditCost = ACTION_COSTS.resume;

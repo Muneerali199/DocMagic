@@ -5,7 +5,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { generateDiagramWithMistral } from '@/lib/mistral';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
@@ -37,6 +38,9 @@ export async function POST(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'diagram' });
+    }
 
     const body = await request.json();
     const { prompt, diagramType = 'flowchart' } = body;

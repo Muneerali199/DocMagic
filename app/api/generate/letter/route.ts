@@ -12,8 +12,8 @@ import { createClient } from "@supabase/supabase-js";
 import {
   ACTION_COSTS,
   calculateRemainingCredits,
-  hasUnlimitedDeveloperCredits,
 } from "@/lib/credits-service";
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from "@/lib/developer-credit-bypass";
 import {
   reserveCredits,
   refundCredits,
@@ -106,6 +106,9 @@ export async function POST(request: Request) {
 
     // Check user credits
     const creditCost = ACTION_COSTS[actionType];
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: actionType });
+    }
 
     // Get or create user credits (cached, 15 s TTL)
     const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);

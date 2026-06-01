@@ -11,8 +11,8 @@ import {
   getCreditsResetDate,
   shouldResetCredits,
   calculateRemainingCredits,
-  hasUnlimitedDeveloperCredits
 } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
     }
 
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
+    }
     const creditCost = ACTION_COSTS.resume;
 
     // Get or create user credits

@@ -5,7 +5,8 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, calculateRemainingCredits } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
@@ -38,6 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
+    }
 
     let prompt, validatedPageCount, template;
     try {
