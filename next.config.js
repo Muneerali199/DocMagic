@@ -2,6 +2,12 @@ import withPWACore from 'next-pwa';
 import { withSentryConfig } from '@sentry/nextjs';
 import { CSP_HEADER } from './lib/csp.mjs';
 
+if (process.env.NODE_ENV === 'production' && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
+  throw new Error(
+    'Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production. Use auditable grants instead.'
+  );
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
