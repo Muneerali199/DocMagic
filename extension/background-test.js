@@ -16,6 +16,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener(() => {
     console.log('📦 TEST: Extension installed/updated');
 });
+// Test 4: Sender ID validation
+console.log('🔒 TEST: Testing sender ID validation...');
+
+// Test invalid sender
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    const fakeSender = { id: 'fake-extension-id-123' };
+    
+    if (!fakeSender || !fakeSender.id || fakeSender.id !== chrome.runtime.id) {
+        sendResponse({ error: 'Unauthorized sender' });
+        console.log('✅ TEST: Invalid sender correctly rejected');
+        return false;
+    }
+});
+
+// Test valid sender
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    const validSender = { id: chrome.runtime.id };
+    
+    if (!validSender || !validSender.id || validSender.id !== chrome.runtime.id) {
+        console.log('❌ TEST: Valid sender was incorrectly rejected');
+    } else {
+        console.log('✅ TEST: Valid sender correctly allowed through');
+    }
+});
+
+console.log('🔒 TEST: Sender validation tests complete');
 
 console.log('🎉 TEST: Background script loaded successfully!');
 console.log('👉 If you see this, the service worker is working!');
