@@ -178,9 +178,6 @@ async function postHandler(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
-    }
 
     // Check user credits
     const creditCost = ACTION_COSTS.resume;
@@ -249,6 +246,10 @@ async function postHandler(request: Request) {
       name: sanitizedName, 
       email: sanitizedEmail 
     } = sanitizedInput;
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
+    }
 
     // Atomically reserve credits BEFORE generation to prevent the
     // TOCTOU race documented in issue #477. If a concurrent request beat

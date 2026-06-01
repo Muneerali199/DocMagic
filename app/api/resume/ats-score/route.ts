@@ -47,9 +47,6 @@ export async function POST(req: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
-    }
 
     const { resumeData, jobDescription } = await req.json();
 
@@ -146,6 +143,10 @@ export async function POST(req: Request) {
         );
       }
       userCredits = reserved;
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
     }
 
     // Calculate ATS score

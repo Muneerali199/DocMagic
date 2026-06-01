@@ -98,6 +98,16 @@ describe('developer credit bypass', () => {
     );
   });
 
+  it('does not let DRAFTDECK_RUNTIME_ENV downgrade production NODE_ENV', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.DRAFTDECK_RUNTIME_ENV = 'development';
+    process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';
+
+    await expect(import('../../lib/developer-credit-bypass')).rejects.toThrow(
+      /Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production/i,
+    );
+  });
+
   it('logs structured audit details when a developer bypass is used', async () => {
     process.env.NODE_ENV = 'development';
     process.env.DEVELOPER_BYPASS_EMAILS = 'dev@example.com';

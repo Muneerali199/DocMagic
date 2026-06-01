@@ -41,9 +41,6 @@ export async function POST(request: Request) {
     }
 
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
-    }
     const creditCost = ACTION_COSTS.resume;
 
     // Get or create user credits
@@ -124,6 +121,10 @@ export async function POST(request: Request) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
     }
 
     const resume = await generateGuidedResume({

@@ -247,9 +247,6 @@ export async function POST(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
-    }
 
     const body = await request.json();
     const { prompt, pageCount = 8, outlineOnly = false, settings } = body;
@@ -325,6 +322,10 @@ export async function POST(request: Request) {
           { status: 402 }
         );
       }
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
     }
 
     // console.log('📝 Step 1: Generating slide text content...');

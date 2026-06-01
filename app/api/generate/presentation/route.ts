@@ -39,9 +39,6 @@ export async function POST(request: NextRequest) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
-    }
 
     let prompt, validatedPageCount, template;
     try {
@@ -110,6 +107,10 @@ export async function POST(request: NextRequest) {
         );
       }
       creditsUsedAfterReserve = reserved.credits_used;
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
     }
 
     // Generate presentation outline first

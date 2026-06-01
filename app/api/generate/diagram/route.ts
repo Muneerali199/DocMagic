@@ -38,9 +38,6 @@ export async function POST(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'diagram' });
-    }
 
     const body = await request.json();
     const { prompt, diagramType = 'flowchart' } = body;
@@ -98,6 +95,10 @@ export async function POST(request: Request) {
           { status: 402 }
         );
       }
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'diagram' });
     }
 
     // console.log(`📊 Generating ${diagramType} diagram with Mistral...`);

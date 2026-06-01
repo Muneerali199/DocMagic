@@ -45,9 +45,6 @@ export async function POST(request: Request) {
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
-    if (hasUnlimitedCredits) {
-      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
-    }
 
     const { resumeText, jobDescription } = await request.json();
 
@@ -144,6 +141,10 @@ export async function POST(request: Request) {
         );
       }
       userCredits = reserved;
+    }
+
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
     }
 
     // Single refund-on-exit guard for everything after the reservation:

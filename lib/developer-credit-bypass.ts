@@ -26,8 +26,8 @@ export type DeveloperCreditBypassAuditEvent = {
 
 function currentEnvironment(): string {
   return (
-    process.env.DRAFTDECK_RUNTIME_ENV?.trim()
-    || process.env.NODE_ENV?.trim()
+    process.env.NODE_ENV?.trim()
+    || process.env.DRAFTDECK_RUNTIME_ENV?.trim()
     || LOCAL_DEVELOPMENT_ENV
   );
 }
@@ -41,11 +41,19 @@ function isNextProductionServer(): boolean {
 }
 
 function isLocalDevelopmentRuntime(): boolean {
-  return currentEnvironment() === LOCAL_DEVELOPMENT_ENV && !isNextProductionServer();
+  return (
+    !isNextProductionServer()
+    && process.env.DRAFTDECK_RUNTIME_ENV?.trim() !== PRODUCTION_ENV
+    && (process.env.NODE_ENV?.trim() ?? LOCAL_DEVELOPMENT_ENV) === LOCAL_DEVELOPMENT_ENV
+  );
 }
 
 function isProductionLikeRuntime(): boolean {
-  return currentEnvironment() === PRODUCTION_ENV || isNextProductionServer();
+  return (
+    process.env.NODE_ENV?.trim() === PRODUCTION_ENV
+    || process.env.DRAFTDECK_RUNTIME_ENV?.trim() === PRODUCTION_ENV
+    || isNextProductionServer()
+  );
 }
 
 function configuredBypassEmails(): Set<string> {
