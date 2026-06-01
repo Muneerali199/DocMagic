@@ -9,6 +9,10 @@ import {
   validateEnvironmentVariables,
   SECURITY_CONFIG,
 } from '@/lib/security';
+import {
+  buildCorsHeaders,
+  STATIC_SECURITY_HEADERS,
+} from '@/lib/security-headers';
 
 beforeAll(() => jest.useFakeTimers());
 afterAll(() => jest.useRealTimers());
@@ -125,6 +129,39 @@ describe('getSecurityHeaders', () => {
   it('includes HSTS in production mode', () => {
     const prodHeaders = getSecurityHeaders(false);
     expect(prodHeaders['Strict-Transport-Security']).toContain('max-age=');
+  });
+});
+
+// ──────────────────────────────────────────────────────────────
+// shared security headers
+// ──────────────────────────────────────────────────────────────
+describe('shared security header config', () => {
+  it('exports static headers used by Next config', () => {
+    const keys = STATIC_SECURITY_HEADERS.map((header) => header.key);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        'X-Frame-Options',
+        'X-Content-Type-Options',
+        'X-XSS-Protection',
+        'Referrer-Policy',
+        'Strict-Transport-Security',
+        'Content-Security-Policy',
+      ])
+    );
+  });
+
+  it('builds CORS headers for allowed origins', () => {
+    const headers = buildCorsHeaders('https://draftdeckai.com', [
+      'https://draftdeckai.com',
+    ]);
+
+    expect(headers).toMatchObject({
+      'Access-Control-Allow-Origin': 'https://draftdeckai.com',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-Request-Id',
+      'Access-Control-Max-Age': '86400',
+    });
   });
 });
 

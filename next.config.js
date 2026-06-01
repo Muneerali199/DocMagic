@@ -1,6 +1,6 @@
 import withPWACore from 'next-pwa';
 import { withSentryConfig } from '@sentry/nextjs';
-import { CSP_HEADER } from './lib/csp.mjs';
+import { STATIC_SECURITY_HEADERS } from './lib/security-headers.mjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -52,18 +52,7 @@ trailingSlash: false,
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          {
-            // Source of truth: lib/csp.ts (and its JS companion lib/csp.mjs)
-            key: 'Content-Security-Policy',
-            value: CSP_HEADER,
-          }
-        ]
+        headers: STATIC_SECURITY_HEADERS
       }
     ];
   },
