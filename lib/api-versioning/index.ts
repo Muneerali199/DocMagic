@@ -1,9 +1,26 @@
-export { detectVersion, isSupported, isDeprecated } from './version-router';
-export { addDeprecationHeaders, getDeprecationHeaderMap } from './deprecation';
-export type { ApiVersion, VersionConfig, V1ResumeInput, V2ResumeInput, V1DocumentInput, V2DocumentInput } from './types';
-export { VERSION_CONFIGS } from './types';
+export { detectVersion, isSupported, isDeprecated } from "./version-router";
+export { addDeprecationHeaders, getDeprecationHeaderMap } from "./deprecation";
+export {
+  addLegacyEndpointDeprecation,
+  LEGACY_GENERATION_ENDPOINTS,
+  type LegacyGenerationPath,
+} from "./legacy-endpoint";
+export type {
+  ApiVersion,
+  VersionConfig,
+  V1ResumeInput,
+  V2ResumeInput,
+  V1DocumentInput,
+  V2DocumentInput,
+} from "./types";
+export { VERSION_CONFIGS } from "./types";
 
-import type { V1ResumeInput, V2ResumeInput, V1DocumentInput, V2DocumentInput } from './types';
+import type {
+  V1ResumeInput,
+  V2ResumeInput,
+  V1DocumentInput,
+  V2DocumentInput,
+} from "./types";
 
 /**
  * Converts a v1 resume request body to the v2 shape expected by
@@ -15,26 +32,39 @@ import type { V1ResumeInput, V2ResumeInput, V1DocumentInput, V2DocumentInput } f
  *   jobTitle + yearsOfExperience + skills + additionalContext → prompt (constructed)
  */
 export function convertV1ResumeToV2(body: V1ResumeInput): V2ResumeInput {
-  const { personalInfo, jobTitle, yearsOfExperience, skills, additionalContext } = body;
+  const {
+    personalInfo,
+    jobTitle,
+    yearsOfExperience,
+    skills,
+    additionalContext,
+  } = body;
 
-  const article = /^[aeiou]/i.test(jobTitle) ? 'an' : 'a';
-  const promptParts: string[] = [`Create a professional resume for ${article} ${jobTitle} position.`];
+  const article = /^[aeiou]/i.test(jobTitle) ? "an" : "a";
+  const promptParts: string[] = [
+    `Create a professional resume for ${article} ${jobTitle} position.`,
+  ];
 
   if (yearsOfExperience !== undefined) {
-    promptParts.push(`The candidate has ${yearsOfExperience} years of experience.`);
+    promptParts.push(
+      `The candidate has ${yearsOfExperience} years of experience.`,
+    );
   }
 
-  if (typeof skills === 'string' && skills) {
+  if (typeof skills === "string" && skills) {
     const skillList = skills
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
-      .join(', ');
+      .join(", ");
     // Guard against whitespace-only input producing "Key skills: ."
     if (skillList) promptParts.push(`Key skills: ${skillList}.`);
   }
 
-  const trimmedContext = typeof additionalContext === 'string' ? additionalContext.trim() : undefined;
+  const trimmedContext =
+    typeof additionalContext === "string"
+      ? additionalContext.trim()
+      : undefined;
   if (trimmedContext) {
     promptParts.push(trimmedContext);
   }
@@ -42,7 +72,7 @@ export function convertV1ResumeToV2(body: V1ResumeInput): V2ResumeInput {
   return {
     name: personalInfo.name,
     email: personalInfo.email,
-    prompt: promptParts.join(' '),
+    prompt: promptParts.join(" "),
   };
 }
 

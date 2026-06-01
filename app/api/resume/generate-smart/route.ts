@@ -1,30 +1,31 @@
-import { logger } from '@/lib/logger';
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/logger";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { addLegacyEndpointDeprecation } from "@/lib/api-versioning";
 
-export async function POST(req: Request) {
+export async function handleGenerateResumeSmart(req: Request) {
   try {
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.replace("Bearer ", "");
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        global: { headers: { Authorization: `Bearer ${token}` } }
-      }
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      },
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { text, targetRole } = await req.json();
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
     if (!text || !text.trim()) {
       return NextResponse.json(
         { error: "Please provide some information about yourself" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,27 +41,33 @@ export async function POST(req: Request) {
 
     // Generate complete resume using AI
     const resume = await generateCompleteResume(text, targetRole);
-    
+
     // Calculate ATS score
     const atsScore = calculateATSScore(resume);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       resume,
       atsScore,
-      message: "Resume generated successfully!"
+      message: "Resume generated successfully!",
     });
-
   } catch (error: any) {
-    logger.error({ route: 'app/api/resume/generate-smart/route.ts' }, "Smart resume generation error:", error);
+    logger.error(
+      { route: "app/api/resume/generate-smart/route.ts" },
+      "Smart resume generation error:",
+      error,
+    );
     return NextResponse.json(
       { error: error.message || "Failed to generate resume" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-async function generateCompleteResume(text: string, targetRole?: string): Promise<any> {
+async function generateCompleteResume(
+  text: string,
+  targetRole?: string,
+): Promise<any> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
@@ -73,7 +80,7 @@ async function generateCompleteResume(text: string, targetRole?: string): Promis
 User Input:
 ${text}
 
-${targetRole ? `Target Role: ${targetRole}` : ''}
+${targetRole ? `Target Role: ${targetRole}` : ""}
 
 IMPORTANT INSTRUCTIONS:
 1. Create a COMPLETE resume even if the input is minimal (e.g., just a name or job title)
@@ -173,7 +180,10 @@ CRITICAL:
   return await generateWithOpenAI(openaiApiKey!, prompt);
 }
 
-async function generateWithGemini(apiKey: string, prompt: string): Promise<any> {
+async function generateWithGemini(
+  apiKey: string,
+  prompt: string,
+): Promise<any> {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
     {
@@ -186,9 +196,9 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<any> 
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
-        }
+        },
       }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -196,13 +206,19 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<any> 
   }
 
   const data = await response.json();
-  let content = data.candidates[0]?.content?.parts[0]?.text || '';
-  content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  let content = data.candidates[0]?.content?.parts[0]?.text || "";
+  content = content
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
 
   return JSON.parse(content);
 }
 
-async function generateWithOpenAI(apiKey: string, prompt: string): Promise<any> {
+async function generateWithOpenAI(
+  apiKey: string,
+  prompt: string,
+): Promise<any> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -214,12 +230,13 @@ async function generateWithOpenAI(apiKey: string, prompt: string): Promise<any> 
       messages: [
         {
           role: "system",
-          content: "You are an expert resume writer. Generate complete, professional, ATS-optimized resumes. Always return valid JSON."
+          content:
+            "You are an expert resume writer. Generate complete, professional, ATS-optimized resumes. Always return valid JSON.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -241,24 +258,24 @@ function calculateATSScore(resume: any): any {
 
   // Check contact info (20 points)
   const contact = resume.personalInfo || {};
-  if (contact.name && contact.name !== 'Your Name') {
+  if (contact.name && contact.name !== "Your Name") {
     score += 5;
   } else {
     improvements.push("Add your full name");
   }
-  
-  if (contact.email && contact.email.includes('@')) {
+
+  if (contact.email && contact.email.includes("@")) {
     score += 5;
   } else {
     improvements.push("Add a professional email");
   }
-  
+
   if (contact.phone) {
     score += 5;
   } else {
     improvements.push("Add phone number");
   }
-  
+
   if (contact.location) {
     score += 5;
   } else {
@@ -287,19 +304,22 @@ function calculateATSScore(resume: any): any {
   }
 
   // Check for quantifiable achievements
-  const hasMetrics = exp.some((e: any) => 
-    e.achievements?.some((a: string) => /\d+%|\$\d+|\d+\+/.test(a))
+  const hasMetrics = exp.some((e: any) =>
+    e.achievements?.some((a: string) => /\d+%|\$\d+|\d+\+/.test(a)),
   );
   if (hasMetrics) {
     score += 10;
     feedback.push("✅ Includes quantifiable achievements");
   } else {
-    improvements.push("Add numbers/metrics to achievements (e.g., 'increased sales by 25%')");
+    improvements.push(
+      "Add numbers/metrics to achievements (e.g., 'increased sales by 25%')",
+    );
   }
 
   // Check achievement count
-  const totalAchievements = exp.reduce((sum: number, e: any) => 
-    sum + (e.achievements?.length || 0), 0
+  const totalAchievements = exp.reduce(
+    (sum: number, e: any) => sum + (e.achievements?.length || 0),
+    0,
   );
   if (totalAchievements >= 6) {
     score += 10;
@@ -323,10 +343,11 @@ function calculateATSScore(resume: any): any {
 
   // Check skills (15 points)
   const skills = resume.skills || {};
-  const totalSkills = (skills.technical?.length || 0) + 
-                      (skills.soft?.length || 0) + 
-                      (skills.tools?.length || 0);
-  
+  const totalSkills =
+    (skills.technical?.length || 0) +
+    (skills.soft?.length || 0) +
+    (skills.tools?.length || 0);
+
   if (totalSkills >= 10) {
     score += 15;
     feedback.push("✅ Comprehensive skills list");
@@ -347,26 +368,26 @@ function calculateATSScore(resume: any): any {
   }
 
   // Determine grade
-  let grade = 'F';
-  let color = 'red';
+  let grade = "F";
+  let color = "red";
   if (score >= 90) {
-    grade = 'A';
-    color = 'green';
+    grade = "A";
+    color = "green";
     feedback.push("🎉 Excellent! Your resume is ATS-optimized");
   } else if (score >= 80) {
-    grade = 'B';
-    color = 'blue';
+    grade = "B";
+    color = "blue";
     feedback.push("👍 Good! A few tweaks will make it perfect");
   } else if (score >= 70) {
-    grade = 'C';
-    color = 'yellow';
+    grade = "C";
+    color = "yellow";
     feedback.push("⚠️ Decent, but needs improvement");
   } else if (score >= 60) {
-    grade = 'D';
-    color = 'orange';
+    grade = "D";
+    color = "orange";
     feedback.push("⚠️ Needs significant improvement");
   } else {
-    color = 'red';
+    color = "red";
     feedback.push("❌ Needs major improvements for ATS compatibility");
   }
 
@@ -382,7 +403,16 @@ function calculateATSScore(resume: any): any {
       experience: Math.min(30, totalAchievements >= 6 ? 30 : 15),
       education: edu.length > 0 ? 15 : 0,
       skills: Math.min(15, totalSkills >= 10 ? 15 : 8),
-      certifications: resume.certifications?.length > 0 ? 5 : 0
-    }
+      certifications: resume.certifications?.length > 0 ? 5 : 0,
+    },
   };
+}
+
+/** @deprecated Use POST /api/v2/generate/resume/smart */
+export async function POST(req: Request) {
+  const response = await handleGenerateResumeSmart(req);
+  return addLegacyEndpointDeprecation(
+    response,
+    "/api/v2/generate/resume/smart",
+  );
 }
