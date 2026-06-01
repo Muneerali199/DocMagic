@@ -1,10 +1,18 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { type Database } from '@/types/supabase';
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type Database } from "@/types/supabase";
 import { createClient } from "@supabase/supabase-js";
 
 // Custom fetch with timeout and retry logic
 const createFetchWithTimeout = (timeoutMs: number = 30000) => {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  return async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    // Bypass timeouts in local development to avoid compilation blocking aborts
+    if (process.env.NODE_ENV === "development") {
+      return fetch(input, init);
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -17,19 +25,24 @@ const createFetchWithTimeout = (timeoutMs: number = 30000) => {
       return response;
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
+
       // Handle timeout errors
-      if (error.name === 'AbortError') {
-        console.error('Request timeout:', { url: input, timeout: timeoutMs });
+      if (error.name === "AbortError") {
+        console.error("Request timeout:", { url: input, timeout: timeoutMs });
         throw new Error(`Request timeout after ${timeoutMs}ms`);
       }
-      
+
       // Handle connection errors
-      if (error.code === 'UND_ERR_CONNECT_TIMEOUT' || error.message?.includes('Connect Timeout Error')) {
-        console.error('Connection timeout:', error);
-        throw new Error('Unable to connect to authentication service. Please check your network connection.');
+      if (
+        error.code === "UND_ERR_CONNECT_TIMEOUT" ||
+        error.message?.includes("Connect Timeout Error")
+      ) {
+        console.error("Connection timeout:", error);
+        throw new Error(
+          "Unable to connect to authentication service. Please check your network connection.",
+        );
       }
-      
+
       throw error;
     }
   };
@@ -37,12 +50,11 @@ const createFetchWithTimeout = (timeoutMs: number = 30000) => {
 
 // Server Component Client - For Server Components
 export const createServer = async () => {
-  const { cookies } = await import('next/headers');
+  const { cookies } = await import("next/headers");
   const cookieStore = cookies();
 
   return createServerClient<Database>(
-process.env.SUPABASE_POOLER_URL ||
-process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_POOLER_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
@@ -53,13 +65,13 @@ process.env.NEXT_PUBLIC_SUPABASE_URL!,
       global: {
         fetch: createFetchWithTimeout(30000), // 30 second timeout
       },
-    }
+    },
   );
 };
 
 // Route Handler Client - For API Routes
 export const createRoute = async () => {
-  const { cookies } = await import('next/headers');
+  const { cookies } = await import("next/headers");
   const cookieStore = cookies();
 
   return createServerClient<Database>(
@@ -81,7 +93,7 @@ export const createRoute = async () => {
         },
         remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value: '', ...options });
+            cookieStore.set({ name, value: "", ...options });
           } catch (error) {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
@@ -92,7 +104,7 @@ export const createRoute = async () => {
       global: {
         fetch: createFetchWithTimeout(30000), // 30 second timeout
       },
-    }
+    },
   );
 };
 
@@ -103,6 +115,6 @@ export function createSupabaseAdmin() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 }
