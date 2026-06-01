@@ -16,6 +16,7 @@
 /build
 
 # misc
+.tmp-typecheck/
 .DS_Store
 *.pem
 
