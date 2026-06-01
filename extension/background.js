@@ -394,6 +394,12 @@ async function getProviderAndKey() {
 
 // Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
+     if (sender.id !== chrome.runtime.id) {
+        sendResponse({ error: 'Unauthorized sender' });
+        return false;
+    }
+    
     if (request.type === 'INCREMENT_STAT') {
         incrementStat(request.stat, request.count);
         sendResponse({ success: true });
