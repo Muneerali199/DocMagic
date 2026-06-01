@@ -74,7 +74,15 @@ trailingSlash: false,
     tsconfigPath: './tsconfig.build.json',
     ignoreBuildErrors: true,
   },
-webpack: (config, { isServer }) => {
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+      jsdom: false,
+      'jsdom/lib/jsdom/living/generated/utils': false,
+      'jsdom/lib/jsdom/utils': false,
+    };
+
     config.module.rules.push({
       test: /\.pdf$/,
       type: 'asset/resource',
