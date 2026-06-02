@@ -5,11 +5,14 @@ class MCPServer {
     constructor() {
         this.isRunning = false;
         this.scanInterval = null;
+        this.debounceTimer = null;
+        this.isScanning = false;
         this.lastScannedContent = null;
         this.analysisCache = new Map();
         
         this.config = {
-            scanInterval: 2000,
+            scanInterval: 10000,
+            inputDebounceMs: 1500,
             maxCacheSize: 100,
             enableAutoScan: true,
             enableContextAnalysis: true,
@@ -59,6 +62,7 @@ class MCPServer {
         if (this.scanInterval) return;
         
         console.log('🔍 Starting auto-scan...');
+        this.scanCurrentPage();
         this.scanInterval = setInterval(() => {
             this.scanCurrentPage();
         }, this.config.scanInterval);
@@ -69,9 +73,16 @@ class MCPServer {
             clearInterval(this.scanInterval);
             this.scanInterval = null;
         }
+
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
     }
     
     async scanCurrentPage() {
+        if (this.isScanning) return;
+
         try {
             const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tabs[0]) return;
@@ -81,8 +92,18 @@ class MCPServer {
             
             // Check if it's a supported platform
             if (!this.isSupportedPlatform(url)) return;
+
+            const pageState = await this.getPageScanState(tab.id);
+            if (pageState?.visibilityState === 'hidden') return;
+
+            const lastInputAt = pageState?.lastInputAt || 0;
+            if (lastInputAt && Date.now() - lastInputAt < this.config.inputDebounceMs) {
+                this.scheduleDebouncedScan();
+                return;
+            }
             
             // Inject content scanner
+            this.isScanning = true;
             const result = await chrome.tabs.sendMessage(tab.id, {
                 type: 'MCP_SCAN_PAGE'
             });
@@ -94,6 +115,51 @@ class MCPServer {
         } catch (error) {
             // Silent fail - page might not be ready
             console.debug('Scan failed:', error.message);
+        } finally {
+            this.isScanning = false;
+        }
+    }
+
+    scheduleDebouncedScan() {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+
+        this.debounceTimer = setTimeout(() => {
+            this.debounceTimer = null;
+            this.scanCurrentPage();
+        }, this.config.inputDebounceMs);
+    }
+
+    async getPageScanState(tabId) {
+        try {
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId },
+                func: () => {
+                    if (!window.__draftDeckAIInputTrackingInstalled) {
+                        window.__draftDeckAIInputTrackingInstalled = true;
+                        window.__draftDeckAILastInputAt = 0;
+
+                        const markInput = () => {
+                            window.__draftDeckAILastInputAt = Date.now();
+                        };
+
+                        document.addEventListener('input', markInput, true);
+                        document.addEventListener('keydown', markInput, true);
+                        document.addEventListener('pointerdown', markInput, true);
+                    }
+
+                    return {
+                        visibilityState: document.visibilityState,
+                        lastInputAt: window.__draftDeckAILastInputAt || 0
+                    };
+                }
+            });
+
+            return result?.result || null;
+        } catch (error) {
+            console.debug('Page state check failed:', error.message);
+            return null;
         }
     }
     
