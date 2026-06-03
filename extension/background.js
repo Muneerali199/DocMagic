@@ -258,7 +258,7 @@ async function callGeminiAPI(apiKey, prompt) {
     }
 
     const data = await response.json();
-    const text = data.candidates[0]?.content?.parts[0]?.text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     return parseAIResponse(text);
 }
@@ -287,7 +287,7 @@ async function callOpenAIAPI(apiKey, prompt) {
     }
 
     const data = await response.json();
-    const text = data.choices[0]?.message?.content || '';
+    const text = data.choices?.[0]?.message?.content || '';
 
     return parseAIResponse(text);
 }
@@ -315,7 +315,7 @@ async function callMistralAPI(apiKey, prompt) {
     }
 
     const data = await response.json();
-    const text = data.choices[0]?.message?.content || '';
+    const text = data.choices?.[0]?.message?.content || '';
 
     return parseAIResponse(text);
 }
@@ -345,7 +345,7 @@ async function callClaudeAPI(apiKey, prompt) {
     }
 
     const data = await response.json();
-    const text = data.content[0]?.text || '';
+    const text = data.content?.[0]?.text || '';
 
     return parseAIResponse(text);
 }
