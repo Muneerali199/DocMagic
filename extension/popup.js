@@ -200,21 +200,61 @@ themeToggle.addEventListener('click', () => {
 });
 
 // Tab Management
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const tabName = tab.dataset.tab;
-        
-        // Update active tab
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Update active content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
+const tabButtons = Array.from(document.querySelectorAll('.tab'));
+
+function activateTab(tab, shouldFocus = false) {
+    if (!tab) return;
+
+    const tabName = tab.dataset.tab;
+    const activePanel = document.getElementById(`${tabName}-tab`);
+
+    tabButtons.forEach(button => {
+        const isActive = button === tab;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', String(isActive));
+        button.tabIndex = isActive ? 0 : -1;
+    });
+
+    document.querySelectorAll('.tab-content').forEach(content => {
+        const isActive = content === activePanel;
+        content.classList.toggle('active', isActive);
+        content.hidden = !isActive;
+    });
+
+    if (shouldFocus) {
+        tab.focus();
+    }
+}
+
+tabButtons.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab));
+
+    tab.addEventListener('keydown', event => {
+        const lastIndex = tabButtons.length - 1;
+        let nextIndex = index;
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            nextIndex = index === lastIndex ? 0 : index + 1;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            nextIndex = index === 0 ? lastIndex : index - 1;
+        } else if (event.key === 'Home') {
+            nextIndex = 0;
+        } else if (event.key === 'End') {
+            nextIndex = lastIndex;
+        } else if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            activateTab(tab);
+            return;
+        } else {
+            return;
+        }
+
+        event.preventDefault();
+        activateTab(tabButtons[nextIndex], true);
     });
 });
+
+activateTab(document.querySelector('.tab.active'));
 
 // Open Settings Page
 const settingsBtn = document.getElementById('open-settings');
@@ -783,10 +823,7 @@ document.getElementById('start-interview-config').addEventListener('click', () =
 // Display interview question
 function displayInterviewQuestion(question) {
     // Switch to interview tab
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('[data-tab="interview"]').classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('interview-tab').classList.add('active');
+    activateTab(document.querySelector('[data-tab="interview"]'));
     
     // Display question
     const resultDiv = document.getElementById('interview-result');

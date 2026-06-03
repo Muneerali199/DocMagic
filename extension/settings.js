@@ -31,6 +31,7 @@ async function loadSettings() {
         // Load AI provider
         const provider = result[STORAGE_KEYS.AI_PROVIDER] || 'gemini';
         document.querySelector(`input[name="ai-provider"][value="${provider}"]`).checked = true;
+        updateProviderSelection();
 
         // Load API keys and update status
         loadApiKey('gemini', result[STORAGE_KEYS.GEMINI_KEY]);
@@ -87,9 +88,30 @@ function setupEventListeners() {
     document.querySelectorAll('input[name="ai-provider"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const provider = radio.value;
+            updateProviderSelection();
             chrome.storage.local.set({ [STORAGE_KEYS.AI_PROVIDER]: provider });
             showStatus(`Switched to ${getProviderName(provider)}`, 'success');
         });
+    });
+
+    document.querySelectorAll('.provider-option').forEach(option => {
+        option.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+
+            const radio = option.querySelector('input[name="ai-provider"]');
+            if (!radio) return;
+
+            event.preventDefault();
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+}
+
+function updateProviderSelection() {
+    document.querySelectorAll('.provider-option').forEach(option => {
+        const radio = option.querySelector('input[name="ai-provider"]');
+        option.setAttribute('aria-checked', String(Boolean(radio?.checked)));
     });
 }
 
@@ -197,6 +219,7 @@ async function resetSettings() {
 
         // Reset form
         document.querySelector('input[name="ai-provider"][value="gemini"]').checked = true;
+        updateProviderSelection();
         document.getElementById('gemini-api-key').value = '';
         document.getElementById('openai-api-key').value = '';
         document.getElementById('mistral-api-key').value = '';
