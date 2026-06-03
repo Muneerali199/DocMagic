@@ -11,6 +11,7 @@ class MCPServer {
         this.analysisCache = new Map();
         
         this.config = {
+            configVersion: 2,
             scanInterval: 10000,
             inputDebounceMs: 1500,
             maxCacheSize: 100,
@@ -50,7 +51,16 @@ class MCPServer {
     async loadConfig() {
         const stored = await chrome.storage.local.get(['mcp_config']);
         if (stored.mcp_config) {
-            this.config = { ...this.config, ...stored.mcp_config };
+            const storedConfig = { ...stored.mcp_config };
+            const needsMigration = !storedConfig.configVersion || storedConfig.scanInterval === 2000;
+
+            if (needsMigration) {
+                storedConfig.configVersion = this.config.configVersion;
+                storedConfig.scanInterval = this.config.scanInterval;
+                await chrome.storage.local.set({ mcp_config: storedConfig });
+            }
+
+            this.config = { ...this.config, ...storedConfig };
         }
     }
     
@@ -82,6 +92,9 @@ class MCPServer {
     
     async scanCurrentPage() {
         if (this.isScanning) return;
+        if (!this.isRunning) return;
+
+        this.isScanning = true;
 
         try {
             const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -103,7 +116,6 @@ class MCPServer {
             }
             
             // Inject content scanner
-            this.isScanning = true;
             const result = await chrome.tabs.sendMessage(tab.id, {
                 type: 'MCP_SCAN_PAGE'
             });
@@ -121,12 +133,15 @@ class MCPServer {
     }
 
     scheduleDebouncedScan() {
+        if (!this.isRunning) return;
+
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
         }
 
         this.debounceTimer = setTimeout(() => {
             this.debounceTimer = null;
+            if (!this.isRunning) return;
             this.scanCurrentPage();
         }, this.config.inputDebounceMs);
     }
