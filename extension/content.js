@@ -35,11 +35,12 @@
     
     function detectPlatform() {
         const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
         
         if (hostname.includes('leetcode.com')) return 'leetcode';
         if (hostname.includes('hackerrank.com')) return 'hackerrank';
         if (hostname.includes('codeforces.com')) return 'codeforces';
-        if (hostname.includes('linkedin.com/jobs')) return 'linkedin-jobs';
+        if (hostname.includes('linkedin.com') && pathname.startsWith('/jobs')) return 'linkedin-jobs';
         if (hostname.includes('geeksforgeeks.org')) return 'geeksforgeeks';
         if (hostname.includes('linkedin.com')) return 'linkedin';
         
@@ -58,6 +59,12 @@
         return new Promise((resolve) => {
             try {
                 chrome.storage.local.get([key], (result) => {
+                    if (chrome.runtime.lastError) {
+                        console.warn('DraftDeckAI storage read failed:', chrome.runtime.lastError);
+                        resolve(undefined);
+                        return;
+                    }
+
                     resolve(result?.[key]);
                 });
             } catch (error) {
@@ -70,7 +77,13 @@
     function setStoredValue(key, value) {
         return new Promise((resolve) => {
             try {
-                chrome.storage.local.set({ [key]: value }, resolve);
+                chrome.storage.local.set({ [key]: value }, () => {
+                    if (chrome.runtime.lastError) {
+                        console.warn('DraftDeckAI storage write failed:', chrome.runtime.lastError);
+                    }
+
+                    resolve();
+                });
             } catch (error) {
                 console.warn('DraftDeckAI storage write failed:', error);
                 resolve();
@@ -81,7 +94,13 @@
     function removeStoredValue(key) {
         return new Promise((resolve) => {
             try {
-                chrome.storage.local.remove(key, resolve);
+                chrome.storage.local.remove(key, () => {
+                    if (chrome.runtime.lastError) {
+                        console.warn('DraftDeckAI storage remove failed:', chrome.runtime.lastError);
+                    }
+
+                    resolve();
+                });
             } catch (error) {
                 console.warn('DraftDeckAI storage remove failed:', error);
                 resolve();
@@ -990,8 +1009,7 @@
     }
     
     // Check for job postings on page load
-    if (detectPlatform()?.includes('jobs') || detectPlatform()?.includes('indeed') || 
-        detectPlatform()?.includes('wellfound') || detectPlatform()?.includes('glassdoor')) {
+    if (platform && ['linkedin-jobs', 'indeed', 'wellfound', 'glassdoor'].includes(platform)) {
         setTimeout(handleJobPosting, 2000);
     }
     
