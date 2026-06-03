@@ -170,12 +170,18 @@ describe("shared security header config", () => {
     const origin = "https://draftdeckai.com";
     const allowedOrigins = [origin];
 
-    expect(
-      runtimeModule.STATIC_SECURITY_HEADERS.map((header) => header.key),
-    ).toEqual(STATIC_SECURITY_HEADERS.map((header) => header.key));
+    expect(runtimeModule.STATIC_SECURITY_HEADERS).toEqual(
+      STATIC_SECURITY_HEADERS,
+    );
     expect(runtimeModule.buildCorsHeaders(origin, allowedOrigins)).toEqual(
       buildCorsHeaders(origin, allowedOrigins),
     );
+    expect(
+      runtimeModule.buildCorsHeaders(
+        "https://evil.example.com",
+        allowedOrigins,
+      ),
+    ).toEqual(buildCorsHeaders("https://evil.example.com", allowedOrigins));
   });
 });
 
