@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- Replaced the Quick Resume Generate tab's inline name and email checks with shared Zod schemas, added inline field errors, and blocked submit until validation passes.
+
 ## [2.0.0] - 2025-07-28
 ### Changed
 - Updated version to 2.0.0 in package.json

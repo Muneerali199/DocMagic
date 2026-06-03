@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/use-theme';
 import { useUsageStats } from '@/hooks/use-usage-stats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +13,8 @@ import { logger } from "@/lib/logger";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme, isDark, isUsingSystemTheme, systemPreference, mounted: themeMounted } = useTheme();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const { 
     documentsCreated, 
     templatesUsed, 
@@ -24,10 +23,6 @@ export default function SettingsPage() {
     loading: statsLoading, 
     error: statsError 
   } = useUsageStats();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
 
 
@@ -115,7 +110,7 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Theme</label>
-                  {!mounted ? (
+                  {!themeMounted ? (
                     <div className="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
                   ) : (
                     <div className="space-y-3">
@@ -145,14 +140,17 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                       
-                      {/* Debug info */}
-                      <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                        <div>Current theme: <span className="font-mono">{theme}</span></div>
-                        <div>Resolved theme: <span className="font-mono">{resolvedTheme}</span></div>
-                        <div>HTML has dark class: <span className="font-mono">{document?.documentElement?.classList?.contains('dark') ? 'Yes' : 'No'}</span></div>
-                      </div>
+                      {/* System preference info */}
+                      {isUsingSystemTheme && systemPreference && (
+                        <div className="text-xs text-muted-foreground bg-muted/50 p-2.5 rounded-lg flex items-center gap-2">
+                          <Laptop className="h-3.5 w-3.5 shrink-0" />
+                          <span>
+                            Your system prefers <span className="font-semibold">{systemPreference}</span> mode
+                          </span>
+                        </div>
+                      )}
                       
-                      {/* Alternative theme buttons for testing */}
+                      {/* Theme quick-select buttons */}
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
@@ -182,7 +180,7 @@ export default function SettingsPage() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Theme changes apply immediately across the entire application
+                      Your preference is saved automatically and persists across sessions
                   </p>
                 </div>
               </div>

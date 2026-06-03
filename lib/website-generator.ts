@@ -217,7 +217,7 @@ async function generateAIImages(prompt: string, count: number = 5): Promise<stri
 }
 
 // Build analysis for web applications (functional apps, not marketing websites)
-function buildWebAppAnalysis(appType: string, prompt: string) {
+export function buildWebAppAnalysis(appType: string, prompt: string) {
   const appConfigs: Record<string, any> = {
     'Todo / Task Manager App': {
       features: ['Add new tasks', 'Mark tasks as complete', 'Delete tasks', 'Edit tasks', 'Filter (all/active/completed)', 'Clear completed', 'Task counter', 'Local storage persistence'],
@@ -297,7 +297,7 @@ function buildWebAppAnalysis(appType: string, prompt: string) {
 }
 
 // Intelligent prompt analysis to detect project type and requirements
-function analyzePrompt(prompt: string): {
+export function analyzePrompt(prompt: string): {
   type: string;
   features: string[];
   sections: string[];

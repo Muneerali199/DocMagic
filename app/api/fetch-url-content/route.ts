@@ -1,8 +1,7 @@
-import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-import { isPrivateUrl } from '@/lib/validate-fetch-url';
-
+import { validateFetchUrl } from '@/lib/validate-fetch-url';
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
@@ -12,31 +11,16 @@ export async function POST(request: Request) {
     const { url } = body;
 
     if (!url) {
-      return NextResponse.json(
-        { error: 'Missing URL' },
-        { status: 400 }
-      );
-    }
-    if(await isPrivateUrl(url)){
-      return NextResponse.json(
-        { error: 'Forbidden URL' },
-        { status: 403 }
-      );
-    }
+  return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
+}
 
-    // Validate URL format
-    let validUrl: URL;
-    try {
-      validUrl = new URL(url);
-      if (!['http:', 'https:'].includes(validUrl.protocol)) {
-        throw new Error('Invalid protocol');
-      }
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid URL format. Please provide a valid HTTP/HTTPS URL.' },
-        { status: 400 }
-      );
-    }
+// ✅ Single unified check — validates protocol, private IPs, length
+const validationError = validateFetchUrl(url);
+if (validationError) {
+  return NextResponse.json({ error: validationError }, { status: 403 });
+}
+
+const validUrl = new URL(url);
 
     // Fetch the URL content
     const response = await fetch(validUrl.toString(), {
@@ -137,7 +121,7 @@ export async function POST(request: Request) {
     });
     
   } catch (error: any) {
-    logger.error({ route: 'app/api/fetch-url-content/route.ts' }, 'Error fetching URL content:', error);
+    logger.error({ route: 'fetch-url-content' }, 'Error fetching URL content:', error);
     
     if (error.name === 'AbortError') {
       return NextResponse.json(

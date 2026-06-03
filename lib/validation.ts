@@ -66,6 +66,7 @@ export function detectSqlInjection(s: string): boolean {
 
 export const emailSchema = z
   .string()
+  .trim()
   .email()
   .max(LIMITS.EMAIL_MAX)
   .refine((e) => /^[^@]+@[^@]+\.[^@]+$/.test(e));
@@ -78,6 +79,7 @@ export const passwordSchema = z
 
 export const nameSchema = z
   .string()
+  .trim()
   .min(1)
   .max(LIMITS.NAME_MAX)
   .regex(/^[a-zA-Z0-9\s.'"\\-]+$/, 'Invalid chars');
@@ -236,5 +238,3 @@ export function validateAndSanitize<T>(schema: ZodSchema<T>, data: unknown): T {
     throw new Error('Validation failed: ' + r.error.errors.map((e) => e.message).join(', '));
   return r.data;
 }
-
-

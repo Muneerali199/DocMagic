@@ -2,18 +2,12 @@
 
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useTheme } from "@/hooks/use-theme";
 
 import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { isDark, toggleTheme, mounted } = useTheme();
 
   if (!mounted) {
     return (
@@ -24,19 +18,15 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement>((props, ref) => {
     );
   }
 
-  const handleToggle = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  };
-
   return (
     <Button
       ref={ref}
       variant="outline"
       size="icon"
       className="rounded-full cursor-pointer relative z-10"
-      onClick={handleToggle}
-      aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-      style={{ pointerEvents: "auto" }}
+      onClick={toggleTheme}
+      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+      style={{ pointerEvents: 'auto' }}
       {...props}
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { CSP_HEADER, buildCspWithNonce } from '@/lib/csp';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
@@ -51,6 +52,8 @@ const RL = {
 
 type RLKey = keyof typeof RL;
 
+// NOTE: In-memory Maps only rate-limit per individual Edge node in production. 
+// For global production rate limiting, swap this Map for Vercel KV or Redis.
 const store = new Map<string, { count: number; reset: number }>();
 function pruneStore() {
   const now = Date.now();
@@ -90,6 +93,16 @@ function secHdrs(r: NextResponse) {
   r.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 }
 
+/**
+ * Generate a cryptographically random nonce for per-request CSP.
+ * Uses Web APIs (btoa) to ensure compatibility with the Edge Runtime.
+ */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join(''));
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin');
@@ -112,6 +125,7 @@ export function middleware(req: NextRequest) {
       req.headers.get('x-real-ip') ??
       'unknown'
     ).trim();
+    
     const rl = checkRL(ip, pathname);
     if (!rl.allowed) {
       const ra = Math.ceil((rl.reset - Date.now()) / 1000);
@@ -153,8 +167,14 @@ export function middleware(req: NextRequest) {
   }
 
   if (!pathname.includes('.')) {
-    const r = NextResponse.next();
+    const nonce = generateNonce();
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-nonce', nonce);
+
+    const r = NextResponse.next({ request: { headers: requestHeaders } });
     secHdrs(r);
+    
+    r.headers.set('Content-Security-Policy', buildCspWithNonce(nonce));
     r.headers.set('X-DNS-Prefetch-Control', 'on');
     r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
     r.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
@@ -169,6 +189,7 @@ export function middleware(req: NextRequest) {
 
   const r = NextResponse.next();
   secHdrs(r);
+  r.headers.set('Content-Security-Policy', CSP_HEADER);
   r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
   return r;
 }

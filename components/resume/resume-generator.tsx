@@ -20,6 +20,7 @@ import { TextColorPanel } from "@/components/resume/text-color-panel";
 import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { useToast } from "@/hooks/use-toast";
 import { useShare } from "@/hooks/use-share";
+import { emailSchema, nameSchema } from "@/lib/validation";
 import {
   File as FileIcon,
   Loader2,
@@ -45,6 +46,7 @@ import {
   Facebook,
   Send,
   FileDown,
+  Check,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { TooltipWithShortcut } from "../ui/tooltip";
@@ -52,12 +54,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { logger } from "@/lib/logger";
 
+type QuickResumeField = "name" | "email";
+type QuickResumeErrors = Partial<Record<QuickResumeField, string>>;
+
 export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const supabaseClient = createClient();
   const { user, loading } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [quickFormErrors, setQuickFormErrors] = useState<QuickResumeErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [resumeData, setResumeData] = useState<any>(null);
   // Persist selected template across sessions (#430)
@@ -87,7 +93,68 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     }
   }, []);
 
+  const isNameValid = name.length > 0 && nameSchema.safeParse(name).success;
+  const isEmailValid = email.length > 0 && emailSchema.safeParse(email).success;
+
+  const validateQuickField = (field: QuickResumeField, value: string) => {
+    const schema = field === "name" ? nameSchema : emailSchema;
+    const result = schema.safeParse(value);
+    const errorMessage = result.success
+      ? undefined
+      : result.error.errors[0]?.message ?? "Invalid value";
+
+    setQuickFormErrors((current) => {
+      if (!errorMessage) {
+        const nextErrors = { ...current };
+        delete nextErrors[field];
+        return nextErrors;
+      }
+
+      return {
+        ...current,
+        [field]: errorMessage,
+      };
+    });
+
+    return result;
+  };
+
+  const validateQuickForm = () => {
+    const validatedName = nameSchema.safeParse(name);
+    const validatedEmail = emailSchema.safeParse(email);
+    const nextErrors: QuickResumeErrors = {};
+
+    if (!validatedName.success) {
+      nextErrors.name =
+        validatedName.error.errors[0]?.message ?? "Name is required";
+    }
+
+    if (!validatedEmail.success) {
+      nextErrors.email =
+        validatedEmail.error.errors[0]?.message ??
+        "Please enter a valid email address";
+    }
+
+    if (!validatedName.success || !validatedEmail.success) {
+      setQuickFormErrors(nextErrors);
+      return null;
+    }
+
+    setQuickFormErrors({});
+
+    return {
+      name: validatedName.data,
+      email: validatedEmail.data,
+    };
+  };
+
   const generateResume = async () => {
+    const validatedQuickForm = validateQuickForm();
+
+    if (!validatedQuickForm) {
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Please enter a prompt",
@@ -97,13 +164,14 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       return;
     }
 
-    if (!name.trim() || !email.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your name and email",
-        variant: "destructive",
-      });
-      return;
+    const { name: validatedName, email: validatedEmail } = validatedQuickForm;
+
+    if (validatedName !== name) {
+      setName(validatedName);
+    }
+
+    if (validatedEmail !== email) {
+      setEmail(validatedEmail);
     }
 
     setIsGenerating(true);
@@ -129,8 +197,8 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
         },
         body: JSON.stringify({
           prompt,
-          name,
-          email,
+          name: validatedName,
+          email: validatedEmail,
         }),
       });
 
@@ -153,10 +221,10 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               'Authorization': `Bearer ${session.access_token}`,
             },
             body: JSON.stringify({
-              title: `${data.name || name}'s Resume`,
+              title: `${data.name || validatedName}'s Resume`,
               content: data,
               template: selectedTemplate,
-              prompt: prompt || `Resume for ${data.name || name}`,
+              prompt: prompt || `Resume for ${data.name || validatedName}`,
               isPublic: false,
               customColors: customColors,
             }),
@@ -214,6 +282,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     setResumeData(resume);
     setName(fullName);
     setEmail(profile.email || "");
+    setQuickFormErrors({});
 
     // Log to verify state was updated
     setTimeout(() => {
@@ -605,22 +674,41 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                     <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       Your Name
+                      {isNameValid && (
+                        <Check className="h-3 w-3 text-green-500" />
+                      )}
                     </Label>
                     <Input
                       id="name"
                       placeholder="John Doe"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 w-full text-base px-3 py-2"
+                      onChange={(e) => {
+                        const nextName = e.target.value;
+                        setName(nextName);
+
+                        if (quickFormErrors.name) {
+                          validateQuickField("name", nextName);
+                        }
+                      }}
+                      onBlur={() => validateQuickField("name", name)}
+                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${quickFormErrors.name
+                        ? "border-red-400/60 focus:border-red-400/80"
+                        : "border-yellow-400/30 focus:border-yellow-400/60"
+                        }`}
                       disabled={isGenerating}
                     />
+                    {quickFormErrors.name && (
+                      <p className="text-xs text-red-500">
+                        {quickFormErrors.name}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       Email
-                      {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                      {isEmailValid && (
                         <span className="text-green-500 text-xs">✓</span>
                       )}
                     </Label>
@@ -629,13 +717,26 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                       type="email"
                       placeholder="john@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                      onChange={(e) => {
+                        const nextEmail = e.target.value;
+                        setEmail(nextEmail);
+
+                        if (quickFormErrors.email) {
+                          validateQuickField("email", nextEmail);
+                        }
+                      }}
+                      onBlur={() => validateQuickField("email", email)}
+                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${quickFormErrors.email
                           ? "border-red-400/60 focus:border-red-400/80"
                           : "border-yellow-400/30 focus:border-yellow-400/60"
                         }`}
                       disabled={isGenerating}
                     />
+                    {quickFormErrors.email && (
+                      <p className="text-xs text-red-500">
+                        {quickFormErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -660,7 +761,9 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                         isGenerating ||
                         !prompt.trim() ||
                         !name.trim() ||
-                        !email.trim()
+                        !email.trim() ||
+                        Boolean(quickFormErrors.name) ||
+                        Boolean(quickFormErrors.email)
                       }
                       className="w-full h-12 bolt-gradient text-white font-semibold text-base hover:scale-105 transition-all duration-300 relative overflow-hidden"
                     >

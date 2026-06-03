@@ -200,17 +200,18 @@ Free tier: 50 credits/month
 ### Getting Started (⭐ Start Here!)
 - **[docs/SETUP.md](./docs/SETUP.md)** - 📖 Complete setup guide with step-by-step API key generation and troubleshooting
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
-- **[docs/UTILITIES.md](./docs/UTILITIES.md)** - Development utilities & best practices guide
 
 ### Architecture & Diagrams
-- [ARCHITECTURE_DIAGRAM_FEATURE.md](./ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
-- [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md) - Technical system architecture  
-- [ARCHITECTURE_IMPROVEMENTS.md](./ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
+- [docs/DARK_MODE_PERSISTENCE.md](./docs/DARK_MODE_PERSISTENCE.md) - 🌓 Detailed dark mode persistence and FOUC prevention system guide
+- [docs/architecture/ARCHITECTURE_DIAGRAM_FEATURE.md](./docs/architecture/ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
+- [docs/architecture/SYSTEM_ARCHITECTURE.md](./docs/architecture/SYSTEM_ARCHITECTURE.md) - Technical system architecture
+- [docs/architecture/ARCHITECTURE_IMPROVEMENTS.md](./docs/architecture/ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
 
 ### Other Docs
-- [Code_of_Conduct.md](./Code_of_Conduct.md) - Community standards
-- [CHANGELOG.md](./CHANGELOG.md) - Version history
-- [FAQ.md](./FAQ.md) - Frequently asked questions
+- [docs/Code_of_Conduct.md](./docs/Code_of_Conduct.md) - Community standards
+- [docs/CHANGELOG.md](./docs/CHANGELOG.md) - Version history
+- [docs/FAQ.md](./docs/FAQ.md) - Frequently asked questions
+- [docs/THEME_FIX.md](./docs/THEME_FIX.md) - Theme-Adaptive presentation fix guide
 
 ---
 
@@ -230,6 +231,10 @@ Join our official WhatsApp group to connect with other contributors, get help wi
 [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/JblK45aOdv9Ao0YhnMcPcQ)
 
 ---
+
+## Security
+
+If you discover any security vulnerabilities, please refer to our [Security Policy](SECURITY.md) for information on how to responsibly disclose them. Please do not report security vulnerabilities via public GitHub issues.
 
 ## 👥 Contributors
 
@@ -253,7 +258,6 @@ Contributions are welcome! We've made it easy to get started:
 **First-time contributors?** Start here:
 1. 📖 Read [docs/SETUP.md](./docs/SETUP.md) - Complete setup guide with all API keys
 2. 📚 Check [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
-3. 🛠️ Review [docs/UTILITIES.md](./docs/UTILITIES.md) - Development utilities guide
 
 **Ready to contribute?**
 1. Fork the repository

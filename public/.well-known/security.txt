@@ -1,0 +1,14 @@
+# Security Contact Information
+Contact: mailto:[MAINTAINERS-PLEASE-INSERT-EMAIL-HERE]
+
+# Link to the Vulnerability Disclosure Policy
+Policy: https://github.com/muneerali199/draftdeckai/blob/main/SECURITY.md
+
+# Preferred Languages for Communication
+Preferred-Languages: en
+
+# Canonical URI for this file
+Canonical: https://draftdeckai.com/.well-known/security.txt
+
+# File Expiry Date (Requires annual renewal)
+Expires: 2027-05-31T00:00:00.000Z

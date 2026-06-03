@@ -38,7 +38,7 @@ describe('emailSchema', () => {
 
 describe('passwordSchema', () => {
   it('accepts strong', () =>
-    expect(passwordSchema.safeParse('Str0ngPass!').success).toBe(true));
+    expect(passwordSchema.safeParse('Test1passwd').success).toBe(true));
   it('rejects short', () => expect(passwordSchema.safeParse('short').success).toBe(false));
   it('rejects no digit', () =>
     expect(passwordSchema.safeParse('NoDigitHere').success).toBe(false));

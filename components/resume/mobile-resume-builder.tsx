@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText, Upload, Sparkles, Download, Globe, Linkedin,
   FileDown, Loader2, CheckCircle2, AlertCircle, Edit, MessageSquare,
@@ -39,10 +40,72 @@ interface MobileResumeBuilderProps {
   resumeId?: string | null;
 }
 
+const MobileBuilderSkeleton = () => (
+  <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    {/* Mobile Header Skeleton */}
+    <div className="flex items-center justify-between p-4 bg-white border-b shadow-sm z-10">
+      <Skeleton className="h-9 w-9 rounded-full" />
+      <Skeleton className="h-6 w-32" />
+      <Skeleton className="h-9 w-20 rounded-md" />
+    </div>
+
+    {/* Progress Bar / Tabs Skeleton */}
+    <div className="px-4 py-3 bg-white border-b">
+      <Skeleton className="h-2 w-full rounded-full mb-4" />
+      <div className="flex gap-2 overflow-hidden">
+        <Skeleton className="h-8 w-24 rounded-full flex-shrink-0" />
+        <Skeleton className="h-8 w-24 rounded-full flex-shrink-0" />
+        <Skeleton className="h-8 w-24 rounded-full flex-shrink-0" />
+        <Skeleton className="h-8 w-24 rounded-full flex-shrink-0" />
+      </div>
+    </div>
+
+    {/* Form Content Skeleton */}
+    <div className="flex-1 p-5 space-y-6 overflow-y-auto">
+      {/* Section Title */}
+      <Skeleton className="h-7 w-48 mb-6" />
+
+      {/* Input Fields */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+      </div>
+
+      {/* Textarea/Rich Text Skeleton */}
+      <div className="space-y-2 pt-4">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-32 w-full rounded-lg" />
+      </div>
+    </div>
+
+    {/* Bottom Action Bar Skeleton */}
+    <div className="p-4 bg-white border-t flex justify-between gap-4 z-10">
+      <Skeleton className="h-12 flex-1 rounded-lg" />
+      <Skeleton className="h-12 flex-1 rounded-lg" />
+    </div>
+  </div>
+);
+
 export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilderProps) {
   const { toast } = useToast();
   const resumePreviewRef = useRef<ResumePreviewRef>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [isLoadingSavedResume, setIsLoadingSavedResume] = useState(false);
   const [resumeData, setResumeData] = useState<any>(null);
   const [atsScore, setAtsScore] = useState<any>(null);
   const [manualText, setManualText] = useState("");
@@ -92,6 +155,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   useEffect(() => {
     logger.info(null, 'Template ID received:', templateId);
     if (templateId) {
+      setIsLoadingTemplate(true);
       const template = RESUME_TEMPLATES.find(t => t.id === templateId);
       logger.info(null, 'Template found:', template);
       if (template) {
@@ -154,6 +218,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           variant: "destructive",
         });
       }
+      setIsLoadingTemplate(false);
     }
   }, [templateId, toast]);
 
@@ -161,6 +226,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   useEffect(() => {
     const loadSavedResume = async () => {
       if (!resumeId) return;
+      setIsLoadingSavedResume(true);
 
       logger.info(null, '📄 Loading saved resume:', resumeId);
 
@@ -261,6 +327,10 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           description: "Failed to load saved resume.",
           variant: "destructive",
         });
+      }
+      finally {
+        // Add this finally block! It will run no matter what happens above.
+        setIsLoadingSavedResume(false);
       }
     };
 
@@ -1265,6 +1335,12 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
     const text = encodeURIComponent(`Check out my professional ${isCV ? 'CV' : 'resume'}`);
     window.open(`https://t.me/share/url?url=${encodeURIComponent(publishedUrl)}&text=${text}`, '_blank');
   };
+
+  // Add this interceptor right BEFORE the main return statement!
+  // This will catch all the loading states the maintainer asked for in the issue.
+  if (isImporting || isExtractingJob || isAnalyzingAts || isLoadingTemplate || isLoadingSavedResume) {
+    return <MobileBuilderSkeleton />;
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">

@@ -1,4 +1,6 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,9 +33,14 @@ export function ShareTemplateDialog({
   const [canEdit, setCanEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [origin, setOrigin] = useState("");
   const { toast } = useToast();
 
-  const shareableLink = `${window.location.origin}/templates/${templateId}/shared`;
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const shareableLink = origin ? `${origin}/templates/${templateId}/shared` : "";
 
   const handleShare = async () => {
     if (!email) return;
@@ -75,6 +82,7 @@ export function ShareTemplateDialog({
   };
 
   const copyToClipboard = () => {
+    if (!shareableLink) return;
     navigator.clipboard.writeText(shareableLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -145,7 +153,7 @@ export function ShareTemplateDialog({
                 variant="outline"
                 size="icon"
                 onClick={copyToClipboard}
-                disabled={isCopied}
+                disabled={isCopied || !shareableLink}
               >
                 {isCopied ? (
                   <Check className="h-4 w-4 text-green-500" />

@@ -195,7 +195,7 @@ export function isAllowedOrigin(origin: string | null, host: string): boolean {
     ...(process.env.NEXT_PUBLIC_VERCEL_URL ? [`https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/^https?:\/\//, '')}`] : []),
   ];
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env['NODE_ENV'] === 'development') {
     allowedOrigins.push(
       'http://localhost:3000',
       'http://127.0.0.1:3000',

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🔄 Regenerating image for: "${prompt}"`);
+    // console.log(`🔄 Regenerating image for: "${prompt}"`);
 
     // Generate new image with FLUX
     const imageUrl = await regenerateSlideImage(prompt, size);

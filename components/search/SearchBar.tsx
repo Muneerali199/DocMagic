@@ -66,7 +66,7 @@ export default function SearchBar() {
       if (requestId !== latestRequestId.current) return
       setLoading(false)
     }
-  }, [category, loading])
+  }, [category])
 
   // Debounced search trigger as user types
   useEffect(() => {

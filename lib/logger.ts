@@ -6,8 +6,12 @@ export interface LogContext {
   requestId?: string; userId?: string; route?: string;
   durationMs?: number; statusCode?: number; [key: string]: unknown;
 }
-const IS_PROD = process.env.NODE_ENV === 'production';
-const IS_TEST = process.env.NODE_ENV === 'test';
+const getEnv = () => {
+  const key = 'NODE_ENV';
+  return process.env[key];
+};
+const IS_PROD = getEnv() === 'production';
+const IS_TEST = getEnv() === 'test';
 const COLOURS: Record<LogLevel,string> = { debug:'\x1b[90m', info:'\x1b[36m', warn:'\x1b[33m', error:'\x1b[31m' };
 const RESET = '\x1b[0m';
 function serialize(v: unknown): string {

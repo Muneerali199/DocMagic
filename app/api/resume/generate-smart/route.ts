@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('🚀 Generating smart resume from:', text.substring(0, 100) + '...');
+    // console.log('🚀 Generating smart resume from:', text.substring(0, 100) + '...');
 
     // Generate complete resume using AI
     const resume = await generateCompleteResume(text, targetRole);
