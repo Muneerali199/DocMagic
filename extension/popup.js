@@ -256,6 +256,63 @@ tabButtons.forEach((tab, index) => {
 
 activateTab(document.querySelector('.tab.active'));
 
+let previouslyFocusedElement = null;
+
+function getModalFocusableElements(modal) {
+    return Array.from(modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(element => !element.disabled && element.offsetParent !== null);
+}
+
+function openInterviewConfigModal() {
+    const modal = document.getElementById('interview-config-modal');
+    previouslyFocusedElement = document.activeElement;
+    modal.classList.remove('hidden');
+
+    const focusableElements = getModalFocusableElements(modal);
+    (focusableElements[0] || modal).focus();
+}
+
+function closeInterviewConfigModal() {
+    const modal = document.getElementById('interview-config-modal');
+    modal.classList.add('hidden');
+
+    if (previouslyFocusedElement?.focus) {
+        previouslyFocusedElement.focus();
+    }
+
+    previouslyFocusedElement = null;
+}
+
+function trapInterviewConfigFocus(event) {
+    const modal = document.getElementById('interview-config-modal');
+    if (modal.classList.contains('hidden')) return;
+
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeInterviewConfigModal();
+        return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const focusableElements = getModalFocusableElements(modal);
+    if (!focusableElements.length) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+    }
+}
+
+document.addEventListener('keydown', trapInterviewConfigFocus);
+
 // Open Settings Page
 const settingsBtn = document.getElementById('open-settings');
 if (settingsBtn) {
@@ -788,12 +845,12 @@ document.getElementById('start-interview-mode').addEventListener('click', () => 
     }
     
     // Show config modal
-    document.getElementById('interview-config-modal').classList.remove('hidden');
+    openInterviewConfigModal();
 });
 
 // Cancel Interview Config
 document.getElementById('cancel-interview-config').addEventListener('click', () => {
-    document.getElementById('interview-config-modal').classList.add('hidden');
+    closeInterviewConfigModal();
 });
 
 // Start Interview from Config
@@ -813,7 +870,7 @@ document.getElementById('start-interview-config').addEventListener('click', () =
     };
     
     // Hide modal
-    document.getElementById('interview-config-modal').classList.add('hidden');
+    closeInterviewConfigModal();
     
     // Start interview
     window.interviewerMode.startInterview(config);

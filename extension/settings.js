@@ -96,14 +96,26 @@ function setupEventListeners() {
 
     document.querySelectorAll('.provider-option').forEach(option => {
         option.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const options = Array.from(document.querySelectorAll('.provider-option'));
+            const currentIndex = options.indexOf(option);
+            let nextOption = null;
 
-            const radio = option.querySelector('input[name="ai-provider"]');
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                nextOption = options[(currentIndex + 1) % options.length];
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                nextOption = options[(currentIndex - 1 + options.length) % options.length];
+            } else if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            const selectedOption = nextOption || option;
+            const radio = selectedOption.querySelector('input[name="ai-provider"]');
             if (!radio) return;
 
             event.preventDefault();
             radio.checked = true;
             radio.dispatchEvent(new Event('change', { bubbles: true }));
+            selectedOption.focus();
         });
     });
 }
@@ -111,7 +123,9 @@ function setupEventListeners() {
 function updateProviderSelection() {
     document.querySelectorAll('.provider-option').forEach(option => {
         const radio = option.querySelector('input[name="ai-provider"]');
-        option.setAttribute('aria-checked', String(Boolean(radio?.checked)));
+        const isChecked = Boolean(radio?.checked);
+        option.setAttribute('aria-checked', String(isChecked));
+        option.tabIndex = isChecked ? 0 : -1;
     });
 }
 

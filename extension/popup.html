@@ -228,7 +228,6 @@
                         Copy Plan
                     </button>
                 </div>
-                </div>
             </div>
         </div>
 
@@ -364,9 +363,9 @@
         </div>
 
         <!-- Interview Config Modal -->
-        <div id="interview-config-modal" class="loading-overlay hidden">
+        <div id="interview-config-modal" class="loading-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="interview-config-title">
             <div class="container" style="max-width: 350px; background: var(--bg); padding: 20px; border-radius: 10px; height: auto;">
-                <h2>🎯 Setup Interview</h2>
+                <h2 id="interview-config-title">🎯 Setup Interview</h2>
                 <p class="description">Configure your mock interview session</p>
                 
                 <div class="input-group">
@@ -426,7 +425,7 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
+    <div id="loading-overlay" class="loading-overlay hidden" role="status" aria-live="polite">
         <div class="spinner"></div>
         <p>AI is thinking...</p>
     </div>
