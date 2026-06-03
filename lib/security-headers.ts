@@ -28,12 +28,18 @@ export const STATIC_SECURITY_HEADERS = [
   },
 ];
 
+/**
+ * Parses the comma-separated CORS allowlist from the environment.
+ */
 export function getAllowedOrigins(
   rawOrigins = process.env.ALLOWED_ORIGINS ?? DEFAULT_ALLOWED_ORIGINS,
 ): string[] {
   return rawOrigins.split(",").map((origin) => origin.trim());
 }
 
+/**
+ * Builds CORS response headers for an allowed request origin.
+ */
 export function buildCorsHeaders(
   origin: string | null,
   allowedOrigins = getAllowedOrigins(),
@@ -48,6 +54,9 @@ export function buildCorsHeaders(
   };
 }
 
+/**
+ * Applies the shared security header values to a mutable Headers object.
+ */
 export function applySecurityHeaders(headers: Headers): void {
   for (const [key, value] of Object.entries(SECURITY_HEADER_VALUES)) {
     headers.set(key, value);
