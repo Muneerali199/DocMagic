@@ -41,7 +41,11 @@ export function buildCorsHeaders(
   if (!origin) return {};
   if (!allowedOrigins.includes("*") && !allowedOrigins.includes(origin))
     return {};
-  return { "Access-Control-Allow-Origin": origin, ...CORS_HEADERS };
+  return {
+    "Access-Control-Allow-Origin": origin,
+    Vary: "Origin",
+    ...CORS_HEADERS,
+  };
 }
 
 export function applySecurityHeaders(headers: Headers): void {
