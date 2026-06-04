@@ -270,7 +270,12 @@ export async function POST(request: NextRequest) {
     );
 
     return Response.json(
-      { error: error.message || "Failed to generate images" },
+      {
+        error: "Failed to generate images",
+        ...(process.env.NODE_ENV !== "production" && {
+          details: error.message,
+        }),
+      },
       { status: 500 },
     );
   }

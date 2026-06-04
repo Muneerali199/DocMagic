@@ -136,6 +136,10 @@ export const slideImageGenerationSchema = z
     size: z
       .string()
       .regex(/^\d{2,5}x\d{2,5}$/, "Size must be WIDTHxHEIGHT")
+      .refine((size) => {
+        const [width, height] = size.split("x").map(Number);
+        return width >= 64 && width <= 8192 && height >= 64 && height <= 8192;
+      }, "Dimensions must be between 64 and 8192 pixels")
       .default("1024x576"),
     count: z.coerce.number().int().min(1).max(10).default(1),
   })
@@ -312,9 +316,9 @@ export async function safeParseBody<T>(
     ]);
   }
 
-  const cl = Number(request.headers.get("content-length") ?? 0);
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
   const maxBodyBytes = options.maxBodyBytes ?? LIMITS.MAX_BODY_BYTES;
-  if (Number.isFinite(cl) && cl > maxBodyBytes) {
+  if (Number.isFinite(contentLength) && contentLength > maxBodyBytes) {
     throw new RequestValidationError("Request body too large", [
       `Maximum request body size is ${maxBodyBytes} bytes`,
     ]);
@@ -322,8 +326,46 @@ export async function safeParseBody<T>(
 
   let raw: unknown;
   try {
-    raw = await request.json();
-  } catch {
+    const reader = request.body?.getReader();
+    let text: string;
+
+    if (reader) {
+      const chunks: Uint8Array[] = [];
+      let receivedBytes = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!value) continue;
+
+        receivedBytes += value.byteLength;
+        if (receivedBytes > maxBodyBytes) {
+          throw new RequestValidationError("Request body too large", [
+            `Maximum request body size is ${maxBodyBytes} bytes`,
+          ]);
+        }
+        chunks.push(value);
+      }
+
+      const bodyBytes = new Uint8Array(receivedBytes);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bodyBytes.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      text = new TextDecoder().decode(bodyBytes);
+    } else {
+      text = await request.text();
+      if (new TextEncoder().encode(text).byteLength > maxBodyBytes) {
+        throw new RequestValidationError("Request body too large", [
+          `Maximum request body size is ${maxBodyBytes} bytes`,
+        ]);
+      }
+    }
+
+    raw = JSON.parse(text);
+  } catch (error) {
+    if (error instanceof RequestValidationError) throw error;
     throw new RequestValidationError("Invalid JSON payload", [
       "Request body must be valid JSON",
     ]);

@@ -55,11 +55,23 @@ export async function GET(request: Request) {
     }
     // Include public templates if requested
     if (includePublic) {
-      const { data: publicTemplates } = await supabase
+      let publicQuery = supabase
         .from("templates")
         .select("*")
         .eq("is_public", true)
-        .neq("user_id", user.id);
+        .neq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (type) {
+        publicQuery = publicQuery.eq("type", type);
+      }
+      if (limit) {
+        publicQuery = publicQuery.limit(Number(limit));
+      }
+
+      const { data: publicTemplates, error: publicError } = await publicQuery;
+      if (publicError) throw publicError;
+
       const { data: userTemplates, error: templatesError } = await query;
       if (templatesError) throw templatesError;
       // Combine user's templates with public templates
