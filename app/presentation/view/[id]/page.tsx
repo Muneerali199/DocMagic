@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Loader2, ArrowLeft, Download } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { exportAsPDF } from '@/lib/presentation-export';
 
 interface Slide {
@@ -168,24 +169,15 @@ export default function ViewPresentationPage() {
                 </select>
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleExportPDF}
-                disabled={exporting}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all disabled:opacity-50"
+                isLoading={exporting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all"
               >
-                {exporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Export as PDF
-                  </>
-                )}
-              </button>
+                <Download className="w-4 h-4" />
+                Export as PDF
+              </Button>
 
               <Link
                 href="/presentation"

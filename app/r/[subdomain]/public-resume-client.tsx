@@ -5,6 +5,8 @@ import { Download, Linkedin, Share2, Twitter } from "lucide-react";
 
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { Button } from "@/components/ui/button";
+// FIXED: Using the universal path alias so Next.js finds it anywhere
+import { useLayoutAuditor } from "@/hooks/useLayoutAuditor";
 
 type ResumeData = {
   name?: string;
@@ -38,6 +40,11 @@ export function PublicResumeClient({
   const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
   const xShareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
 
+  // Call the layout auditor hook and pass the resume data as a dependency
+  const { containerRef, overflowRatio, isOverflowing } = useLayoutAuditor([
+    resumeData,
+  ]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur-lg">
@@ -53,18 +60,25 @@ export function PublicResumeClient({
 
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="outline" size="sm" className="gap-2">
-              <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={linkedinShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Linkedin className="h-4 w-4" />
                 LinkedIn
               </a>
             </Button>
             <Button asChild variant="outline" size="sm" className="gap-2">
               <a href={xShareUrl} target="_blank" rel="noopener noreferrer">
-                <Twitter className="h-4 w-4" />
-                X
+                <Twitter className="h-4 w-4" />X
               </a>
             </Button>
-            <Button asChild size="sm" className="bolt-gradient gap-2 text-white">
+            <Button
+              asChild
+              size="sm"
+              className="bolt-gradient gap-2 text-white"
+            >
               <Link href="/resume">
                 <Download className="h-4 w-4" />
                 Create Your Own
@@ -81,12 +95,17 @@ export function PublicResumeClient({
               Build a polished resume like this in minutes.
             </p>
             <p className="text-sm text-gray-600">
-              Use DraftDeckAI to create, edit, and publish your own professional resume.
+              Use DraftDeckAI to create, edit, and publish your own professional
+              resume.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm" className="gap-2">
-              <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={linkedinShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Share2 className="h-4 w-4" />
                 Share on LinkedIn
               </a>
@@ -97,7 +116,16 @@ export function PublicResumeClient({
           </div>
         </section>
 
-        <div className="overflow-hidden rounded-lg bg-white shadow-2xl">
+        {/* We attached containerRef here to watch the height boundaries.
+          If it overflows, it applies a scale transform to shrink the preview down seamlessly.
+        */}
+        <div
+          ref={containerRef}
+          className="overflow-hidden rounded-lg bg-white shadow-2xl origin-top transition-transform duration-200"
+          style={{
+            transform: isOverflowing ? `scale(${overflowRatio})` : "none",
+          }}
+        >
           <ResumePreview
             resume={resumeData}
             template="modern"
@@ -109,11 +137,17 @@ export function PublicResumeClient({
         <div className="mt-8 text-center">
           <p className="mb-4 text-sm text-gray-600">
             Powered by{" "}
-            <Link href="/" className="font-semibold text-blue-600 hover:underline">
+            <Link
+              href="/"
+              className="font-semibold text-blue-600 hover:underline"
+            >
               DraftDeckAI
             </Link>
           </p>
-          <Button asChild className="bolt-gradient text-white shadow-lg transition-transform hover:scale-105">
+          <Button
+            asChild
+            className="bolt-gradient text-white shadow-lg transition-transform hover:scale-105"
+          >
             <Link href="/resume">
               <Download className="mr-2 h-4 w-4" />
               Create Your Professional Resume

@@ -1381,13 +1381,13 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
 
               <Button
                 onClick={generateSlideOutlines}
-                disabled={isGenerating || isFetchingUrl || !prompt.trim()}
+                disabled={isFetchingUrl || !prompt.trim()}
+                isLoading={isGenerating}
                 className="w-full bolt-gradient text-white font-semibold py-4 rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden"
               >
                 <div className="flex items-center justify-center gap-2 relative z-10">
                   {isGenerating ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
                       <span>AI is analyzing your topic...</span>
                     </>
                   ) : (
@@ -1530,12 +1530,11 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             </Button>
             <Button
               onClick={slides.length > 0 ? applyNewThemeToSlides : generateFullPresentation}
-              disabled={isGenerating}
+              isLoading={isGenerating}
               className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 px-8 py-3"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   {slides.length > 0 ? 'Applying theme...' : 'Creating your presentation...'}
                 </>
               ) : (
@@ -1804,57 +1803,65 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             {!shareUrl && (
               <Button
                 onClick={() => saveAndSharePresentation(true)}
-                disabled={isSaving}
+                isLoading={isSaving}
                 className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
               >
                 {isSaving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  "Share Presentation"
                 ) : (
-                  <Share2 className="mr-2 h-4 w-4" />
+                  <>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share Presentation
+                  </>
                 )}
-                Share Presentation
               </Button>
             )}
             
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 onClick={exportToPNG}
-                disabled={isExporting}
+                isLoading={isExporting}
                 variant="outline"
                 className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
               >
                 {isExporting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  "PNG"
                 ) : (
-                  <Download className="mr-2 h-4 w-4" />
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    PNG
+                  </>
                 )}
-                PNG
               </Button>
               <Button
                 onClick={exportToPDF}
-                disabled={isExporting}
+                isLoading={isExporting}
                 variant="outline"
                 className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
               >
                 {isExporting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  "PDF"
                 ) : (
-                  <Download className="mr-2 h-4 w-4" />
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF
+                  </>
                 )}
-                PDF
               </Button>
               <Button
                 onClick={exportToPPTX}
-                disabled={isExporting}
+                isLoading={isExporting}
                 variant="outline"
                 className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
               >
                 {isExporting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  "PowerPoint"
                 ) : (
-                  <Download className="mr-2 h-4 w-4" />
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    PowerPoint
+                  </>
                 )}
-                PowerPoint
               </Button>
             </div>
           </div>

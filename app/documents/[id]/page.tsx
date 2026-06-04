@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { DocumentEditor } from '@/components/documents/document-editor';
+import { SiteHeader } from '@/components/site-header';
 
 interface Props {
   params: Promise<{
@@ -20,7 +21,10 @@ export default async function DocumentPage({ params }: Props) {
   
   return (
     <div className="min-h-screen bg-background">
-      <DocumentEditor documentId={id} />
+      <SiteHeader />
+      <main className="min-h-[calc(100vh-4rem)]">
+        <DocumentEditor documentId={id} />
+      </main>
     </div>
   );
 }

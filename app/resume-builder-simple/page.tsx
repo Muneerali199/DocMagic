@@ -122,9 +122,9 @@ function ResumeBuilderSimple() {
           <p className="text-sm text-gray-600">Click any text to edit</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={exportToPDF} disabled={isExporting}>
+          <Button variant="outline" onClick={exportToPDF} isLoading={isExporting}>
             {isExporting ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Exporting...</>
+              <>Exporting...</>
             ) : (
               <><Download className="w-4 h-4 mr-2" /> Export PDF</>
             )}

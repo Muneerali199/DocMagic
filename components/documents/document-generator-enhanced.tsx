@@ -915,10 +915,9 @@ export function DocumentGeneratorEnhanced({ onDocumentCreated }: DocumentGenerat
               <FileCode className="w-4 h-4 mr-2 text-blue-500" />
               Generate in LaTeX
             </Button>
-            <Button onClick={approveOutline} disabled={isLoading} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20">
+            <Button onClick={approveOutline} isLoading={isLoading} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20">
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Generating...
                 </>
               ) : (

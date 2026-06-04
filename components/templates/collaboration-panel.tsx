@@ -1,36 +1,42 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  Share2, 
-  Copy, 
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  Share2,
+  Copy,
   Mail,
   UserPlus,
   Crown,
   Eye,
   Edit,
-  X
-} from 'lucide-react';
-import { 
-  collaborationService, 
-  Participant, 
-  SharePermission 
-} from '@/lib/collaboration-service';
-import { toast } from 'sonner';
+  X,
+} from "lucide-react";
+import {
+  collaborationService,
+  DocumentChange,
+  Participant,
+} from "@/lib/collaboration-service";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -38,15 +44,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 
 interface CollaborationPanelProps {
   documentId: string;
-  documentType: 'resume' | 'presentation' | 'cv' | 'letter';
+  documentType: "resume" | "presentation" | "cv" | "letter";
   userId: string;
   userName: string;
   userEmail: string;
   isOwner: boolean;
+  onRemoteChange?: (change: DocumentChange) => void;
 }
 
 export function CollaborationPanel({
@@ -56,62 +63,87 @@ export function CollaborationPanel({
   userName,
   userEmail,
   isOwner,
+  onRemoteChange,
 }: CollaborationPanelProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [shareEmail, setShareEmail] = useState('');
-  const [sharePermission, setSharePermission] = useState<'view' | 'edit'>('view');
-  const [shareLink, setShareLink] = useState('');
+  const [shareEmail, setShareEmail] = useState("");
+  const [sharePermission, setSharePermission] = useState<"view" | "edit">(
+    "view",
+  );
+  const [shareLink, setShareLink] = useState("");
   const [isSharing, setIsSharing] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+
+  const initializeCollaboration = useCallback(async () => {
+    const session = await collaborationService.getOrCreateSessionForDocument(
+      documentId,
+      documentType,
+      userId,
+    );
+
+    if (!session) {
+      toast.error("Could not start collaboration session");
+      return;
+    }
+
+    await collaborationService.joinSession(
+      session.id,
+      userId,
+      userName,
+      userEmail,
+      isOwner ? "editor" : "viewer",
+    );
+
+    collaborationService.subscribeToChanges(
+      session.id,
+      (change) => {
+        if (change.user_id !== userId) {
+          onRemoteChange?.(change);
+        }
+      },
+      () => {
+        // Cursor updates handled by parent when needed
+      },
+      (participant) => {
+        setParticipants((prev) => {
+          if (prev.some((p) => p.user_id === participant.user_id)) return prev;
+          return [...prev, participant];
+        });
+        if (participant.user_id !== userId) {
+          toast.success(`${participant.user_name} joined`);
+        }
+      },
+      (leftUserId) => {
+        setParticipants((prev) => prev.filter((p) => p.user_id !== leftUserId));
+      },
+    );
+
+    if (session.participants?.length) {
+      setParticipants(session.participants);
+    }
+
+    const link = `${window.location.origin}/editor/${documentType}/${documentId}`;
+    setShareLink(link);
+  }, [
+    documentId,
+    documentType,
+    userId,
+    userName,
+    userEmail,
+    isOwner,
+    onRemoteChange,
+  ]);
 
   useEffect(() => {
     initializeCollaboration();
     return () => {
       collaborationService.cleanup();
     };
-  }, [documentId]);
-
-  const initializeCollaboration = async () => {
-    if (isOwner) {
-      await collaborationService.createSession(documentId, documentType, userId);
-    }
-
-    await collaborationService.joinSession(
-      documentId,
-      userId,
-      userName,
-      userEmail,
-      isOwner ? 'editor' : 'viewer'
-    );
-
-    // Subscribe to real-time updates
-    collaborationService.subscribeToChanges(
-      documentId,
-      (change) => {
-        // Handle document changes
-        
-      },
-      (userId, position) => {
-        // Handle cursor movements
-        
-      },
-      (participant) => {
-        setParticipants(prev => [...prev, participant]);
-        toast.success(`${participant.user_name} joined`);
-      },
-      (userId) => {
-        setParticipants(prev => prev.filter(p => p.user_id !== userId));
-      }
-    );
-
-    // Generate share link
-    const link = `${window.location.origin}/shared/${documentId}`;
-    setShareLink(link);
-  };
+  }, [initializeCollaboration]);
 
   const handleShareByEmail = async () => {
     if (!shareEmail.trim()) {
-      toast.error('Please enter an email address');
+      toast.error("Please enter an email address");
       return;
     }
 
@@ -120,28 +152,28 @@ export function CollaborationPanel({
       documentId,
       userId,
       shareEmail,
-      sharePermission
+      sharePermission,
     );
 
     if (result) {
       toast.success(`Document shared with ${shareEmail}`);
-      setShareEmail('');
+      setShareEmail("");
       setShowShareDialog(false);
     } else {
-      toast.error('Failed to share document');
+      toast.error("Failed to share document");
     }
     setIsSharing(false);
   };
 
   const copyShareLink = () => {
     navigator.clipboard.writeText(shareLink);
-    toast.success('Link copied to clipboard!');
+    toast.success("Link copied to clipboard!");
   };
 
   const removeParticipant = async (participantId: string) => {
     // Remove participant logic
-    setParticipants(prev => prev.filter(p => p.user_id !== participantId));
-    toast.success('Participant removed');
+    setParticipants((prev) => prev.filter((p) => p.user_id !== participantId));
+    toast.success("Participant removed");
   };
 
   return (
@@ -151,14 +183,14 @@ export function CollaborationPanel({
           <Users className="h-5 w-5" />
           Collaboration
         </CardTitle>
-        <CardDescription>
-          Share and work together in real-time
-        </CardDescription>
+        <CardDescription>Share and work together in real-time</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Active Participants */}
         <div>
-          <Label className="mb-2 block">Active Now ({participants.length})</Label>
+          <Label className="mb-2 block">
+            Active Now ({participants.length})
+          </Label>
           <div className="space-y-2">
             {participants.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
@@ -171,21 +203,40 @@ export function CollaborationPanel({
                   className="flex items-center justify-between p-2 rounded-lg bg-muted"
                 >
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8" style={{ borderColor: participant.color, borderWidth: 2 }}>
-                      <AvatarFallback style={{ backgroundColor: participant.color + '20' }}>
+                    <Avatar
+                      className="h-8 w-8"
+                      style={{ borderColor: participant.color, borderWidth: 2 }}
+                    >
+                      <AvatarFallback
+                        style={{ backgroundColor: participant.color + "20" }}
+                      >
                         {participant.user_name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{participant.user_name}</p>
-                      <p className="text-xs text-muted-foreground">{participant.user_email}</p>
+                      <p className="text-sm font-medium">
+                        {participant.user_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {participant.user_email}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={participant.role === 'owner' ? 'default' : 'secondary'}>
-                      {participant.role === 'owner' && <Crown className="h-3 w-3 mr-1" />}
-                      {participant.role === 'editor' && <Edit className="h-3 w-3 mr-1" />}
-                      {participant.role === 'viewer' && <Eye className="h-3 w-3 mr-1" />}
+                    <Badge
+                      variant={
+                        participant.role === "owner" ? "default" : "secondary"
+                      }
+                    >
+                      {participant.role === "owner" && (
+                        <Crown className="h-3 w-3 mr-1" />
+                      )}
+                      {participant.role === "editor" && (
+                        <Edit className="h-3 w-3 mr-1" />
+                      )}
+                      {participant.role === "viewer" && (
+                        <Eye className="h-3 w-3 mr-1" />
+                      )}
                       {participant.role}
                     </Badge>
                     {isOwner && participant.user_id !== userId && (
@@ -243,7 +294,12 @@ export function CollaborationPanel({
                   </div>
                   <div>
                     <Label>Permission Level</Label>
-                    <Select value={sharePermission} onValueChange={(value: 'view' | 'edit') => setSharePermission(value)}>
+                    <Select
+                      value={sharePermission}
+                      onValueChange={(value: "view" | "edit") =>
+                        setSharePermission(value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -289,7 +345,8 @@ export function CollaborationPanel({
         {/* Info */}
         <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg text-sm">
           <p className="text-blue-900 dark:text-blue-100">
-            💡 Changes are synced in real-time. You can see others' cursors and edits as they happen!
+            💡 Changes are synced in real-time. You can see others' cursors and
+            edits as they happen!
           </p>
         </div>
       </CardContent>

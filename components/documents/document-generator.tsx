@@ -392,10 +392,9 @@ export function DocumentGenerator() {
         <Button variant="outline" onClick={() => setCurrentStep('input-data')}>
           Back
         </Button>
-        <Button onClick={generateDocumentOutline} disabled={isLoading}>
+        <Button onClick={generateDocumentOutline} disabled={isLoading} isLoading={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Generating Outline...
             </>
           ) : (
@@ -450,10 +449,9 @@ export function DocumentGenerator() {
           <Button variant="outline" onClick={() => setCurrentStep('upload-context')}>
             Back
           </Button>
-          <Button onClick={approveOutline} disabled={isLoading}>
+          <Button onClick={approveOutline} disabled={isLoading} isLoading={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Generating...
               </>
             ) : (

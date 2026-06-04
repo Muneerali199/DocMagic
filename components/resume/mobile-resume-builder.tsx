@@ -34,6 +34,7 @@ import { VersionHistoryPanel } from "@/components/templates/version-history-pane
 import { CollaborationPanel } from "@/components/templates/collaboration-panel";
 import { versionHistoryService } from "@/lib/version-history-service";
 import { logger } from "@/lib/logger";
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 interface MobileResumeBuilderProps {
   templateId?: string | null;
@@ -1336,10 +1337,40 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
     window.open(`https://t.me/share/url?url=${encodeURIComponent(publishedUrl)}&text=${text}`, '_blank');
   };
 
-  // Add this interceptor right BEFORE the main return statement!
-  // This will catch all the loading states the maintainer asked for in the issue.
-  if (isImporting || isExtractingJob || isAnalyzingAts || isLoadingTemplate || isLoadingSavedResume) {
+  if (isLoadingTemplate || isLoadingSavedResume) {
     return <MobileBuilderSkeleton />;
+  }
+
+  if (isImporting || isExtractingJob || isAnalyzingAts) {
+    return (
+      <div className="relative min-h-screen">
+        <MobileBuilderSkeleton />
+        <GenerationLoadingOverlay
+          show
+          title={
+            isAnalyzingAts
+              ? "Analyzing ATS score"
+              : isExtractingJob
+                ? "Extracting job details"
+                : "Generating resume"
+          }
+          description={
+            isAnalyzingAts
+              ? "Reviewing keywords, structure, and resume readiness..."
+              : isExtractingJob
+                ? "Reading the job post and identifying the strongest match points..."
+                : "Turning your inputs into a polished resume draft..."
+          }
+          estimatedTime="Estimated time: 20-60 seconds"
+          tips={[
+            "Measurable achievements make resume bullets stronger.",
+            "Tailored resumes should mirror important job keywords naturally.",
+            "You can change templates after the content is generated.",
+          ]}
+          variant="resume"
+        />
+      </div>
+    );
   }
 
   return (

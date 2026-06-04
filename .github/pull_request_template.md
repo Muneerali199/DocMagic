@@ -41,5 +41,6 @@ If your PR consists of any UI changes, please provide screenshots or a video (if
 - [ ] I have successfully run `npm run typecheck` and resolved all TypeScript errors
 - [ ] New and existing unit tests pass locally with my changes (`npx jest`)
 - [ ] I have written or updated related tests, if necessary
-- [ ] This issue is already assigned to me, not an unassigned issue.
+- [ ] This is already assigned Issue to me, not an unassigned issue.
+- [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules

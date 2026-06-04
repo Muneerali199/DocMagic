@@ -248,13 +248,10 @@ export default function SignIn() {
                 variant="outline"
                 className="w-full py-3 flex items-center justify-center gap-3 glass-effect border-yellow-400/30 hover:border-yellow-400/60 hover:bg-yellow-400/5 transition-all duration-300"
                 onClick={() => handleOAuthSignIn("google")}
+                isLoading={isOAuthLoading === "google"}
                 disabled={isLoading || isOAuthLoading !== null}
               >
-                {isOAuthLoading === "google" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <GoogleIcon />
-                )}
+                {isOAuthLoading !== "google" && <GoogleIcon />}
                 <span>Continue with Google</span>
               </Button>
 
@@ -263,13 +260,10 @@ export default function SignIn() {
                 variant="outline"
                 className="w-full py-3 flex items-center justify-center gap-3 glass-effect border-yellow-400/30 hover:border-yellow-400/60 hover:bg-yellow-400/5 transition-all duration-300"
                 onClick={() => handleOAuthSignIn("github")}
+                isLoading={isOAuthLoading === "github"}
                 disabled={isLoading || isOAuthLoading !== null}
               >
-                {isOAuthLoading === "github" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <GitHubIcon />
-                )}
+                {isOAuthLoading !== "github" && <GitHubIcon />}
                 <span>Continue with GitHub</span>
               </Button>
             </div>
@@ -468,14 +462,14 @@ export default function SignIn() {
               >
                 <Button
                   type="submit"
-                  disabled={isLoading || isOAuthLoading !== null || !isFormValid}
+                  disabled={isOAuthLoading !== null || !isFormValid}
+                  isLoading={isLoading}
                   className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   aria-label="Sign in to your account"
                 >
                   <div className="flex items-center justify-center gap-3 relative z-20">
                     {isLoading ? (
                       <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
                         <span className="button-text font-bold">
                           Signing in...
                         </span>

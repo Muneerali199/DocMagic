@@ -53,6 +53,7 @@ import {
   PRESENTATION_WHEEL_LOCK_MS,
 } from '@/lib/presentation-motion';
 import { PublishModal } from "@/components/showcase/publish-modal";
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 // Circuit Pattern Component (inline for now)
 export const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -1675,6 +1676,23 @@ export default function RealTimeGenerator() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground selection:bg-blue-500/30">
+      <GenerationLoadingOverlay
+        show={isGeneratingOutline || isStreaming}
+        title={isStreaming ? "Generating presentation" : "Creating outline"}
+        description={
+          isStreaming
+            ? currentSlideText || "Designing slides, content, and visuals..."
+            : loadingSteps[loadingStep]
+        }
+        progress={isStreaming ? progress : ((loadingStep + 1) / loadingSteps.length) * 100}
+        estimatedTime={isStreaming ? "Estimated time: 30-90 seconds" : "Estimated time: 15-45 seconds"}
+        tips={[
+          "Strong decks have one clear idea per slide.",
+          "You can adjust slide text and visuals after generation.",
+          "Add audience and tone details for sharper presentation structure.",
+        ]}
+        variant="presentation"
+      />
       {/* Mesh Gradient Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="mesh-gradient opacity-40 absolute inset-0"></div>
@@ -1958,7 +1976,7 @@ export default function RealTimeGenerator() {
               </div>
 
               {/* Enhanced Loading Overlay */}
-              {isGeneratingOutline && (
+              {false && isGeneratingOutline && (
                 <div className="fixed inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
                   <div className="bg-card/90 border border-border/50 rounded-3xl p-10 shadow-2xl max-w-md w-full mx-6 backdrop-blur-xl relative overflow-hidden">
                     {/* Background decoration */}
@@ -4059,5 +4077,4 @@ export function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage
     </div>
   );
 }
-
 

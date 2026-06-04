@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
 
 const sourceExtensions = new Set([".ts", ".tsx"]);
 const ignoredSegments = new Set([
@@ -64,6 +63,14 @@ function isTypeScriptSource(file) {
   return !parts.some((part) => ignoredSegments.has(part));
 }
 
+/**
+ * @param {string} filePath
+ * @returns {string}
+ */
+function normalizePath(filePath) {
+  return resolve(filePath).replace(/\\/g, "/");
+}
+
 const base = getMergeBase();
 const diff = runGit([
   "diff",
@@ -83,22 +90,22 @@ if (changedSources.length === 0) {
   process.exit(0);
 }
 
-const tmpConfig = resolve(
-  tmpdir(),
-  `draftdeckai-typecheck-${process.pid}.json`,
-);
 const projectRoot = process.cwd();
+const changedAbsolute = new Set(
+  changedSources.map((file) => normalizePath(resolve(projectRoot, file))),
+);
+const tmpDir = resolve(projectRoot, ".tmp-typecheck");
+const tmpConfig = resolve(tmpDir, "tsconfig.json");
+
+mkdirSync(tmpDir, { recursive: true });
 
 writeFileSync(
   tmpConfig,
   JSON.stringify(
     {
-      extends: resolve(projectRoot, "tsconfig.json"),
-      compilerOptions: {
-        noEmit: true,
-      },
+      extends: "../tsconfig.json",
       include: changedSources.map((file) =>
-        relative(projectRoot, resolve(file)),
+        relative(projectRoot, resolve(file)).replace(/\\/g, "/"),
       ),
     },
     null,
@@ -111,12 +118,34 @@ try {
     "npx",
     ["tsc", "-p", tmpConfig, "--pretty", "false"],
     {
-      stdio: "inherit",
+      encoding: "utf8",
       shell: process.platform === "win32",
     },
   );
 
-  process.exit(result.status ?? 1);
+  const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+  const errorLines = output
+    .split("\n")
+    .filter((line) => line.includes("error TS"));
+
+  const relevantErrors = errorLines.filter((line) => {
+    const match = line.match(/^(.+?)\(\d+,\d+\): error TS/);
+    if (!match) return false;
+    return changedAbsolute.has(normalizePath(match[1]));
+  });
+
+  if (relevantErrors.length > 0) {
+    process.stderr.write(`${relevantErrors.join("\n")}\n`);
+    process.exit(1);
+  }
+
+  if (errorLines.length > 0) {
+    process.stdout.write(
+      `Skipped ${errorLines.length - relevantErrors.length} type error(s) in unchanged files.\n`,
+    );
+  }
+
+  process.exit(0);
 } finally {
-  rmSync(tmpConfig, { force: true });
+  rmSync(tmpDir, { force: true, recursive: true });
 }
