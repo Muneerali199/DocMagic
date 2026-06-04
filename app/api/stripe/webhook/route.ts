@@ -111,20 +111,23 @@ export async function POST(req: Request) {
         parsedSession.data.subscription,
       );
 
-      // Create subscription in Supabase with validation
-      const { error } = await supabase.from("subscriptions").insert({
-        user_id: parsedSession.data.metadata.userId,
-        stripe_subscription_id: subscription.id,
-        stripe_price_id: subscription.items.data[0].price.id,
-        stripe_current_period_end: new Date(
-          subscription.current_period_end * 1000,
-        ).toISOString(),
-      });
+      // Upsert so Stripe retries for the same subscription are idempotent.
+      const { error } = await supabase.from("subscriptions").upsert(
+        {
+          user_id: parsedSession.data.metadata.userId,
+          stripe_subscription_id: subscription.id,
+          stripe_price_id: subscription.items.data[0].price.id,
+          stripe_current_period_end: new Date(
+            subscription.current_period_end * 1000,
+          ).toISOString(),
+        },
+        { onConflict: "stripe_subscription_id" },
+      );
 
       if (error) {
         logger.error(
           { route: "app/api/stripe/webhook/route.ts" },
-          "Error creating subscription:",
+          "Error upserting subscription:",
           error,
         );
         return new NextResponse("Database Error", { status: 500 });
@@ -152,7 +155,7 @@ export async function POST(req: Request) {
       );
 
       // Update subscription in Supabase
-      const { error } = await supabase
+      const { data: updatedRows, error } = await supabase
         .from("subscriptions")
         .update({
           stripe_price_id: subscription.items.data[0].price.id,
@@ -160,7 +163,8 @@ export async function POST(req: Request) {
             subscription.current_period_end * 1000,
           ).toISOString(),
         })
-        .eq("stripe_subscription_id", subscription.id);
+        .eq("stripe_subscription_id", subscription.id)
+        .select("id");
 
       if (error) {
         logger.error(
@@ -169,6 +173,17 @@ export async function POST(req: Request) {
           error,
         );
         return new NextResponse("Database Error", { status: 500 });
+      }
+
+      if (!updatedRows?.length) {
+        logger.error(
+          {
+            route: "app/api/stripe/webhook/route.ts",
+            stripeSubscriptionId: subscription.id,
+          },
+          "Invoice webhook did not match an existing subscription",
+        );
+        return new NextResponse("Subscription not found", { status: 409 });
       }
     }
 
