@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -75,8 +76,19 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinPdfFile, setLinkedinPdfFile] = useState<File | null>(null);
   const [manualData, setManualData] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
   const { toast } = useToast();
   const supabase = createClient();
+
+  const showImportError = (title: string, fallbackMessage: string, error: unknown) => {
+    const message = error instanceof Error && error.message ? error.message : fallbackMessage;
+    setImportError(message);
+    toast({
+      title,
+      description: message,
+      variant: "destructive",
+    });
+  };
 
   // Helper to get auth token
   const getAuthToken = async () => {
@@ -107,6 +119,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
     }
 
     setIsImporting(true);
+    setImportError(null);
 
     try {
       const token = await getAuthToken();
@@ -188,12 +201,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
       } else {
         throw new Error("Invalid response format");
       }
-    } catch (error: any) {
-      toast({
-        title: "Import failed",
-        description: error.message || "Could not import LinkedIn profile. Please try manual entry or PDF upload.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "Import failed",
+        "Could not import LinkedIn profile. Please try manual entry or PDF upload.",
+        error
+      );
     } finally {
       setIsImporting(false);
     }
@@ -215,6 +228,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
     setLinkedinPdfFile(file);
     setIsImporting(true);
+    setImportError(null);
 
     try {
       const token = await getAuthToken();
@@ -246,12 +260,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         title: "LinkedIn PDF imported! ✨",
         description: "Your profile data has been extracted successfully",
       });
-    } catch (error: any) {
-      toast({
-        title: "PDF parsing failed",
-        description: error.message || "Could not parse LinkedIn PDF. Please try manual entry.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "PDF parsing failed",
+        "Could not parse LinkedIn PDF. Please try manual entry.",
+        error
+      );
     } finally {
       setIsImporting(false);
     }
@@ -269,6 +283,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
     }
 
     setIsImporting(true);
+    setImportError(null);
 
     try {
       const token = await getAuthToken();
@@ -307,12 +322,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         title: "Profile data imported! ✨",
         description: "Your profile has been successfully parsed",
       });
-    } catch (error: any) {
-      toast({
-        title: "Parsing failed",
-        description: error.message || "Could not parse profile data. Please check the format.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "Parsing failed",
+        "Could not parse profile data. Please check the format.",
+        error
+      );
     } finally {
       setIsImporting(false);
     }
@@ -337,6 +352,14 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
       </CardHeader>
 
       <CardContent>
+        {importError && (
+          <ErrorMessage
+            title="LinkedIn import failed"
+            message={importError}
+            className="mb-4"
+          />
+        )}
+
         <Tabs defaultValue="url" className="w-full">
           <TabsList className="grid w-full grid-cols-3 glass-effect border border-yellow-400/20">
             <TabsTrigger value="url" className="data-[state=active]:bolt-gradient data-[state=active]:text-white">
