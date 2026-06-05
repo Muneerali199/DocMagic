@@ -15,14 +15,18 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <ErrorDisplay
-      title="Critical Error"
-      description="We encountered a critical error. Our team has been notified."
-      error={error}
-      onRetry={reset}
-      homeLabel="Go to Homepage"
-      variant="card"
-    />
+    <html>
+      <body>
+        <ErrorDisplay
+          title="Critical Error"
+          description="We encountered a critical error. Our team has been notified."
+          error={error}
+          onRetry={reset}
+          homeLabel="Go to Homepage"
+          variant="card"
+        />
+      </body>
+    </html>
   );
 }
 
