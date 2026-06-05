@@ -4,17 +4,8 @@ import { LetterDashboard } from "@/components/letter/letter-dashboard";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Sparkles, Mail, Zap, Star, Wand2, FileText } from "lucide-react";
-import { useEffect, useState } from "react";
-import { LetterGeneratorSkeleton } from "@/components/ui/skeleton";
 
 export default function LetterPage() {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 1800);
-    return () => clearTimeout(timer);
-  }, []);
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background elements matching landing page */}
@@ -117,7 +108,7 @@ export default function LetterPage() {
             <div className="relative z-10">
               <CreateDocumentGuard>
                 <ErrorBoundary>
-                  {isLoading ? <LetterGeneratorSkeleton /> : <LetterDashboard />}
+                  <LetterDashboard />
                 </ErrorBoundary>
               </CreateDocumentGuard>
             </div>

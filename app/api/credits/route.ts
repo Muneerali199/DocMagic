@@ -1,7 +1,8 @@
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, hasUnlimitedDeveloperCredits, getCreditsResetDate, shouldResetCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { TIER_LIMITS, ACTION_COSTS, TIER_NAMES, TIER_FEATURES, getCreditsResetDate, shouldResetCredits, type Tier, type ActionType } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 import { reserveCredits } from '@/lib/credit-operations';
 import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
 
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
     const creditsRequired = ACTION_COSTS[action];
 
     if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action });
       return NextResponse.json({
         success: true,
         creditsUsed: 0,

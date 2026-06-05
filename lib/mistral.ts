@@ -1,5 +1,13 @@
 import { Mistral } from "@mistralai/mistralai";
 
+import type {
+  MistralPresentationTextSlide,
+  MistralSlideOutlineLike,
+  LetterData as DraftdeckLetterData,
+} from "@/types/ai-gemini-mistral";
+
+
+
 const apiKey = process.env.MISTRAL_API_KEY;
 
 if (!apiKey) {
@@ -73,7 +81,8 @@ function createMistralFillerSlide(
  * Helper to safely extract and parse JSON from AI response
  * Handles markdown code blocks, preamble text, and potential truncation
  */
-function extractAndParseJSON(content: string, context: string = ""): any {
+function extractAndParseJSON(content: string, context: string = ""): unknown {
+
   if (!content) return null;
 
   try {
@@ -121,9 +130,10 @@ function extractAndParseJSON(content: string, context: string = ""): any {
  * Generate image descriptions for presentation slides using Mistral AI
  */
 export async function generateImageDescriptions(
-  slideOutlines: any[],
+  slideOutlines: MistralSlideOutlineLike[],
   topic: string,
 ): Promise<ImageDescription[]> {
+
   if (!mistral) {
     console.error("Mistral client not initialized");
     return [];
@@ -200,9 +210,10 @@ Make each query UNIQUE and HIGHLY RELEVANT to both the presentation topic AND th
  * Generate chart data for presentation slides using Mistral AI
  */
 export async function generateChartData(
-  slideOutlines: any[],
+  slideOutlines: MistralSlideOutlineLike[],
   topic: string,
 ): Promise<ChartData[]> {
+
   if (!mistral) {
     console.error("Mistral client not initialized");
     return [];
@@ -274,6 +285,7 @@ export async function enhanceSlideWithVisuals(
   image?: ImageDescription;
   chart?: ChartData;
 }> {
+
   if (!mistral) {
     console.error("Mistral client not initialized");
     return {};
@@ -336,7 +348,8 @@ export async function generatePresentationText(
   topic: string,
   pageCount: number = 8,
   settings?: PresentationTextSettings,
-): Promise<any[]> {
+): Promise<MistralPresentationTextSlide[]> {
+
   if (!mistral) {
     console.error("Mistral client not initialized");
     return [];
@@ -532,9 +545,10 @@ Return ONLY the JSON array. No markdown, no explanation.`;
       }
 
       // Enrich slides with proper structure
-      return parsedSlides.map((slide: any, index: number) =>
-        enrichSlideData(slide, index + 1, topic),
+      return parsedSlides.map((slide: unknown, index: number) =>
+        enrichSlideData(slide as MistralPresentationTextSlide, index + 1, topic),
       );
+
     }
     return [];
   } catch (error) {
@@ -587,7 +601,8 @@ function createProfessionalFillerSlide(
   slideNumber: number,
   pageCount: number,
   topic: string,
-): any {
+): MistralPresentationTextSlide {
+
   const isClosing = slideNumber === pageCount;
 
   if (isClosing) {
@@ -679,57 +694,83 @@ function createProfessionalFillerSlide(
 /**
  * Enrich slide data with proper structure for rendering
  */
-function enrichSlideData(slide: any, slideNumber: number, topic: string): any {
-  const enriched = {
-    ...slide,
+function enrichSlideData(
+  slide: MistralPresentationTextSlide | Record<string, unknown>,
+  slideNumber: number,
+  topic: string,
+): MistralPresentationTextSlide {
+  const s = slide as Partial<MistralPresentationTextSlide> & Record<string, unknown>;
+
+  const enriched: MistralPresentationTextSlide = {
+    ...(slide as Record<string, unknown>),
     slideNumber,
     // Ensure bulletPoints exists for backward compatibility
-    bulletPoints: slide.bulletPoints || slide.bullets || [],
+    bulletPoints: (s.bulletPoints ?? s.bullets) as unknown,
     // Convert icons format if needed
-    icons: slide.icons?.map((icon: any) => ({
-      icon: icon.icon || "Star",
-      label: icon.label || "Feature",
-      description: icon.description || "",
-    })),
+    icons: (Array.isArray((s as any).icons)
+      ? (s as any).icons.map((icon: any) => ({
+          icon: icon.icon || "Star",
+          label: icon.label || "Feature",
+          description: icon.description || "",
+        }))
+      : (s as any).icons) as unknown,
     // Ensure stats have proper format
-    stats: slide.stats?.map((stat: any) => ({
-      value: stat.value || "0",
-      label: stat.label || "Metric",
-      context: stat.context || "",
-      trend: stat.trend || "neutral",
-    })),
+    stats: (Array.isArray((s as any).stats)
+      ? (s as any).stats.map((stat: any) => ({
+          value: stat.value || "0",
+          label: stat.label || "Metric",
+          context: stat.context || "",
+          trend: stat.trend || "neutral",
+        }))
+      : (s as any).stats) as unknown,
     // Add description for outline compatibility
     description:
-      slide.subtitle || slide.content || getSlideDescription(slide, topic),
-  };
+      (s.subtitle as any) || (s.content as any) || getSlideDescription(slide, topic),
+    // Keep original type/title if present; otherwise provide safe fallbacks
+    type: (s.type as any) || "bullets",
+    title: (s.title as any) || `Slide ${slideNumber}`,
+  } as MistralPresentationTextSlide;
 
   return enriched;
 }
 
+
 /**
  * Generate a description from slide content
  */
-function getSlideDescription(slide: any, topic: string): string {
-  if (slide.stats?.length) {
-    return `Key metrics: ${slide.stats.map((s: any) => `${s.value} ${s.label}`).join(", ")}`;
+function getSlideDescription(
+
+  slide: MistralPresentationTextSlide | Record<string, unknown>,
+  topic: string,
+): string {
+  const s = slide as Partial<MistralPresentationTextSlide> & Record<string, unknown>;
+
+  if (Array.isArray(s.stats) && s.stats.length) {
+    return `Key metrics: ${s.stats
+      .map((st) => `${(st as any).value} ${(st as any).label}`)
+      .join(", ")}`;
   }
-  if (slide.comparison) {
+  if (s.comparison) {
     return `Comparison showing benefits of the new approach`;
   }
-  if (slide.timeline?.length) {
-    return `Timeline with ${slide.timeline.length} key milestones`;
+  if (Array.isArray((s as any).timeline) && (s as any).timeline.length) {
+    return `Timeline with ${(s as any).timeline.length} key milestones`;
   }
-  if (slide.icons?.length) {
-    return `${slide.icons.length} key features and benefits`;
+  if (Array.isArray((s as any).icons) && (s as any).icons.length) {
+    return `${(s as any).icons.length} key features and benefits`;
   }
-  if (slide.testimonial) {
-    return `Customer testimonial from ${slide.testimonial.author || "satisfied customer"}`;
+  if (s.testimonial) {
+    return `Customer testimonial from ${(s as any).testimonial.author || "satisfied customer"}`;
   }
-  if (slide.chartData) {
-    return `${slide.chartData.type} chart visualization`;
+  if (s.chartData) {
+    return `${(s as any).chartData.type} chart visualization`;
+  }
+  if (Array.isArray((s as any).bulletPoints) && (s as any).bulletPoints.length) {
+    return `Key points about ${topic}`;
   }
   return `Professional content about ${topic}`;
 }
+
 
 /**
  * Generate alternative image suggestions for a slide
@@ -871,30 +912,35 @@ Return ONLY valid JSON.`;
       "generateLetterWithMistral",
     );
 
-    if (letterData) {
+    if (letterData && typeof letterData === "object" && "from" in letterData && "to" in letterData) {
+      const ld = letterData as import("@/types/ai-gemini-mistral").LetterData & {
+        // Mistral fallback sometimes uses `letter` instead of `content`
+        letter?: string;
+      };
       return {
         from: {
-          name: letterData.from?.name || fromName,
-          address: letterData.from?.address || fromAddress || "",
+          name: ld.from?.name || fromName,
+          address: ld.from?.address || fromAddress || "",
         },
         to: {
-          name: letterData.to?.name || toName,
-          address: letterData.to?.address || toAddress || "",
+          name: ld.to?.name || toName,
+          address: ld.to?.address || toAddress || "",
         },
         date:
-          letterData.date ||
+          ld.date ||
           new Date().toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           }),
-        subject: letterData.subject || "Re: " + prompt.substring(0, 30) + "...",
+        subject: ld.subject || "Re: " + prompt.substring(0, 30) + "...",
         content:
-          letterData.content ||
-          letterData.letter ||
+          ld.content ||
+          (ld as any).letter ||
           "Letter content not available.",
       };
     }
+
 
     // FALLBACK: If JSON parsing totally fails, assume the entire content is the letter body.
     // This is better than crashing.

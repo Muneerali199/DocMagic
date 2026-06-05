@@ -506,37 +506,19 @@ export default function ResumeEditorContent() {
             size="sm"
             className="bg-white hover:bg-gray-100 text-gray-900 border-0"
             onClick={handleSave}
-            disabled={isSaving}
+            isLoading={isSaving}
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </>
-            )}
+            <Save className="w-4 h-4 mr-2" />
+            Save
           </Button>
           <Button
             size="sm"
             className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
             onClick={handleExportPdf}
-            disabled={isExporting}
+            isLoading={isExporting}
           >
-            {isExporting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
-              </>
-            )}
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
           </Button>
         </div>
       </div>

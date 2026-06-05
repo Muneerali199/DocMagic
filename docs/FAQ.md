@@ -416,3 +416,27 @@ npm run build
 **Built with ❤️ by the DraftDeckAI community** ✨
 
 </div>
+
+## 🛠️ Local Development Troubleshooting Guide
+
+### Q: Why am I seeing a completely blank white page or layout errors when running `npm run dev`?
+
+**A:** A completely blank screen or browser runtime error usually indicates an environment variable initialization failure. Because **DraftDeckAI** relies on external infrastructure layouts (such as Supabase database schemas and Gemini AI configurations), the Next.js framework engine can throw blocking layout exceptions on startup if these keys are undefined.
+
+To systematically bypass this local block, follow these exact diagnostic steps:
+
+#### 1. Verify Local Environment Configuration
+The system engine cannot parse arguments directly from blueprints. You must copy the seed layout manually:
+* Find the `.env.example` file in the root directory layout of the repository.
+* Create a clone copy of this file in the exact same root folder.
+* Rename the file copy precisely to `.env.local`.
+* **Pro-tip:** Even if you do not possess active API credentials, keeping the empty placeholder definitions intact allows the schema validations to compile successfully without throwing fatal layout breaks.
+
+#### 2. Purge Dependencies and Restart on Port 3000
+If components were previously compiled under missing configurations, build errors can persist in your active terminal session state. Refresh the local package engine sequence:
+1. Kill your current terminal instance thread by hitting `Ctrl + C`.
+2. Clear out module configurations and request a fresh installation setup:
+   ```bash
+   npm install && npm run dev
+   ```
+3. Open your browser to `http://localhost:3000` and purge the client browser cache by pressing `Ctrl + F5` (or `Cmd + Shift + R` on Mac).

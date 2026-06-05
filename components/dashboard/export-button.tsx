@@ -84,12 +84,12 @@ export function ExportButton({
   return (
     <Button
       onClick={handleExport}
-      disabled={disabled || isExporting}
+      disabled={disabled}
+      isLoading={isExporting}
       className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold h-12 px-6"
     >
       {isExporting ? (
         <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Exporting...
         </>
       ) : (

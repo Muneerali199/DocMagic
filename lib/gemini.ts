@@ -1,6 +1,22 @@
 import { logger } from "@/lib/logger";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+import type {
+  ATSScoreData,
+  GuidedResumeData,
+  ResumeData,
+  ResumeStepGuidanceResponse,
+  LetterData,
+  DiagramData,
+  PresentationOutlineChartData,
+  PresentationOutlineSlide,
+  PresentationSlide,
+  PresentationSlideLayout,
+  PresentationOutlineType,
+  PresentationChartType,
+  PresentationOutlineLayout,
+} from "@/types/ai-gemini-mistral";
+
 // Get API key with fallback for build time - support both env var names
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
@@ -33,7 +49,7 @@ async function retryWithBackoff<T>(
   maxRetries: number = 3,
   initialDelay: number = 1000
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
   
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -73,8 +89,10 @@ async function validateApiConnection() {
     });
     
     return true;
-  } catch (error: any) {
-    console.error("API Connection Test Failed:", error);
+  } catch (error: unknown) {
+    const err = error as any;
+    console.error("API Connection Test Failed:", err);
+
     
     // Don't throw during build time
     if (process.env.NODE_ENV === 'production' && !process.env.RUNTIME_ENV) {
@@ -82,13 +100,15 @@ async function validateApiConnection() {
     }
     
     // Provide more helpful error messages
-    if (error?.status === 503) {
+    const apiErr = err as { status?: number };
+    if (apiErr?.status === 503) {
       throw new Error("Google AI service is temporarily overloaded. Please try again in a few moments.");
-    } else if (error?.status === 429) {
+    } else if (apiErr?.status === 429) {
       throw new Error("Rate limit exceeded. Please wait a moment before trying again.");
-    } else if (error?.status === 401 || error?.status === 403) {
+    } else if (apiErr?.status === 401 || apiErr?.status === 403) {
       throw new Error("Invalid API key. Please check your GEMINI_API_KEY environment variable.");
     }
+
     
     throw new Error("Unable to connect to Google Generative AI API.");
   }
@@ -283,8 +303,10 @@ export async function generateResume({
     
     return validatedResume;
     
-  } catch (error: any) {
-    console.error("❌ Error generating resume:", error);
+  } catch (error: unknown) {
+    const err = error as any;
+    console.error("❌ Error generating resume:", err);
+
     
     // Provide detailed error information
     if (error instanceof Error) {
@@ -295,11 +317,11 @@ export async function generateResume({
     }
     
     // Return more specific error messages based on error type
-    if (error?.status === 503) {
+    if (err?.status === 503) {
       throw new Error('Google AI service is temporarily overloaded. Please try again in a few moments.');
-    } else if (error?.status === 429) {
+    } else if (err?.status === 429) {
       throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
-    } else if (error?.status === 401 || error?.status === 403) {
+    } else if (err?.status === 401 || err?.status === 403) {
       throw new Error('Invalid API key. Please check your GEMINI_API_KEY environment variable.');
     } else if (error instanceof Error && error.message.includes('API key')) {
       throw new Error('Gemini API key not configured. Please set GOOGLE_API_KEY in environment variables.');

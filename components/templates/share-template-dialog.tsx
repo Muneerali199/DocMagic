@@ -14,7 +14,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Copy, Check, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { workspaceApi } from "@/lib/workspace-api";
+import { canEditContent } from "@/lib/workspace-permissions";
+import type { WorkspaceWithRole } from "@/types/workspace";
 
 type ShareTemplateDialogProps = {
   open: boolean;
@@ -34,13 +44,28 @@ export function ShareTemplateDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([]);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
+  const [isAddingToWorkspace, setIsAddingToWorkspace] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
 
-  const shareableLink = origin ? `${origin}/templates/${templateId}/shared` : "";
+  useEffect(() => {
+    if (!open) return;
+    workspaceApi
+      .list()
+      .then((list) =>
+        setWorkspaces(list.filter((ws) => canEditContent(ws.role))),
+      )
+      .catch(() => setWorkspaces([]));
+  }, [open]);
+
+  const shareableLink = origin
+    ? `${origin}/templates/${templateId}/shared`
+    : "";
 
   const handleShare = async () => {
     if (!email) return;
@@ -73,11 +98,33 @@ export function ShareTemplateDialog({
       console.error("Error sharing template:", error);
       toast({
         title: "Error sharing template",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddToWorkspace = async () => {
+    if (!selectedWorkspaceId) return;
+    setIsAddingToWorkspace(true);
+    try {
+      await workspaceApi.addTemplate(selectedWorkspaceId, templateId);
+      toast({
+        title: "Added to workspace",
+        description: `${templateTitle} is now in your team template library.`,
+      });
+      setSelectedWorkspaceId("");
+    } catch {
+      toast({
+        title: "Could not add to workspace",
+        description: "You must be an editor or admin in the workspace.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToWorkspace(false);
     }
   };
 
@@ -86,7 +133,7 @@ export function ShareTemplateDialog({
     navigator.clipboard.writeText(shareableLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-    
+
     toast({
       title: "Link copied to clipboard",
       description: "Share this link with others to give them access.",
@@ -99,7 +146,8 @@ export function ShareTemplateDialog({
         <DialogHeader>
           <DialogTitle>Share "{templateTitle}"</DialogTitle>
           <DialogDescription>
-            Share this template with others by entering their email address below.
+            Share this template with others by entering their email address
+            below.
           </DialogDescription>
         </DialogHeader>
 
@@ -115,8 +163,8 @@ export function ShareTemplateDialog({
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1"
               />
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleShare}
                 disabled={isLoading || !email}
               >
@@ -139,6 +187,43 @@ export function ShareTemplateDialog({
               Allow editing
             </label>
           </div>
+
+          {workspaces.length > 0 && (
+            <div className="relative pt-4 border-t space-y-2">
+              <Label className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Team workspace library
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Share with your whole team via a workspace template library.
+              </p>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedWorkspaceId}
+                  onValueChange={setSelectedWorkspaceId}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select workspace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workspaces.map((ws) => (
+                      <SelectItem key={ws.id} value={ws.id}>
+                        {ws.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleAddToWorkspace}
+                  disabled={!selectedWorkspaceId || isAddingToWorkspace}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="relative mt-4 pt-4 border-t">
             <Label>Shareable link</Label>

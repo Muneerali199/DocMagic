@@ -209,12 +209,12 @@ export default function ForgotPassword() {
                   <Button
                     onClick={handleResend}
                     variant="outline"
-                    disabled={countdown > 0 || isLoading}
+                    disabled={countdown > 0}
+                    isLoading={isLoading}
                     className="w-full glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Sending...
                       </>
                     ) : countdown > 0 ? (
@@ -312,13 +312,13 @@ export default function ForgotPassword() {
                 >
                   <Button
                     type="submit"
-                    disabled={isLoading || !isValidEmail(email)}
+                    disabled={!isValidEmail(email)}
+                    isLoading={isLoading}
                     className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300"
                   >
                     <div className="flex items-center justify-center gap-3 relative z-20">
                       {isLoading ? (
                         <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
                           <span className="font-bold">Sending Reset Link...</span>
                         </>
                       ) : (
