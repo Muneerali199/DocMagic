@@ -2,6 +2,8 @@
  * lib/logger.ts  —  Fix #9 (structured logging)
  */
 type LogLevel = "debug" | "info" | "warn" | "error";
+export const REQUEST_ID_HEADER = "x-request-id";
+
 export interface LogContext {
   requestId?: string;
   userId?: string;
@@ -31,6 +33,29 @@ const COLOURS: Record<LogLevel, string> = {
   error: "\x1b[31m",
 };
 const RESET = "\x1b[0m";
+
+export function createRequestId(candidate?: string | null): string {
+  const trimmed = candidate?.trim();
+  if (trimmed && /^[a-zA-Z0-9._:-]{8,128}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+}
+
+export function requestContextFromHeaders(
+  headers: Pick<Headers, "get">,
+  route: string,
+): LogContext {
+  return {
+    requestId: createRequestId(headers.get(REQUEST_ID_HEADER)),
+    route,
+  };
+}
 
 function getConfiguredLevel(): LogLevel {
   const configured = process.env.LOG_LEVEL?.toLowerCase() as

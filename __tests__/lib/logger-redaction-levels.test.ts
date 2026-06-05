@@ -90,4 +90,28 @@ describe("structured logger redaction and levels", () => {
     expect(debugSpy).not.toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps valid incoming request IDs for request context", async () => {
+    const { requestContextFromHeaders } = await importLoggerWithEnv({
+      NODE_ENV: "production",
+    });
+    const headers = new Headers({ "x-request-id": "req-valid-12345" });
+
+    expect(requestContextFromHeaders(headers, "/api/test")).toEqual({
+      requestId: "req-valid-12345",
+      route: "/api/test",
+    });
+  });
+
+  it("generates a safe request ID when the incoming header is invalid", async () => {
+    const { requestContextFromHeaders } = await importLoggerWithEnv({
+      NODE_ENV: "production",
+    });
+    const headers = new Headers({ "x-request-id": "../bad id" });
+    const context = requestContextFromHeaders(headers, "/api/test");
+
+    expect(context.route).toBe("/api/test");
+    expect(context.requestId).toEqual(expect.any(String));
+    expect(context.requestId).not.toBe("../bad id");
+  });
 });
