@@ -103,7 +103,7 @@ STRIPE_SECRET_KEY=your_stripe_key
 
 ## 🐳 Docker Quick Start
 
-Run the entire application with one command — no manual Node.js installation required.
+Run the entire application including the database with one command — no manual Node.js or PostgreSQL installation required.
 
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
@@ -117,18 +117,19 @@ cd Draftdeckai
 
 # Set up environment variables
 cp .env.example .env.local
-# Edit .env.local with your API keys
+# Edit .env.local with your API keys (and optionally SUPABASE_JWT_SECRET)
 
-# Build and start (development mode with hot reload)
+# Build and start both App and Database
 docker compose up
-
-# For production build:
-docker compose -f docker-compose.yml up
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-The development setup mounts your local files for hot reload — changes to the source code automatically refresh the app.
+The setup includes:
+- **App Service**: Next.js with hot reload (Port 3000)
+- **Database Service**: PostgreSQL 16 (Port 5432)
+- **Shared Network**: Inter-service communication
+- **Persistent Storage**: Database data persists in `postgres_data` volume
 
 ---
 
