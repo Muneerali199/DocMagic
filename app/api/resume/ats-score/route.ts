@@ -1,26 +1,37 @@
-import { logger } from '@/lib/logger';
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
-import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
-import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
+import { logger } from "@/lib/logger";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import {
+  ACTION_COSTS,
+  TIER_LIMITS,
+  getCreditsResetDate,
+  shouldResetCredits,
+  calculateRemainingCredits,
+  hasUnlimitedDeveloperCredits,
+} from "@/lib/credits-service";
+import {
+  reserveCredits,
+  refundCredits,
+  creditReservationConflictResponse,
+} from "@/lib/credit-operations";
+import { addLegacyEndpointDeprecation } from "@/lib/api-versioning";
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-export async function POST(req: Request) {
+export async function handleAtsScore(req: Request) {
   try {
     // Get authorization header
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.replace("Bearer ", "");
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized - No token provided' },
-        { status: 401 }
+        { error: "Unauthorized - No token provided" },
+        { status: 401 },
       );
     }
 
@@ -31,19 +42,22 @@ export async function POST(req: Request) {
       {
         global: {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      }
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
     );
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized - Please sign in' },
-        { status: 401 }
+        { error: "Unauthorized - Please sign in" },
+        { status: 401 },
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
@@ -53,39 +67,43 @@ export async function POST(req: Request) {
     if (!resumeData) {
       return NextResponse.json(
         { error: "Resume data is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Check user credits
     const creditCost = ACTION_COSTS.ats_check;
-    
+
     // Get or create user credits
     let { data: userCredits } = await supabaseAdmin
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', user.id)
+      .from("user_credits")
+      .select("*")
+      .eq("user_id", user.id)
       .single();
 
     // If no credits record exists, create one
     if (!userCredits) {
       const { data: newCredits, error: insertError } = await supabaseAdmin
-        .from('user_credits')
+        .from("user_credits")
         .insert({
           user_id: user.id,
-          tier: 'free',
+          tier: "free",
           credits_total: TIER_LIMITS.free,
           credits_used: 0,
-          credits_reset_at: getCreditsResetDate()
+          credits_reset_at: getCreditsResetDate(),
         })
         .select()
         .single();
-      
+
       if (insertError) {
-        logger.error({ route: 'app/api/resume/ats-score/route.ts' }, 'Failed to create credits record:', insertError);
+        logger.error(
+          { route: "app/api/resume/ats-score/route.ts" },
+          "Failed to create credits record:",
+          insertError,
+        );
         return NextResponse.json(
-          { error: 'Failed to initialize credits' },
-          { status: 500 }
+          { error: "Failed to initialize credits" },
+          { status: 500 },
         );
       }
       userCredits = newCredits;
@@ -95,12 +113,12 @@ export async function POST(req: Request) {
     if (userCredits && shouldResetCredits(userCredits.credits_reset_at)) {
       const resetAt = getCreditsResetDate();
       const { data: updatedCredits } = await supabaseAdmin
-        .from('user_credits')
+        .from("user_credits")
         .update({
           credits_used: 0,
           credits_reset_at: resetAt,
         })
-        .eq('user_id', user.id)
+        .eq("user_id", user.id)
         .select()
         .single();
 
@@ -112,18 +130,21 @@ export async function POST(req: Request) {
     // Check if user has enough credits
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
-      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
+      : calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used,
+        );
+
     if (!hasUnlimitedCredits && creditsRemaining < creditCost) {
       return NextResponse.json(
         {
-          error: 'Not enough credits',
+          error: "Not enough credits",
           message: `You need ${creditCost} credits to calculate ATS score. You have ${creditsRemaining} credits remaining.`,
           needsUpgrade: true,
           currentTier: userCredits.tier,
-          creditsRemaining
+          creditsRemaining,
         },
-        { status: 402 }
+        { status: 402 },
       );
     }
 
@@ -134,12 +155,12 @@ export async function POST(req: Request) {
         supabaseAdmin,
         user.id,
         userCredits.credits_used,
-        creditCost
+        creditCost,
       );
       if (!reserved) {
         return NextResponse.json(
           creditReservationConflictResponse(creditCost, userCredits.tier),
-          { status: 402 }
+          { status: 402 },
         );
       }
       userCredits = reserved;
@@ -163,16 +184,20 @@ export async function POST(req: Request) {
     // Credits were already reserved atomically. Log usage after success.
     if (!hasUnlimitedCredits) {
       const { error: logError } = await supabaseAdmin
-        .from('credit_usage_log')
+        .from("credit_usage_log")
         .insert({
           user_id: user.id,
-          action: 'ats_check',
+          action: "ats_check",
           credits_used: creditCost,
-          metadata: { has_job_description: !!jobDescription }
+          metadata: { has_job_description: !!jobDescription },
         });
 
       if (logError) {
-        logger.error({ route: 'app/api/resume/ats-score/route.ts' }, 'Failed to log credit usage:', logError);
+        logger.error(
+          { route: "app/api/resume/ats-score/route.ts" },
+          "Failed to log credit usage:",
+          logError,
+        );
       } else {
         // console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
       }
@@ -180,22 +205,40 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ atsAnalysis });
   } catch (error: any) {
-    logger.error({ route: 'app/api/resume/ats-score/route.ts' }, "ATS score calculation error:", error);
+    logger.error(
+      { route: "app/api/resume/ats-score/route.ts" },
+      "ATS score calculation error:",
+      error,
+    );
     return NextResponse.json(
       { error: error.message || "Failed to calculate ATS score" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
+/** @deprecated Use POST /api/v2/generate/resume/ats-score */
+export async function POST(req: Request) {
+  const response = await handleAtsScore(req);
+  return addLegacyEndpointDeprecation(
+    response,
+    "/api/v2/generate/resume/ats-score",
+  );
+}
+
 // Calculate ATS score using AI
-async function calculateATSScore(resumeData: any, jobDescription?: string): Promise<any> {
+async function calculateATSScore(
+  resumeData: any,
+  jobDescription?: string,
+): Promise<any> {
   // Prioritize Gemini, fallback to OpenAI
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!geminiApiKey && !openaiApiKey) {
-    throw new Error("AI API key not configured. Please add GEMINI_API_KEY or OPENAI_API_KEY to your .env file");
+    throw new Error(
+      "AI API key not configured. Please add GEMINI_API_KEY or OPENAI_API_KEY to your .env file",
+    );
   }
 
   const useGemini = !!geminiApiKey;
@@ -203,25 +246,37 @@ async function calculateATSScore(resumeData: any, jobDescription?: string): Prom
 
   // Prepare resume text
   const resumeText = `
-Name: ${resumeData.personalInfo?.name || 'N/A'}
-Email: ${resumeData.personalInfo?.email || 'N/A'}
-Phone: ${resumeData.personalInfo?.phone || 'N/A'}
-Location: ${resumeData.personalInfo?.location || 'N/A'}
+Name: ${resumeData.personalInfo?.name || "N/A"}
+Email: ${resumeData.personalInfo?.email || "N/A"}
+Phone: ${resumeData.personalInfo?.phone || "N/A"}
+Location: ${resumeData.personalInfo?.location || "N/A"}
 
-Summary: ${resumeData.summary || 'N/A'}
+Summary: ${resumeData.summary || "N/A"}
 
 Experience:
-${resumeData.experience?.map((exp: any) => `
+${
+  resumeData.experience
+    ?.map(
+      (exp: any) => `
 - ${exp.position} at ${exp.company} (${exp.startDate} - ${exp.endDate})
-  ${exp.description || ''}
-`).join('\n') || 'None'}
+  ${exp.description || ""}
+`,
+    )
+    .join("\n") || "None"
+}
 
 Education:
-${resumeData.education?.map((edu: any) => `
+${
+  resumeData.education
+    ?.map(
+      (edu: any) => `
 - ${edu.degree} in ${edu.field} from ${edu.school} (${edu.year})
-`).join('\n') || 'None'}
+`,
+    )
+    .join("\n") || "None"
+}
 
-Skills: ${resumeData.skills?.join(', ') || 'None'}
+Skills: ${resumeData.skills?.join(", ") || "None"}
 `;
 
   const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze this resume and provide a detailed ATS score.
@@ -229,7 +284,7 @@ Skills: ${resumeData.skills?.join(', ') || 'None'}
 Resume:
 ${resumeText}
 
-${jobDescription ? `Job Description:\n${jobDescription}\n` : ''}
+${jobDescription ? `Job Description:\n${jobDescription}\n` : ""}
 
 Provide a comprehensive ATS analysis in JSON format with:
 {
@@ -273,12 +328,13 @@ async function callOpenAIForATS(apiKey: string, prompt: string): Promise<any> {
       messages: [
         {
           role: "system",
-          content: "You are an expert ATS (Applicant Tracking System) analyzer. Provide detailed, actionable feedback."
+          content:
+            "You are an expert ATS (Applicant Tracking System) analyzer. Provide detailed, actionable feedback.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
       response_format: { type: "json_object" },
       temperature: 0.3,
@@ -313,19 +369,21 @@ async function callGeminiForATS(apiKey: string, prompt: string): Promise<any> {
           {
             parts: [
               {
-                text: prompt + "\n\nIMPORTANT: Respond ONLY with valid JSON, no markdown or explanations."
-              }
-            ]
-          }
+                text:
+                  prompt +
+                  "\n\nIMPORTANT: Respond ONLY with valid JSON, no markdown or explanations.",
+              },
+            ],
+          },
         ],
         generationConfig: {
           temperature: 0.3,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
-        }
+        },
       }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -334,10 +392,13 @@ async function callGeminiForATS(apiKey: string, prompt: string): Promise<any> {
   }
 
   const data = await response.json();
-  let content = data.candidates[0]?.content?.parts[0]?.text || '';
+  let content = data.candidates[0]?.content?.parts[0]?.text || "";
 
   // Clean up Gemini response
-  content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  content = content
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
 
   try {
     return JSON.parse(content);

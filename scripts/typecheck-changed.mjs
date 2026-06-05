@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { resolve } from "node:path";
 
 const sourceExtensions = new Set([".ts", ".tsx"]);
 const ignoredSegments = new Set([
@@ -12,12 +18,6 @@ const ignoredSegments = new Set([
   "coverage",
 ]);
 
-/**
- * Runs a Git command and returns trimmed stdout.
- *
- * @param {string[]} args - Git CLI arguments to execute.
- * @returns {string} Trimmed command output.
- */
 function runGit(args) {
   return execFileSync("git", args, {
     encoding: "utf8",
@@ -25,11 +25,6 @@ function runGit(args) {
   }).trim();
 }
 
-/**
- * Resolves the best comparison base for changed-file type-checking.
- *
- * @returns {string} Git revision to diff against.
- */
 function getMergeBase() {
   const candidates = [
     ["merge-base", "HEAD", "@{upstream}"],
@@ -49,12 +44,6 @@ function getMergeBase() {
   return "HEAD";
 }
 
-/**
- * Checks whether a changed path is a type-checkable TypeScript source file.
- *
- * @param {string} file - Repository-relative file path.
- * @returns {boolean} True when the path should be included in changed-file tsc.
- */
 function isTypeScriptSource(file) {
   if (!sourceExtensions.has(file.slice(file.lastIndexOf(".")))) return false;
   if (file.endsWith(".d.ts")) return false;
@@ -63,10 +52,6 @@ function isTypeScriptSource(file) {
   return !parts.some((part) => ignoredSegments.has(part));
 }
 
-/**
- * @param {string} filePath
- * @returns {string}
- */
 function normalizePath(filePath) {
   return resolve(filePath).replace(/\\/g, "/");
 }
@@ -99,14 +84,23 @@ const tmpConfig = resolve(tmpDir, "tsconfig.json");
 
 mkdirSync(tmpDir, { recursive: true });
 
+const baseTsconfig = JSON.parse(
+  readFileSync(resolve(projectRoot, "tsconfig.json"), "utf8"),
+);
+
 writeFileSync(
   tmpConfig,
   JSON.stringify(
     {
-      extends: "../tsconfig.json",
-      include: changedSources.map((file) =>
-        relative(projectRoot, resolve(file)).replace(/\\/g, "/"),
-      ),
+      compilerOptions: {
+        ...baseTsconfig.compilerOptions,
+        baseUrl: projectRoot,
+        typeRoots: (
+          baseTsconfig.compilerOptions?.typeRoots ?? ["./node_modules/@types"]
+        ).map((root) => resolve(projectRoot, root.replace(/^\.\//, ""))),
+        noEmit: true,
+      },
+      files: changedSources.map((file) => resolve(projectRoot, file)),
     },
     null,
     2,

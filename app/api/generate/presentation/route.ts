@@ -1,41 +1,68 @@
-import { logger } from '@/lib/logger';
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+import { logger } from "@/lib/logger";
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { generatePresentation, generatePresentationOutline } from '@/lib/gemini';
-import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, calculateRemainingCredits } from '@/lib/credits-service';
-import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
-import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
-import { presentationGenerationSchema, RequestValidationError, safeParseBody } from '@/lib/validation';
-import { getCachedUserCredits, invalidateUserCredits } from '@/lib/cached-queries';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  generatePresentation,
+  generatePresentationOutline,
+} from "@/lib/gemini";
+import { createClient } from "@supabase/supabase-js";
+import {
+  ACTION_COSTS,
+  calculateRemainingCredits,
+  hasUnlimitedDeveloperCredits,
+} from "@/lib/credits-service";
+import {
+  reserveCredits,
+  refundCredits,
+  creditReservationConflictResponse,
+} from "@/lib/credit-operations";
+import {
+  presentationGenerationSchema,
+  RequestValidationError,
+  safeParseBody,
+} from "@/lib/validation";
+import {
+  getCachedUserCredits,
+  invalidateUserCredits,
+} from "@/lib/cached-queries";
+import { addLegacyEndpointDeprecation } from "@/lib/api-versioning";
 
 // Service role client for credit operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-export async function POST(request: NextRequest) {
+export async function handleGeneratePresentation(request: NextRequest) {
   try {
     // ✅ AUTHENTICATION CHECK
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+
     if (!token) {
       return NextResponse.json(
-        { error: 'Authentication required. Please sign in to create presentations.' },
-        { status: 401 }
+        {
+          error:
+            "Authentication required. Please sign in to create presentations.",
+        },
+        { status: 401 },
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required. Please sign in to create presentations.' },
-        { status: 401 }
+        {
+          error:
+            "Authentication required. Please sign in to create presentations.",
+        },
+        { status: 401 },
       );
     }
     const hasUnlimitedCredits = hasUnlimitedDeveloperCredits(user.email);
@@ -52,7 +79,7 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json(
         { error: validationError.message, details: validationError.details },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,31 +87,35 @@ export async function POST(request: NextRequest) {
     const userCredits = await getCachedUserCredits(supabaseAdmin, user.id);
     if (!userCredits) {
       return NextResponse.json(
-        { error: 'Failed to initialize credits' },
-        { status: 500 }
+        { error: "Failed to initialize credits" },
+        { status: 500 },
       );
     }
 
     // Check if user has enough credits - use validated page count
     const creditsPerSlide = ACTION_COSTS.presentation;
-    const estimatedCreditCost = validatedPageCount * creditsPerSlide;
+    const pageCount = validatedPageCount ?? 1;
+    const estimatedCreditCost = pageCount * creditsPerSlide;
     const creditsRemaining = hasUnlimitedCredits
       ? Number.MAX_SAFE_INTEGER
-      : calculateRemainingCredits(userCredits.credits_total, userCredits.credits_used);
-    
+      : calculateRemainingCredits(
+          userCredits.credits_total,
+          userCredits.credits_used,
+        );
+
     if (!hasUnlimitedCredits && creditsRemaining < estimatedCreditCost) {
-      const creditWord = estimatedCreditCost === 1 ? 'credit' : 'credits';
-      const slideWord = validatedPageCount === 1 ? 'slide' : 'slides';
+      const creditWord = estimatedCreditCost === 1 ? "credit" : "credits";
+      const slideWord = pageCount === 1 ? "slide" : "slides";
       return NextResponse.json(
         {
-          error: 'Not enough credits',
-          message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${validatedPageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? 'credit' : 'credits'} remaining.`,
+          error: "Not enough credits",
+          message: `You need ${estimatedCreditCost} ${creditWord} to generate a ${pageCount}-${slideWord} presentation. You have ${creditsRemaining} ${creditsRemaining === 1 ? "credit" : "credits"} remaining.`,
           needsUpgrade: true,
           currentTier: userCredits.tier,
           creditsRemaining,
-          creditsRequired: estimatedCreditCost
+          creditsRequired: estimatedCreditCost,
         },
-        { status: 402 }
+        { status: 402 },
       );
     }
 
@@ -97,13 +128,16 @@ export async function POST(request: NextRequest) {
         supabaseAdmin,
         user.id,
         userCredits.credits_used,
-        estimatedCreditCost
+        estimatedCreditCost,
       );
       invalidateUserCredits(user.id);
       if (!reserved) {
         return NextResponse.json(
-          creditReservationConflictResponse(estimatedCreditCost, userCredits.tier),
-          { status: 402 }
+          creditReservationConflictResponse(
+            estimatedCreditCost,
+            userCredits.tier,
+          ),
+          { status: 402 },
         );
       }
       creditsUsedAfterReserve = reserved.credits_used;
@@ -117,7 +151,10 @@ export async function POST(request: NextRequest) {
     let outlines;
     let slides;
     try {
-      outlines = await generatePresentationOutline({ prompt, pageCount: validatedPageCount });
+      outlines = await generatePresentationOutline({
+        prompt,
+        pageCount,
+      });
       // Generate full presentation with visuals
       slides = await generatePresentation({ outlines, prompt, template });
     } catch (err) {
@@ -134,8 +171,8 @@ export async function POST(request: NextRequest) {
         slides,
         credits: {
           used: 0,
-          remaining: Number.MAX_SAFE_INTEGER
-        }
+          remaining: Number.MAX_SAFE_INTEGER,
+        },
       });
     }
 
@@ -143,20 +180,37 @@ export async function POST(request: NextRequest) {
     const overReserved = estimatedCreditCost - actualCreditCost;
     let creditsUsedAfterRefund = creditsUsedAfterReserve;
     if (overReserved > 0) {
-      const refunded = await refundCredits(supabaseAdmin, user.id, overReserved);
+      const refunded = await refundCredits(
+        supabaseAdmin,
+        user.id,
+        overReserved,
+      );
       if (!refunded) {
-        logger.error({ route: 'app/api/generate/presentation/route.ts' }, `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`);
+        logger.error(
+          { route: "app/api/generate/presentation/route.ts" },
+          `Failed to refund ${overReserved} over-reserved credits for user ${user.id}`,
+        );
       } else {
-        creditsUsedAfterRefund = Math.max(0, creditsUsedAfterReserve - overReserved);
+        creditsUsedAfterRefund = Math.max(
+          0,
+          creditsUsedAfterReserve - overReserved,
+        );
       }
       invalidateUserCredits(user.id);
     }
 
     // Fire-and-forget: log write does not block the response
     supabaseAdmin
-      .from('credit_usage_log')
-      .insert({ user_id: user.id, action_type: 'presentation', credits_used: actualCreditCost, metadata: { pageCount: slides.length, prompt_length: prompt.length } })
-      .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
+      .from("credit_usage_log")
+      .insert({
+        user_id: user.id,
+        action_type: "presentation",
+        credits_used: actualCreditCost,
+        metadata: { pageCount: slides.length, prompt_length: prompt.length },
+      })
+      .then(({ error }) => {
+        if (error) console.error("Failed to log credit usage:", error);
+      });
 
     return NextResponse.json({
       slides,
@@ -164,15 +218,28 @@ export async function POST(request: NextRequest) {
         used: actualCreditCost,
         remaining: calculateRemainingCredits(
           userCredits.credits_total,
-          creditsUsedAfterRefund
-        )
-      }
+          creditsUsedAfterRefund,
+        ),
+      },
     });
   } catch (error) {
-    logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Error generating presentation:', error);
+    logger.error(
+      { route: "app/api/generate/presentation/route.ts" },
+      "Error generating presentation:",
+      error,
+    );
     return NextResponse.json(
-      { error: 'Failed to generate presentation' },
-      { status: 500 }
+      { error: "Failed to generate presentation" },
+      { status: 500 },
     );
   }
+}
+
+/** @deprecated Use POST /api/v2/generate/presentation */
+export async function POST(request: NextRequest) {
+  const response = await handleGeneratePresentation(request);
+  return addLegacyEndpointDeprecation(
+    response,
+    "/api/v2/generate/presentation",
+  );
 }
