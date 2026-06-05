@@ -3,20 +3,12 @@ import { SiteHeader } from "@/components/site-header";
 import { DiagramGenerator } from "@/components/diagram/diagram-generator";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
 import { Sparkles, Workflow, Zap, Star, Wand2, Share2 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
-import { DiagramGeneratorSkeleton } from "@/components/ui/skeleton";
+import { useCallback } from "react";
 import { useShare } from "@/hooks/use-share";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function DiagramPage() {
-  const [isLoading, setIsLoading] = useState(true);
-
   const { copied, shareViaWebShare } = useShare();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleShare = useCallback(() => {
     shareViaWebShare({
@@ -142,11 +134,7 @@ export default function DiagramPage() {
 
             <div className="relative z-10">
               <CreateDocumentGuard>
-                {isLoading ? (
-                  <DiagramGeneratorSkeleton />
-                ) : (
-                  <DiagramGenerator />
-                )}
+                <DiagramGenerator />
               </CreateDocumentGuard>
             </div>
           </div>

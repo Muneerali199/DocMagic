@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { CSP_HEADER, buildCspWithNonce } from '@/lib/csp';
-
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
-  .split(',')
-  .map((o) => o.trim());
+import { applySecurityHeaders, buildCorsHeaders } from '@/lib/security-headers';
 
 const DEPLOYMENT_ERROR_PATTERNS = [
   /DEPLOYMENT_NOT_FOUND/i,
@@ -30,18 +27,6 @@ async function logError(
   if (process.env.NODE_ENV === 'development') {
     console.error(`[ERROR] ${pathname}: ${error} (${status}) at ${new Date(timestamp).toISOString()}`);
   }
-}
-
-const CORS_HDRS = {
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Request-Id',
-  'Access-Control-Max-Age': '86400',
-};
-
-function corsHeaders(origin: string | null): Record<string, string> {
-  if (!origin) return {};
-  if (!ALLOWED_ORIGINS.includes('*') && !ALLOWED_ORIGINS.includes(origin)) return {};
-  return { 'Access-Control-Allow-Origin': origin, ...CORS_HDRS };
 }
 
 const RL = {
@@ -85,14 +70,6 @@ function checkRL(ip: string, pathname: string) {
   return { allowed: true, remaining: cfg.max - e.count, reset: e.reset, limit: cfg.max };
 }
 
-function secHdrs(r: NextResponse) {
-  r.headers.set('X-Frame-Options', 'DENY');
-  r.headers.set('X-Content-Type-Options', 'nosniff');
-  r.headers.set('X-XSS-Protection', '1; mode=block');
-  r.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  r.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-}
-
 /**
  * Generate a cryptographically random nonce for per-request CSP.
  * Uses Web APIs (btoa) to ensure compatibility with the Edge Runtime.
@@ -106,7 +83,7 @@ function generateNonce(): string {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const origin = req.headers.get('origin');
-  const cors = corsHeaders(origin);
+  const cors = buildCorsHeaders(origin);
 
   if (req.method === 'OPTIONS') {
     if (!Object.keys(cors).length) return new NextResponse(null, { status: 403 });
@@ -172,7 +149,7 @@ export function middleware(req: NextRequest) {
     requestHeaders.set('x-nonce', nonce);
 
     const r = NextResponse.next({ request: { headers: requestHeaders } });
-    secHdrs(r);
+    applySecurityHeaders(r.headers);
     
     r.headers.set('Content-Security-Policy', buildCspWithNonce(nonce));
     r.headers.set('X-DNS-Prefetch-Control', 'on');
@@ -188,7 +165,7 @@ export function middleware(req: NextRequest) {
   }
 
   const r = NextResponse.next();
-  secHdrs(r);
+  applySecurityHeaders(r.headers);
   r.headers.set('Content-Security-Policy', CSP_HEADER);
   r.headers.set('Cache-Control', 'public,max-age=300,stale-while-revalidate=3600');
   return r;

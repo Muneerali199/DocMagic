@@ -134,6 +134,10 @@ export async function handleGenerateGuidedResume(request: Request) {
       );
     }
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
+    }
+
     const resume = await generateGuidedResume({
       personalInfo,
       professionalSummary,

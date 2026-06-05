@@ -7,3 +7,4 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development
+      - DRAFTDECK_RUNTIME_ENV=development

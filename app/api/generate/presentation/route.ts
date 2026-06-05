@@ -143,6 +143,10 @@ export async function handleGeneratePresentation(request: NextRequest) {
       creditsUsedAfterReserve = reserved.credits_used;
     }
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'presentation' });
+    }
+
     // Generate presentation outline first
     let outlines;
     let slides;

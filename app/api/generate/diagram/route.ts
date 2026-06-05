@@ -115,6 +115,10 @@ export async function handleGenerateDiagram(request: Request) {
       }
     }
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'diagram' });
+    }
+
     // console.log(`📊 Generating ${diagramType} diagram with Mistral...`);
 
     let diagram;

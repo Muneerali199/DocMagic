@@ -298,6 +298,10 @@ async function postHandler(request: Request) {
       email: sanitizedEmail,
     } = sanitizedInput;
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'resume' });
+    }
+
     // Atomically reserve credits BEFORE generation to prevent the
     // TOCTOU race documented in issue #477. If a concurrent request beat
     // us to the row, the optimistic-lock update returns no row and we

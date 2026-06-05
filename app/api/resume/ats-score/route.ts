@@ -166,6 +166,10 @@ export async function handleAtsScore(req: Request) {
       userCredits = reserved;
     }
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
+    }
+
     // Calculate ATS score
     let atsAnalysis;
     try {

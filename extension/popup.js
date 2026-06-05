@@ -200,21 +200,118 @@ themeToggle.addEventListener('click', () => {
 });
 
 // Tab Management
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const tabName = tab.dataset.tab;
-        
-        // Update active tab
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Update active content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
+const tabButtons = Array.from(document.querySelectorAll('.tab'));
+
+function activateTab(tab, shouldFocus = false) {
+    if (!tab) return;
+
+    const tabName = tab.dataset.tab;
+    const activePanel = document.getElementById(`${tabName}-tab`);
+
+    tabButtons.forEach(button => {
+        const isActive = button === tab;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', String(isActive));
+        button.tabIndex = isActive ? 0 : -1;
+    });
+
+    document.querySelectorAll('.tab-content').forEach(content => {
+        const isActive = content === activePanel;
+        content.classList.toggle('active', isActive);
+        content.hidden = !isActive;
+    });
+
+    if (shouldFocus) {
+        tab.focus();
+    }
+}
+
+tabButtons.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab));
+
+    tab.addEventListener('keydown', event => {
+        const lastIndex = tabButtons.length - 1;
+        let nextIndex = index;
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            nextIndex = index === lastIndex ? 0 : index + 1;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            nextIndex = index === 0 ? lastIndex : index - 1;
+        } else if (event.key === 'Home') {
+            nextIndex = 0;
+        } else if (event.key === 'End') {
+            nextIndex = lastIndex;
+        } else if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            activateTab(tab);
+            return;
+        } else {
+            return;
+        }
+
+        event.preventDefault();
+        activateTab(tabButtons[nextIndex], true);
     });
 });
+
+activateTab(document.querySelector('.tab.active'));
+
+let previouslyFocusedElement = null;
+
+function getModalFocusableElements(modal) {
+    return Array.from(modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(element => !element.disabled && element.offsetParent !== null);
+}
+
+function openInterviewConfigModal() {
+    const modal = document.getElementById('interview-config-modal');
+    previouslyFocusedElement = document.activeElement;
+    modal.classList.remove('hidden');
+
+    const focusableElements = getModalFocusableElements(modal);
+    (focusableElements[0] || modal).focus();
+}
+
+function closeInterviewConfigModal() {
+    const modal = document.getElementById('interview-config-modal');
+    modal.classList.add('hidden');
+
+    if (previouslyFocusedElement?.focus) {
+        previouslyFocusedElement.focus();
+    }
+
+    previouslyFocusedElement = null;
+}
+
+function trapInterviewConfigFocus(event) {
+    const modal = document.getElementById('interview-config-modal');
+    if (modal.classList.contains('hidden')) return;
+
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeInterviewConfigModal();
+        return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const focusableElements = getModalFocusableElements(modal);
+    if (!focusableElements.length) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+    }
+}
+
+document.addEventListener('keydown', trapInterviewConfigFocus);
 
 // Open Settings Page
 const settingsBtn = document.getElementById('open-settings');
@@ -748,12 +845,12 @@ document.getElementById('start-interview-mode').addEventListener('click', () => 
     }
     
     // Show config modal
-    document.getElementById('interview-config-modal').classList.remove('hidden');
+    openInterviewConfigModal();
 });
 
 // Cancel Interview Config
 document.getElementById('cancel-interview-config').addEventListener('click', () => {
-    document.getElementById('interview-config-modal').classList.add('hidden');
+    closeInterviewConfigModal();
 });
 
 // Start Interview from Config
@@ -773,7 +870,7 @@ document.getElementById('start-interview-config').addEventListener('click', () =
     };
     
     // Hide modal
-    document.getElementById('interview-config-modal').classList.add('hidden');
+    closeInterviewConfigModal();
     
     // Start interview
     window.interviewerMode.startInterview(config);
@@ -783,10 +880,7 @@ document.getElementById('start-interview-config').addEventListener('click', () =
 // Display interview question
 function displayInterviewQuestion(question) {
     // Switch to interview tab
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('[data-tab="interview"]').classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('interview-tab').classList.add('active');
+    activateTab(document.querySelector('[data-tab="interview"]'));
     
     // Display question
     const resultDiv = document.getElementById('interview-result');

@@ -1,6 +1,18 @@
 import withPWACore from 'next-pwa';
 import { withSentryConfig } from '@sentry/nextjs';
-import { CSP_HEADER } from './lib/csp.mjs';
+import { STATIC_SECURITY_HEADERS } from './lib/security-headers.mjs';
+
+const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
+const isProductionLikeRuntime =
+  (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== 'development')
+  || process.env.NODE_ENV === 'production'
+  || process.env.npm_lifecycle_event === 'start';
+
+if (isProductionLikeRuntime && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
+  throw new Error(
+    'Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production. Use auditable grants instead.'
+  );
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -52,18 +64,7 @@ trailingSlash: false,
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          {
-            // Source of truth: lib/csp.ts (and its JS companion lib/csp.mjs)
-            key: 'Content-Security-Policy',
-            value: CSP_HEADER,
-          }
-        ]
+        headers: STATIC_SECURITY_HEADERS
       }
     ];
   },
@@ -74,7 +75,15 @@ trailingSlash: false,
     tsconfigPath: './tsconfig.build.json',
     ignoreBuildErrors: true,
   },
-webpack: (config, { isServer }) => {
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+      jsdom: false,
+      'jsdom/lib/jsdom/living/generated/utils': false,
+      'jsdom/lib/jsdom/utils': false,
+    };
+
     config.module.rules.push({
       test: /\.pdf$/,
       type: 'asset/resource',

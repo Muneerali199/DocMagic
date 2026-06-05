@@ -58,6 +58,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 type StepType = "dashboard" | "create" | "job-url" | "templates" | "preview";
 
@@ -668,6 +669,18 @@ ${letterData.content || ""}
   if (currentStep === "job-url") {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title={isRegenerating ? "Regenerating cover letter" : "Generating cover letter"}
+          description="Matching your experience to the role and drafting a polished letter..."
+          estimatedTime="Estimated time: 20-45 seconds"
+          tips={[
+            "Tailored letters work best when the job description has concrete responsibilities.",
+            "You can lock sections before regenerating to preserve details you like.",
+            "Add measurable achievements to make the final draft more persuasive.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
@@ -892,6 +905,18 @@ ${letterData.content || ""}
 
     return (
       <div className="space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title="Generating letter"
+          description="Finding the right tone, structure, and professional phrasing..."
+          estimatedTime="Estimated time: 15-35 seconds"
+          tips={[
+            "Mention the letter purpose clearly for a sharper first draft.",
+            "Names and recipient details help the letter feel more complete.",
+            "You can regenerate after preview if you want a different tone.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
@@ -1076,6 +1101,18 @@ ${letterData.content || ""}
   if (currentStep === "preview" && letterData) {
     return (
       <div className="space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title="Updating letter"
+          description="Refreshing your draft while keeping the useful details intact..."
+          estimatedTime="Estimated time: 15-35 seconds"
+          tips={[
+            "Regeneration keeps your latest inputs in mind.",
+            "Review the opening paragraph first; it sets the tone.",
+            "Download or copy once the letter matches your voice.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <Button

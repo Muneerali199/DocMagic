@@ -420,13 +420,13 @@ function ResetPasswordForm() {
                 >
                   <Button
                     type="submit"
-                    disabled={isLoading || !isFormValid}
+                    disabled={!isFormValid}
+                    isLoading={isLoading}
                     className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg disabled:opacity-50 shadow-lg hover:scale-105 transition-all duration-300"
                   >
                     <div className="flex items-center justify-center gap-3 relative z-20">
                       {isLoading ? (
                         <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
                           <span className="font-bold">Updating Password...</span>
                         </>
                       ) : (
