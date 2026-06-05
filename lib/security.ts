@@ -40,7 +40,7 @@ export const SECURITY_CONFIG = {
 };
 
 // Security headers for different environments
-export const getSecurityHeaders = (isDevelopment: boolean = false) => {
+export const getSecurityHeaders = (isDevelopment: boolean = false): Record<string, string> => {
   const baseHeaders = {
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
