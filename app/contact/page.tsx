@@ -61,9 +61,17 @@ export default function ContactForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<ContactErrors>({});
 
-  // Email validation function
   const isValidEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    contactSchema.shape.email.safeParse(email).success;
+
+  const validateField = (name: ContactField, value: string) => {
+    const fieldSchema = contactSchema.shape[name];
+    const validation = fieldSchema.safeParse(value);
+
+    return validation.success
+      ? undefined
+      : validation.error.issues[0]?.message || "Invalid value";
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -73,7 +81,10 @@ export default function ContactForm() {
       ...prev,
       [name]: value,
     }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name as ContactField, value),
+    }));
   };
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {

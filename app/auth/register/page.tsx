@@ -181,6 +181,7 @@ function RegisterForm() {
       return;
     }
 
+    const validatedData = validation.data;
     setFieldErrors({});
     setIsLoading(true);
 
@@ -202,7 +203,13 @@ function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, referralCode, utmData }),
+        body: JSON.stringify({
+          name: validatedData.name,
+          email: validatedData.email,
+          password: validatedData.password,
+          referralCode,
+          utmData,
+        }),
       });
 
       const result = await res.json();
@@ -251,7 +258,7 @@ function RegisterForm() {
           error.message.includes("Password is too short")
         ) {
           userMessage =
-            "Password is too short. Please use at least 6 characters.";
+            "Password is too short. Please use at least 8 characters.";
         } else if (
           error.message.includes("rate limit") ||
           error.message.includes("Too many requests")

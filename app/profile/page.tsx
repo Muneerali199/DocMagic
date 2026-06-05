@@ -71,17 +71,28 @@ const profileSchema = z.object({
     .refine((value) => {
       if (!value) return true;
       try {
-        new URL(value);
-        return true;
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
       } catch {
         return false;
       }
-    }, "Please enter a valid URL including https://"),
+    }, "Please enter a valid http(s) URL including https://"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 type ProfileField = keyof ProfileFormData;
 type ProfileErrors = Partial<Record<ProfileField, string>>;
+
+const isSafeHttpUrl = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
 
 interface UserProfile {
   id: string;
@@ -122,6 +133,26 @@ export default function ProfilePage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateProfileField = (name: ProfileField, value: string) => {
+    const fieldSchema = profileSchema.shape[name];
+    const validation = fieldSchema.safeParse(value);
+
+    return validation.success
+      ? undefined
+      : validation.error.issues[0]?.message || "Invalid value";
+  };
+
+  const handleProfileFieldChange = (name: ProfileField, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateProfileField(name, value),
+    }));
+  };
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -182,17 +213,30 @@ export default function ProfilePage() {
       }
 
       try {
-        // Try to get documents count and last activity
-        const documentsResult = await supabase
+        const documentsCountResult = await supabase
+          .from("documents")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", authUser.id);
+
+        if (documentsCountResult.error) {
+          throw documentsCountResult.error;
+        }
+
+        documentsCount = documentsCountResult.count || 0;
+
+        const latestDocumentResult = await supabase
           .from("documents")
           .select("id, created_at")
           .eq("user_id", authUser.id)
           .order("created_at", { ascending: false })
           .limit(1);
 
-        documentsCount = documentsResult.data?.length || 0;
+        if (latestDocumentResult.error) {
+          throw latestDocumentResult.error;
+        }
+
         lastActivity =
-          documentsResult.data?.[0]?.created_at || authUser.created_at;
+          latestDocumentResult.data?.[0]?.created_at || authUser.created_at;
       } catch (error) {
         console.warn("Documents table not found or accessible:", error);
       }
@@ -326,17 +370,18 @@ export default function ProfilePage() {
     }
 
     try {
+      const validatedData = validation.data;
       setFieldErrors({});
       setSaving(true);
 
       // Update user metadata
       const { error } = await supabase.auth.updateUser({
         data: {
-          name: formData.name,
-          bio: formData.bio,
-          location: formData.location,
-          phone: formData.phone,
-          website: formData.website,
+          name: validatedData.name,
+          bio: validatedData.bio,
+          location: validatedData.location,
+          phone: validatedData.phone,
+          website: validatedData.website,
         },
       });
 
@@ -347,14 +392,16 @@ export default function ProfilePage() {
         prev
           ? {
               ...prev,
-              name: formData.name,
-              bio: formData.bio,
-              location: formData.location,
-              phone: formData.phone,
-              website: formData.website,
+              name: validatedData.name,
+              bio: validatedData.bio,
+              location: validatedData.location,
+              phone: validatedData.phone,
+              website: validatedData.website,
             }
           : null,
       );
+
+      setFormData(validatedData);
 
       setEditing(false);
       toast({
@@ -536,14 +583,10 @@ export default function ProfilePage() {
                               id="name"
                               value={formData.name}
                               onChange={(e) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  name: e.target.value,
-                                }));
-                                setFieldErrors((prev) => ({
-                                  ...prev,
-                                  name: undefined,
-                                }));
+                                handleProfileFieldChange(
+                                  "name",
+                                  e.target.value,
+                                );
                               }}
                               placeholder="Enter your full name"
                             />
@@ -584,14 +627,10 @@ export default function ProfilePage() {
                               id="phone"
                               value={formData.phone}
                               onChange={(e) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  phone: e.target.value,
-                                }));
-                                setFieldErrors((prev) => ({
-                                  ...prev,
-                                  phone: undefined,
-                                }));
+                                handleProfileFieldChange(
+                                  "phone",
+                                  e.target.value,
+                                );
                               }}
                               placeholder="Enter your phone number"
                             />
@@ -622,14 +661,10 @@ export default function ProfilePage() {
                               id="location"
                               value={formData.location}
                               onChange={(e) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  location: e.target.value,
-                                }));
-                                setFieldErrors((prev) => ({
-                                  ...prev,
-                                  location: undefined,
-                                }));
+                                handleProfileFieldChange(
+                                  "location",
+                                  e.target.value,
+                                );
                               }}
                               placeholder="Enter your location"
                             />
@@ -661,14 +696,10 @@ export default function ProfilePage() {
                             id="website"
                             value={formData.website}
                             onChange={(e) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                website: e.target.value,
-                              }));
-                              setFieldErrors((prev) => ({
-                                ...prev,
-                                website: undefined,
-                              }));
+                              handleProfileFieldChange(
+                                "website",
+                                e.target.value,
+                              );
                             }}
                             placeholder="https://example.com"
                           />
@@ -680,7 +711,7 @@ export default function ProfilePage() {
                         </>
                       ) : (
                         <p className="mt-1 text-sm text-muted-foreground flex items-center">
-                          {user.website ? (
+                          {isSafeHttpUrl(user.website) ? (
                             <>
                               <Globe className="mr-2 h-4 w-4" />
                               <a
@@ -711,14 +742,7 @@ export default function ProfilePage() {
                           id="bio"
                           value={formData.bio}
                           onChange={(e) => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              bio: e.target.value,
-                            }));
-                            setFieldErrors((prev) => ({
-                              ...prev,
-                              bio: undefined,
-                            }));
+                            handleProfileFieldChange("bio", e.target.value);
                           }}
                           placeholder="Tell us about yourself..."
                           rows={4}
