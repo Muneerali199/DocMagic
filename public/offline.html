@@ -3,115 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
     <title>DraftDeckAI - Offline</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            margin: 0;
             min-height: 100vh;
-            display: flex;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #172033;
+            background: #f6f8fb;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        main {
+            width: min(100%, 620px);
+            background: #ffffff;
+            border: 1px solid #d9e1ef;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(36, 64, 112, 0.14);
+            padding: 32px;
+        }
+
+        .status {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 500px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-        }
-        
-        h1 {
-            font-size: 32px;
-            margin-bottom: 16px;
+            gap: 10px;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 14px;
             font-weight: 700;
         }
-        
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f97316;
+        }
+
+        h1 {
+            margin: 24px 0 12px;
+            font-size: clamp(28px, 6vw, 42px);
+            line-height: 1.05;
+            letter-spacing: 0;
+        }
+
         p {
-            font-size: 18px;
-            line-height: 1.6;
-            opacity: 0.9;
-            margin-bottom: 30px;
+            margin: 0;
+            color: #526071;
+            font-size: 17px;
+            line-height: 1.65;
         }
-        
-        .button {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .features {
-            margin-top: 30px;
-            text-align: left;
-        }
-        
-        .feature {
+
+        .actions {
             display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            font-size: 14px;
-            opacity: 0.8;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 28px 0;
         }
-        
-        .feature::before {
-            content: "✓";
-            margin-right: 10px;
-            font-weight: bold;
+
+        a,
+        button {
+            min-height: 44px;
+            border-radius: 10px;
+            border: 1px solid #c9d4e5;
+            padding: 0 16px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            color: #ffffff;
+            background: #2563eb;
+            text-decoration: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            color: #172033;
+            background: #ffffff;
+        }
+
+        ul {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            color: #374151;
+            background: #f8fafc;
+            border: 1px solid #e5eaf3;
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+
+        .sync-state {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">📄</div>
-        <h1>You're Offline</h1>
-        <p>Don't worry! DraftDeckAI works offline too. You can still access your saved documents and continue working on your projects.</p>
-        
-        <a href="/" class="button" onclick="window.location.reload()">Try Again</a>
-        
-        <div class="features">
-            <div class="feature">Access saved documents offline</div>
-            <div class="feature">Continue editing your work</div>
-            <div class="feature">Changes sync when back online</div>
+    <main>
+        <div class="status">
+            <span class="dot" aria-hidden="true"></span>
+            Offline mode
         </div>
-    </div>
-    
+
+        <h1>You can keep working.</h1>
+        <p>
+            DraftDeckAI could not reach the network. Recently visited pages are still available,
+            and supported document saves will be queued by the app worker until your connection returns.
+        </p>
+
+        <div class="actions">
+            <a href="/">Go to dashboard</a>
+            <button type="button" id="retry-button">Try again</button>
+        </div>
+
+        <ul aria-label="Offline capabilities">
+            <li>Open cached resumes, presentations, templates, and editor pages.</li>
+            <li>Keep safe document changes queued locally when background sync is available.</li>
+            <li>Reconnect and refresh to sync queued work with DraftDeckAI.</li>
+        </ul>
+
+        <p class="sync-state" id="sync-state">Waiting for connection...</p>
+    </main>
+
     <script>
-        // Auto-refresh when connection is restored
-        window.addEventListener('online', function() {
+        const retryButton = document.getElementById('retry-button');
+        const syncState = document.getElementById('sync-state');
+
+        retryButton.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        window.addEventListener('online', () => {
+            syncState.textContent = 'Connection restored. Refreshing...';
             window.location.reload();
         });
     </script>
