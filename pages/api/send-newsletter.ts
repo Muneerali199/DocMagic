@@ -1,5 +1,4 @@
-// @ts-ignore
-import type { NextApiRequest, NextApiResponse } from 'next/types';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { sendTestMail } from '../../lib/testmail';
 
 // Example: POST /api/send-newsletter
