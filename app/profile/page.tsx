@@ -1,19 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { SiteHeader } from '@/components/site-header';
-import { ReferralSection } from '@/components/referral-section';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { SiteHeader } from "@/components/site-header";
+import { ReferralSection } from "@/components/referral-section";
+import { z } from "zod";
 import {
   User,
   Mail,
@@ -28,8 +41,58 @@ import {
   FileText,
   Activity,
   Camera,
-  Upload
-} from 'lucide-react';
+  Upload,
+} from "lucide-react";
+
+const profileSchema = z.object({
+  name: z.string().trim().min(2, "Full name must be at least 2 characters"),
+  bio: z
+    .string()
+    .trim()
+    .max(500, "Bio must be 500 characters or fewer")
+    .optional(),
+  location: z
+    .string()
+    .trim()
+    .max(120, "Location must be 120 characters or fewer")
+    .optional(),
+  phone: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) => !value || /^[+()\-\s\d]{7,20}$/.test(value),
+      "Please enter a valid phone number",
+    ),
+  website: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => {
+      if (!value) return true;
+      try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+      } catch {
+        return false;
+      }
+    }, "Please enter a valid http(s) URL including https://"),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
+type ProfileField = keyof ProfileFormData;
+type ProfileErrors = Partial<Record<ProfileField, string>>;
+
+const isSafeHttpUrl = (value?: string | null) => {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
 
 interface UserProfile {
   id: string;
@@ -57,57 +120,79 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    bio: '',
-    location: '',
-    phone: '',
-    website: ''
+  const [formData, setFormData] = useState<ProfileFormData>({
+    name: "",
+    bio: "",
+    location: "",
+    phone: "",
+    website: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<ProfileErrors>({});
 
   const { toast } = useToast();
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    loadUserProfile();
-  }, []);
+  const validateProfileField = (name: ProfileField, value: string) => {
+    const fieldSchema = profileSchema.shape[name];
+    const validation = fieldSchema.safeParse(value);
 
-  const loadUserProfile = async () => {
+    return validation.success
+      ? undefined
+      : validation.error.issues[0]?.message || "Invalid value";
+  };
+
+  const handleProfileFieldChange = (name: ProfileField, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateProfileField(name, value),
+    }));
+  };
+
+  const loadUserProfile = useCallback(async () => {
     try {
       setLoading(true);
 
       // Use getSession() for rate limit avoidance (reads from local cache)
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const authUser = session?.user;
 
       if (!authUser) {
-        router.push('/auth/signin');
+        router.push("/auth/signin");
         return;
       }
 
       // Set user profile data
       const userProfile: UserProfile = {
         id: authUser.id,
-        email: authUser.email || '',
-        name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || '',
-        avatar_url: authUser.user_metadata?.avatar_url || '',
-        bio: authUser.user_metadata?.bio || '',
-        location: authUser.user_metadata?.location || '',
-        phone: authUser.user_metadata?.phone || '',
-        website: authUser.user_metadata?.website || '',
+        email: authUser.email || "",
+        name:
+          authUser.user_metadata?.name ||
+          authUser.user_metadata?.full_name ||
+          "",
+        avatar_url: authUser.user_metadata?.avatar_url || "",
+        bio: authUser.user_metadata?.bio || "",
+        location: authUser.user_metadata?.location || "",
+        phone: authUser.user_metadata?.phone || "",
+        website: authUser.user_metadata?.website || "",
         created_at: authUser.created_at,
-        last_sign_in_at: authUser.last_sign_in_at || undefined
+        last_sign_in_at: authUser.last_sign_in_at || undefined,
       };
 
       setUser(userProfile);
       setFormData({
-        name: userProfile.name || '',
-        bio: userProfile.bio || '',
-        location: userProfile.location || '',
-        phone: userProfile.phone || '',
-        website: userProfile.website || ''
+        name: userProfile.name || "",
+        bio: userProfile.bio || "",
+        location: userProfile.location || "",
+        phone: userProfile.phone || "",
+        website: userProfile.website || "",
       });
 
       // Load real user statistics from database with error handling
@@ -118,68 +203,88 @@ export default function ProfilePage() {
       try {
         // Try to get templates count
         const templatesResult = await supabase
-          .from('templates')
-          .select('id')
-          .eq('user_id', authUser.id);
+          .from("templates")
+          .select("id")
+          .eq("user_id", authUser.id);
 
         templatesCount = templatesResult.data?.length || 0;
       } catch (error) {
-        console.warn('Templates table not found or accessible:', error);
+        console.warn("Templates table not found or accessible:", error);
       }
 
       try {
-        // Try to get documents count and last activity
-        const documentsResult = await supabase
-          .from('documents')
-          .select('id, created_at')
-          .eq('user_id', authUser.id)
-          .order('created_at', { ascending: false })
+        const documentsCountResult = await supabase
+          .from("documents")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", authUser.id);
+
+        if (documentsCountResult.error) {
+          throw documentsCountResult.error;
+        }
+
+        documentsCount = documentsCountResult.count || 0;
+
+        const latestDocumentResult = await supabase
+          .from("documents")
+          .select("id, created_at")
+          .eq("user_id", authUser.id)
+          .order("created_at", { ascending: false })
           .limit(1);
 
-        documentsCount = documentsResult.data?.length || 0;
-        lastActivity = documentsResult.data?.[0]?.created_at || authUser.created_at;
+        if (latestDocumentResult.error) {
+          throw latestDocumentResult.error;
+        }
+
+        lastActivity =
+          latestDocumentResult.data?.[0]?.created_at || authUser.created_at;
       } catch (error) {
-        console.warn('Documents table not found or accessible:', error);
+        console.warn("Documents table not found or accessible:", error);
       }
 
       setStats({
         templates_created: templatesCount,
         documents_generated: documentsCount,
-        last_activity: lastActivity
+        last_activity: lastActivity,
       });
-
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error("Error loading profile:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load profile data',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, supabase, toast]);
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    loadUserProfile();
+  }, [loadUserProfile]);
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
     // Validate file type and size
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: 'Invalid file type',
-        description: 'Please upload a JPEG, PNG, GIF, or WebP image',
-        variant: 'destructive'
+        title: "Invalid file type",
+        description: "Please upload a JPEG, PNG, GIF, or WebP image",
+        variant: "destructive",
       });
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast({
-        title: 'File too large',
-        description: 'Please upload an image smaller than 5MB',
-        variant: 'destructive'
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
       });
       return;
     }
@@ -188,59 +293,62 @@ export default function ProfilePage() {
       setUploadingAvatar(true);
 
       // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`; // Remove avatars/ prefix since we're already in the avatars bucket
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(filePath, file);
 
       if (uploadError) {
         // Handle specific bucket not found error
-        if (uploadError.message?.includes('Bucket not found')) {
-          throw new Error('Storage bucket not configured. Please contact support or check the setup guide.');
+        if (uploadError.message?.includes("Bucket not found")) {
+          throw new Error(
+            "Storage bucket not configured. Please contact support or check the setup guide.",
+          );
         }
         throw uploadError;
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update user metadata with new avatar URL
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
-          avatar_url: publicUrl
-        }
+          avatar_url: publicUrl,
+        },
       });
 
       if (updateError) throw updateError;
 
       // Update local state
-      setUser(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      setUser((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
 
       toast({
-        title: 'Success',
-        description: 'Profile picture updated successfully'
+        title: "Success",
+        description: "Profile picture updated successfully",
       });
-
     } catch (error: any) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error);
 
-      let errorMessage = 'Failed to upload profile picture';
+      let errorMessage = "Failed to upload profile picture";
 
-      if (error.message?.includes('Storage bucket not configured')) {
-        errorMessage = 'Profile picture upload is not configured yet. Please check the setup guide.';
-      } else if (error.message?.includes('Bucket not found')) {
-        errorMessage = 'Storage bucket not found. Please create the "avatars" bucket in Supabase Storage.';
+      if (error.message?.includes("Storage bucket not configured")) {
+        errorMessage =
+          "Profile picture upload is not configured yet. Please check the setup guide.";
+      } else if (error.message?.includes("Bucket not found")) {
+        errorMessage =
+          'Storage bucket not found. Please create the "avatars" bucket in Supabase Storage.';
       }
 
       toast({
-        title: 'Error',
+        title: "Error",
         description: errorMessage,
-        variant: 'destructive'
+        variant: "destructive",
       });
     } finally {
       setUploadingAvatar(false);
@@ -250,44 +358,62 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user) return;
 
+    const validation = profileSchema.safeParse(formData);
+    if (!validation.success) {
+      const nextErrors: ProfileErrors = {};
+      validation.error.issues.forEach((issue) => {
+        const field = issue.path[0] as ProfileField;
+        nextErrors[field] = issue.message;
+      });
+      setFieldErrors(nextErrors);
+      return;
+    }
+
     try {
+      const validatedData = validation.data;
+      setFieldErrors({});
       setSaving(true);
 
       // Update user metadata
       const { error } = await supabase.auth.updateUser({
         data: {
-          name: formData.name,
-          bio: formData.bio,
-          location: formData.location,
-          phone: formData.phone,
-          website: formData.website
-        }
+          name: validatedData.name,
+          bio: validatedData.bio,
+          location: validatedData.location,
+          phone: validatedData.phone,
+          website: validatedData.website,
+        },
       });
 
       if (error) throw error;
 
       // Update local state
-      setUser(prev => prev ? {
-        ...prev,
-        name: formData.name,
-        bio: formData.bio,
-        location: formData.location,
-        phone: formData.phone,
-        website: formData.website
-      } : null);
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: validatedData.name,
+              bio: validatedData.bio,
+              location: validatedData.location,
+              phone: validatedData.phone,
+              website: validatedData.website,
+            }
+          : null,
+      );
+
+      setFormData(validatedData);
 
       setEditing(false);
       toast({
-        title: 'Success',
-        description: 'Profile updated successfully'
+        title: "Success",
+        description: "Profile updated successfully",
       });
-
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to update profile',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
@@ -298,29 +424,30 @@ export default function ProfilePage() {
     if (!user) return;
 
     setFormData({
-      name: user.name || '',
-      bio: user.bio || '',
-      location: user.location || '',
-      phone: user.phone || '',
-      website: user.website || ''
+      name: user.name || "",
+      bio: user.bio || "",
+      location: user.location || "",
+      phone: user.phone || "",
+      website: user.website || "",
     });
+    setFieldErrors({});
     setEditing(false);
   };
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -380,7 +507,7 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <Button onClick={handleSave} disabled={saving}>
                   <Save className="mr-2 h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save'}
+                  {saving ? "Saving..." : "Save"}
                 </Button>
                 <Button variant="outline" onClick={handleCancel}>
                   <X className="mr-2 h-4 w-4" />
@@ -400,7 +527,11 @@ export default function ProfilePage() {
                       <Avatar className="h-20 w-20">
                         <AvatarImage src={user.avatar_url} alt={user.name} />
                         <AvatarFallback className="text-lg">
-                          {user.name ? getInitials(user.name) : <User className="h-8 w-8" />}
+                          {user.name ? (
+                            getInitials(user.name)
+                          ) : (
+                            <User className="h-8 w-8" />
+                          )}
                         </AvatarFallback>
                       </Avatar>
                       {editing && (
@@ -427,7 +558,9 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <CardTitle className="text-2xl">{user.name || 'Anonymous User'}</CardTitle>
+                      <CardTitle className="text-2xl">
+                        {user.name || "Anonymous User"}
+                      </CardTitle>
                       <CardDescription className="flex items-center mt-1">
                         <Mail className="mr-2 h-4 w-4" />
                         {user.email}
@@ -438,26 +571,42 @@ export default function ProfilePage() {
                 <CardContent className="space-y-6">
                   {/* Basic Information */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Basic Information
+                    </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <Label htmlFor="name">Full Name</Label>
                         {editing ? (
-                          <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="Enter your full name"
-                          />
+                          <>
+                            <Input
+                              id="name"
+                              value={formData.name}
+                              onChange={(e) => {
+                                handleProfileFieldChange(
+                                  "name",
+                                  e.target.value,
+                                );
+                              }}
+                              placeholder="Enter your full name"
+                            />
+                            {fieldErrors.name && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {fieldErrors.name}
+                              </p>
+                            )}
+                          </>
                         ) : (
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {user.name || 'Not provided'}
+                            {user.name || "Not provided"}
                           </p>
                         )}
                       </div>
                       <div>
                         <Label htmlFor="email">Email</Label>
-                        <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -466,17 +615,31 @@ export default function ProfilePage() {
 
                   {/* Contact Information */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Contact Information
+                    </h3>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <Label htmlFor="phone">Phone</Label>
                         {editing ? (
-                          <Input
-                            id="phone"
-                            value={formData.phone}
-                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                            placeholder="Enter your phone number"
-                          />
+                          <>
+                            <Input
+                              id="phone"
+                              value={formData.phone}
+                              onChange={(e) => {
+                                handleProfileFieldChange(
+                                  "phone",
+                                  e.target.value,
+                                );
+                              }}
+                              placeholder="Enter your phone number"
+                            />
+                            {fieldErrors.phone && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {fieldErrors.phone}
+                              </p>
+                            )}
+                          </>
                         ) : (
                           <p className="mt-1 text-sm text-muted-foreground flex items-center">
                             {user.phone ? (
@@ -485,7 +648,7 @@ export default function ProfilePage() {
                                 {user.phone}
                               </>
                             ) : (
-                              'Not provided'
+                              "Not provided"
                             )}
                           </p>
                         )}
@@ -493,12 +656,24 @@ export default function ProfilePage() {
                       <div>
                         <Label htmlFor="location">Location</Label>
                         {editing ? (
-                          <Input
-                            id="location"
-                            value={formData.location}
-                            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                            placeholder="Enter your location"
-                          />
+                          <>
+                            <Input
+                              id="location"
+                              value={formData.location}
+                              onChange={(e) => {
+                                handleProfileFieldChange(
+                                  "location",
+                                  e.target.value,
+                                );
+                              }}
+                              placeholder="Enter your location"
+                            />
+                            {fieldErrors.location && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {fieldErrors.location}
+                              </p>
+                            )}
+                          </>
                         ) : (
                           <p className="mt-1 text-sm text-muted-foreground flex items-center">
                             {user.location ? (
@@ -507,7 +682,7 @@ export default function ProfilePage() {
                                 {user.location}
                               </>
                             ) : (
-                              'Not provided'
+                              "Not provided"
                             )}
                           </p>
                         )}
@@ -516,23 +691,40 @@ export default function ProfilePage() {
                     <div className="mt-4">
                       <Label htmlFor="website">Website</Label>
                       {editing ? (
-                        <Input
-                          id="website"
-                          value={formData.website}
-                          onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                          placeholder="Enter your website URL"
-                        />
+                        <>
+                          <Input
+                            id="website"
+                            value={formData.website}
+                            onChange={(e) => {
+                              handleProfileFieldChange(
+                                "website",
+                                e.target.value,
+                              );
+                            }}
+                            placeholder="https://example.com"
+                          />
+                          {fieldErrors.website && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {fieldErrors.website}
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <p className="mt-1 text-sm text-muted-foreground flex items-center">
-                          {user.website ? (
+                          {isSafeHttpUrl(user.website) ? (
                             <>
                               <Globe className="mr-2 h-4 w-4" />
-                              <a href={user.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              <a
+                                href={user.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
                                 {user.website}
                               </a>
                             </>
                           ) : (
-                            'Not provided'
+                            "Not provided"
                           )}
                         </p>
                       )}
@@ -545,16 +737,34 @@ export default function ProfilePage() {
                   <div>
                     <Label htmlFor="bio">Bio</Label>
                     {editing ? (
-                      <Textarea
-                        id="bio"
-                        value={formData.bio}
-                        onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                        placeholder="Tell us about yourself..."
-                        rows={4}
-                      />
+                      <>
+                        <Textarea
+                          id="bio"
+                          value={formData.bio}
+                          onChange={(e) => {
+                            handleProfileFieldChange("bio", e.target.value);
+                          }}
+                          placeholder="Tell us about yourself..."
+                          rows={4}
+                        />
+                        <div className="mt-1 flex items-center justify-between text-xs">
+                          {fieldErrors.bio ? (
+                            <span className="text-red-500">
+                              {fieldErrors.bio}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              500 characters max
+                            </span>
+                          )}
+                          <span className="text-muted-foreground">
+                            {formData.bio?.length || 0}/500
+                          </span>
+                        </div>
+                      </>
                     ) : (
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {user.bio || 'No bio provided'}
+                        {user.bio || "No bio provided"}
                       </p>
                     )}
                   </div>
@@ -574,12 +784,20 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Templates Created</span>
-                    <Badge variant="secondary">{stats?.templates_created || 0}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Templates Created
+                    </span>
+                    <Badge variant="secondary">
+                      {stats?.templates_created || 0}
+                    </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Documents Generated</span>
-                    <Badge variant="secondary">{stats?.documents_generated || 0}</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Documents Generated
+                    </span>
+                    <Badge variant="secondary">
+                      {stats?.documents_generated || 0}
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -605,7 +823,9 @@ export default function ProfilePage() {
                   </div>
                   {user.last_sign_in_at && (
                     <div>
-                      <Label className="text-sm font-medium">Last Sign In</Label>
+                      <Label className="text-sm font-medium">
+                        Last Sign In
+                      </Label>
                       <p className="text-sm text-muted-foreground flex items-center mt-1">
                         <Calendar className="mr-2 h-4 w-4" />
                         {formatDate(user.last_sign_in_at)}
@@ -624,15 +844,27 @@ export default function ProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start" onClick={() => router.push('/templates')}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/templates")}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     Browse Templates
                   </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => router.push('/resume')}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/resume")}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     Create Resume
                   </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => router.push('/settings')}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => router.push("/settings")}
+                  >
                     <Shield className="mr-2 h-4 w-4" />
                     Account Settings
                   </Button>

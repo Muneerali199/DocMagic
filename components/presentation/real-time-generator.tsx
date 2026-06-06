@@ -46,6 +46,7 @@ import { getProIcon, ProFeatureCard, ProStatCard, ProLogo, ProIconGrid } from '.
 import { AIImageGeneratorModal } from './ai-image-generator';
 import { DiagramPreview } from '@/components/diagram/diagram-preview';
 import { PresentationVisualFrame } from './visual-frame';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   getSlideMotionTransition,
   getSlideMotionVariants,
@@ -2610,6 +2611,24 @@ export default function RealTimeGenerator() {
                 </div>
               )}
 
+              {!isStreaming && slides.length === 0 && (
+                <EmptyState
+                  title="No slides yet"
+                  description="Generate a deck from a topic, paste source text, or add a blank slide to start editing."
+                  icon={<Presentation className="h-6 w-6" aria-hidden="true" />}
+                  action={
+                    <button
+                      onClick={handleAddSlide}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add blank slide
+                    </button>
+                  }
+                  className="min-h-[45vh] rounded-3xl bg-card/40"
+                />
+              )}
+
               {slides.map((slide, index) => (
                 <div key={index} className="animate-fadeIn" data-slide-card>
                   <SlideCard
@@ -4077,4 +4096,3 @@ export function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage
     </div>
   );
 }
-

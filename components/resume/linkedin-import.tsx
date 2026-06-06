@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +26,13 @@ import {
   Globe,
   Phone,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -75,17 +82,37 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinPdfFile, setLinkedinPdfFile] = useState<File | null>(null);
   const [manualData, setManualData] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
   const { toast } = useToast();
   const supabase = createClient();
 
+  const showImportError = (
+    title: string,
+    fallbackMessage: string,
+    error: unknown,
+  ) => {
+    const message =
+      error instanceof Error && error.message ? error.message : fallbackMessage;
+    setImportError(message);
+    toast({
+      title,
+      description: message,
+      variant: "destructive",
+    });
+  };
+
   // Helper to get auth token
   const getAuthToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session?.access_token;
   };
 
   // Parse LinkedIn URL and fetch profile data
   const handleUrlImport = async () => {
+    setImportError(null);
+
     if (!linkedinUrl.trim()) {
       toast({
         title: "Please enter a LinkedIn URL",
@@ -96,11 +123,13 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
     }
 
     // Validate LinkedIn URL
-    const linkedinUrlPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|pub)\/[\w-]+\/?$/;
+    const linkedinUrlPattern =
+      /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|pub)\/[\w-]+\/?$/;
     if (!linkedinUrlPattern.test(linkedinUrl)) {
       toast({
         title: "Invalid LinkedIn URL",
-        description: "Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)",
+        description:
+          "Please enter a valid LinkedIn profile URL (e.g., https://linkedin.com/in/username)",
         variant: "destructive",
       });
       return;
@@ -110,7 +139,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
     try {
       const token = await getAuthToken();
-      
+
       if (!token) {
         throw new Error("Please sign in to import LinkedIn profiles");
       }
@@ -119,24 +148,25 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ profileUrl: linkedinUrl }),
       });
 
       const data = await response.json();
-      
+
       // Handle 503 status (scraping temporarily unavailable)
       if (response.status === 503) {
         toast({
           title: "⚠️ URL Import Temporarily Unavailable",
-          description: data.message || "All scraping methods are currently unavailable. Please use PDF Export (100% reliable) or Manual Entry.",
+          description:
+            data.message ||
+            "All scraping methods are currently unavailable. Please use PDF Export (100% reliable) or Manual Entry.",
           variant: "default",
         });
-        
+
         // Log recommendations for debugging
         if (data.recommendations && data.recommendations.length > 0) {
-          
         }
         return;
       }
@@ -147,34 +177,34 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
       // Success! Handle the imported data
       if (data.success && data.data) {
-        logger.info(null, '✅ LinkedIn data received from API:', data.data)
-        
+        logger.info(null, "✅ LinkedIn data received from API:", data.data);
+
         // Transform the scraped data to match our profile format
         const profileData = {
-          fullName: data.data.fullName || '',
-          email: data.data.email || '',
-          phone: data.data.phone || '',
-          location: data.data.location || '',
-          summary: data.data.summary || data.data.headline || '',
-          headline: data.data.headline || '',
+          fullName: data.data.fullName || "",
+          email: data.data.email || "",
+          phone: data.data.phone || "",
+          location: data.data.location || "",
+          summary: data.data.summary || data.data.headline || "",
+          headline: data.data.headline || "",
           experience: data.data.experience || [],
           education: data.data.education || [],
           skills: data.data.skills || [],
           languages: data.data.languages || [],
           certifications: data.data.certifications || [],
-          profileUrl: data.data.profileUrl || '',
+          profileUrl: data.data.profileUrl || "",
         };
 
-        logger.info(null, '✅ Transformed profile data:', profileData)
-        logger.info(null, '✅ Calling onImport with profile data...')
-        
+        logger.info(null, "✅ Transformed profile data:", profileData);
+        logger.info(null, "✅ Calling onImport with profile data...");
+
         onImport(profileData);
 
         toast({
           title: `✅ Profile imported successfully!`,
           description: `Used ${data.method} to extract your LinkedIn data`,
         });
-        
+
         // Show note if there's limited data
         if (data.data.note) {
           setTimeout(() => {
@@ -188,12 +218,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
       } else {
         throw new Error("Invalid response format");
       }
-    } catch (error: any) {
-      toast({
-        title: "Import failed",
-        description: error.message || "Could not import LinkedIn profile. Please try manual entry or PDF upload.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "Import failed",
+        "Could not import LinkedIn profile. Please try manual entry or PDF upload.",
+        error,
+      );
     } finally {
       setIsImporting(false);
     }
@@ -201,6 +231,8 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
   // Parse LinkedIn PDF export
   const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImportError(null);
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -218,7 +250,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
     try {
       const token = await getAuthToken();
-      
+
       if (!token) {
         throw new Error("Please sign in to import LinkedIn profiles");
       }
@@ -229,7 +261,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
       const response = await fetch("/api/linkedin/import-pdf", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -246,12 +278,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         title: "LinkedIn PDF imported! ✨",
         description: "Your profile data has been extracted successfully",
       });
-    } catch (error: any) {
-      toast({
-        title: "PDF parsing failed",
-        description: error.message || "Could not parse LinkedIn PDF. Please try manual entry.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "PDF parsing failed",
+        "Could not parse LinkedIn PDF. Please try manual entry.",
+        error,
+      );
     } finally {
       setIsImporting(false);
     }
@@ -259,10 +291,13 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
   // Parse manual JSON/text data
   const handleManualImport = async () => {
+    setImportError(null);
+
     if (!manualData.trim()) {
       toast({
         title: "Please enter profile data",
-        description: "Paste your LinkedIn profile data in JSON format or plain text",
+        description:
+          "Paste your LinkedIn profile data in JSON format or plain text",
         variant: "destructive",
       });
       return;
@@ -272,7 +307,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
 
     try {
       const token = await getAuthToken();
-      
+
       if (!token) {
         throw new Error("Please sign in to import LinkedIn profiles");
       }
@@ -287,7 +322,7 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ text: manualData }),
         });
@@ -307,12 +342,12 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
         title: "Profile data imported! ✨",
         description: "Your profile has been successfully parsed",
       });
-    } catch (error: any) {
-      toast({
-        title: "Parsing failed",
-        description: error.message || "Could not parse profile data. Please check the format.",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      showImportError(
+        "Parsing failed",
+        "Could not parse profile data. Please check the format.",
+        error,
+      );
     } finally {
       setIsImporting(false);
     }
@@ -330,24 +365,42 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
               LinkedIn Smart Import
             </CardTitle>
             <CardDescription>
-              Automatically fetch your LinkedIn profile data to create your resume
+              Automatically fetch your LinkedIn profile data to create your
+              resume
             </CardDescription>
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
+        {importError && (
+          <ErrorMessage
+            title="LinkedIn import failed"
+            message={importError}
+            className="mb-4"
+          />
+        )}
+
         <Tabs defaultValue="url" className="w-full">
           <TabsList className="grid w-full grid-cols-3 glass-effect border border-yellow-400/20">
-            <TabsTrigger value="url" className="data-[state=active]:bolt-gradient data-[state=active]:text-white">
+            <TabsTrigger
+              value="url"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white"
+            >
               <Globe className="h-4 w-4 mr-2" />
               Profile URL
             </TabsTrigger>
-            <TabsTrigger value="pdf" className="data-[state=active]:bolt-gradient data-[state=active]:text-white">
+            <TabsTrigger
+              value="pdf"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white"
+            >
               <Upload className="h-4 w-4 mr-2" />
               PDF Export
             </TabsTrigger>
-            <TabsTrigger value="manual" className="data-[state=active]:bolt-gradient data-[state=active]:text-white">
+            <TabsTrigger
+              value="manual"
+              className="data-[state=active]:bolt-gradient data-[state=active]:text-white"
+            >
               <FileText className="h-4 w-4 mr-2" />
               Manual Entry
             </TabsTrigger>
@@ -366,7 +419,9 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
                       Direct URL Import Coming Soon
                     </p>
                     <p className="text-xs text-amber-700 dark:text-amber-300">
-                      We're working on LinkedIn API integration. For now, please use <strong>PDF Export</strong> (recommended) or <strong>Manual Entry</strong> to import your profile.
+                      We're working on LinkedIn API integration. For now, please
+                      use <strong>PDF Export</strong> (recommended) or{" "}
+                      <strong>Manual Entry</strong> to import your profile.
                     </p>
                   </div>
                 </div>
@@ -387,7 +442,10 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="linkedin-url" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="linkedin-url"
+                    className="flex items-center gap-2"
+                  >
                     <Linkedin className="h-4 w-4 text-blue-600" />
                     LinkedIn Profile URL
                   </Label>
@@ -444,7 +502,10 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="linkedin-pdf" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="linkedin-pdf"
+                    className="flex items-center gap-2"
+                  >
                     <FileText className="h-4 w-4 text-blue-600" />
                     LinkedIn PDF Export
                   </Label>
@@ -490,13 +551,19 @@ export function LinkedInImport({ onImport }: LinkedInImportProps) {
                       Paste your profile data:
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      You can paste LinkedIn profile text, JSON data, or any formatted text containing your work history, education, and skills. Our AI will extract the information automatically.
+                      You can paste LinkedIn profile text, JSON data, or any
+                      formatted text containing your work history, education,
+                      and skills. Our AI will extract the information
+                      automatically.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="manual-data" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="manual-data"
+                    className="flex items-center gap-2"
+                  >
                     <FileText className="h-4 w-4 text-blue-600" />
                     Profile Data
                   </Label>

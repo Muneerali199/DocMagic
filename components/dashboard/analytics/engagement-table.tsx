@@ -9,8 +9,10 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { format, parseISO } from "date-fns";
-import { Download, Share2, Copy, Printer, MessageSquare, Edit } from "lucide-react";
+import { Download, Share2, Copy, Printer, MessageSquare, Edit, Loader2 } from "lucide-react";
 
 const eventIconMap: Record<string, any> = {
   download: Download,
@@ -35,12 +37,35 @@ const eventColorMap: Record<string, string> = {
 /**
  * Table showing recent engagement activity with icons and timestamps
  */
-export function EngagementTable({ data }: { data: any[] }) {
+export function EngagementTable({
+  data,
+  isLoading = false,
+  error,
+}: {
+  data: any[];
+  isLoading?: boolean;
+  error?: string | null;
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-border/40 glass-effect">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorMessage title="Could not load engagement data" message={error} />;
+  }
+
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-12 glass-effect rounded-xl border border-border/40">
-        <p className="text-muted-foreground">No engagement events found</p>
-      </div>
+      <EmptyState
+        title="No engagement data yet"
+        description="Engagement events will appear here after viewers interact with this document."
+        icon={<MessageSquare className="h-6 w-6" aria-hidden="true" />}
+        className="glass-effect"
+      />
     );
   }
 
