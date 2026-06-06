@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import type { NebiusImageGenerationRequest } from "@/types/nebius";
 /**
  * FLUX.1-schnell Image Generator using Nebius API
  * High-quality image generation for presentations
@@ -60,16 +61,17 @@ export async function generateFluxImage({
       apiKey: NEBIUS_API_KEY,
     });
 
-    const response = await client.images.generate({
+    const imageRequest: NebiusImageGenerationRequest = {
       model: model,
       prompt: enhancedPrompt,
       response_format: "url",
-      // @ts-ignore - Nebius-specific parameters
       width: width,
       height: height,
       num_inference_steps: 28,
       n: 1,
-    });
+    };
+
+    const response = await client.images.generate(imageRequest);
 
     if (!response.data || !response.data[0] || !response.data[0].url) {
       throw new Error('Invalid response from FLUX API');
