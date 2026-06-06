@@ -3,7 +3,14 @@ import { HistoryDashboard } from "@/components/dashboard/history-dashboard";
 
 export const metadata: Metadata = {
   title: "History | DraftDeckAI",
-  description: "View all your created content - resumes, presentations, diagrams, websites, and campaigns",
+  description:
+    "View all your created content - resumes, presentations, diagrams, websites, and campaigns",
+  openGraph: {
+    title: "History | DraftDeckAI",
+    description:
+      "View all your created content - resumes, presentations, diagrams, websites, and campaigns",
+    type: "website",
+  },
 };
 
 export default function HistoryPage() {
