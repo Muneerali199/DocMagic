@@ -1047,7 +1047,8 @@
                     ${data.spaceComplexity ? `<p><strong>💾 Space:</strong> ${data.spaceComplexity}</p>` : ''}
                 </div>`;
                 break;
-                
+
+            case 'complexity':
                 html = `<div class="draftdeckai-complexity">
                     <h4>⏱️ Complexity Analysis:</h4>
                     <p><strong>Time:</strong> ${data.timeComplexity || data.content || 'O(n)'}</p>
