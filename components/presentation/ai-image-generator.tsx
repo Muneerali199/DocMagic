@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type CSSProperties } from 'react';
 import { 
   X, 
   Loader2, 
@@ -86,6 +86,10 @@ interface GeneratedImage {
   prompt: string;
   success?: boolean;
 }
+
+type TailwindRingStyle = CSSProperties & {
+  '--tw-ring-color'?: string;
+};
 
 export function AIImageGeneratorModal({
   isOpen,
@@ -282,12 +286,11 @@ export function AIImageGeneratorModal({
                   placeholder={`e.g., "${slideTitle || presentationTopic || 'modern business concept'}"`}
                   rows={3}
                   className="w-full px-4 py-3 rounded-xl border bg-transparent resize-none text-sm focus:outline-none focus:ring-2"
-                  style={{ 
+                  style={{
                     borderColor: `${theme?.colors?.foreground || '#fff'}20`,
                     color: theme?.colors?.foreground || '#fff',
-                    // @ts-ignore
                     '--tw-ring-color': accentColor
-                  }}
+                  } as TailwindRingStyle}
                 />
                 
                 {/* Quick Prompts */}

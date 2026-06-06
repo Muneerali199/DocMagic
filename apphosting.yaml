@@ -1,0 +1,20 @@
+app: draftdeckai-web
+liveChannelId: channel-id
+backend:
+  region: us-central1
+  # If you want to use a specific Node.js version, you can set it here.
+  # nodeVersion: 20
+firebase:
+  # The Firebase project ID. This is required.
+  projectId: draftdeckai-web
+hosting:
+  # The Firebase Hosting site ID. This is required if you want to use Firebase Hosting for serving static assets.
+  # If you are only using App Hosting for dynamic serving, you can leave this unset.
+  site: draftdeckai-web
+rewrites:
+  - source: /**
+    run:
+      serviceId: web
+      # For Next.js, we use the default entrypoint.
+      # You can also specify a containerPort if you have a custom server.
+      containerPort: 3000
