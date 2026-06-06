@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
     OPENAI_KEY: 'openai_api_key',
     MISTRAL_KEY: 'mistral_api_key',
     CLAUDE_KEY: 'claude_api_key',
-    SETTINGS: 'settings'
+    SETTINGS: 'settings',
+    LINKEDIN_AUTO_DETECT_DISABLED: 'draftdeckai_auto_detection_disabled'
 };
 
 // Load settings on page load
@@ -25,12 +26,14 @@ async function loadSettings() {
             STORAGE_KEYS.OPENAI_KEY,
             STORAGE_KEYS.MISTRAL_KEY,
             STORAGE_KEYS.CLAUDE_KEY,
-            STORAGE_KEYS.SETTINGS
+            STORAGE_KEYS.SETTINGS,
+            STORAGE_KEYS.LINKEDIN_AUTO_DETECT_DISABLED
         ]);
 
         // Load AI provider
         const provider = result[STORAGE_KEYS.AI_PROVIDER] || 'gemini';
         document.querySelector(`input[name="ai-provider"][value="${provider}"]`).checked = true;
+        updateProviderSelection();
 
         // Load API keys and update status
         loadApiKey('gemini', result[STORAGE_KEYS.GEMINI_KEY]);
@@ -47,6 +50,7 @@ async function loadSettings() {
         };
 
         document.getElementById('auto-detect').checked = settings.autoDetect;
+        document.getElementById('linkedin-auto-detect').checked = result[STORAGE_KEYS.LINKEDIN_AUTO_DETECT_DISABLED] !== true;
         document.getElementById('notifications').checked = settings.notifications;
         document.getElementById('hints-first').checked = settings.showHintsFirst;
         document.getElementById('default-language').value = settings.defaultLanguage;
@@ -87,9 +91,44 @@ function setupEventListeners() {
     document.querySelectorAll('input[name="ai-provider"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const provider = radio.value;
+            updateProviderSelection();
             chrome.storage.local.set({ [STORAGE_KEYS.AI_PROVIDER]: provider });
             showStatus(`Switched to ${getProviderName(provider)}`, 'success');
         });
+    });
+
+    document.querySelectorAll('.provider-option').forEach(option => {
+        option.addEventListener('keydown', event => {
+            const options = Array.from(document.querySelectorAll('.provider-option'));
+            const currentIndex = options.indexOf(option);
+            let nextOption = null;
+
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                nextOption = options[(currentIndex + 1) % options.length];
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                nextOption = options[(currentIndex - 1 + options.length) % options.length];
+            } else if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            const selectedOption = nextOption || option;
+            const radio = selectedOption.querySelector('input[name="ai-provider"]');
+            if (!radio) return;
+
+            event.preventDefault();
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            selectedOption.focus();
+        });
+    });
+}
+
+function updateProviderSelection() {
+    document.querySelectorAll('.provider-option').forEach(option => {
+        const radio = option.querySelector('input[name="ai-provider"]');
+        const isChecked = Boolean(radio?.checked);
+        option.setAttribute('aria-checked', String(isChecked));
+        option.tabIndex = isChecked ? 0 : -1;
     });
 }
 
@@ -111,6 +150,7 @@ async function saveSettings() {
             showHintsFirst: document.getElementById('hints-first').checked,
             defaultLanguage: document.getElementById('default-language').value
         };
+        const linkedinAutoDetectDisabled = !document.getElementById('linkedin-auto-detect').checked;
 
         // Save to storage
         await chrome.storage.local.set({
@@ -119,7 +159,8 @@ async function saveSettings() {
             [STORAGE_KEYS.OPENAI_KEY]: openaiKey,
             [STORAGE_KEYS.MISTRAL_KEY]: mistralKey,
             [STORAGE_KEYS.CLAUDE_KEY]: claudeKey,
-            [STORAGE_KEYS.SETTINGS]: settings
+            [STORAGE_KEYS.SETTINGS]: settings,
+            [STORAGE_KEYS.LINKEDIN_AUTO_DETECT_DISABLED]: linkedinAutoDetectDisabled
         });
 
         // Update status badges
@@ -197,12 +238,14 @@ async function resetSettings() {
 
         // Reset form
         document.querySelector('input[name="ai-provider"][value="gemini"]').checked = true;
+        updateProviderSelection();
         document.getElementById('gemini-api-key').value = '';
         document.getElementById('openai-api-key').value = '';
         document.getElementById('mistral-api-key').value = '';
         document.getElementById('claude-api-key').value = '';
 
         document.getElementById('auto-detect').checked = true;
+        document.getElementById('linkedin-auto-detect').checked = true;
         document.getElementById('notifications').checked = true;
         document.getElementById('hints-first').checked = true;
         document.getElementById('default-language').value = 'javascript';

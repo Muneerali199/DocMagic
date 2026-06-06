@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +11,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { ResumePreview } from "@/components/resume/resume-preview";
+import { exportToLaTeXFile } from "@/lib/resume/latex-exporter";
 import { ResumeTemplates } from "@/components/resume/resume-templates";
+import { TemplateSwitcher } from "@/components/resume/template-switcher";
 import { GuidedResumeGenerator } from "@/components/resume/guided-resume-generator";
 import { LinkedInImport } from "@/components/resume/linkedin-import";
+import { TextColorPanel } from "@/components/resume/text-color-panel";
+import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
 import { useToast } from "@/hooks/use-toast";
+import { useShare } from "@/hooks/use-share";
+import { emailSchema, nameSchema } from "@/lib/validation";
 import {
   File as FileIcon,
   Loader2,
@@ -23,6 +29,7 @@ import {
   Minimize2,
   Download,
   User,
+  Code,
   Mail,
   Wand2,
   Palette,
@@ -39,11 +46,16 @@ import {
   Facebook,
   Send,
   FileDown,
+  Check,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { TooltipWithShortcut } from "../ui/tooltip";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth-provider";
+import { logger } from "@/lib/logger";
+
+type QuickResumeField = "name" | "email";
+type QuickResumeErrors = Partial<Record<QuickResumeField, string>>;
 
 export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const supabaseClient = createClient();
@@ -51,9 +63,17 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const [prompt, setPrompt] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [quickFormErrors, setQuickFormErrors] = useState<QuickResumeErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [resumeData, setResumeData] = useState<any>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState("professional");
+  // Persist selected template across sessions (#430)
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("draftdeck:selectedTemplate") ?? "professional";
+    }
+    return "professional";
+  });
+  const [previewKey, setPreviewKey] = useState(0); // bumped on template switch for fade animation
   const [isFullView, setIsFullView] = useState(false);
   const [shareUrl, setShareUrl] = useState<string>("");
   const [resumeId, setResumeId] = useState<string>("");
@@ -62,8 +82,79 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { isPro } = useSubscription();
+  const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
+
+  /** Switches template, persists choice to localStorage, triggers fade animation (#430) */
+  const handleTemplateSwitch = useCallback((id: string) => {
+    setSelectedTemplate(id);
+    setPreviewKey((k) => k + 1);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("draftdeck:selectedTemplate", id);
+    }
+  }, []);
+
+  const isNameValid = name.length > 0 && nameSchema.safeParse(name).success;
+  const isEmailValid = email.length > 0 && emailSchema.safeParse(email).success;
+
+  const validateQuickField = (field: QuickResumeField, value: string) => {
+    const schema = field === "name" ? nameSchema : emailSchema;
+    const result = schema.safeParse(value);
+    const errorMessage = result.success
+      ? undefined
+      : result.error.errors[0]?.message ?? "Invalid value";
+
+    setQuickFormErrors((current) => {
+      if (!errorMessage) {
+        const nextErrors = { ...current };
+        delete nextErrors[field];
+        return nextErrors;
+      }
+
+      return {
+        ...current,
+        [field]: errorMessage,
+      };
+    });
+
+    return result;
+  };
+
+  const validateQuickForm = () => {
+    const validatedName = nameSchema.safeParse(name);
+    const validatedEmail = emailSchema.safeParse(email);
+    const nextErrors: QuickResumeErrors = {};
+
+    if (!validatedName.success) {
+      nextErrors.name =
+        validatedName.error.errors[0]?.message ?? "Name is required";
+    }
+
+    if (!validatedEmail.success) {
+      nextErrors.email =
+        validatedEmail.error.errors[0]?.message ??
+        "Please enter a valid email address";
+    }
+
+    if (!validatedName.success || !validatedEmail.success) {
+      setQuickFormErrors(nextErrors);
+      return null;
+    }
+
+    setQuickFormErrors({});
+
+    return {
+      name: validatedName.data,
+      email: validatedEmail.data,
+    };
+  };
 
   const generateResume = async () => {
+    const validatedQuickForm = validateQuickForm();
+
+    if (!validatedQuickForm) {
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Please enter a prompt",
@@ -73,13 +164,14 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       return;
     }
 
-    if (!name.trim() || !email.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your name and email",
-        variant: "destructive",
-      });
-      return;
+    const { name: validatedName, email: validatedEmail } = validatedQuickForm;
+
+    if (validatedName !== name) {
+      setName(validatedName);
+    }
+
+    if (validatedEmail !== email) {
+      setEmail(validatedEmail);
     }
 
     setIsGenerating(true);
@@ -105,8 +197,8 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
         },
         body: JSON.stringify({
           prompt,
-          name,
-          email,
+          name: validatedName,
+          email: validatedEmail,
         }),
       });
 
@@ -129,14 +221,15 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
               'Authorization': `Bearer ${session.access_token}`,
             },
             body: JSON.stringify({
-              title: `${data.name || name}'s Resume`,
+              title: `${data.name || validatedName}'s Resume`,
               content: data,
               template: selectedTemplate,
-              prompt: prompt || `Resume for ${data.name || name}`,
-              isPublic: false
+              prompt: prompt || `Resume for ${data.name || validatedName}`,
+              isPublic: false,
+              customColors: customColors,
             }),
           });
-          console.log('✅ Resume saved to history');
+          logger.info(null, '✅ Resume saved to history');
         }
       } catch (saveError) {
         console.error('Failed to auto-save resume:', saveError);
@@ -163,7 +256,7 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
   };
 
   const handleLinkedInImport = (profile: any) => {
-    console.log('LinkedIn profile received:', profile);
+    logger.info(null, 'LinkedIn profile received:', profile);
 
     // Convert LinkedIn profile to resume format
     // Handle both 'name' and 'fullName' field
@@ -184,15 +277,16 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
       languages: profile.languages || [],
     };
 
-    console.log('Converted resume data:', resume);
+    logger.info(null, 'Converted resume data:', resume);
 
     setResumeData(resume);
     setName(fullName);
     setEmail(profile.email || "");
+    setQuickFormErrors({});
 
     // Log to verify state was updated
     setTimeout(() => {
-      console.log('Resume data state after update:', resume);
+      logger.info(null, 'Resume data state after update:', resume);
     }, 100);
 
     toast({
@@ -207,6 +301,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
 
     setIsExporting(true);
     try {
+      // First try the new @react-pdf/renderer vector PDF export for highest quality
+      try {
+        const { generateReactPDF } = await import('@/lib/resume/pdf-exporter');
+        await generateReactPDF(resumeData, selectedTemplate);
+        
+        toast({
+          title: "Resume downloaded!",
+          description: "Your resume has been downloaded as a high-quality PDF.",
+        });
+        return; // Success! Exit early.
+      } catch (reactPdfError) {
+        console.error('Vector PDF generation failed, falling back to html2canvas:', reactPdfError);
+        // Fall back to html2canvas if React PDF fails
+      }
+
       const resumeElement = document.getElementById('resume-content');
       if (!resumeElement) {
         throw new Error('Resume content not found');
@@ -277,6 +386,27 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     });
   };
 
+  const downloadLaTeX = async () => {
+    if (!resumeData) return;
+    setIsExporting(true);
+    try {
+      await exportToLaTeXFile(resumeData as any);
+      toast({
+        title: "Resume downloaded!",
+        description: "Your LaTeX source has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Error exporting to LaTeX:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export resume to LaTeX. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Share functions
   const saveAndShareResume = async () => {
     if (!resumeData) return;
@@ -336,80 +466,21 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
     }
   };
 
-  const copyShareLink = async () => {
-    if (!shareUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Share link has been copied to your clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to copy",
-        description: "Please copy the URL manually",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const shareViaEmail = () => {
-    const subject = encodeURIComponent('Check out my resume!');
-    const body = encodeURIComponent(`I wanted to share my professional resume with you:\\n\\n${shareUrl}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const shareViaWhatsApp = () => {
-    const text = encodeURIComponent(`Check out my resume: ${shareUrl}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  const shareViaTwitter = () => {
-    const text = encodeURIComponent('Check out my professional resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-  };
-
-  const shareViaLinkedIn = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-  };
-
-  const shareViaFacebook = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-  };
-
-  const shareViaTelegram = () => {
-    const text = encodeURIComponent('Check out my resume!');
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
-  };
-
-  const shareViaWebShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My Resume',
-          text: 'Check out my professional resume!',
-          url: shareUrl
-        });
-        toast({
-          title: "Shared successfully!",
-          description: "Resume shared via Web Share API",
-        });
-      } catch (error) {
-        // User cancelled sharing
-      }
-    } else {
-      toast({
-        title: "Not supported",
-        description: "Web Share API is not supported on this device",
-        variant: "destructive",
-      });
-    }
-  };
+  const {
+    copyToClipboard: copyShareLink,
+    shareViaEmail,
+    shareViaWhatsApp,
+    shareViaTwitter,
+    shareViaLinkedIn,
+    shareViaFacebook,
+    shareViaTelegram,
+    shareViaWebShare,
+  } = useShare(shareUrl, {
+    emailSubject: "Check out my resume!",
+    emailBody: `I wanted to share my professional resume with you:\n\n${shareUrl}`,
+    text: "Check out my professional resume!",
+    title: "My Resume",
+  });
 
   return (
     <>
@@ -513,12 +584,26 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                   </Button>
                 </div>
 
-                <div className={`glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white transition-all duration-300 ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : ""
+                <div
+                  key={previewKey}
+                  className={`glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white transition-all duration-300 animate-fade-in ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : ""
                   }`}>
                   <div className="absolute inset-0 shimmer opacity-10"></div>
                   <div className="relative z-10">
-                    <ResumePreview resume={resumeData} template={selectedTemplate} />
+                    <ResumePreview resume={resumeData} template={selectedTemplate} customColors={customColors} />
                   </div>
+                </div>
+
+                {/* Template Switcher (#430) */}
+                <TemplateSwitcher
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={handleTemplateSwitch}
+                  className="mt-4"
+                />
+
+                {/* Text Color Controls (#429) */}
+                <div className="mt-4">
+                  <TextColorPanel colors={customColors} onChange={setCustomColors} />
                 </div>
 
                 <div className="glass-effect p-4 rounded-xl border border-yellow-400/20 mt-6">
@@ -543,6 +628,15 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download DOCX
+                    </Button>
+                    <Button
+                      onClick={downloadLaTeX}
+                      disabled={isExporting}
+                      variant="outline"
+                      className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
+                    >
+                      {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                      Download LaTeX
                     </Button>
                     <Button
                       onClick={saveAndShareResume}
@@ -580,22 +674,41 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                     <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       Your Name
+                      {isNameValid && (
+                        <Check className="h-3 w-3 text-green-500" />
+                      )}
                     </Label>
                     <Input
                       id="name"
                       placeholder="John Doe"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 w-full text-base px-3 py-2"
+                      onChange={(e) => {
+                        const nextName = e.target.value;
+                        setName(nextName);
+
+                        if (quickFormErrors.name) {
+                          validateQuickField("name", nextName);
+                        }
+                      }}
+                      onBlur={() => validateQuickField("name", name)}
+                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${quickFormErrors.name
+                        ? "border-red-400/60 focus:border-red-400/80"
+                        : "border-yellow-400/30 focus:border-yellow-400/60"
+                        }`}
                       disabled={isGenerating}
                     />
+                    {quickFormErrors.name && (
+                      <p className="text-xs text-red-500">
+                        {quickFormErrors.name}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       Email
-                      {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                      {isEmailValid && (
                         <span className="text-green-500 text-xs">✓</span>
                       )}
                     </Label>
@@ -604,13 +717,26 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                       type="email"
                       placeholder="john@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
+                      onChange={(e) => {
+                        const nextEmail = e.target.value;
+                        setEmail(nextEmail);
+
+                        if (quickFormErrors.email) {
+                          validateQuickField("email", nextEmail);
+                        }
+                      }}
+                      onBlur={() => validateQuickField("email", email)}
+                      className={`glass-effect focus:ring-yellow-400/20 w-full text-base px-3 py-2 ${quickFormErrors.email
                           ? "border-red-400/60 focus:border-red-400/80"
                           : "border-yellow-400/30 focus:border-yellow-400/60"
                         }`}
                       disabled={isGenerating}
                     />
+                    {quickFormErrors.email && (
+                      <p className="text-xs text-red-500">
+                        {quickFormErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -635,7 +761,9 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                         isGenerating ||
                         !prompt.trim() ||
                         !name.trim() ||
-                        !email.trim()
+                        !email.trim() ||
+                        Boolean(quickFormErrors.name) ||
+                        Boolean(quickFormErrors.email)
                       }
                       className="w-full h-12 bolt-gradient text-white font-semibold text-base hover:scale-105 transition-all duration-300 relative overflow-hidden"
                     >
@@ -686,6 +814,17 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                         >
                           <Download className="mr-2 h-4 w-4" />
                           Download DOCX
+                        </Button>
+                      </TooltipWithShortcut>
+                      <TooltipWithShortcut content="Download as LaTeX source for advanced editing">
+                        <Button
+                          onClick={downloadLaTeX}
+                          disabled={isExporting}
+                          variant="outline"
+                          className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 w-full sm:w-auto"
+                        >
+                          {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                          Download LaTeX
                         </Button>
                       </TooltipWithShortcut>
                       <TooltipWithShortcut content="Create a shareable link for your resume">
@@ -746,18 +885,29 @@ export function ResumeGenerator({ initialSession }: { initialSession?: any }) {
                 </div>
 
                 {resumeData ? (
-                  <div
-                    className={`glass-effect border border-yellow-400/20 rounded-xl overflow-y-auto bg-white transition-all duration-300 ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : "overflow-hidden"
-                      }`}
-                  >
-                    <div className="absolute inset-0 shimmer opacity-10"></div>
-                    <div className="relative z-10">
-                      <ResumePreview
-                        resume={resumeData}
-                        template={selectedTemplate}
-                      />
+                  <>
+                    <div
+                      key={previewKey}
+                      className={`glass-effect border border-yellow-400/20 rounded-xl overflow-y-auto bg-white transition-all duration-300 animate-fade-in ${isFullView ? "fixed inset-4 z-50 shadow-2xl" : "overflow-hidden"
+                        }`}
+                    >
+                      <div className="absolute inset-0 shimmer opacity-10"></div>
+                      <div className="relative z-10">
+                        <ResumePreview
+                          resume={resumeData}
+                          template={selectedTemplate}
+                          customColors={customColors}
+                        />
+                      </div>
                     </div>
-                  </div>
+
+                    {/* Template Switcher (#430) */}
+                    <TemplateSwitcher
+                      selectedTemplate={selectedTemplate}
+                      onSelectTemplate={handleTemplateSwitch}
+                      className="mt-4"
+                    />
+                  </>
                 ) : (
                   <Card className="glass-effect border border-yellow-400/20 flex items-center justify-center min-h-[500px] relative overflow-hidden">
                     <div className="absolute inset-0 shimmer opacity-10"></div>

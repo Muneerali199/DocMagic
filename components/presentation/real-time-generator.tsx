@@ -1,4 +1,5 @@
 'use client';
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { exportPremiumPresentation } from '@/lib/premium-presentation-export';
@@ -34,7 +35,8 @@ import {
   ChevronRight,
   Minus,
   Wand2,
-  PenTool
+  PenTool,
+  Share2
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { PRESENTATION_THEMES, getThemeById, PresentationTheme } from '@/lib/presentation-themes';
@@ -50,6 +52,8 @@ import {
   isWheelNavigationLocked,
   PRESENTATION_WHEEL_LOCK_MS,
 } from '@/lib/presentation-motion';
+import { PublishModal } from "@/components/showcase/publish-modal";
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 // Circuit Pattern Component (inline for now)
 export const CircuitPattern = ({ color = '#3B82F6' }: { color?: string }) => (
@@ -1074,7 +1078,7 @@ export default function RealTimeGenerator() {
           // Switch to presentation view
           setView('presentation');
 
-          console.log('✅ Loaded presentation:', data.title);
+          logger.info(null, '✅ Loaded presentation:', data.title)
         }
       } catch (error) {
         console.error('Error loading presentation:', error);
@@ -1128,7 +1132,7 @@ export default function RealTimeGenerator() {
         };
         return newSlides;
       });
-      console.log(`✅ Added ${imageType} image to slide ${imageGeneratorSlideIndex + 1}`);
+      logger.info(null, `✅ Added ${imageType} image to slide ${imageGeneratorSlideIndex + 1}`)
     }
     setShowImageGenerator(false);
     setImageGeneratorSlideIndex(null);
@@ -1157,6 +1161,7 @@ export default function RealTimeGenerator() {
   const presentWheelLockRef = useRef(0);
   const prefersReducedMotion = useReducedMotion();
   const visiblePresentationId = presentationId || editId;
+  const [publishOpen, setPublishOpen] = useState(false);
 
   const handleCopyLink = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -1253,7 +1258,7 @@ export default function RealTimeGenerator() {
         setShowShareModal(true);
       }
 
-      console.log(isAutoSave ? '🤖 Presentation auto-saved' : '✅ Presentation saved:', result?.id);
+      logger.info(null, isAutoSave ? '🤖 Presentation auto-saved' : '✅ Presentation saved:', result?.id)
     } catch (error) {
       console.error('❌ Error saving presentation:', error);
       if (!isAutoSave) alert('Failed to save presentation. Please try again.');
@@ -1335,7 +1340,7 @@ export default function RealTimeGenerator() {
 
   // Debug view changes
   useEffect(() => {
-    console.log('🎬 VIEW CHANGED TO:', view);
+    
   }, [view]);
 
   // Update structured outline when raw text changes (debounced or on blur ideally, but simple here)
@@ -1349,8 +1354,8 @@ export default function RealTimeGenerator() {
   const handleGenerateOutline = async () => {
     if (!topic.trim()) return;
 
-    console.log('🎯 handleGenerateOutline called with topic:', topic);
-    console.log('🎯 Requesting', slideCount, 'cards');
+    
+    
 
     setIsGeneratingOutline(true);
 
@@ -1364,7 +1369,7 @@ export default function RealTimeGenerator() {
         return;
       }
 
-      console.log('📡 Calling /api/generate/presentation-outline...');
+      
       const response = await fetch('/api/generate/presentation-outline', {
         method: 'POST',
         headers: {
@@ -1378,7 +1383,7 @@ export default function RealTimeGenerator() {
         })
       });
 
-      console.log('📡 Response status:', response.status);
+      
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -1397,12 +1402,12 @@ export default function RealTimeGenerator() {
       }
 
       const data = await response.json();
-      console.log('📦 Received data:', data);
+      
 
       if (data.outlines && Array.isArray(data.outlines)) {
-        console.log('✅ Setting', data.outlines.length, 'outlines');
+        logger.info(null, '✅ Setting', data.outlines.length, 'outlines')
         setOutline(data.outlines);
-        console.log('✅ Switching to outline-review view');
+        logger.info(null, '✅ Switching to outline-review view')
         setView('outline-review');
       } else {
         console.error('❌ Invalid outline format:', data);
@@ -1417,10 +1422,10 @@ export default function RealTimeGenerator() {
   };
 
   const handleFinalGenerate = async () => {
-    console.log('handleFinalGenerate called');
-    console.log('Topic:', topic);
-    console.log('Outline length:', outline.length);
-    console.log('Settings:', { textDensity, audience, tone, theme, imageSource });
+    
+    
+    
+    
 
     setSlides([]);
     setCurrentSlideText('');
@@ -1428,7 +1433,7 @@ export default function RealTimeGenerator() {
     setError(null);
     setProgress(10);
     setIsStreaming(true);
-    console.log('View set to: presentation');
+    
 
     let finalOutline = outline;
     if (outlineMode === 'freeform') {
@@ -1567,7 +1572,7 @@ export default function RealTimeGenerator() {
         }
       );
 
-      console.log(`✅ Premium exported as ${format.toUpperCase()}`);
+      logger.info(null, `✅ Premium exported as ${format.toUpperCase()}`)
     } catch (error) {
       console.error('Export error:', error);
       alert(`Failed to export as ${format.toUpperCase()}. Please try again.`);
@@ -1667,8 +1672,27 @@ export default function RealTimeGenerator() {
     return themeConfig.colors.gradient;
   };
 
+   const origin = typeof window !== "undefined" ? window.location.origin : "";
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground selection:bg-blue-500/30">
+      <GenerationLoadingOverlay
+        show={isGeneratingOutline || isStreaming}
+        title={isStreaming ? "Generating presentation" : "Creating outline"}
+        description={
+          isStreaming
+            ? currentSlideText || "Designing slides, content, and visuals..."
+            : loadingSteps[loadingStep]
+        }
+        progress={isStreaming ? progress : ((loadingStep + 1) / loadingSteps.length) * 100}
+        estimatedTime={isStreaming ? "Estimated time: 30-90 seconds" : "Estimated time: 15-45 seconds"}
+        tips={[
+          "Strong decks have one clear idea per slide.",
+          "You can adjust slide text and visuals after generation.",
+          "Add audience and tone details for sharper presentation structure.",
+        ]}
+        variant="presentation"
+      />
       {/* Mesh Gradient Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="mesh-gradient opacity-40 absolute inset-0"></div>
@@ -1952,7 +1976,7 @@ export default function RealTimeGenerator() {
               </div>
 
               {/* Enhanced Loading Overlay */}
-              {isGeneratingOutline && (
+              {false && isGeneratingOutline && (
                 <div className="fixed inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300">
                   <div className="bg-card/90 border border-border/50 rounded-3xl p-10 shadow-2xl max-w-md w-full mx-6 backdrop-blur-xl relative overflow-hidden">
                     {/* Background decoration */}
@@ -2485,6 +2509,14 @@ export default function RealTimeGenerator() {
                       )}
                     </button>
 
+                    {/* Publish to Showcase Button */}
+                    <button
+                      onClick={() => setPublishOpen(true)}
+                    >
+                      <Share2 className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Publish</span>
+                    </button>
+
                     {/* Export Button */}
                     <div className="relative">
                       <button
@@ -2806,6 +2838,21 @@ export default function RealTimeGenerator() {
           }
         `}</style>
       </div>
+
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        defaults={{
+          type: "presentation",
+          title: slides?.[0]?.title ?? "My Presentation",
+          content_ref:
+            shareUrl ||
+            (visiblePresentationId
+              ? `${origin}/presentation/view/${visiblePresentationId}`
+               : ""),
+        }}
+        onSuccess={() => alert("Published to Showcase!")}
+      />
     </div>
   );
 }
@@ -4030,5 +4077,4 @@ export function SlideCard({ slide, getGradientClass, theme, onUpdate, onAddImage
     </div>
   );
 }
-
 

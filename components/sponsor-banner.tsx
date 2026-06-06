@@ -16,9 +16,10 @@ export function SponsorBanner() {
           <span className="text-muted-foreground">Powered by</span>
         </div>
         
-        <Link 
-          href="https://teamblitz.netlify.app/" 
+        <Link
+          href="https://teamblitz.netlify.app/"
           target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1 bolt-gradient-text font-bold hover:scale-105 transition-transform duration-200 flex-shrink-0"
         >
           <Zap className="h-3 w-3 sm:h-4 sm:w-4" />

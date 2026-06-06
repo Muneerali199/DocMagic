@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,9 @@ import { SiteHeader } from "@/components/site-header";
 import { getThemeById } from "@/lib/presentation-themes";
 import { SlideCard, Slide } from "@/components/presentation/real-time-generator";
 import { ResumePreview } from "@/components/resume/resume-preview";
+import { logger } from "@/lib/logger";
+import { DashboardPagination } from "@/components/ui/pagination";
+import { DashboardPageSkeleton } from "@/components/skeletons";
 
 type ContentType = "resume" | "presentation" | "diagram" | "letter" | "generated";
 
@@ -88,7 +91,6 @@ const contentTypeConfig = {
   },
 };
 
-// Helper function to get document description
 function getPresentationSlides(raw: any): any[] {
   const content = raw?.content || raw || {};
   const directSlides = content.slides ?? raw?.slides;
@@ -131,17 +133,14 @@ const ResumePreviewMini = ({ data, title }: { data: any, title: string }) => {
 
   useEffect(() => {
     if (!containerRef.current) return;
-
     const updateScale = () => {
       if (containerRef.current) {
         const width = containerRef.current.offsetWidth;
         if (width > 0) {
-          // A4 base width is approx 794px for standard display
           setScale(width / 794);
         }
       }
     };
-
     updateScale();
     const observer = new ResizeObserver(() => updateScale());
     observer.observe(containerRef.current);
@@ -152,30 +151,14 @@ const ResumePreviewMini = ({ data, title }: { data: any, title: string }) => {
     };
   }, []);
 
-  // Unwrap resume data
   let resumeData = data;
   if (data?.resumeData) resumeData = data.resumeData;
   const template = data?.template || data?.templateId || 'modern';
 
   return (
-    <div
-      ref={containerRef}
-      className="h-full w-full relative cursor-pointer overflow-hidden bg-white"
-    >
-      <div 
-        className="absolute top-0 left-0 origin-top-left" 
-        style={{ 
-          width: '794px', // A4 width at 96 DPI
-          height: '1123px', // A4 height
-          transform: `scale(${scale})`,
-        }}
-      >
-        <ResumePreview
-          resume={resumeData}
-          template={template}
-          showControls={false}
-          layoutMode="fixed"
-        />
+    <div ref={containerRef} className="h-full w-full relative cursor-pointer overflow-hidden bg-white">
+      <div className="absolute top-0 left-0 origin-top-left" style={{ width: '794px', height: '1123px', transform: `scale(${scale})` }}>
+        <ResumePreview resume={resumeData} template={template} showControls={false} layoutMode="fixed" />
       </div>
     </div>
   );
@@ -190,7 +173,6 @@ const PresentationPreview = ({ slides, title, themeId }: { slides: Slide[], titl
 
   useEffect(() => {
     if (!containerRef.current) return;
-
     const updateScale = () => {
       if (containerRef.current) {
         const width = containerRef.current.offsetWidth;
@@ -199,15 +181,9 @@ const PresentationPreview = ({ slides, title, themeId }: { slides: Slide[], titl
         }
       }
     };
-
     updateScale();
-    
-    const observer = new ResizeObserver(() => {
-      updateScale();
-    });
-    
+    const observer = new ResizeObserver(() => updateScale());
     observer.observe(containerRef.current);
-    
     window.addEventListener('resize', updateScale);
     return () => {
       observer.disconnect();
@@ -239,52 +215,46 @@ const PresentationPreview = ({ slides, title, themeId }: { slides: Slide[], titl
       className="h-full w-full relative group/slideshow cursor-pointer flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: theme.colors.background }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setCurrentIndex(0);
-      }}
+      onMouseLeave={() => { setIsHovered(false); setCurrentIndex(0); }}
     >
-      <div 
-        className="absolute top-0 left-0 origin-top-left" 
-        style={{ 
-          width: '1200px', 
-          height: '675px', // 16:9 for 1200px width
-          transform: `scale(${scale})`,
-        }}
-      >
-        <SlideCard
-          slide={slide}
-          theme={theme}
-          getGradientClass={() => theme.colors.gradient}
-          isPreview={true}
-        />
+      <div className="absolute top-0 left-0 origin-top-left" style={{ width: '1200px', height: '675px', transform: `scale(${scale})` }}>
+        <SlideCard slide={slide} theme={theme} getGradientClass={() => theme.colors.gradient} isPreview={true} />
       </div>
-
-      {/* Slide number indicator */}
-      <div className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-md font-bold z-20"
-        style={{ backgroundColor: `${theme.colors.foreground}cc`, color: theme.colors.background }}>
+      <div className="absolute bottom-2 right-2 text-[10px] px-2 py-0.5 rounded-full backdrop-blur-md font-bold z-20" style={{ backgroundColor: `${theme.colors.foreground}cc`, color: theme.colors.background }}>
         {currentIndex + 1} / {slides.length}
       </div>
-
-      {/* Progress bar */}
       {isHovered && slides.length > 1 && (
         <div className="absolute bottom-0 left-0 right-0 h-1 z-20" style={{ backgroundColor: `${theme.colors.muted}80` }}>
-          <div
-            className="h-full transition-all duration-300"
-            style={{ backgroundColor: theme.colors.accent, width: `${((currentIndex + 1) / slides.length) * 100}%` }}
-          />
+          <div className="h-full transition-all duration-300" style={{ backgroundColor: theme.colors.accent, width: `${((currentIndex + 1) / slides.length) * 100}%` }} />
         </div>
       )}
     </div>
   );
 };
 
-export function HistoryDashboard() {
-  const [activeTab, setActiveTab] = useState<ContentType | "all">("all");
+function HistoryDashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const supabase = createClient();
+
+  // Validating and clamping URL parameters
+  const rawPage = Number(searchParams?.get("page"));
+  const rawPageSize = Number(searchParams?.get("pageSize"));
+  const allowedPageSizes = [10, 20, 50];
+
+  const currentPage = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  const pageSize = Number.isInteger(rawPageSize) && allowedPageSizes.includes(rawPageSize) ? rawPageSize : 20;
+
+  // Persisting tab state from URL
+  const urlTab = (searchParams?.get("tab") as ContentType | "all") || "all";
+  const [activeTab, setActiveTab] = useState<ContentType | "all">(urlTab);
+  
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [totalItems, setTotalItems] = useState(0); 
   const [stats, setStats] = useState({
     total: 0,
     resume: 0,
@@ -293,25 +263,21 @@ export function HistoryDashboard() {
     diagram: 0,
     letter: 0,
   });
-  const router = useRouter();
-  const { toast } = useToast();
-  const supabase = createClient();
+
+  // Helper to preserve existing URL search params while making targeted updates
+  const updateQueryParams = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    Object.entries(updates).forEach(([key, value]) => params.set(key, String(value)));
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     fetchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentPage, pageSize, activeTab]);
 
-  // Filter items when dependencies change
   useEffect(() => {
     let filtered = items;
-
-    // Filter by type
-    if (activeTab !== "all") {
-      filtered = filtered.filter((item) => item.type === activeTab);
-    }
-
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         (item) =>
@@ -319,14 +285,12 @@ export function HistoryDashboard() {
           item.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
     setFilteredItems(filtered);
-  }, [activeTab, searchQuery, items]);
+  }, [searchQuery, items]);
 
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      // Use getSession() for rate limit avoidance (reads from local cache)
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 
@@ -335,23 +299,54 @@ export function HistoryDashboard() {
         return;
       }
 
-      console.log('📋 Fetching history for user:', user.id);
+      logger.info(null, '📋 Fetching history for user:', user.id);
 
-      // Fetch from all sources in parallel
-      const [documentsResult, resumes, presentations, diagrams, letters] = await Promise.all([
-        supabase.from("documents").select("*").eq("user_id", user.id),
-        fetchResumes(user.id),
-        fetchPresentations(user.id),
-        fetchDiagrams(user.id),
-        fetchLetters(user.id),
-      ]);
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
 
-      const { data: documents } = documentsResult;
+      let query = supabase.from("documents").select("*", { count: "exact" }).eq("user_id", user.id);
+      
+      if (activeTab !== "all") {
+        query = query.eq("type", activeTab);
+      }
 
-      // Map documents to history items
+      const { data: documents, count, error } = await query
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      // Handle Out-Of-Bounds Pagination
+      if (documents && documents.length === 0 && count && count > 0) {
+        const lastValidPage = Math.ceil(count / pageSize);
+        if (currentPage !== lastValidPage) {
+          updateQueryParams({ page: lastValidPage });
+          return;
+        }
+      }
+
+      if (activeTab === "all") {
+          const typeCounts = await Promise.all(
+            Object.keys(contentTypeConfig).map(type => 
+              supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("type", type)
+            )
+          );
+          
+          setStats({
+            total: count || 0,
+            resume: typeCounts[0].count || 0,
+            presentation: typeCounts[1].count || 0,
+            generated: typeCounts[2].count || 0,
+            diagram: typeCounts[3].count || 0,
+            letter: typeCounts[4].count || 0,
+          });
+      }
+
+      setTotalItems(count || 0);
+
       const docItems: HistoryItem[] = (documents || []).map((doc: any) => {
         const content = doc.content || {};
-        const data = doc.type === 'resume' ? (content.resumeData || content) : doc; // Keep full doc for generated docs
+        const data = doc.type === 'resume' ? (content.resumeData || content) : doc;
 
         return {
           id: doc.id,
@@ -364,36 +359,8 @@ export function HistoryDashboard() {
         };
       });
 
-      // Merge all items and deduplicate by ID
-      const mergedMap = new Map<string, HistoryItem>();
+      setItems(docItems);
 
-      // Add legacy items first
-      [...resumes, ...presentations, ...diagrams, ...letters].forEach(item => {
-        mergedMap.set(item.id, item);
-      });
-
-      // Add (and potentially overwrite with better data) document items
-      docItems.forEach(item => {
-        mergedMap.set(item.id, item);
-      });
-
-      const allItems = Array.from(mergedMap.values())
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      // DEBUG: Log the final merged items
-      console.log('📊 Final History Items:', allItems.length, 'items');
-      
-      setItems(allItems);
-
-      // Calculate stats
-      setStats({
-        total: allItems.length,
-        resume: allItems.filter(i => i.type === 'resume').length,
-        presentation: allItems.filter(i => i.type === 'presentation').length,
-        generated: allItems.filter(i => i.type === 'generated').length,
-        diagram: allItems.filter(i => i.type === 'diagram').length,
-        letter: allItems.filter(i => i.type === 'letter').length,
-      });
     } catch (error) {
       console.error("Error fetching history:", error);
       toast({
@@ -406,113 +373,6 @@ export function HistoryDashboard() {
     }
   };
 
-  const fetchResumes = async (userId: string): Promise<HistoryItem[]> => {
-    const { data, error } = await supabase
-      .from("documents")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("type", "resume")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching resumes:", error);
-      return [];
-    }
-
-    return (data as any[] || []).map((doc) => {
-      const content = doc.content || {};
-      
-      // DEBUG: Log the raw content structure
-      console.log('📄 Raw Resume Document:', doc.id, content);
-      
-      // Pass the full content object which contains resumeData
-      // The preview component will unwrap it properly
-      return {
-        id: doc.id,
-        type: "resume" as ContentType,
-        title: doc.title || "Untitled Resume",
-        description: content.resumeData?.personal_info?.name || content.resumeData?.personalInfo?.name || 
-                    content.personal_info?.name || content.personalInfo?.name || "",
-        created_at: doc.created_at,
-        updated_at: doc.updated_at,
-        data: content, // Pass the full content object
-      };
-    });
-  };
-
-  const fetchPresentations = async (userId: string): Promise<HistoryItem[]> => {
-    const { data, error } = await supabase
-      .from("presentations")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching presentations:", error);
-      return [];
-    }
-
-    return (data as any[] || []).map((pres) => {
-      const slides = getPresentationSlides(pres);
-      return ({
-      id: pres.id,
-      type: "presentation" as ContentType,
-      title: pres.title || "Untitled Presentation",
-      description: `${slides.length || 0} slides`,
-      created_at: pres.created_at,
-      updated_at: pres.updated_at,
-      data: pres,
-    })});
-  };
-
-  const fetchDiagrams = async (userId: string): Promise<HistoryItem[]> => {
-    const { data, error } = await supabase
-      .from("diagrams")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching diagrams:", error);
-      return [];
-    }
-
-    return (data as any[] || []).map((diagram) => ({
-      id: diagram.id,
-      type: "diagram" as ContentType,
-      title: diagram.title || "Untitled Diagram",
-      description: diagram.type || "Diagram",
-      created_at: diagram.created_at,
-      updated_at: diagram.updated_at,
-      data: diagram,
-    }));
-  };
-
-  const fetchLetters = async (userId: string): Promise<HistoryItem[]> => {
-    const { data, error } = await supabase
-      .from("letters")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching letters:", error);
-      return [];
-    }
-
-    return (data as any[] || []).map((letter) => ({
-      id: letter.id,
-      type: "letter" as ContentType,
-      title: letter.subject || letter.title || "Untitled Letter",
-      description: letter.letter_type || "Letter",
-      created_at: letter.created_at,
-      updated_at: letter.updated_at,
-      data: letter,
-    }));
-  };
-
-  // filterItems is now inlined in useEffect above
-
   const handleView = (item: HistoryItem) => {
     if (item.type === 'generated') {
       router.push(`/documents/${item.id}`);
@@ -522,9 +382,7 @@ export function HistoryDashboard() {
     router.push(`${config.route}?id=${item.id}`);
   };
 
-  // Render visual preview based on content type
   const renderPreview = (item: HistoryItem) => {
-    // Helper to get nested data with multiple possible paths
     const getData = (data: any, ...paths: string[]): any => {
       if (!data) return null;
       for (const path of paths) {
@@ -542,12 +400,10 @@ export function HistoryDashboard() {
     switch (item.type) {
       case "resume":
         return <ResumePreviewMini data={item.data} title={item.title} />;
-
       case "presentation":
         const slides = getPresentationSlides(item.data);
         const themeId = getPresentationThemeId(item.data);
         return <PresentationPreview slides={slides} title={item.title} themeId={themeId} />;
-
       case "generated":
         const metadata = item.data?.metadata || {};
         const docSections = metadata.sections || item.data?.sections || [];
@@ -570,8 +426,6 @@ export function HistoryDashboard() {
                 + {docSections.length - 4} more sections
               </div>
             )}
-            
-            {/* Action buttons visible on hover in history grid */}
             <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
                <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white dark:bg-gray-800" onClick={(e) => { e.stopPropagation(); handleView(item); }}>
                  <Edit className="h-3 w-3 mr-1" /> Edit
@@ -579,7 +433,6 @@ export function HistoryDashboard() {
             </div>
           </div>
         );
-
       case "diagram":
         return (
           <div className="h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 to-emerald-50">
@@ -598,9 +451,7 @@ export function HistoryDashboard() {
             </div>
           </div>
         );
-
       case "letter":
-        // Handle different letter data structures
         const letterData = item.data?.letterData || item.data;
         const recipientName = getData(letterData, 'to.name', 'recipient.name', 'recipientName', 'to');
         const senderName = getData(letterData, 'from.name', 'sender.name', 'senderName', 'from');
@@ -641,7 +492,6 @@ export function HistoryDashboard() {
             </div>
           </div>
         );
-
       default:
         return (
           <div className="h-full flex items-center justify-center">
@@ -655,95 +505,33 @@ export function HistoryDashboard() {
     if (!confirm(`Are you sure you want to delete "${item.title}"?`)) return;
 
     try {
-      // First try to delete from documents table
-      const { error: docError } = await (supabase
-        .from('documents' as any)
-        .delete()
-        .eq("id", item.id)) as { error: any };
-
-      if (!docError) {
-        toast({
-          title: "Deleted",
-          description: `${item.title} has been deleted`,
-        });
-        fetchHistory();
-        return;
-      }
-
-      // Fallback: try individual table
-      const tableName = `${item.type}s`;
-      const { error } = await (supabase.from(tableName as any).delete().eq("id", item.id)) as { error: any };
-
+      const { error } = await supabase.from('documents').delete().eq("id", item.id);
       if (error) throw error;
 
-      toast({
-        title: "Deleted",
-        description: `${item.title} has been deleted`,
-      });
-
+      toast({ title: "Deleted", description: `${item.title} has been deleted` });
       fetchHistory();
     } catch (error) {
       console.error("Error deleting item:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete item",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to delete item", variant: "destructive" });
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
-        {/* Background elements matching landing page */}
-        <div className="absolute inset-0 mesh-gradient opacity-20"></div>
-        <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-15 top-20 -left-24"></div>
-        <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18"></div>
-        <div className="floating-orb w-40 h-40 sm:w-56 sm:h-56 bolt-gradient opacity-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-
-        <SiteHeader />
-        <div className="flex-1 flex items-center justify-center relative z-10">
-          <div className="text-center glass-effect p-8 rounded-2xl">
-            <Loader2 className="h-12 w-12 animate-spin text-yellow-500 mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading your documents...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background elements matching landing page */}
       <div className="absolute inset-0 mesh-gradient opacity-20"></div>
       <div className="floating-orb w-32 h-32 sm:w-48 sm:h-48 bolt-gradient opacity-15 top-20 -left-24"></div>
       <div className="floating-orb w-24 h-24 sm:w-36 sm:h-36 bolt-gradient opacity-20 bottom-20 -right-18"></div>
       <div className="floating-orb w-40 h-40 sm:w-56 sm:h-56 bolt-gradient opacity-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-
-      {/* Grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")`,
-        }}
-      />
+      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%23000000' fill-opacity='1'%3e%3ccircle cx='30' cy='30' r='1'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e")` }} />
 
       <SiteHeader />
       <div className="flex-1 p-4 md:p-8 relative z-10">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 shimmer">
               <Sparkles className="h-4 w-4 text-yellow-500" />
@@ -751,16 +539,11 @@ export function HistoryDashboard() {
               <Clock className="h-4 w-4 text-blue-500" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              <span className="bolt-gradient-text">
-                Your Created Documents
-              </span>
+              <span className="bolt-gradient-text">Your Created Documents</span>
             </h1>
-            <p className="text-muted-foreground">
-              View and manage all your created content in one place
-            </p>
+            <p className="text-muted-foreground">View and manage all your created content in one place</p>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <Card className="p-3 sm:p-4 glass-effect border border-border/40 hover:shadow-lg transition-all">
               <div className="flex items-center gap-2 mb-2">
@@ -776,7 +559,10 @@ export function HistoryDashboard() {
                 <Card
                   key={type}
                   className={`p-3 sm:p-4 glass-effect border border-border/40 cursor-pointer hover:scale-105 hover:shadow-lg transition-all ${activeTab === type ? 'ring-2 ring-yellow-400 border-yellow-400/50' : ''}`}
-                  onClick={() => setActiveTab(type as ContentType)}
+                  onClick={() => {
+                     setActiveTab(type as ContentType);
+                     updateQueryParams({ tab: type, page: 1, pageSize });
+                  }}
                 >
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-2">
                     <div className={`p-1 sm:p-1.5 rounded-lg ${config.bgColor}`}>
@@ -790,13 +576,12 @@ export function HistoryDashboard() {
             })}
           </div>
 
-          {/* Search and Filter */}
           <div className="mb-6 flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search your content..."
+                placeholder="Search your content (Current Page)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-lg border border-border/40 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 glass-effect bg-background/50 text-foreground placeholder:text-muted-foreground"
@@ -804,19 +589,14 @@ export function HistoryDashboard() {
             </div>
           </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentType | "all")}>
-            <TabsList className="mb-6 glass-effect border border-border/40 overflow-x-auto flex-nowrap scrollbar-hide">
-              <TabsTrigger value="all" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-700 dark:data-[state=active]:text-yellow-400 whitespace-nowrap">All ({stats.total})</TabsTrigger>
-              {Object.entries(contentTypeConfig).map(([type, config]) => (
-                <TabsTrigger key={type} value={type} className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-700 dark:data-[state=active]:text-yellow-400 whitespace-nowrap">
-                  {config.label} ({stats[type as ContentType]})
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
+          <Tabs value={activeTab} onValueChange={(v) => {
+              setActiveTab(v as ContentType | "all");
+              updateQueryParams({ tab: v, page: 1, pageSize });
+          }}>
             <TabsContent value={activeTab} className="space-y-4">
-              {filteredItems.length === 0 ? (
+              {isLoading ? (
+                <DashboardPageSkeleton />
+              ) : filteredItems.length === 0 ? (
                 <Card className="p-12 text-center glass-effect border border-border/40">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-20 h-20 rounded-full bolt-gradient flex items-center justify-center">
@@ -824,130 +604,78 @@ export function HistoryDashboard() {
                     </div>
                     <p className="text-foreground text-lg font-medium">No content found</p>
                     <p className="text-muted-foreground text-sm">Start creating amazing documents!</p>
-                    <Button
-                      onClick={() => router.push("/")}
-                      className="bolt-gradient text-white hover:scale-105 transition-transform"
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Create Something New
-                    </Button>
                   </div>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 items-start">
-                  {filteredItems.map((item) => {
-                    const config = contentTypeConfig[item.type];
-                    const Icon = config.icon;
-                    
-                    // Dynamic background for the preview container
-                    let containerBg = `bg-gradient-to-br ${config.gradient}`;
-                    if (item.type === 'presentation') {
-                      const themeId = getPresentationThemeId(item.data);
-                      const theme = getThemeById(themeId);
-                      // Use a subtle version of the theme background or the theme background itself
-                      containerBg = ""; // We'll use inline style for PPT to be precise
-                    }
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 items-start">
+                    {filteredItems.map((item) => {
+                      const config = contentTypeConfig[item.type];
+                      const Icon = config.icon;
+                      let containerBg = `bg-gradient-to-br ${config.gradient}`;
+                      if (item.type === 'presentation') containerBg = ""; 
 
-                    return (
-                      <Card
-                        key={item.id}
-                        className="group relative overflow-hidden glass-effect border border-border/40 hover:border-yellow-400/50 hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                        onClick={() => handleView(item)}
-                      >
-                        {/* Preview Area */}
-                        <div 
-                          className={`relative ${item.type === 'presentation' ? 'aspect-video' : 'aspect-[3/4]'} ${item.type !== 'presentation' ? containerBg : ''} overflow-hidden`}
-                          style={item.type === 'presentation' ? { backgroundColor: getThemeById(getPresentationThemeId(item.data)).colors.background } : {}}
+                      return (
+                        <Card
+                          key={item.id}
+                          className="group relative overflow-hidden glass-effect border border-border/40 hover:border-yellow-400/50 hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                          onClick={() => handleView(item)}
                         >
-                          {/* Document Preview Content */}
-                          <div
-                            className={`absolute inset-0 ${item.type === 'presentation' ? '' : 'bg-white dark:bg-gray-900 m-3 rounded-lg shadow-inner'} overflow-hidden`}
-                          >
-                            {renderPreview(item)}
-                          </div>
-
-                          {/* Hover Overlay - Show on hover for desktop, always visible actions on mobile */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 hidden sm:group-hover:flex items-center justify-center z-30">
-                            <div className="flex gap-3">
-                              <Button
-                                size="sm"
-                                className="bg-white text-gray-800 hover:bg-gray-100"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleView(item);
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(item);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                          <div className={`relative ${item.type === 'presentation' ? 'aspect-video' : 'aspect-[3/4]'} ${item.type !== 'presentation' ? containerBg : ''} overflow-hidden`}
+                               style={item.type === 'presentation' ? { backgroundColor: getThemeById(getPresentationThemeId(item.data)).colors.background } : {}}>
+                            <div className={`absolute inset-0 ${item.type === 'presentation' ? '' : 'bg-white dark:bg-gray-900 m-3 rounded-lg shadow-inner'} overflow-hidden`}>
+                              {renderPreview(item)}
+                            </div>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 hidden sm:group-hover:flex items-center justify-center z-30">
+                              <div className="flex gap-3">
+                                <Button size="sm" className="bg-white text-gray-800 hover:bg-gray-100" onClick={(e) => { e.stopPropagation(); handleView(item); }}>
+                                  <Eye className="h-4 w-4 mr-1" /> View
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleDelete(item); }}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="absolute top-2 left-2">
+                              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm`}>
+                                <Icon className={`h-3 w-3 ${config.color}`} />
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{config.label.slice(0, -1)}</span>
+                              </div>
                             </div>
                           </div>
-
-                          {/* Type Badge */}
-                          <div className="absolute top-2 left-2">
-                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm`}>
-                              <Icon className={`h-3 w-3 ${config.color}`} />
-                              <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{config.label.slice(0, -1)}</span>
+                          <div className="p-3 sm:p-4 bg-background/50">
+                            <h3 className="font-semibold text-foreground mb-1 line-clamp-1 group-hover:bolt-gradient-text transition-colors text-sm sm:text-base">
+                              {item.title}
+                            </h3>
+                            {item.description && <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-1">{item.description}</p>}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span className="hidden xs:inline">{formatDate(item.created_at)}</span>
+                                <span className="xs:hidden">{formatDate(item.created_at).split(',')[0]}</span>
+                              </div>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 sm:invisible sm:group-hover:visible transition-all" onClick={(e) => { e.stopPropagation(); handleView(item); }}>
+                                  <Edit className="h-3 w-3 sm:mr-1" />
+                                  <span className="hidden sm:inline">Edit</span>
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 px-2 sm:hidden" onClick={(e) => { e.stopPropagation(); handleView(item); }}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Info Section */}
-                        <div className="p-3 sm:p-4 bg-background/50">
-                          <h3 className="font-semibold text-foreground mb-1 line-clamp-1 group-hover:bolt-gradient-text transition-colors text-sm sm:text-base">
-                            {item.title}
-                          </h3>
-                          {item.description && (
-                            <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-1">
-                              {item.description}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span className="hidden xs:inline">{formatDate(item.created_at)}</span>
-                              <span className="xs:hidden">{formatDate(item.created_at).split(',')[0]}</span>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 sm:invisible sm:group-hover:visible transition-all"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleView(item);
-                                }}
-                              >
-                                <Edit className="h-3 w-3 sm:mr-1" />
-                                <span className="hidden sm:inline">Edit</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 sm:hidden"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleView(item);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  
+                  <DashboardPagination 
+                    totalItems={totalItems} 
+                    currentPage={currentPage} 
+                    pageSize={pageSize} 
+                    className="mt-8 border-t border-border/40 pt-4"
+                  />
                 </div>
               )}
             </TabsContent>
@@ -955,5 +683,17 @@ export function HistoryDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function HistoryDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <DashboardPageSkeleton />
+      </div>
+    }>
+      <HistoryDashboardContent />
+    </Suspense>
   );
 }

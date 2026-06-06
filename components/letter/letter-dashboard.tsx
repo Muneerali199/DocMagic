@@ -1,9 +1,15 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { sanitizeFilename } from '@/lib/utils';
+import { sanitizeFilename } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,27 +46,83 @@ import {
   AlertCircle,
   ThumbsUp,
   Clock,
-  Users
+  Users,
 } from "lucide-react";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
+import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
-type StepType = 'dashboard' | 'create' | 'job-url' | 'templates' | 'preview';
+type StepType = "dashboard" | "create" | "job-url" | "templates" | "preview";
 
 const LETTER_TYPES = [
-  { id: 'cover', name: 'Cover Letter', icon: Briefcase, description: 'For job applications', color: 'from-blue-500 to-cyan-500' },
-  { id: 'business', name: 'Business Letter', icon: FileText, description: 'Formal business correspondence', color: 'from-purple-500 to-pink-500' },
-  { id: 'thank', name: 'Thank You Letter', icon: Heart, description: 'Express gratitude', color: 'from-pink-500 to-rose-500' },
-  { id: 'recommendation', name: 'Recommendation', icon: ThumbsUp, description: 'Recommend someone', color: 'from-green-500 to-emerald-500' },
-  { id: 'complaint', name: 'Complaint Letter', icon: AlertCircle, description: 'Professional complaints', color: 'from-orange-500 to-amber-500' },
-  { id: 'resignation', name: 'Resignation Letter', icon: Clock, description: 'Leave professionally', color: 'from-red-500 to-orange-500' },
-  { id: 'invitation', name: 'Invitation Letter', icon: Users, description: 'Invite formally', color: 'from-indigo-500 to-violet-500' },
-  { id: 'apology', name: 'Apology Letter', icon: MessageSquare, description: 'Sincere apologies', color: 'from-teal-500 to-cyan-500' },
+  {
+    id: "cover",
+    name: "Cover Letter",
+    icon: Briefcase,
+    description: "For job applications",
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    id: "business",
+    name: "Business Letter",
+    icon: FileText,
+    description: "Formal business correspondence",
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    id: "thank",
+    name: "Thank You Letter",
+    icon: Heart,
+    description: "Express gratitude",
+    color: "from-pink-500 to-rose-500",
+  },
+  {
+    id: "recommendation",
+    name: "Recommendation",
+    icon: ThumbsUp,
+    description: "Recommend someone",
+    color: "from-green-500 to-emerald-500",
+  },
+  {
+    id: "complaint",
+    name: "Complaint Letter",
+    icon: AlertCircle,
+    description: "Professional complaints",
+    color: "from-orange-500 to-amber-500",
+  },
+  {
+    id: "resignation",
+    name: "Resignation Letter",
+    icon: Clock,
+    description: "Leave professionally",
+    color: "from-red-500 to-orange-500",
+  },
+  {
+    id: "invitation",
+    name: "Invitation Letter",
+    icon: Users,
+    description: "Invite formally",
+    color: "from-indigo-500 to-violet-500",
+  },
+  {
+    id: "apology",
+    name: "Apology Letter",
+    icon: MessageSquare,
+    description: "Sincere apologies",
+    color: "from-teal-500 to-cyan-500",
+  },
 ];
 
 export function LetterDashboard() {
-  const [currentStep, setCurrentStep] = useState<StepType>('dashboard');
+  const [currentStep, setCurrentStep] = useState<StepType>("dashboard");
   const [prompt, setPrompt] = useState("");
   const [fromName, setFromName] = useState("");
   const [fromAddress, setFromAddress] = useState("");
@@ -69,6 +131,7 @@ export function LetterDashboard() {
   const [toAddress, setToAddress] = useState("");
   const [letterType, setLetterType] = useState("cover");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [letterData, setLetterData] = useState<any>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -84,11 +147,20 @@ export function LetterDashboard() {
   const [isExtractingJob, setIsExtractingJob] = useState(false);
   const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
+  const [tone, setTone] = useState("formal");
+  const [length, setLength] = useState("medium");
+
+  const [lockedSections, setLockedSections] = useState({
+    name: false,
+    skills: false,
+    experience: false,
+  });
 
   const { toast } = useToast();
   const supabase = createClient();
 
-  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const generateLetter = async () => {
     if (!prompt.trim()) {
@@ -112,7 +184,9 @@ export function LetterDashboard() {
     setIsGenerating(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // Validate session before making API call
       if (!session?.access_token) {
@@ -125,11 +199,11 @@ export function LetterDashboard() {
         return;
       }
 
-      const response = await fetch('/api/generate/letter', {
-        method: 'POST',
+      const response = await fetch("/api/generate/letter", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           prompt,
@@ -143,12 +217,12 @@ export function LetterDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || 'Failed to generate letter');
+        throw new Error(errorData.details || "Failed to generate letter");
       }
 
       const data = await response.json();
       setLetterData(data);
-      setCurrentStep('preview');
+      setCurrentStep("preview");
 
       toast({
         title: "Letter generated! ✨",
@@ -158,15 +232,15 @@ export function LetterDashboard() {
       console.error("Error generating letter:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate letter. Please try again.",
+        description:
+          error.message || "Failed to generate letter. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
   };
-
-  const generateCoverLetterFromJob = async () => {
+  const generateCoverLetterFromJob = async (regenerate = false) => {
     if (!jobDescription.trim() || !fromName.trim()) {
       toast({
         title: "Missing information",
@@ -179,7 +253,9 @@ export function LetterDashboard() {
     setIsGenerating(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // Validate session before making API call
       if (!session?.access_token) {
@@ -192,11 +268,11 @@ export function LetterDashboard() {
         return;
       }
 
-      const response = await fetch('/api/generate/letter', {
-        method: 'POST',
+      const response = await fetch("/api/generate/letter", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           jobDescription,
@@ -204,29 +280,53 @@ export function LetterDashboard() {
           fromName,
           fromEmail,
           fromAddress,
-          skills: skills ? skills.split(',').map(s => s.trim()) : [],
+          skills: skills ? skills.split(",").map((s) => s.trim()) : [],
           experience,
+          tone,
+          length,
+          lockedSections,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || 'Failed to generate cover letter');
+        throw new Error(errorData.details || "Failed to generate cover letter");
       }
 
       const data = await response.json();
-      setLetterData(data);
-      setCurrentStep('preview');
+      // setLetterData(data);
+      setLetterData((prev: any) => {
+        if (!prev) return data;
+
+        return {
+          ...data,
+
+          from: lockedSections.name ? prev.from : data.from,
+
+          skills: lockedSections.skills ? prev.skills : data.skills,
+
+          experience: lockedSections.experience
+            ? prev.experience
+            : data.experience,
+        };
+      });
+      setCurrentStep("preview");
 
       toast({
-        title: "Cover letter generated! ✨",
-        description: "Tailored to match the job requirements",
+        title: regenerate
+          ? "Cover letter regenerated! ✨"
+          : "Cover letter generated! ✨",
+
+        description: regenerate
+          ? "Your cover letter has been updated successfully"
+          : "Tailored to match the job requirements",
       });
     } catch (error: any) {
       console.error("Error generating cover letter:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate cover letter. Please try again.",
+        description:
+          error.message || "Failed to generate cover letter. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -241,17 +341,17 @@ export function LetterDashboard() {
 
     try {
       const letterText = `
-${letterData.from?.name || ''}
-${letterData.from?.address || ''}
+${letterData.from?.name || ""}
+${letterData.from?.address || ""}
 
-${letterData.date || ''}
+${letterData.date || ""}
 
-${letterData.to?.name || ''}
-${letterData.to?.address || ''}
+${letterData.to?.name || ""}
+${letterData.to?.address || ""}
 
-Subject: ${letterData.subject || ''}
+Subject: ${letterData.subject || ""}
 
-${letterData.content || ''}
+${letterData.content || ""}
       `.trim();
 
       await navigator.clipboard.writeText(letterText);
@@ -278,14 +378,17 @@ ${letterData.content || ''}
 
     try {
       // Import dynamically to avoid SSR issues if any
-      const { pdf } = await import('@react-pdf/renderer');
-      const { LetterPdf } = await import('@/components/letter/pdf-template');
+      const { pdf } = await import("@react-pdf/renderer");
+      const { LetterPdf } = await import("@/components/letter/pdf-template");
 
       const blob = await pdf(<LetterPdf letter={letterData} />).toBlob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      const sanitizedSubject = sanitizeFilename(letterData.subject, `${letterType}-letter-${Date.now()}`);
+      const sanitizedSubject = sanitizeFilename(
+        letterData.subject,
+        `${letterType}-letter-${Date.now()}`,
+      );
 
       link.download = `${sanitizedSubject}.pdf`;
       document.body.appendChild(link);
@@ -298,7 +401,7 @@ ${letterData.content || ''}
         description: "Your letter has been downloaded as a PDF",
       });
     } catch (error) {
-      console.error('Error exporting to PDF:', error);
+      console.error("Error exporting to PDF:", error);
       toast({
         title: "Export failed",
         description: "Failed to export letter to PDF",
@@ -322,22 +425,22 @@ ${letterData.content || ''}
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: emailTo,
           subject: emailSubject,
           content: emailContent,
           fromName,
           fromEmail,
-          letterContent: letterData
+          letterContent: letterData,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send email');
+        throw new Error(errorData.error || "Failed to send email");
       }
 
       toast({
@@ -359,7 +462,7 @@ ${letterData.content || ''}
   };
 
   // Dashboard View
-  if (currentStep === 'dashboard') {
+  if (currentStep === "dashboard") {
     return (
       <div className="space-y-8">
         {/* Header */}
@@ -370,10 +473,13 @@ ${letterData.content || ''}
             <Sparkles className="h-4 w-4 text-blue-500" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-            <span className="bolt-gradient-text">Create Professional Letters</span>
+            <span className="bolt-gradient-text">
+              Create Professional Letters
+            </span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Choose how you want to create your letter - from scratch, tailored to a job, or from templates
+            Choose how you want to create your letter - from scratch, tailored
+            to a job, or from templates
           </p>
         </div>
 
@@ -381,7 +487,7 @@ ${letterData.content || ''}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Create Letter */}
           <button
-            onClick={() => setCurrentStep('create')}
+            onClick={() => setCurrentStep("create")}
             className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -389,14 +495,18 @@ ${letterData.content || ''}
               <div className="w-12 h-12 bolt-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                 <PenTool className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Create Letter</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Write any type of professional letter with AI assistance.</p>
+              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                Create Letter
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Write any type of professional letter with AI assistance.
+              </p>
             </div>
           </button>
 
           {/* Cover Letter from Job */}
           <button
-            onClick={() => setCurrentStep('job-url')}
+            onClick={() => setCurrentStep("job-url")}
             className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -404,14 +514,18 @@ ${letterData.content || ''}
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Cover Letter</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Generate a tailored cover letter from job description.</p>
+              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Cover Letter
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Generate a tailored cover letter from job description.
+              </p>
             </div>
           </button>
 
           {/* Browse Templates */}
           <button
-            onClick={() => setCurrentStep('templates')}
+            onClick={() => setCurrentStep("templates")}
             className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -419,16 +533,20 @@ ${letterData.content || ''}
               <div className="w-12 h-12 cosmic-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                 <FileCheck className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Letter Types</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Browse 8+ professional letter templates and types.</p>
+              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                Letter Types
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Browse 8+ professional letter templates and types.
+              </p>
             </div>
           </button>
 
           {/* Quick Thank You */}
           <button
             onClick={() => {
-              setLetterType('thank');
-              setCurrentStep('create');
+              setLetterType("thank");
+              setCurrentStep("create");
             }}
             className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
           >
@@ -437,8 +555,12 @@ ${letterData.content || ''}
               <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                 <Heart className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">Thank You Letter</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Express gratitude professionally after interviews or meetings.</p>
+              <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                Thank You Letter
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Express gratitude professionally after interviews or meetings.
+              </p>
             </div>
           </button>
         </div>
@@ -451,23 +573,36 @@ ${letterData.content || ''}
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Pro Tips for Professional Letters</h4>
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  Pro Tips for Professional Letters
+                </h4>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span><strong>Cover Letters:</strong> Tailor to each job application</span>
+                    <span>
+                      <strong>Cover Letters:</strong> Tailor to each job
+                      application
+                    </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span><strong>Business Letters:</strong> Keep professional and concise</span>
+                    <span>
+                      <strong>Business Letters:</strong> Keep professional and
+                      concise
+                    </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span><strong>Thank You:</strong> Send within 24 hours of meeting</span>
+                    <span>
+                      <strong>Thank You:</strong> Send within 24 hours of
+                      meeting
+                    </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span><strong>All Letters:</strong> Proofread before sending!</span>
+                    <span>
+                      <strong>All Letters:</strong> Proofread before sending!
+                    </span>
                   </div>
                 </div>
               </div>
@@ -479,21 +614,25 @@ ${letterData.content || ''}
   }
 
   // Letter Types / Templates View
-  if (currentStep === 'templates') {
+  if (currentStep === "templates") {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => setCurrentStep('dashboard')}
+            onClick={() => setCurrentStep("dashboard")}
             className="hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Back
           </Button>
           <div>
-            <h2 className="text-2xl font-bold bolt-gradient-text">Choose Letter Type</h2>
-            <p className="text-sm text-muted-foreground">Select the type of letter you want to create</p>
+            <h2 className="text-2xl font-bold bolt-gradient-text">
+              Choose Letter Type
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Select the type of letter you want to create
+            </p>
           </div>
         </div>
 
@@ -505,15 +644,19 @@ ${letterData.content || ''}
                 key={type.id}
                 onClick={() => {
                   setLetterType(type.id);
-                  setCurrentStep('create');
+                  setCurrentStep("create");
                 }}
                 className="group relative p-6 rounded-2xl border border-border hover:border-blue-500/50 bg-card/60 backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:shadow-xl text-left"
               >
-                <div className={`w-12 h-12 bg-gradient-to-br ${type.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${type.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="font-bold text-lg mb-1">{type.name}</h3>
-                <p className="text-sm text-muted-foreground">{type.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {type.description}
+                </p>
               </button>
             );
           })}
@@ -523,21 +666,37 @@ ${letterData.content || ''}
   }
 
   // Job URL / Cover Letter View
-  if (currentStep === 'job-url') {
+  if (currentStep === "job-url") {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title={isRegenerating ? "Regenerating cover letter" : "Generating cover letter"}
+          description="Matching your experience to the role and drafting a polished letter..."
+          estimatedTime="Estimated time: 20-45 seconds"
+          tips={[
+            "Tailored letters work best when the job description has concrete responsibilities.",
+            "You can lock sections before regenerating to preserve details you like.",
+            "Add measurable achievements to make the final draft more persuasive.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => setCurrentStep('dashboard')}
+            onClick={() => setCurrentStep("dashboard")}
             className="hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Back
           </Button>
           <div>
-            <h2 className="text-2xl font-bold bolt-gradient-text">Tailored Cover Letter</h2>
-            <p className="text-sm text-muted-foreground">Generate a cover letter matched to a specific job</p>
+            <h2 className="text-2xl font-bold bolt-gradient-text">
+              Tailored Cover Letter
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Generate a cover letter matched to a specific job
+            </p>
           </div>
         </div>
 
@@ -568,7 +727,10 @@ ${letterData.content || ''}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="jobDescription" className="flex items-center gap-2">
+                <Label
+                  htmlFor="jobDescription"
+                  className="flex items-center gap-2"
+                >
                   <FileText className="h-4 w-4" />
                   Job Description *
                 </Label>
@@ -583,7 +745,10 @@ ${letterData.content || ''}
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fromNameJob" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="fromNameJob"
+                    className="flex items-center gap-2"
+                  >
                     <User className="h-4 w-4" />
                     Your Name *
                   </Label>
@@ -597,7 +762,10 @@ ${letterData.content || ''}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="fromEmailJob" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="fromEmailJob"
+                    className="flex items-center gap-2"
+                  >
                     <MailIcon className="h-4 w-4" />
                     Your Email
                   </Label>
@@ -639,17 +807,83 @@ ${letterData.content || ''}
                   className="min-h-[80px] border-emerald-200 focus:border-emerald-500"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Tone Preset</Label>
+
+                <div className="flex flex-wrap gap-2">
+                  {["formal", "confident", "concise", "detailed"].map((t) => (
+                    <Button
+                      key={t}
+                      type="button"
+                      variant={tone === t ? "default" : "outline"}
+                      onClick={() => setTone(t)}
+                    >
+                      {t}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Length Preset</Label>
+
+                <div className="flex flex-wrap gap-2">
+                  {["short", "medium", "long"].map((l) => (
+                    <Button
+                      key={l}
+                      type="button"
+                      variant={length === l ? "default" : "outline"}
+                      onClick={() => setLength(l)}
+                    >
+                      {l}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
+            <div className="space-y-2">
+              <Label>Lock Sections</Label>
+
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(lockedSections).map((section) => (
+                  <Button
+                    key={section}
+                    type="button"
+                    variant={
+                      lockedSections[section as keyof typeof lockedSections]
+                        ? "default"
+                        : "outline"
+                    }
+                    onClick={() =>
+                      setLockedSections((prev) => ({
+                        ...prev,
+                        [section]: !prev[section as keyof typeof prev],
+                      }))
+                    }
+                  >
+                    {lockedSections[section as keyof typeof lockedSections]
+                      ? `🔒 ${section}`
+                      : `🔓 ${section}`}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Locked sections will remain unchanged during regeneration.
+            </p>
 
             <Button
-              onClick={generateCoverLetterFromJob}
-              disabled={isGenerating || !jobDescription.trim() || !fromName.trim()}
+              onClick={() => generateCoverLetterFromJob(false)}
+              disabled={
+                isGenerating || !jobDescription.trim() || !fromName.trim()
+              }
               className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Generating Tailored Cover Letter...
+                  {isRegenerating
+                    ? "Regenerating Cover Letter..."
+                    : "Generating Tailored Cover Letter..."}
                 </>
               ) : (
                 <>
@@ -665,23 +899,40 @@ ${letterData.content || ''}
   }
 
   // Create Letter View
-  if (currentStep === 'create') {
-    const selectedType = LETTER_TYPES.find(t => t.id === letterType) || LETTER_TYPES[0];
+  if (currentStep === "create") {
+    const selectedType =
+      LETTER_TYPES.find((t) => t.id === letterType) || LETTER_TYPES[0];
 
     return (
       <div className="space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title="Generating letter"
+          description="Finding the right tone, structure, and professional phrasing..."
+          estimatedTime="Estimated time: 15-35 seconds"
+          tips={[
+            "Mention the letter purpose clearly for a sharper first draft.",
+            "Names and recipient details help the letter feel more complete.",
+            "You can regenerate after preview if you want a different tone.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => setCurrentStep('dashboard')}
+            onClick={() => setCurrentStep("dashboard")}
             className="hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Back
           </Button>
           <div>
-            <h2 className="text-2xl font-bold bolt-gradient-text">Create {selectedType.name}</h2>
-            <p className="text-sm text-muted-foreground">{selectedType.description}</p>
+            <h2 className="text-2xl font-bold bolt-gradient-text">
+              Create {selectedType.name}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {selectedType.description}
+            </p>
           </div>
         </div>
 
@@ -743,7 +994,10 @@ ${letterData.content || ''}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fromAddress" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="fromAddress"
+                    className="flex items-center gap-2"
+                  >
                     <MapPin className="h-4 w-4" />
                     From (Address)
                   </Label>
@@ -757,7 +1011,10 @@ ${letterData.content || ''}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="toAddress" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="toAddress"
+                    className="flex items-center gap-2"
+                  >
                     <MapPin className="h-4 w-4" />
                     To (Address)
                   </Label>
@@ -788,7 +1045,12 @@ ${letterData.content || ''}
 
               <Button
                 onClick={generateLetter}
-                disabled={isGenerating || !prompt.trim() || !fromName.trim() || !toName.trim()}
+                disabled={
+                  isGenerating ||
+                  !prompt.trim() ||
+                  !fromName.trim() ||
+                  !toName.trim()
+                }
                 className="w-full h-12 bolt-gradient text-white font-semibold hover:scale-105 transition-all"
               >
                 {isGenerating ? (
@@ -818,8 +1080,14 @@ ${letterData.content || ''}
               {isGenerating && (
                 <div className="flex items-center justify-center gap-2 mt-4">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div
+                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
                 </div>
               )}
             </CardContent>
@@ -830,22 +1098,38 @@ ${letterData.content || ''}
   }
 
   // Preview View
-  if (currentStep === 'preview' && letterData) {
+  if (currentStep === "preview" && letterData) {
     return (
       <div className="space-y-6">
+        <GenerationLoadingOverlay
+          show={isGenerating}
+          title="Updating letter"
+          description="Refreshing your draft while keeping the useful details intact..."
+          estimatedTime="Estimated time: 15-35 seconds"
+          tips={[
+            "Regeneration keeps your latest inputs in mind.",
+            "Review the opening paragraph first; it sets the tone.",
+            "Download or copy once the letter matches your voice.",
+          ]}
+          variant="letter"
+        />
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => setCurrentStep('dashboard')}
+              onClick={() => setCurrentStep("dashboard")}
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back
             </Button>
             <div>
-              <h2 className="text-2xl font-bold bolt-gradient-text">Your Letter</h2>
-              <p className="text-sm text-muted-foreground">Review and download your professional letter</p>
+              <h2 className="text-2xl font-bold bolt-gradient-text">
+                Your Letter
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Review and download your professional letter
+              </p>
             </div>
           </div>
 
@@ -856,7 +1140,11 @@ ${letterData.content || ''}
               disabled={isCopying}
               className="glass-effect"
             >
-              {isCopying ? <Check className="mr-2 h-4 w-4 text-green-500" /> : <Copy className="mr-2 h-4 w-4" />}
+              {isCopying ? (
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="mr-2 h-4 w-4" />
+              )}
               Copy
             </Button>
             <Button
@@ -865,14 +1153,18 @@ ${letterData.content || ''}
               disabled={isExporting}
               className="glass-effect"
             >
-              {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              {isExporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
               Download PDF
             </Button>
             <Button
               onClick={() => {
-                setEmailTo('');
-                setEmailSubject(letterData.subject || '');
-                setEmailContent('');
+                setEmailTo("");
+                setEmailSubject(letterData.subject || "");
+                setEmailContent("");
                 setShowEmailDialog(true);
               }}
               className="bolt-gradient text-white"
@@ -889,6 +1181,21 @@ ${letterData.content || ''}
             <Card className="glass-effect border border-yellow-400/20 overflow-hidden">
               <div id="letter-preview" className="bg-white">
                 <LetterPreview letter={letterData} />
+                <Button
+                  onClick={async () => {
+                    if (jobDescription) {
+                      setIsRegenerating(true);
+                      await generateCoverLetterFromJob(true);
+                      setIsRegenerating(false);
+                    } else {
+                      await generateLetter();
+                    }
+                  }}
+                  disabled={isGenerating}
+                  className="mt-4 w-full"
+                >
+                  Regenerate Letter
+                </Button>
               </div>
             </Card>
           </div>
@@ -901,12 +1208,13 @@ ${letterData.content || ''}
                 Letter Generated!
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Your professional letter is ready. You can download it as PDF, copy the text, or send it via email.
+                Your professional letter is ready. You can download it as PDF,
+                copy the text, or send it via email.
               </p>
 
               <div className="space-y-2">
                 <Button
-                  onClick={() => setCurrentStep('create')}
+                  onClick={() => setCurrentStep("create")}
                   variant="outline"
                   className="w-full"
                 >
@@ -914,7 +1222,7 @@ ${letterData.content || ''}
                   Create Another
                 </Button>
                 <Button
-                  onClick={() => setCurrentStep('dashboard')}
+                  onClick={() => setCurrentStep("dashboard")}
                   variant="outline"
                   className="w-full"
                 >
@@ -949,7 +1257,8 @@ ${letterData.content || ''}
             <DialogHeader>
               <DialogTitle>Send Letter via Email</DialogTitle>
               <DialogDescription>
-                Fill in the details to send your letter directly to the recipient.
+                Fill in the details to send your letter directly to the
+                recipient.
               </DialogDescription>
             </DialogHeader>
 
@@ -967,7 +1276,9 @@ ${letterData.content || ''}
                   placeholder="recipient@example.com"
                   value={emailTo}
                   onChange={(e) => setEmailTo(e.target.value)}
-                  className={emailTo && !isValidEmail(emailTo) ? "border-red-400" : ""}
+                  className={
+                    emailTo && !isValidEmail(emailTo) ? "border-red-400" : ""
+                  }
                 />
               </div>
 
@@ -982,7 +1293,9 @@ ${letterData.content || ''}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="emailContent">Additional Message (Optional)</Label>
+                <Label htmlFor="emailContent">
+                  Additional Message (Optional)
+                </Label>
                 <Textarea
                   id="emailContent"
                   placeholder="Add a personal note..."
@@ -994,7 +1307,10 @@ ${letterData.content || ''}
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowEmailDialog(false)}
+              >
                 Cancel
               </Button>
               <Button

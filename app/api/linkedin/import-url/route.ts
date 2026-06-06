@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require('next/server');
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
@@ -6,7 +7,7 @@ import * as cheerio from 'cheerio';
 // Method 1: MCP-Powered LinkedIn Scraper (Most Reliable - No API Key Required!)
 async function scrapeWithMCP(profileUrl: string) {
   try {
-    console.log('🔍 Using MCP to fetch LinkedIn profile...');
+    // console.log('🔍 Using MCP to fetch LinkedIn profile...');
 
     // LinkedIn blocks automated requests with error 999
     // This is their anti-bot protection
@@ -36,7 +37,7 @@ async function scrapeWithMCP(profileUrl: string) {
     const html = response.data;
     const $ = cheerio.load(html);
 
-    console.log('📄 HTML content fetched, extracting data...');
+    // console.log('📄 HTML content fetched, extracting data...');
 
     // Extract data from LinkedIn's public profile HTML structure
     // LinkedIn uses various class names and structures
@@ -132,7 +133,7 @@ async function scrapeWithMCP(profileUrl: string) {
     // Use AI to enhance/extract more data if available
     if (process.env.OPENAI_API_KEY && html.length > 0) {
       try {
-        console.log('🤖 Using AI to enhance extracted data...');
+        // console.log('🤖 Using AI to enhance extracted data...');
         const aiEnhanced = await enhanceWithAI(html, {
           fullName,
           headline,
@@ -149,7 +150,7 @@ async function scrapeWithMCP(profileUrl: string) {
           method: 'MCP + AI Enhancement'
         };
       } catch (aiError) {
-        console.log('⚠️ AI enhancement failed, using MCP-only data');
+        // console.log('⚠️ AI enhancement failed, using MCP-only data');
       }
     }
 
@@ -173,7 +174,7 @@ async function scrapeWithMCP(profileUrl: string) {
     };
 
   } catch (error: any) {
-    console.error('❌ MCP scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, '❌ MCP scraping failed:', error.message);
     throw new Error(`MCP scraping failed: ${error.message}`);
   }
 }
@@ -298,7 +299,7 @@ async function scrapeWithCheerio(profileUrl: string) {
       note: 'Limited data extracted. LinkedIn restricts public profile access. For complete data, please use PDF Export method.'
     };
   } catch (error: any) {
-    console.error('Cheerio scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'Cheerio scraping failed:', error.message);
     throw error;
   }
 }
@@ -371,7 +372,7 @@ ${html.substring(0, 5000)}`
 
     throw new Error('Could not parse AI response');
   } catch (error: any) {
-    console.error('AI scraping failed:', error.message);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'AI scraping failed:', error.message);
     throw error;
   }
 }
@@ -406,7 +407,7 @@ export async function POST(req: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('Authentication error:', authError);
+      logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, 'Authentication error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized - Please sign in' },
         { status: 401 }
@@ -436,35 +437,35 @@ export async function POST(req: Request) {
     let method = '';
     let errors: string[] = [];
 
-    console.log('🔍 Starting LinkedIn profile scraping for:', profileUrl);
+    // console.log('🔍 Starting LinkedIn profile scraping for:', profileUrl);
 
     // Method 1: Try MCP-powered scraping (BEST - No API key needed!)
     try {
-      console.log('🚀 Attempting MCP scraping...');
+      // console.log('🚀 Attempting MCP scraping...');
       profileData = await scrapeWithMCP(profileUrl);
       method = profileData.method || 'MCP Scraping';
-      console.log('✅ MCP scraping successful');
+      // console.log('✅ MCP scraping successful');
     } catch (error: any) {
       errors.push(`MCP: ${error.message}`);
-      console.log('❌ MCP failed, trying AI method...');
+      // console.log('❌ MCP failed, trying AI method...');
       
       // Method 2: Try AI-powered extraction (good quality, requires OpenAI key)
       try {
         profileData = await scrapeWithAI(profileUrl);
         method = 'AI-Powered Extraction';
-        console.log('✅ AI scraping successful');
+        // console.log('✅ AI scraping successful');
       } catch (aiError: any) {
         errors.push(`AI: ${aiError.message}`);
-        console.log('❌ AI failed, trying basic scraping...');
+        // console.log('❌ AI failed, trying basic scraping...');
         
         // Method 3: Try basic Cheerio scraping (limited data, but works without API keys)
         try {
           profileData = await scrapeWithCheerio(profileUrl);
           method = 'Basic Web Scraping';
-          console.log('✅ Basic scraping successful');
+          // console.log('✅ Basic scraping successful');
         } catch (cheerioError: any) {
           errors.push(`Cheerio: ${cheerioError.message}`);
-          console.log('❌ All scraping methods failed');
+          // console.log('❌ All scraping methods failed');
         }
       }
     }
@@ -520,7 +521,7 @@ export async function POST(req: Request) {
       message: `✅ Profile imported successfully using ${method}`
     });
   } catch (error: any) {
-    console.error("LinkedIn URL import error:", error);
+    logger.error({ route: 'app/api/linkedin/import-url/route.ts' }, "LinkedIn URL import error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to import LinkedIn profile" },
       { status: 500 }

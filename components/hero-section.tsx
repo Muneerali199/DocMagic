@@ -5,7 +5,13 @@ import { TooltipWithShortcut } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Zap, Star, Wand2, Clock, Users, Trophy } from "lucide-react";
 
+// 1. Import our custom tracker
+import { useTrackEvent } from "@/hooks/useTrackEvent";
+
 export function HeroSection() {
+  // 2. Initialize the tracker
+  const { trackEvent } = useTrackEvent();
+
   return (
     <div className="relative overflow-hidden bg-background py-16 sm:py-24 md:py-32 lg:py-40">
       {/* Enhanced animated background elements */}
@@ -111,6 +117,8 @@ export function HeroSection() {
                 href="#document-types"
                 className="flex items-center justify-center gap-3 sm:gap-4"
                 tabIndex={0}
+                // 3. Attach the tracker to the primary CTA
+                onClick={() => trackEvent("Landing CTA Clicked")} 
               >
                 <Sparkles
                   className="h-5 w-5 sm:h-6 sm:w-6 group-hover:animate-spin transition-transform"
@@ -127,10 +135,10 @@ export function HeroSection() {
             </Button>
             {/*Enhanced watch demo button*/}
               <Button
-             asChild
-             variant="outline"
-             size="lg"
-            className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group
+              asChild
+              variant="outline"
+              size="lg"
+             className="px-10 sm:px-12 py-5 sm:py-6 rounded-full w-full sm:w-auto relative z-10 focus:ring-4 focus:ring-red-400 focus:outline-none shadow-xl text-base sm:text-xl font-bold transition-all duration-500 ease-in-out group
              bg-gradient-to-r from-red-600 to-black text-white border-2 border-red-500/50
              hover:from-red-700 hover:to-neutral-900
              hover:scale-110 hover:shadow-[0_15px_35px_rgba(220,38,38,0.4)] hover:z-20"
@@ -140,6 +148,8 @@ export function HeroSection() {
             href="#how-it-works"
             className="flex items-center justify-center gap-3 sm:gap-4"
             tabIndex={0}
+            // 4. Attach the tracker to the secondary CTA
+            onClick={() => trackEvent("Watch Demo Clicked")}
           >
     <Star
   

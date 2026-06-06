@@ -5,11 +5,15 @@ class MCPServer {
     constructor() {
         this.isRunning = false;
         this.scanInterval = null;
+        this.debounceTimer = null;
+        this.isScanning = false;
         this.lastScannedContent = null;
         this.analysisCache = new Map();
         
         this.config = {
-            scanInterval: 2000,
+            configVersion: 2,
+            scanInterval: 10000,
+            inputDebounceMs: 1500,
             maxCacheSize: 100,
             enableAutoScan: true,
             enableContextAnalysis: true,
@@ -47,7 +51,16 @@ class MCPServer {
     async loadConfig() {
         const stored = await chrome.storage.local.get(['mcp_config']);
         if (stored.mcp_config) {
-            this.config = { ...this.config, ...stored.mcp_config };
+            const storedConfig = { ...stored.mcp_config };
+            const needsMigration = !storedConfig.configVersion || storedConfig.scanInterval === 2000;
+
+            if (needsMigration) {
+                storedConfig.configVersion = this.config.configVersion;
+                storedConfig.scanInterval = this.config.scanInterval;
+                await chrome.storage.local.set({ mcp_config: storedConfig });
+            }
+
+            this.config = { ...this.config, ...storedConfig };
         }
     }
     
@@ -59,6 +72,7 @@ class MCPServer {
         if (this.scanInterval) return;
         
         console.log('🔍 Starting auto-scan...');
+        this.scanCurrentPage();
         this.scanInterval = setInterval(() => {
             this.scanCurrentPage();
         }, this.config.scanInterval);
@@ -69,9 +83,19 @@ class MCPServer {
             clearInterval(this.scanInterval);
             this.scanInterval = null;
         }
+
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
     }
     
     async scanCurrentPage() {
+        if (this.isScanning) return;
+        if (!this.isRunning) return;
+
+        this.isScanning = true;
+
         try {
             const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tabs[0]) return;
@@ -81,6 +105,15 @@ class MCPServer {
             
             // Check if it's a supported platform
             if (!this.isSupportedPlatform(url)) return;
+
+            const pageState = await this.getPageScanState(tab.id);
+            if (pageState?.visibilityState === 'hidden') return;
+
+            const lastInputAt = pageState?.lastInputAt || 0;
+            if (lastInputAt && Date.now() - lastInputAt < this.config.inputDebounceMs) {
+                this.scheduleDebouncedScan();
+                return;
+            }
             
             // Inject content scanner
             const result = await chrome.tabs.sendMessage(tab.id, {
@@ -94,6 +127,54 @@ class MCPServer {
         } catch (error) {
             // Silent fail - page might not be ready
             console.debug('Scan failed:', error.message);
+        } finally {
+            this.isScanning = false;
+        }
+    }
+
+    scheduleDebouncedScan() {
+        if (!this.isRunning) return;
+
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+
+        this.debounceTimer = setTimeout(() => {
+            this.debounceTimer = null;
+            if (!this.isRunning) return;
+            this.scanCurrentPage();
+        }, this.config.inputDebounceMs);
+    }
+
+    async getPageScanState(tabId) {
+        try {
+            const [result] = await chrome.scripting.executeScript({
+                target: { tabId },
+                func: () => {
+                    if (!window.__draftDeckAIInputTrackingInstalled) {
+                        window.__draftDeckAIInputTrackingInstalled = true;
+                        window.__draftDeckAILastInputAt = 0;
+
+                        const markInput = () => {
+                            window.__draftDeckAILastInputAt = Date.now();
+                        };
+
+                        document.addEventListener('input', markInput, true);
+                        document.addEventListener('keydown', markInput, true);
+                        document.addEventListener('pointerdown', markInput, true);
+                    }
+
+                    return {
+                        visibilityState: document.visibilityState,
+                        lastInputAt: window.__draftDeckAILastInputAt || 0
+                    };
+                }
+            });
+
+            return result?.result || null;
+        } catch (error) {
+            console.debug('Page state check failed:', error.message);
+            return null;
         }
     }
     
@@ -465,10 +546,14 @@ class MCPServer {
 // Create global instance
 const mcpServer = new MCPServer();
 
+// Expose the server to other classic popup scripts without using module syntax.
+globalThis.MCPServer = MCPServer;
+globalThis.mcpServer = mcpServer;
+
 // Auto-start server
 mcpServer.start();
 
-// Export for external use
+// Export for the ES-module background service worker.
 export { mcpServer, MCPServer };
 
 console.log('🚀 MCP Server module loaded');

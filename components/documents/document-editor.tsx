@@ -532,15 +532,18 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
                 <Button
                   size="sm"
                   onClick={handleSave}
-                  disabled={isSaving || !hasChanges}
+                  disabled={!hasChanges}
+                  isLoading={isSaving}
                   className="bg-gradient-to-r from-blue-500 to-purple-600"
                 >
                   {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    "Save"
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
+                    </>
                   )}
-                  Save
                 </Button>
               </div>
             </div>
@@ -855,12 +858,12 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
                 </Button>
                 <Button
                   onClick={handleImproveWithAI}
-                  disabled={isImproving || !improveInstruction.trim()}
+                  disabled={!improveInstruction.trim()}
+                  isLoading={isImproving}
                   className="bg-gradient-to-r from-blue-500 to-purple-600"
                 >
                   {isImproving ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Improving...
                     </>
                   ) : (

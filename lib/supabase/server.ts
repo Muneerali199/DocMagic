@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type Database } from '@/types/supabase';
+import { createClient } from "@supabase/supabase-js";
 
 // Custom fetch with timeout and retry logic
 const createFetchWithTimeout = (timeoutMs: number = 30000) => {
@@ -40,7 +41,8 @@ export const createServer = async () => {
   const cookieStore = cookies();
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+process.env.SUPABASE_POOLER_URL ||
+process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
@@ -93,3 +95,14 @@ export const createRoute = async () => {
     }
   );
 };
+
+// Admin client using service_role key — bypasses RLS completely.
+// Use ONLY in server-side cron jobs that need full database access.
+// NEVER use this in client components or expose to the browser.
+export function createSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+}

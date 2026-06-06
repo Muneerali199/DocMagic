@@ -1,7 +1,7 @@
 'use client';
 import Link from "next/link";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
-import { Sparkles, Mail, FileText, Presentation, BookOpen, Heart, Shield, Zap } from "lucide-react";
+import { Sparkles, Mail, FileText, Presentation, BookOpen, Heart, Shield, Zap, ArrowUp } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -191,14 +191,14 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Optional: Back to Top Button */}
+       {/* Back to Top Button */}
         <div className="mt-8 text-center">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-sm hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+            aria-label="Back to top"
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
           >
-            <Sparkles className="h-4 w-4" />
-            Back to Top
+            <ArrowUp className="h-5 w-5" />
           </button>
         </div>
       </div>

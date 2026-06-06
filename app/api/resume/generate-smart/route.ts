@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('🚀 Generating smart resume from:', text.substring(0, 100) + '...');
+    // console.log('🚀 Generating smart resume from:', text.substring(0, 100) + '...');
 
     // Generate complete resume using AI
     const resume = await generateCompleteResume(text, targetRole);
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("Smart resume generation error:", error);
+    logger.error({ route: 'app/api/resume/generate-smart/route.ts' }, "Smart resume generation error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to generate resume" },
       { status: 500 }

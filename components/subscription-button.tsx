@@ -72,9 +72,8 @@ export function SubscriptionButton({ isPro }: SubscriptionButtonProps) {
   return (
     <Button
       onClick={isPro ? handlePortal : handleSubscription}
-      disabled={loading}
+      isLoading={loading}
     >
-      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {isPro ? "Manage Subscription" : "Upgrade to Pro"}
     </Button>
   );

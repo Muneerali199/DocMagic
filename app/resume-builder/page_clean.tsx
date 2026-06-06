@@ -164,8 +164,8 @@ export default function ResumeBuilderPage() {
                 placeholder="Type your message..."
                 className="flex-1 min-h-[60px] text-gray-900"
               />
-              <Button onClick={handleAiChat} disabled={isAiProcessing} className="bg-violet-600 hover:bg-violet-700">
-                {isAiProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <Button onClick={handleAiChat} isLoading={isAiProcessing} className="bg-violet-600 hover:bg-violet-700">
+                <Send className="w-4 h-4" />
               </Button>
             </div>
           </div>

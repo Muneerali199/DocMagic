@@ -16,6 +16,7 @@
 /build
 
 # misc
+.tmp-typecheck/
 .DS_Store
 *.pem
 
@@ -42,3 +43,6 @@ build.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase
+supabase/.temp/

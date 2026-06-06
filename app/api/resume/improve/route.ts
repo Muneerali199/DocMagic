@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('🤖 AI Improvement request:', userMessage);
+    // console.log('🤖 AI Improvement request:', userMessage);
 
     const geminiApiKey = process.env.GEMINI_API_KEY;
     const openaiApiKey = process.env.OPENAI_API_KEY;
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json(result);
 
   } catch (error: any) {
-    console.error("AI improvement error:", error);
+    logger.error({ route: 'app/api/resume/improve/route.ts' }, "AI improvement error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to generate improvements" },
       { status: 500 }

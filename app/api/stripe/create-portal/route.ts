@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const { NextResponse } = require("next/server");
 import { stripe } from "@/lib/stripe";
 import { createRoute } from "@/lib/supabase/server";
@@ -41,7 +42,7 @@ export async function POST() {
 
     return NextResponse.json({ url: stripeSession.url });
   } catch (error) {
-    console.error("Error creating portal session:", error);
+    logger.error({ route: 'app/api/stripe/create-portal/route.ts' }, "Error creating portal session:", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }

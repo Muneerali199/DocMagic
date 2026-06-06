@@ -1,6 +1,7 @@
 'use server';
 
-import { generateOutline, generateDocument, regenerateSection, GenerationOptions, OutlineOptions, GeneratedDocument } from '@/lib/documents/ai-generator';
+import { generateOutline, generateDocument, regenerateSection, type GenerationOptions, type OutlineOptions } from '@/lib/documents/ai-generator';
+import type { GeneratedDocument } from '@/types/documents';
 
 export async function generateOutlineAction(options: OutlineOptions) {
   return generateOutline(options);

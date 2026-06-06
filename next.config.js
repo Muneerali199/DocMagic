@@ -1,8 +1,22 @@
 import withPWACore from 'next-pwa';
+import { withSentryConfig } from '@sentry/nextjs';
+import { STATIC_SECURITY_HEADERS } from './lib/security-headers.mjs';
+
+const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
+const isProductionLikeRuntime =
+  (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== 'development')
+  || process.env.NODE_ENV === 'production'
+  || process.env.npm_lifecycle_event === 'start';
+
+if (isProductionLikeRuntime && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
+  throw new Error(
+    'Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production. Use auditable grants instead.'
+  );
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
 images: {
     unoptimized: false,
@@ -40,9 +54,8 @@ trailingSlash: false,
   poweredByHeader: false,
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
     scrollRestoration: true,
-    workerThreads: true,
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
@@ -51,17 +64,7 @@ trailingSlash: false,
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data: https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com https://latexonline.cc https://latex.ytotech.com https://cdn.jsdelivr.net; frame-src 'self' blob: https://js.stripe.com; object-src 'self' blob:; worker-src 'self' blob:; base-uri 'self';"
-          }
-        ]
+        headers: STATIC_SECURITY_HEADERS
       }
     ];
   },
@@ -72,19 +75,21 @@ trailingSlash: false,
     tsconfigPath: './tsconfig.build.json',
     ignoreBuildErrors: true,
   },
-webpack: (config, { isServer }) => {
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+      jsdom: false,
+      'jsdom/lib/jsdom/living/generated/utils': false,
+      'jsdom/lib/jsdom/utils': false,
+    };
+
     config.module.rules.push({
       test: /\.pdf$/,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/files',
-            outputPath: 'static/files',
-            name: '[name].[ext]',
-          },
-        },
-      ],
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/files/[name][ext]',
+      },
     });
     
     // Bundle size optimizations
@@ -197,4 +202,11 @@ const withPWA = withPWACore({
   ],
 });
 
-export default withPWA(nextConfig);
+const pwaConfig = withPWA(nextConfig);
+
+export default withSentryConfig(pwaConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  hideSourceMaps: true,
+  disableLogger: true,
+});

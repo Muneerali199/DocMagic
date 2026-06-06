@@ -239,12 +239,11 @@ async function callAI(provider, apiKey, prompt) {
 
 // Gemini AI API Call
 async function callGeminiAPI(apiKey, prompt) {
-    const url = `${API_URLS.gemini}?key=${apiKey}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(API_URLS.gemini, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
         },
         body: JSON.stringify({
             contents: [{
@@ -255,11 +254,11 @@ async function callGeminiAPI(apiKey, prompt) {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error ? .message || 'Gemini API request failed');
+        throw new Error(error.error?.message || 'Gemini API request failed');
     }
 
     const data = await response.json();
-    const text = data.candidates[0] ? .content ? .parts[0] ? .text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     return parseAIResponse(text);
 }
@@ -284,11 +283,11 @@ async function callOpenAIAPI(apiKey, prompt) {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error ? .message || 'OpenAI API request failed');
+        throw new Error(error.error?.message || 'OpenAI API request failed');
     }
 
     const data = await response.json();
-    const text = data.choices[0] ? .message ? .content || '';
+    const text = data.choices?.[0]?.message?.content || '';
 
     return parseAIResponse(text);
 }
@@ -316,7 +315,7 @@ async function callMistralAPI(apiKey, prompt) {
     }
 
     const data = await response.json();
-    const text = data.choices[0] ? .message ? .content || '';
+    const text = data.choices?.[0]?.message?.content || '';
 
     return parseAIResponse(text);
 }
@@ -342,11 +341,11 @@ async function callClaudeAPI(apiKey, prompt) {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error ? .message || 'Claude API request failed');
+        throw new Error(error.error?.message || 'Claude API request failed');
     }
 
     const data = await response.json();
-    const text = data.content[0] ? .text || '';
+    const text = data.content?.[0]?.text || '';
 
     return parseAIResponse(text);
 }
@@ -394,6 +393,12 @@ async function getProviderAndKey() {
 
 // Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
+    if (!sender || !sender.id || sender.id !== chrome.runtime.id)  {
+        sendResponse({ error: 'Unauthorized sender' });
+        return false;
+    }
+    
     if (request.type === 'INCREMENT_STAT') {
         incrementStat(request.stat, request.count);
         sendResponse({ success: true });

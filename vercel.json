@@ -1,5 +1,15 @@
 {
     "env": {
         "NEXT_PUBLIC_APP_URL": "https://.vercel.app"
+    } , 
+     "crons": [
+    {
+        "path": "/api/jobs/ranking",
+        "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 2 * * *" 
     }
+  ]
 }

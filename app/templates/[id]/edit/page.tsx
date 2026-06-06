@@ -56,9 +56,12 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
   };
 
   useEffect(() => {
+    const abortController = new AbortController();
     const fetchTemplate = async () => {
       try {
-        const response = await fetch(`/api/templates/${params.id}`);
+        const response = await fetch(`/api/templates/${params.id}`, {
+          signal: abortController.signal
+        });
         if (!response.ok) {
           if (response.status === 404) {
             notFound();
@@ -67,7 +70,8 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
         }
         const data = await response.json();
         setTemplate(data);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError') return;
         console.error('Error fetching template:', error);
         toast({
           title: 'Error',
@@ -80,6 +84,10 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
     };
 
     fetchTemplate();
+
+    return () => {
+      abortController.abort();
+    };
   }, [params.id, toast]);
 
   if (isLoading) {

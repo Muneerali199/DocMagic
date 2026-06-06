@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +18,8 @@ import { DeleteDialog } from "@/components/delete-dialog";
 import { TemplatePreviewModal } from "./template-preview-modal";
 import { Template } from "@/types/templates";
 import { AuthButton, EditTemplateButton } from "@/components/ui/auth-button";
+import { CapabilityBadges, CompatibilityWarnings } from "./capability-badge";
+import { TemplateCapabilities } from "@/types/template";
 
 type TemplateCardProps = {
   id: string;
@@ -36,6 +40,9 @@ type TemplateCardProps = {
   preview_image?: string;
   color_scheme?: string;
   industry?: string;
+  // Capability matrix
+  capabilities?: TemplateCapabilities;
+  userSelections?: { hasPhoto?: boolean; needsAts?: boolean; needsMultiColumn?: boolean };
 };
 
 export function TemplateCard({
@@ -56,6 +63,8 @@ export function TemplateCard({
   preview_image,
   color_scheme,
   industry,
+  capabilities,
+  userSelections = {},
 }: TemplateCardProps) {
   const router = useRouter();
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -105,14 +114,12 @@ export function TemplateCard({
   };
 
   // Create a template object for the preview modal
-  // If we have actual content, use it; otherwise create sample content
   const templateForPreview: Template = {
     id,
     title,
     description: description || '',
     type,
     content: content || {
-      // Add some sample content based on type if no content exists
       ...(type === 'resume' && {
         personalInfo: {
           name: '[Your Name]',
@@ -188,6 +195,15 @@ export function TemplateCard({
                     {description}
                   </p>
                 )}
+
+                {/* Capability Badges - list view */}
+                {capabilities && (
+                  <>
+                    <CapabilityBadges capabilities={capabilities} userSelections={userSelections} />
+                    <CompatibilityWarnings capabilities={capabilities} userSelections={userSelections} />
+                  </>
+                )}
+
                 {/* Stats for mobile */}
                 {(rating || usage_count) && (
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground sm:hidden">
@@ -453,9 +469,17 @@ export function TemplateCard({
             </p>
           )}
 
+          {/* Capability Badges - grid view */}
+          {capabilities && (
+            <>
+              <CapabilityBadges capabilities={capabilities} userSelections={userSelections} />
+              <CompatibilityWarnings capabilities={capabilities} userSelections={userSelections} />
+            </>
+          )}
+
           {/* Tags */}
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
+            <div className="flex flex-wrap gap-1 mb-3 mt-2">
               {tags.slice(0, 3).map((tag) => (
                 <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">
                   {tag}

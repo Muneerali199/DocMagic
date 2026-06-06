@@ -45,18 +45,18 @@
         </div>
 
         <!-- Tab Navigation -->
-        <nav class="tabs">
-            <button class="tab active" data-tab="dsa">DSA</button>
-            <button class="tab" data-tab="interview">Interview</button>
-            <button class="tab" data-tab="resume">Resume</button>
-            <button class="tab" data-tab="study">Study</button>
-            <button class="tab" data-tab="snippets">📚 Snippets</button>
-            <button class="tab" data-tab="analytics">📊 Stats</button>
-            <button class="tab" data-tab="company">🏢 FAANG</button>
+        <nav class="tabs" role="tablist" aria-label="DraftDeckAI sections">
+            <button class="tab active" id="dsa-tab-button" data-tab="dsa" role="tab" aria-selected="true" aria-controls="dsa-tab" tabindex="0">DSA</button>
+            <button class="tab" id="interview-tab-button" data-tab="interview" role="tab" aria-selected="false" aria-controls="interview-tab" tabindex="-1">Interview</button>
+            <button class="tab" id="resume-tab-button" data-tab="resume" role="tab" aria-selected="false" aria-controls="resume-tab" tabindex="-1">Resume</button>
+            <button class="tab" id="study-tab-button" data-tab="study" role="tab" aria-selected="false" aria-controls="study-tab" tabindex="-1">Study</button>
+            <button class="tab" id="snippets-tab-button" data-tab="snippets" role="tab" aria-selected="false" aria-controls="snippets-tab" tabindex="-1">📚 Snippets</button>
+            <button class="tab" id="analytics-tab-button" data-tab="analytics" role="tab" aria-selected="false" aria-controls="analytics-tab" tabindex="-1">📊 Stats</button>
+            <button class="tab" id="company-tab-button" data-tab="company" role="tab" aria-selected="false" aria-controls="company-tab" tabindex="-1">🏢 FAANG</button>
         </nav>
 
         <!-- DSA Tab -->
-        <div id="dsa-tab" class="tab-content active">
+        <div id="dsa-tab" class="tab-content active" role="tabpanel" aria-labelledby="dsa-tab-button">
             <div class="section">
                 <h2>🧩 DSA Problem Solver</h2>
                 <p class="description">Get AI-powered solutions and explanations for any DSA problem</p>
@@ -99,7 +99,7 @@
         </div>
 
         <!-- Interview Tab -->
-        <div id="interview-tab" class="tab-content">
+        <div id="interview-tab" class="tab-content" role="tabpanel" aria-labelledby="interview-tab-button" hidden>
             <div class="section">
                 <h2>💼 Interview Preparation</h2>
                 <p class="description">Practice with AI-generated interview questions</p>
@@ -147,7 +147,7 @@
         </div>
 
         <!-- Resume Tab -->
-        <div id="resume-tab" class="tab-content">
+        <div id="resume-tab" class="tab-content" role="tabpanel" aria-labelledby="resume-tab-button" hidden>
             <div class="section">
                 <h2>📄 Resume & Career Tips</h2>
                 <p class="description">Get personalized resume and career advice</p>
@@ -186,7 +186,7 @@
         </div>
 
         <!-- Study Plans Tab -->
-        <div id="study-tab" class="tab-content">
+        <div id="study-tab" class="tab-content" role="tabpanel" aria-labelledby="study-tab-button" hidden>
             <div class="section">
                 <h2>📅 AI Study Planner</h2>
                 <p class="description">Generate a personalized study plan to reach your goals</p>
@@ -228,12 +228,11 @@
                         Copy Plan
                     </button>
                 </div>
-                </div>
             </div>
         </div>
 
         <!-- Snippets Tab -->
-        <div id="snippets-tab" class="tab-content">
+        <div id="snippets-tab" class="tab-content" role="tabpanel" aria-labelledby="snippets-tab-button" hidden>
             <div class="section">
                 <h2>📚 Code Snippet Library</h2>
                 <p class="description">Save and review important solutions with spaced repetition</p>
@@ -272,7 +271,7 @@
         </div>
 
         <!-- Analytics Tab -->
-        <div id="analytics-tab" class="tab-content">
+        <div id="analytics-tab" class="tab-content" role="tabpanel" aria-labelledby="analytics-tab-button" hidden>
             <div class="section">
                 <h2>📊 Progress Analytics</h2>
                 <p class="description">Track your learning journey with detailed insights</p>
@@ -309,7 +308,7 @@
         </div>
 
         <!-- Company Prep Tab -->
-        <div id="company-tab" class="tab-content">
+        <div id="company-tab" class="tab-content" role="tabpanel" aria-labelledby="company-tab-button" hidden>
             <div class="section">
                 <h2>🏢 FAANG Interview Prep</h2>
                 <p class="description">Company-specific preparation for top tech companies</p>
@@ -364,9 +363,9 @@
         </div>
 
         <!-- Interview Config Modal -->
-        <div id="interview-config-modal" class="loading-overlay hidden">
+        <div id="interview-config-modal" class="loading-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="interview-config-title">
             <div class="container" style="max-width: 350px; background: var(--bg); padding: 20px; border-radius: 10px; height: auto;">
-                <h2>🎯 Setup Interview</h2>
+                <h2 id="interview-config-title">🎯 Setup Interview</h2>
                 <p class="description">Configure your mock interview session</p>
                 
                 <div class="input-group">
@@ -418,7 +417,7 @@
                 </div>
             </div>
             <div class="footer-links">
-                <a href="https://draftdeckai.com" target="_blank">Powered by DraftDeckAI</a>
+                <a href="https://draftdeckai.com" target="_blank" rel="noopener noreferrer">Powered by DraftDeckAI</a>
                 <span>•</span>
                 <a href="#" id="settings-link">Settings</a>
             </div>
@@ -426,14 +425,14 @@
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
+    <div id="loading-overlay" class="loading-overlay hidden" role="status" aria-live="polite">
         <div class="spinner"></div>
         <p>AI is thinking...</p>
     </div>
 
     <script src="voice-handler.js"></script>
     <script src="interviewer-mode.js"></script>
-    <script src="mcp-server.js"></script>
+    <script type="module" src="mcp-server.js"></script>
     <script src="snippet-library.js"></script>
     <script src="analytics-dashboard.js"></script>
     <script src="company-prep.js"></script>

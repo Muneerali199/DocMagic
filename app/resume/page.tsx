@@ -2,31 +2,20 @@
 import { SiteHeader } from "@/components/site-header";
 import { MobileResumeBuilder } from "@/components/resume/mobile-resume-builder";
 import { CreateDocumentGuard } from "@/components/ui/auth-guard";
-import { useEffect, useState, Suspense } from "react";
-import { ResumeGeneratorSkeleton } from "@/components/ui/skeleton";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { LoadingScreen } from "@/components/loading-screen";
+import { ResumePageSkeleton } from "@/components/skeletons";
 
 function ResumeContent() {
-  const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const templateId = searchParams?.get('template') || null;
   const resumeId = searchParams?.get('id') || null;
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <CreateDocumentGuard>
-      {isLoading ? (
-        <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-          <ResumeGeneratorSkeleton />
-        </div>
-      ) : (
-        <MobileResumeBuilder templateId={templateId} resumeId={resumeId} />
-      )}
+      <MobileResumeBuilder templateId={templateId} resumeId={resumeId} />
     </CreateDocumentGuard>
   );
 }
@@ -51,11 +40,17 @@ export default function ResumePage() {
       <SiteHeader />
       <main className="flex-1 relative z-10">
         <Suspense fallback={
-          <div className="container py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-            <ResumeGeneratorSkeleton />
-          </div>
+          <LoadingScreen
+            variant="resume"
+            fullScreen={false}
+            className="min-h-[calc(100vh-4rem)] rounded-none"
+          >
+            <ResumePageSkeleton />
+          </LoadingScreen>
         }>
-          <ResumeContent />
+          <ErrorBoundary>
+            <ResumeContent />
+          </ErrorBoundary>
         </Suspense>
       </main>
     </div>

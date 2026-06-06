@@ -23,8 +23,8 @@
                 <h2>🤖 AI Provider</h2>
                 <p class="section-description">Choose your preferred AI provider for problem solving</p>
                 
-                <div class="provider-selector">
-                    <label class="provider-option">
+                <div class="provider-selector" role="radiogroup" aria-label="AI provider">
+                    <label class="provider-option" role="radio" tabindex="0" aria-checked="true">
                         <input type="radio" name="ai-provider" value="gemini" checked>
                         <div class="provider-card">
                             <div class="provider-icon">🔷</div>
@@ -35,7 +35,7 @@
                         </div>
                     </label>
 
-                    <label class="provider-option">
+                    <label class="provider-option" role="radio" tabindex="-1" aria-checked="false">
                         <input type="radio" name="ai-provider" value="openai">
                         <div class="provider-card">
                             <div class="provider-icon">🟢</div>
@@ -46,7 +46,7 @@
                         </div>
                     </label>
 
-                    <label class="provider-option">
+                    <label class="provider-option" role="radio" tabindex="-1" aria-checked="false">
                         <input type="radio" name="ai-provider" value="mistral">
                         <div class="provider-card">
                             <div class="provider-icon">🔴</div>
@@ -57,7 +57,7 @@
                         </div>
                     </label>
 
-                    <label class="provider-option">
+                    <label class="provider-option" role="radio" tabindex="-1" aria-checked="false">
                         <input type="radio" name="ai-provider" value="claude">
                         <div class="provider-card">
                             <div class="provider-icon">🟣</div>
@@ -82,13 +82,13 @@
                         <span class="status-badge" id="gemini-status">Not Configured</span>
                     </div>
                     <div class="api-key-input-group">
-                        <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key">
-                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('gemini-api-key')">👁️</button>
+                        <input type="password" id="gemini-api-key" aria-label="Google Gemini API key" placeholder="Enter your Gemini API key">
+                        <button class="btn-toggle-visibility" aria-label="Toggle Google Gemini API key visibility" onclick="togglePasswordVisibility('gemini-api-key')">👁️</button>
                     </div>
                     <div class="api-key-help">
-                        <a href="https://makersuite.google.com/app/apikey" target="_blank">Get API Key</a>
+                        <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Get API Key</a>
                         <span>•</span>
-                        <a href="https://ai.google.dev/tutorials/setup" target="_blank">Documentation</a>
+                        <a href="https://ai.google.dev/tutorials/setup" target="_blank" rel="noopener noreferrer">Documentation</a>
                     </div>
                 </div>
 
@@ -99,13 +99,13 @@
                         <span class="status-badge" id="openai-status">Not Configured</span>
                     </div>
                     <div class="api-key-input-group">
-                        <input type="password" id="openai-api-key" placeholder="Enter your OpenAI API key (sk-...)">
-                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('openai-api-key')">👁️</button>
+                        <input type="password" id="openai-api-key" aria-label="OpenAI API key" placeholder="Enter your OpenAI API key (sk-...)">
+                        <button class="btn-toggle-visibility" aria-label="Toggle OpenAI API key visibility" onclick="togglePasswordVisibility('openai-api-key')">👁️</button>
                     </div>
                     <div class="api-key-help">
-                        <a href="https://platform.openai.com/api-keys" target="_blank">Get API Key</a>
+                        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Get API Key</a>
                         <span>•</span>
-                        <a href="https://platform.openai.com/docs" target="_blank">Documentation</a>
+                        <a href="https://platform.openai.com/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
                     </div>
                 </div>
 
@@ -116,13 +116,13 @@
                         <span class="status-badge" id="mistral-status">Not Configured</span>
                     </div>
                     <div class="api-key-input-group">
-                        <input type="password" id="mistral-api-key" placeholder="Enter your Mistral API key">
-                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('mistral-api-key')">👁️</button>
+                        <input type="password" id="mistral-api-key" aria-label="Mistral API key" placeholder="Enter your Mistral API key">
+                        <button class="btn-toggle-visibility" aria-label="Toggle Mistral API key visibility" onclick="togglePasswordVisibility('mistral-api-key')">👁️</button>
                     </div>
                     <div class="api-key-help">
-                        <a href="https://console.mistral.ai/api-keys" target="_blank">Get API Key</a>
+                        <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer">Get API Key</a>
                         <span>•</span>
-                        <a href="https://docs.mistral.ai" target="_blank">Documentation</a>
+                        <a href="https://docs.mistral.ai" target="_blank" rel="noopener noreferrer">Documentation</a>
                     </div>
                 </div>
 
@@ -133,13 +133,13 @@
                         <span class="status-badge" id="claude-status">Not Configured</span>
                     </div>
                     <div class="api-key-input-group">
-                        <input type="password" id="claude-api-key" placeholder="Enter your Claude API key">
-                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('claude-api-key')">👁️</button>
+                        <input type="password" id="claude-api-key" aria-label="Claude API key" placeholder="Enter your Claude API key">
+                        <button class="btn-toggle-visibility" aria-label="Toggle Claude API key visibility" onclick="togglePasswordVisibility('claude-api-key')">👁️</button>
                     </div>
                     <div class="api-key-help">
-                        <a href="https://console.anthropic.com/account/keys" target="_blank">Get API Key</a>
+                        <a href="https://console.anthropic.com/account/keys" target="_blank" rel="noopener noreferrer">Get API Key</a>
                         <span>•</span>
-                        <a href="https://docs.anthropic.com" target="_blank">Documentation</a>
+                        <a href="https://docs.anthropic.com" target="_blank" rel="noopener noreferrer">Documentation</a>
                     </div>
                 </div>
             </section>
@@ -156,6 +156,17 @@
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="auto-detect" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+
+                    <label class="preference-item">
+                        <div class="preference-info">
+                            <h3>LinkedIn Profile Detection</h3>
+                            <p>Ask for consent before reading visible LinkedIn profile text</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="linkedin-auto-detect" checked>
                             <span class="slider"></span>
                         </label>
                     </label>
@@ -213,12 +224,12 @@
             </section>
 
             <!-- Status Message -->
-            <div id="status-message" class="status-message hidden"></div>
+            <div id="status-message" class="status-message hidden" role="status" aria-live="polite"></div>
         </main>
 
         <!-- Footer -->
         <footer class="settings-footer">
-            <p>DraftDeckAI Extension v2.0 • <a href="https://draftdeckai.com" target="_blank">Documentation</a></p>
+            <p>DraftDeckAI Extension v2.0 • <a href="https://draftdeckai.com" target="_blank" rel="noopener noreferrer">Documentation</a></p>
         </footer>
     </div>
 

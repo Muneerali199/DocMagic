@@ -1,0 +1,14 @@
+ALTER TABLE documents
+ADD COLUMN deleted_at TIMESTAMP NULL;
+
+ALTER TABLE resumes
+ADD COLUMN deleted_at TIMESTAMP NULL;
+
+ALTER TABLE presentations
+ADD COLUMN deleted_at TIMESTAMP NULL;
+
+ALTER TABLE diagrams
+ADD COLUMN deleted_at TIMESTAMP NULL;
+
+ALTER TABLE letters
+ADD COLUMN deleted_at TIMESTAMP NULL;

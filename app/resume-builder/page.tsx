@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Sparkles, FileText, Download, Save, Loader2, Send, X, MessageSquare } from 'lucide-react';
+import { Sparkles, FileText, Download, Save, Loader2, Send, X, MessageSquare, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ResumePreview, ResumePreviewRef } from '@/components/resume/resume-preview';
+import { PublishModal } from "@/components/showcase/publish-modal";
 
 // Define ResumeData matching ResumePreview structure
 interface ResumeData {
@@ -69,6 +70,7 @@ function ResumeBuilderContent() {
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'ai'; message: string}>>([]);
   const [showAIChat, setShowAIChat] = useState(false); // Mobile AI chat toggle
+  const [publishOpen, setPublishOpen] = useState(false);
   
   const [resumeData, setResumeData] = useState<ResumeData>({
     name: 'Your Full Name',
@@ -266,6 +268,10 @@ function ResumeBuilderContent() {
             <Save className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
             <span className="hidden sm:inline">Save</span>
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setPublishOpen(true)} className="text-xs sm:text-sm px-2 sm:px-3">
+            <Share2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Publish</span>
+          </Button>
         </div>
       </div>
 
@@ -331,8 +337,8 @@ function ResumeBuilderContent() {
                 placeholder="Type your message..."
                 className="flex-1 min-h-[50px] sm:min-h-[60px] text-sm sm:text-base text-gray-900"
               />
-              <Button onClick={handleAiChat} disabled={isAiProcessing} className="bg-violet-600 hover:bg-violet-700 px-3 sm:px-4">
-                {isAiProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <Button onClick={handleAiChat} isLoading={isAiProcessing} className="bg-violet-600 hover:bg-violet-700 px-3 sm:px-4">
+                <Send className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -361,7 +367,7 @@ function ResumeBuilderContent() {
                       ✏️ Editing Template: {templateId}
                     </p>
                     <p className="text-xs text-gray-600">Click any text to edit directly • Changes save automatically</p>
-                    <p className="text-xs text-blue-600 font-mono mt-1">DEBUG: template="{templateId}"</p>
+          
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -388,6 +394,16 @@ function ResumeBuilderContent() {
           </div>
         </ScrollArea>
       </div>
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        defaults={{
+          type: "resume",
+          title: "My Resume",
+          content_ref: "",
+        }}
+        onSuccess={() => toast.success("Published to Showcase!")}
+      />
     </div>
   );
 }

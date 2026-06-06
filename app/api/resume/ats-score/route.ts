@@ -1,6 +1,8 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits, hasUnlimitedDeveloperCredits } from '@/lib/credits-service';
+import { ACTION_COSTS, TIER_LIMITS, getCreditsResetDate, shouldResetCredits, calculateRemainingCredits } from '@/lib/credits-service';
+import { hasUnlimitedDeveloperCredits, logDeveloperCreditBypass } from '@/lib/developer-credit-bypass';
 import { reserveCredits, refundCredits, creditReservationConflictResponse } from '@/lib/credit-operations';
 
 // Service role client for credit operations
@@ -80,7 +82,7 @@ export async function POST(req: Request) {
         .single();
       
       if (insertError) {
-        console.error('Failed to create credits record:', insertError);
+        logger.error({ route: 'app/api/resume/ats-score/route.ts' }, 'Failed to create credits record:', insertError);
         return NextResponse.json(
           { error: 'Failed to initialize credits' },
           { status: 500 }
@@ -143,6 +145,10 @@ export async function POST(req: Request) {
       userCredits = reserved;
     }
 
+    if (hasUnlimitedCredits) {
+      logDeveloperCreditBypass({ userId: user.id, email: user.email, action: 'ats_check' });
+    }
+
     // Calculate ATS score
     let atsAnalysis;
     try {
@@ -166,15 +172,15 @@ export async function POST(req: Request) {
         });
 
       if (logError) {
-        console.error('Failed to log credit usage:', logError);
+        logger.error({ route: 'app/api/resume/ats-score/route.ts' }, 'Failed to log credit usage:', logError);
       } else {
-        console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
+        // console.log(`💳 Deducted ${creditCost} credits for ATS score calculation`);
       }
     }
 
     return NextResponse.json({ atsAnalysis });
   } catch (error: any) {
-    console.error("ATS score calculation error:", error);
+    logger.error({ route: 'app/api/resume/ats-score/route.ts' }, "ATS score calculation error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to calculate ATS score" },
       { status: 500 }

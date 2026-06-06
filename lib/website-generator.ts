@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { websiteTemplates } from "./website-templates";
 
@@ -23,7 +24,7 @@ async function generateWithMistral(systemPrompt: string, userPrompt: string): Pr
     return result.response.text();
   }
 
-  console.log('🤖 Using Mistral Large (mistral-large-latest)...');
+  logger.info(null, '🤖 Using Mistral Large (mistral-large-latest)...')
   
   const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
     method: 'POST',
@@ -94,7 +95,7 @@ interface WebsiteCode {
 // Generate AI images using multiple sources for best quality
 async function generateImages(prompt: string, count: number = 5): Promise<string[]> {
   try {
-    console.log('🎨 Generating AI images for:', prompt);
+    logger.info(null, '🎨 Generating AI images for:', prompt)
     
     // Extract main topic from prompt
     const topic = prompt
@@ -131,7 +132,7 @@ async function generateImages(prompt: string, count: number = 5): Promise<string
       }
     }
     
-    console.log('✅ Generated', images.length, 'images');
+    logger.info(null, '✅ Generated', images.length, 'images')
     return images;
     
   } catch (error) {
@@ -151,7 +152,7 @@ async function generateImages(prompt: string, count: number = 5): Promise<string
 // Generate custom AI images using Gemini 2.0 Flash for intelligent image selection
 async function generateAIImages(prompt: string, count: number = 5): Promise<string[]> {
   try {
-    console.log('🤖 Attempting intelligent image generation...');
+    logger.info(null, '🤖 Attempting intelligent image generation...')
     
     const topic = prompt
       .toLowerCase()
@@ -200,7 +201,7 @@ async function generateAIImages(prompt: string, count: number = 5): Promise<stri
       images.push(`https://image.pollinations.ai/prompt/${encodedPrompt}?width=${i === 0 ? 1200 : 800}&height=${i === 0 ? 600 : 600}&seed=${i}&nologo=true&enhance=true`);
     }
     
-    console.log('✅ AI-enhanced images generated');
+    logger.info(null, '✅ AI-enhanced images generated')
     return images;
     
   } catch (error: any) {
@@ -216,7 +217,7 @@ async function generateAIImages(prompt: string, count: number = 5): Promise<stri
 }
 
 // Build analysis for web applications (functional apps, not marketing websites)
-function buildWebAppAnalysis(appType: string, prompt: string) {
+export function buildWebAppAnalysis(appType: string, prompt: string) {
   const appConfigs: Record<string, any> = {
     'Todo / Task Manager App': {
       features: ['Add new tasks', 'Mark tasks as complete', 'Delete tasks', 'Edit tasks', 'Filter (all/active/completed)', 'Clear completed', 'Task counter', 'Local storage persistence'],
@@ -296,7 +297,7 @@ function buildWebAppAnalysis(appType: string, prompt: string) {
 }
 
 // Intelligent prompt analysis to detect project type and requirements
-function analyzePrompt(prompt: string): {
+export function analyzePrompt(prompt: string): {
   type: string;
   features: string[];
   sections: string[];
@@ -497,14 +498,14 @@ export async function generateWebsite({
   templateId
 }: WebsiteGenerationParams): Promise<WebsiteCode> {
   try {
-    console.log('🚀 Starting website generation...');
-    console.log('📝 Prompt:', prompt);
-    console.log('🎨 Style:', style);
-    console.log('📋 Template ID:', templateId);
+    logger.info(null, '🚀 Starting website generation...')
+    logger.info(null, '📝 Prompt:', prompt)
+    logger.info(null, '🎨 Style:', style)
+    
     
     // Analyze the prompt to detect project type and requirements
     const projectAnalysis = analyzePrompt(prompt);
-    console.log('🔍 Project Analysis:', projectAnalysis);
+    logger.info(null, '🔍 Project Analysis:', projectAnalysis)
     
     // Find the template if templateId is provided
     const selectedTemplate = templateId 
@@ -514,7 +515,7 @@ export async function generateWebsite({
     // Extract styling information from template
     let templateStylingGuide = '';
     if (selectedTemplate) {
-      console.log(`✨ Using ${selectedTemplate.name} as styling reference`);
+      logger.info(null, `✨ Using ${selectedTemplate.name} as styling reference`)
       templateStylingGuide = `
 🎨 TEMPLATE STYLING REFERENCE (${selectedTemplate.name}):
 Use this template as your PRIMARY styling inspiration. Extract and adapt:
@@ -986,21 +987,21 @@ Before generating, ensure you understand:
 Now generate the COMPLETE, PRODUCTION-READY, FULLY RESPONSIVE website!
 Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
 
-    console.log('💻 Generating code with Mistral Large...');
+    
     let text: string;
     try {
       text = await generateWithMistral(systemPrompt, userPrompt);
-      console.log('✅ Code generation complete');
+      logger.info(null, '✅ Code generation complete')
     } catch (mistralError) {
       console.error('❌ Mistral generation failed:', mistralError);
-      console.log('🔄 Falling back to Gemini 2.0 Flash...');
+      logger.info(null, '🔄 Falling back to Gemini 2.0 Flash...')
       const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       const result = await model.generateContent([
         { text: systemPrompt },
         { text: userPrompt }
       ]);
       text = result.response.text();
-      console.log('✅ Gemini generation complete');
+      logger.info(null, '✅ Gemini generation complete')
     }
 
     // Extract JSON from markdown code blocks if present
@@ -1008,7 +1009,7 @@ Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
     const jsonMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
     if (jsonMatch) {
       jsonText = jsonMatch[1].trim();
-      console.log('📦 Extracted JSON from markdown');
+      
     }
 
     // Clean up common JSON formatting issues
@@ -1019,46 +1020,46 @@ Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
       .trim();
 
     // Parse the JSON response
-    console.log('🔍 Parsing generated code...');
+    logger.info(null, '🔍 Parsing generated code...')
     let websiteCode: WebsiteCode;
     try {
       websiteCode = JSON.parse(jsonText);
-      console.log('📦 Parsed JSON keys:', Object.keys(websiteCode));
+      
     } catch (parseError) {
       console.error('❌ JSON Parse Error:', parseError);
-      console.log('📄 Raw response (first 1000 chars):', text.substring(0, 1000));
-      console.log('📄 Cleaned JSON text (first 1000 chars):', jsonText.substring(0, 1000));
+      
+      
       throw new Error('Failed to parse AI response. Please try again.');
     }
 
     // Handle case where Mistral embeds CSS/JS in HTML instead of separating them
     if (websiteCode.html && !websiteCode.css) {
-      console.log('🔧 Extracting embedded CSS and JS from HTML...');
+      
       
       // Extract CSS from <style> tags
       const styleMatch = websiteCode.html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
       if (styleMatch) {
         websiteCode.css = styleMatch[1].trim();
-        console.log('✅ Extracted CSS from <style> tag');
+        logger.info(null, '✅ Extracted CSS from <style> tag')
       }
       
       // Extract JS from <script> tags
       const scriptMatch = websiteCode.html.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
       if (scriptMatch) {
         websiteCode.javascript = scriptMatch[1].trim();
-        console.log('✅ Extracted JavaScript from <script> tag');
+        logger.info(null, '✅ Extracted JavaScript from <script> tag')
       }
       
       // If still no CSS, create a minimal one
       if (!websiteCode.css) {
         websiteCode.css = '/* Styles embedded in HTML */';
-        console.log('⚠️ No CSS found, using placeholder');
+        
       }
       
       // If still no JS, create empty one
       if (!websiteCode.javascript) {
         websiteCode.javascript = '// JavaScript embedded in HTML or not needed';
-        console.log('⚠️ No JS found, using placeholder');
+        
       }
     }
     
@@ -1070,15 +1071,15 @@ Make it STUNNING, FUNCTIONAL, and PERFECTLY TAILORED to the user's needs!`;
         hasJs: !!websiteCode.js,
         keys: Object.keys(websiteCode)
       });
-      console.log('📄 Full parsed object:', JSON.stringify(websiteCode, null, 2).substring(0, 500));
+      
       throw new Error('Invalid response from AI: missing required fields (html or css)');
     }
-    console.log('✅ Code validation passed');
+    logger.info(null, '✅ Code validation passed')
 
     // Wait for images to be generated
-    console.log('⏳ Waiting for AI images...');
+    logger.info(null, '⏳ Waiting for AI images...')
     const images = await imagesPromise;
-    console.log('✅ Received', images.length, 'images');
+    logger.info(null, '✅ Received', images.length, 'images')
     
     // Replace image placeholders with real images
     let htmlWithImages = websiteCode.html;
@@ -1533,8 +1534,8 @@ export async function improveWebsite({
   style?: string;
 }): Promise<WebsiteCode> {
   try {
-    console.log('🔧 Improving website based on user feedback...');
-    console.log('📝 Improvement Request:', improvementRequest);
+    
+    logger.info(null, '📝 Improvement Request:', improvementRequest)
 
     const improvementPrompt = `You are an expert web developer improving an existing website based on user feedback.
 
@@ -1598,7 +1599,7 @@ Return a JSON object with this EXACT structure:
 
 Now improve the website based on the user's request: "${improvementRequest}"`;
 
-    console.log('💻 Using Mistral Large for improvements...');
+    
     const response = await generateWithMistral(
       'You are an expert web developer. Return ONLY valid JSON with no markdown formatting.',
       improvementPrompt
@@ -1618,7 +1619,7 @@ Now improve the website based on the user's request: "${improvementRequest}"`;
       throw new Error('Invalid improved code structure');
     }
 
-    console.log('✅ Website improved successfully');
+    logger.info(null, '✅ Website improved successfully')
 
     return {
       html: improvedCode.html,

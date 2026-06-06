@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+// 1. Import our custom tracker
+import { useTrackEvent } from "@/hooks/useTrackEvent";
+
 import {
   Sparkles,
   Zap,
@@ -60,8 +64,6 @@ const GitHubIcon = () => (
   </svg>
 );
 
-
-
 function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,6 +82,9 @@ function RegisterForm() {
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
+  
+  // 2. Initialize the tracker
+  const { trackEvent } = useTrackEvent();
 
   // Animation mount effect
   useEffect(() => {
@@ -103,6 +108,10 @@ function RegisterForm() {
   // OAuth Sign In Handler
   const handleOAuthSignIn = async (provider: "google" | "github") => {
     setIsOAuthLoading(provider);
+    
+    // Track OAuth clicks
+    trackEvent("OAuth Signup Clicked", { provider });
+    
     try {
       const redirectTo = `${window.location.origin}/auth/callback?type=signup${referralCode ? `&ref=${referralCode}` : ""}`;
 
@@ -143,10 +152,23 @@ function RegisterForm() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      toast({
+        title: "Password too simple",
+        description: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
         variant: "destructive",
       });
       return;
@@ -155,17 +177,38 @@ function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // Call our internal API route to register the user
+      // 3. Grab our trapped UTM data right before sending to the backend
+      let utmData = {};
+      if (typeof window !== "undefined") {
+        const savedUTMs = sessionStorage.getItem("draftdeck_utms");
+        if (savedUTMs) {
+          try {
+            utmData = JSON.parse(savedUTMs);
+          } catch (e) {
+            console.error("Failed to parse UTMs", e);
+          }
+        }
+      }
+
+      // 4. Inject the utmData into the payload
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, referralCode }),
+        body: JSON.stringify({ name, email, password, referralCode, utmData }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
         throw new Error(result.error || "Failed to create account");
+      }
+
+      // 5. Fire the grand finale Signup Completion event!
+      trackEvent("Signup Completed", { method: "email" });
+
+      // Optional: Clean up the session storage since the user has officially converted
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("draftdeck_utms");
       }
 
       toast({
@@ -175,11 +218,9 @@ function RegisterForm() {
           "Please check your email to verify your account before signing in.",
       });
 
-      // Persist success state and show verification instructions instead of redirecting
       setSubmittedEmail(email);
       setSuccess(true);
     } catch (error: any) {
-      // Enhanced error handling for Supabase registration
       let userMessage = "Failed to create account. Please try again.";
       if (error?.message) {
         if (
@@ -231,7 +272,21 @@ function RegisterForm() {
     password.trim() &&
     confirmPassword.trim() &&
     password === confirmPassword &&
-    password.length >= 6;
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password);
+
+  // Memoized referral handler to prevent unnecessary re-renders
+  const handleReferral = useCallback((code: string | null) => {
+    setReferralCode(code);
+    if (code) {
+      toast({
+        title: "Referral Applied",
+        description: "Your referral code has been applied successfully.",
+      });
+    }
+  }, [toast]);
 
   // Success view: show verification instructions
   if (success) {
@@ -301,17 +356,6 @@ function RegisterForm() {
       </div>
     );
   }
-
-  // Memoized referral handler to prevent unnecessary re-renders
-  const handleReferral = useCallback((code: string | null) => {
-    setReferralCode(code);
-    if (code) {
-      toast({
-        title: "Referral Applied",
-        description: "Your referral code has been applied successfully.",
-      });
-    }
-  }, [toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
@@ -417,13 +461,10 @@ function RegisterForm() {
                 variant="outline"
                 className="w-full py-3 flex items-center justify-center gap-3 glass-effect border-yellow-400/30 hover:border-yellow-400/60 hover:bg-yellow-400/5 transition-all duration-300"
                 onClick={() => handleOAuthSignIn("google")}
+                isLoading={isOAuthLoading === "google"}
                 disabled={isLoading || isOAuthLoading !== null}
               >
-                {isOAuthLoading === "google" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <GoogleIcon />
-                )}
+                {isOAuthLoading !== "google" && <GoogleIcon />}
                 <span>Continue with Google</span>
               </Button>
 
@@ -432,13 +473,10 @@ function RegisterForm() {
                 variant="outline"
                 className="w-full py-3 flex items-center justify-center gap-3 glass-effect border-yellow-400/30 hover:border-yellow-400/60 hover:bg-yellow-400/5 transition-all duration-300"
                 onClick={() => handleOAuthSignIn("github")}
+                isLoading={isOAuthLoading === "github"}
                 disabled={isLoading || isOAuthLoading !== null}
               >
-                {isOAuthLoading === "github" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <GitHubIcon />
-                )}
+                {isOAuthLoading !== "github" && <GitHubIcon />}
                 <span>Continue with GitHub</span>
               </Button>
             </div>
@@ -599,8 +637,7 @@ function RegisterForm() {
                       ? "text-yellow-500 animate-pulse"
                       : ""
                       }`}
-                  />
-                  Password
+                  />                  Password
                   {passwordStrength >= 3 && (
                     <Shield className="h-3 w-3 text-green-500 animate-scale-in" />
                   )}
@@ -613,7 +650,7 @@ function RegisterForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Create a password (min. 6 characters)"
+                    placeholder="Create a strong password (min. 8 characters)"
                     required
                     className="glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 hover:border-yellow-400/50 group-hover:shadow-lg"
                     disabled={isLoading || isOAuthLoading !== null}
@@ -797,14 +834,14 @@ function RegisterForm() {
               >
                 <Button
                   type="submit"
-                  disabled={isLoading || isOAuthLoading !== null || !isFormValid}
+                  disabled={isOAuthLoading !== null || !isFormValid}
+                  isLoading={isLoading}
                   className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   aria-label="Create your DraftDeckAI account"
                 >
                   <div className="flex items-center justify-center gap-3 relative z-20">
                     {isLoading ? (
                       <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
                         <span className="button-text font-bold">
                           Creating account...
                         </span>

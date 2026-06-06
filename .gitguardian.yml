@@ -1,0 +1,4 @@
+version: 2
+ignore-paths:
+  - "__tests__/"
+  - "lib/__tests__/"

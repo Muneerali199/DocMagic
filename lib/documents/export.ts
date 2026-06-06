@@ -263,7 +263,7 @@ function parseContentToParagraphs(content: string): Paragraph[] {
     if (trimmed.startsWith('# ')) {
       paragraphs.push(
         new Paragraph({
-          text: trimmed.substring(2),
+          children: parseInlineFormatting(trimmed.substring(2)),
           heading: HeadingLevel.HEADING_1,
           spacing: { before: 300, after: 200 },
         })
@@ -271,7 +271,7 @@ function parseContentToParagraphs(content: string): Paragraph[] {
     } else if (trimmed.startsWith('## ')) {
       paragraphs.push(
         new Paragraph({
-          text: trimmed.substring(3),
+          children: parseInlineFormatting(trimmed.substring(3)),
           heading: HeadingLevel.HEADING_2,
           spacing: { before: 250, after: 150 },
         })
@@ -279,7 +279,7 @@ function parseContentToParagraphs(content: string): Paragraph[] {
     } else if (trimmed.startsWith('### ')) {
       paragraphs.push(
         new Paragraph({
-          text: trimmed.substring(4),
+          children: parseInlineFormatting(trimmed.substring(4)),
           heading: HeadingLevel.HEADING_3,
           spacing: { before: 200, after: 100 },
         })
@@ -289,7 +289,7 @@ function parseContentToParagraphs(content: string): Paragraph[] {
     else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
       paragraphs.push(
         new Paragraph({
-          text: trimmed.substring(2),
+          children: parseInlineFormatting(trimmed.substring(2)),
           bullet: { level: 0 },
           spacing: { after: 100 },
         })
@@ -297,10 +297,10 @@ function parseContentToParagraphs(content: string): Paragraph[] {
     }
     // Numbered lists
     else if (/^\d+\.\s/.test(trimmed)) {
-      const text = trimmed.replace(/^\d+\.\s/, '');
+      const listText = trimmed.replace(/^\d+\.\s/, '');
       paragraphs.push(
         new Paragraph({
-          text,
+          children: parseInlineFormatting(listText),
           numbering: { reference: 'my-numbering', level: 0 },
           spacing: { after: 100 },
         })
@@ -323,12 +323,39 @@ function parseContentToParagraphs(content: string): Paragraph[] {
 }
 
 /**
- * Parse inline formatting (bold, italic)
+ * Parse inline formatting (bold, italic, bold+italic)
+ * Converts Markdown-style inline syntax to styled TextRun objects:
+ *   ***text*** → bold + italic
+ *   **text**   → bold
+ *   *text*     → italic
  */
-function parseInlineFormatting(text: string): TextRun[] {
+export function parseInlineFormatting(text: string, fontSize: number = 22): TextRun[] {
   const runs: TextRun[] = [];
-  // Simple parsing - can be enhanced
-  runs.push(new TextRun({ text, size: 22 }));
+  // Regex matches: ***bold italic***, **bold**, *italic*, or plain text segments
+  const pattern = /(\*{3}(.+?)\*{3})|(\*{2}(.+?)\*{2})|(\*(.+?)\*)|([^*]+)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match[1]) {
+      // ***bold italic***
+      runs.push(new TextRun({ text: match[2], bold: true, italics: true, size: fontSize }));
+    } else if (match[3]) {
+      // **bold**
+      runs.push(new TextRun({ text: match[4], bold: true, size: fontSize }));
+    } else if (match[5]) {
+      // *italic*
+      runs.push(new TextRun({ text: match[6], italics: true, size: fontSize }));
+    } else if (match[7]) {
+      // plain text
+      runs.push(new TextRun({ text: match[7], size: fontSize }));
+    }
+  }
+
+  // Fallback: if regex produced no runs, return the original text as-is
+  if (runs.length === 0) {
+    runs.push(new TextRun({ text, size: fontSize }));
+  }
+
   return runs;
 }
 
@@ -371,7 +398,7 @@ function createVisualParagraphs(visual: VisualTag): Paragraph[] {
 /**
  * Format content for HTML export
  */
-function formatContentForHtml(content: string): string {
+export function formatContentForHtml(content: string): string {
   return content
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
@@ -398,7 +425,7 @@ function formatDocumentType(type: string): string {
 /**
  * Sanitize filename
  */
-function sanitizeFilename(title: string): string {
+export function sanitizeFilename(title: string): string {
   return title
     .replace(/[^a-z0-9\s-]/gi, '')
     .replace(/\s+/g, '-')

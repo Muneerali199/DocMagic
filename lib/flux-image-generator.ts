@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+import type { NebiusImageGenerationRequest } from "@/types/nebius";
 /**
  * FLUX.1-schnell Image Generator using Nebius API
  * High-quality image generation for presentations
@@ -44,7 +46,7 @@ export async function generateFluxImage({
   }
 
   try {
-    console.log(`🎨 Generating FLUX ${imageType}: "${prompt.substring(0, 50)}..."`);
+    logger.info(null, `🎨 Generating FLUX ${imageType}: "${prompt.substring(0, 50)}..."`)
 
     // Parse size
     const [width, height] = size.split('x').map(Number);
@@ -59,23 +61,24 @@ export async function generateFluxImage({
       apiKey: NEBIUS_API_KEY,
     });
 
-    const response = await client.images.generate({
+    const imageRequest: NebiusImageGenerationRequest = {
       model: model,
       prompt: enhancedPrompt,
       response_format: "url",
-      // @ts-ignore - Nebius-specific parameters
       width: width,
       height: height,
       num_inference_steps: 28,
       n: 1,
-    });
+    };
+
+    const response = await client.images.generate(imageRequest);
 
     if (!response.data || !response.data[0] || !response.data[0].url) {
       throw new Error('Invalid response from FLUX API');
     }
 
     const imageUrl = response.data[0].url;
-    console.log('✅ FLUX image generated successfully');
+    logger.info(null, '✅ FLUX image generated successfully')
     
     return imageUrl;
   } catch (error: any) {
@@ -110,7 +113,7 @@ export async function generatePresentationImages(
   slidePrompts: string[],
   size: "1024x1024" | "1024x768" | "512x512" = "512x512"
 ): Promise<string[]> {
-  console.log(`🎨 Generating ${slidePrompts.length} presentation images with FLUX...`);
+  logger.info(null, `🎨 Generating ${slidePrompts.length} presentation images with FLUX...`)
 
   const imagePromises = slidePrompts.map(prompt => 
     generateFluxImage({ prompt, size })
@@ -118,7 +121,7 @@ export async function generatePresentationImages(
 
   try {
     const images = await Promise.all(imagePromises);
-    console.log(`✅ Generated ${images.length} presentation images`);
+    logger.info(null, `✅ Generated ${images.length} presentation images`)
     return images;
   } catch (error) {
     console.error('❌ Error generating presentation images:', error);
@@ -134,7 +137,7 @@ export async function regenerateSlideImage(
   prompt: string,
   size: "1024x1024" | "1024x768" | "1024x576" = "1024x576"
 ): Promise<string> {
-  console.log(`🔄 Regenerating image: "${prompt}"`);
+  logger.info(null, `🔄 Regenerating image: "${prompt}"`)
   return generateFluxImage({ prompt, size });
 }
 

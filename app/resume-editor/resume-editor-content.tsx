@@ -6,7 +6,9 @@ import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { FileText, Loader2, Sparkles, Code, Edit3, Download, Save, Lock, Unlink, Undo2, Redo2 } from 'lucide-react';
+import { useHistory } from '@/hooks/use-history';
 import { ResumeFormEditor } from '@/components/resume-editor/form-editor';
 import { ResumeLatexEditor, generateLatexFromData } from '@/components/resume-editor/latex-editor';
 import { ResumeAIEditor } from '@/components/resume-editor/ai-editor';
@@ -14,6 +16,7 @@ import { ResumePreviewPanel } from '@/components/resume-editor/preview-panel';
 import { CompileErrorPopup } from '@/components/resume-editor/compile-error-popup';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { useDocumentAnalytics } from '@/hooks/use-document-analytics';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,9 +110,54 @@ export default function ResumeEditorContent() {
   const [isLatexManualMode, setIsLatexManualMode] = useState(false);
   const [showLatexConfirmDialog, setShowLatexConfirmDialog] = useState(false);
 
-  // Resume state
+  // Resume state with Undo/Redo history
   const [resumeId, setResumeId] = useState<string | null>(null);
-  const [resumeData, setResumeData] = useState(defaultResumeData);
+  const {
+    value: resumeData,
+    setValue: setResumeData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetResumeData,
+  } = useHistory(defaultResumeData);
+
+  // Keyboard shortcuts for Undo/Redo (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Y, and Ctrl+Shift+Z / Cmd+Shift+Z)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if command/ctrl key is pressed
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      
+      if (isCmdOrCtrl) {
+        // Z key
+        if (e.key.toLowerCase() === 'z') {
+          if (e.shiftKey) {
+            // Ctrl+Shift+Z / Cmd+Shift+Z (Redo)
+            e.preventDefault();
+            redo();
+          } else {
+            // Ctrl+Z / Cmd+Z (Undo)
+            e.preventDefault();
+            undo();
+          }
+        }
+        // Y key
+        else if (e.key.toLowerCase() === 'y') {
+          // Ctrl+Y / Cmd+Y (Redo)
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undo, redo]);
+
+  // Initialize analytics tracking
+  const { trackEvent } = useDocumentAnalytics(resumeId);
 
   // Save state
   const [isSaving, setIsSaving] = useState(false);
@@ -158,7 +206,7 @@ export default function ResumeEditorContent() {
 
         // Transform loaded data to resumeData format
         const personalInfo = loadedResumeData.personal_info || loadedResumeData.personalInfo || {};
-        setResumeData({
+        resetResumeData({
           name: personalInfo.name || personalInfo.fullName || '',
           email: personalInfo.email || '',
           phone: personalInfo.phone || '',
@@ -254,6 +302,10 @@ export default function ResumeEditorContent() {
       if (result.data) {
         const savedDoc = result.data as any;
         setResumeId(savedDoc.id);
+        
+        // Track engagement: save
+        trackEvent('edit');
+
         toast.success(resumeId ? 'Resume updated successfully' : 'Resume saved successfully');
       }
     } catch (error) {
@@ -299,6 +351,9 @@ export default function ResumeEditorContent() {
           URL.revokeObjectURL(url);
 
           toast.success('PDF downloaded successfully!');
+          
+          // Track engagement: download
+          trackEvent('download');
         } else {
           // JSON response (likely an error)
           const result = await response.json();
@@ -318,13 +373,74 @@ export default function ResumeEditorContent() {
     }
   }, [resumeData]);
 
-  // Show loading state while checking auth
+  // Layout-matching Skeleton Loader
   if (authLoading || isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-          <p className="text-gray-600">{isLoading ? 'Loading resume...' : 'Loading...'}</p>
+      <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 border-b shadow-lg px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-12 h-12 rounded-xl bg-white/20" />
+            <div>
+              <Skeleton className="w-40 h-6 bg-white/20 mb-2" />
+              <Skeleton className="w-64 h-4 bg-white/20" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="w-32 h-9 bg-white/20 rounded-md" />
+            <Skeleton className="w-24 h-9 bg-white/20 rounded-md" />
+            <Skeleton className="w-28 h-9 bg-white/20 rounded-md" />
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* LEFT - Editor Panel Skeleton */}
+          <div className="w-1/2 border-r bg-white flex flex-col">
+            {/* Tabs Skeleton */}
+            <div className="flex border-b px-6 py-3 gap-6">
+              <Skeleton className="w-24 h-6 rounded-md" />
+              <Skeleton className="w-24 h-6 rounded-md" />
+              <Skeleton className="w-28 h-6 rounded-md" />
+            </div>
+            
+            {/* Form Content Skeleton */}
+            <div className="flex-1 p-6 space-y-8 overflow-y-auto">
+              {/* Personal Info Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/3 h-6" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                  <div className="space-y-2"><Skeleton className="w-1/4 h-4" /><Skeleton className="w-full h-10" /></div>
+                </div>
+              </div>
+              
+              {/* Summary Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/4 h-6" />
+                <Skeleton className="w-full h-32" />
+              </div>
+              
+              {/* Experience Section */}
+              <div className="space-y-4">
+                <Skeleton className="w-1/4 h-6" />
+                <Skeleton className="w-full h-40" />
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT - Preview Panel Skeleton */}
+          <div className="w-1/2 bg-gradient-to-br from-gray-100 to-gray-200 p-8 flex flex-col items-center">
+            {/* Toolbar skeleton */}
+            <div className="w-full max-w-2xl flex justify-between mb-4">
+               <Skeleton className="w-48 h-10" />
+               <Skeleton className="w-32 h-10" />
+            </div>
+            {/* A4 Document Skeleton */}
+            <Skeleton className="w-full max-w-2xl flex-1 max-h-[850px] bg-white shadow-xl rounded-sm" />
+          </div>
         </div>
       </div>
     );
@@ -359,47 +475,53 @@ export default function ResumeEditorContent() {
             <p className="text-sm text-blue-100">Create professional resumes in minutes</p>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <div className="flex items-center bg-white/10 rounded-lg p-0.5 border border-white/10 mr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z / Cmd+Z)"
+            >
+              <Undo2 className="w-4 h-4 mr-1.5" />
+              Undo
+            </Button>
+            <div className="w-[1px] h-4 bg-white/20" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/20 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent h-8 px-3"
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)"
+            >
+              <Redo2 className="w-4 h-4 mr-1.5" />
+              Redo
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"
             className="bg-white hover:bg-gray-100 text-gray-900 border-0"
             onClick={handleSave}
-            disabled={isSaving}
+            isLoading={isSaving}
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </>
-            )}
+            <Save className="w-4 h-4 mr-2" />
+            Save
           </Button>
           <Button
             size="sm"
             className="bg-green-500 hover:bg-green-600 text-white shadow-lg"
             onClick={handleExportPdf}
-            disabled={isExporting}
+            isLoading={isExporting}
           >
-            {isExporting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
-              </>
-            )}
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
           </Button>
         </div>
       </div>
-
       {/* Main Content - Split Screen */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT - Editor Panel */}
