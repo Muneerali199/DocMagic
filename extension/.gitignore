@@ -50,3 +50,8 @@ coverage/
 # Documentation drafts
 *DRAFT*
 *WIP*
+
+# Test/debug files — excluded from production
+background-test.js
+test-page.html
+debug.html

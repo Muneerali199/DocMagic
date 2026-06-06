@@ -1,6 +1,8 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { 
   AreaChart, 
   Area, 
@@ -11,15 +13,45 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { Loader2, TrendingUp } from "lucide-react";
 
 /**
  * Responsive area chart showing document views and unique visitors
  */
-export function ViewsChart({ data }: { data: any[] }) {
+export function ViewsChart({
+  data,
+  isLoading = false,
+  error,
+}: {
+  data: any[];
+  isLoading?: boolean;
+  error?: string | null;
+}) {
+  if (isLoading) {
+    return (
+      <Card className="flex h-[400px] items-center justify-center border border-border/40 glass-effect">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="h-[400px] border border-border/40 glass-effect p-6">
+        <ErrorMessage title="Could not load view data" message={error} />
+      </Card>
+    );
+  }
+
   if (!data || data.length === 0) {
     return (
-      <Card className="h-[400px] glass-effect flex items-center justify-center border border-border/40">
-        <p className="text-muted-foreground">No data available for the selected period</p>
+      <Card className="h-[400px] border border-border/40 glass-effect p-6">
+        <EmptyState
+          title="No view data available"
+          description="Views and unique visitors will appear here once this document starts receiving traffic."
+          icon={<TrendingUp className="h-6 w-6" aria-hidden="true" />}
+          className="h-full"
+        />
       </Card>
     );
   }

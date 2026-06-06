@@ -1,0 +1,42 @@
+name: Stale Issue and PR Automation
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mark stale issues and pull requests
+        uses: actions/stale@v9
+
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          stale-issue-message: >
+            This issue has been automatically marked as stale due to inactivity.
+            It will be closed if no further activity occurs.
+
+          stale-pr-message: >
+            This pull request has been automatically marked as stale due to inactivity.
+            It will be closed if no further activity occurs.
+
+          close-issue-message: >
+            Closing stale issue due to prolonged inactivity.
+
+          close-pr-message: >
+            Closing stale pull request due to prolonged inactivity.
+
+          days-before-stale: 30
+          days-before-close: 7
+
+          stale-issue-label: stale
+          stale-pr-label: stale
+
+          exempt-issue-labels: gssocapproved,noissue
+          exempt-pr-labels: gssocapproved
+
+          remove-stale-when-updated: true
