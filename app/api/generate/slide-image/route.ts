@@ -10,6 +10,7 @@ import {
   safeParseBody,
   slideImageGenerationSchema,
 } from "@/lib/validation";
+import type { NebiusImageGenerationRequest } from "@/types/nebius";
 
 const NEBIUS_API_KEY = process.env.NEBIUS_API_KEY;
 const NEBIUS_BASE_URL = "https://api.tokenfactory.nebius.com/v1/";
@@ -205,17 +206,17 @@ export async function POST(request: NextRequest) {
     const imageResults = await Promise.all(
       prompts.map(async (prompt, index) => {
         try {
-          const response = await client.images.generate({
+          const imageRequest: NebiusImageGenerationRequest = {
             model: "black-forest-labs/flux-dev",
             prompt: prompt,
             response_format: "url",
-
-            // @ts-ignore - Nebius-specific parameters
             width: width,
             height: height,
             num_inference_steps: 28,
             n: 1,
-          });
+          };
+
+          const response = await client.images.generate(imageRequest);
 
           if (!response.data?.[0]?.url) {
             throw new Error("Invalid response from FLUX API");
