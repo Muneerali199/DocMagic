@@ -93,6 +93,15 @@ jobs:
       - name: Run Linting
         run: npm run lint
         
+      - name: Cache TypeScript build info
+        uses: actions/cache@v4
+        with:
+          path: .tsbuildinfo
+          key: ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.json') }}-
+            ${{ runner.os }}-tsbuildinfo-
+
       - name: Run Type Checking
         run: npm run typecheck
       # -------------------------------------
