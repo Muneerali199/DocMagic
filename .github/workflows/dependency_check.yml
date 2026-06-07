@@ -1,4 +1,4 @@
-name: Dependency Check and CI
+name: CI Pipeline
 
 on:
   schedule:
@@ -89,6 +89,14 @@ jobs:
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci || (echo "Retrying npm install..." && rm -rf node_modules && npm install)
 
+      # --- NEW LINT AND TYPE CHECK STEPS ---
+      - name: Run Linting
+        run: npm run lint
+        
+      - name: Run Type Checking
+        run: npm run typecheck
+      # -------------------------------------
+
       - name: Run tests with Jest
         run: |
           if npm pkg get scripts.test | grep -qv null; then
@@ -115,9 +123,6 @@ jobs:
           else
             echo "No build script found in package.json, skipping build"
           fi
-
-      - name: Run type checking (if TypeScript)
-        run: echo "TypeScript compilation is handled during build time by Next.js"
 
   dependabot-auto-merge:
     runs-on: ubuntu-latest

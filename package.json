@@ -49,7 +49,8 @@
     "security-check": "npm audit && npm run security-audit",
     "test-pwa": "./scripts/test-pwa.sh",
     "build-pwa": "npm run build && npm start",
-    "analyze": "cross-env ANALYZE=true npm run build"
+    "analyze": "cross-env ANALYZE=true npm run build",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
