@@ -14,6 +14,10 @@ import (
 const shutdownTimeout = 30 * time.Second
 
 func main() {
+	run()
+}
+
+func run() {
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      routes(),
@@ -48,6 +52,7 @@ func main() {
 	log.Println("Server stopped gracefully")
 	os.Exit(0)
 }
+
 
 func routes() http.Handler {
 	mux := http.NewServeMux()

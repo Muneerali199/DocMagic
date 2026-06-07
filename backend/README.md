@@ -4,10 +4,9 @@ This directory contains two Go backend server implementations with **graceful sh
 
 ## Files
 
-- **`main.go`** - Simple backend server with basic routes
 - **`go/cmd/server/main.go`** - Production-ready server with health/ready endpoints
 - **`go.mod`** - Go module definition
-- **`GRACEFUL_SHUTDOWN_TESTING.md`** - Complete testing guide
+
 
 ## Quick Start
 
