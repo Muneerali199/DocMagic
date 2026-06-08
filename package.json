@@ -35,7 +35,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --quiet",
     "lint:staged": "lint-staged",
     "prepare": "husky",
     "test": "jest",
@@ -49,7 +49,7 @@
     "test-pwa": "./scripts/test-pwa.sh",
     "build-pwa": "npm run build && npm start",
     "analyze": "cross-env ANALYZE=true npm run build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --project tsconfig.build.json"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
