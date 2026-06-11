@@ -119,3 +119,32 @@ func TestRequireAuthRejectsMalformedToken(t *testing.T) {
 		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
 	}
 }
+
+func TestRequireAuthRejectsMissingJWTSecret(t *testing.T) {
+	t.Setenv("SUPABASE_JWT_SECRET", "")
+
+	recorder := httptest.NewRecorder()
+	RequireAuth()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("next handler should not run when the JWT secret is missing")
+	})).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/protected", nil))
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status %d, got %d", http.StatusInternalServerError, recorder.Code)
+	}
+}
+
+func TestRequireAuthRejectsMissingSubjectClaim(t *testing.T) {
+	const secret = "test-secret"
+	t.Setenv("SUPABASE_JWT_SECRET", secret)
+
+	token := signedTestToken(t, secret, jwt.MapClaims{
+		"email": "user@example.com",
+		"role":  "authenticated",
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+
+	recorder := runRequireAuthRequest(t, token)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
+	}
+}

@@ -49,6 +49,7 @@ func RequestLogger(next http.Handler) http.Handler {
 		// Generate unique request ID
 		requestID := uuid.NewString()
 		ctx := context.WithValue(r.Context(), RequestIDKey, requestID)
+		ctx = context.WithValue(ctx, "request_id", requestID)
 		r = r.WithContext(ctx)
 
 		// Set request ID in response header for client tracing
@@ -91,4 +92,53 @@ func Recoverer(next http.Handler) http.Handler {
 		}()
 		next.ServeHTTP(w, r)
 	})
+}
+
+// RequestID preserves the short middleware name used by router setup and tests.
+func RequestID(next http.Handler) http.Handler {
+	return RequestLogger(next)
+}
+
+// Recovery preserves the short middleware name used by router setup and tests.
+func Recovery(next http.Handler) http.Handler {
+	return Recoverer(next)
+}
+
+// CORS adds permissive cross-origin headers and handles OPTIONS preflight.
+func CORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-ID")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Timeout cancels slow requests and returns 503 when the deadline is exceeded.
+func Timeout(duration time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), duration)
+			defer cancel()
+
+			done := make(chan struct{})
+			timeoutWriter := newResponseWriter(w)
+			go func() {
+				defer close(done)
+				next.ServeHTTP(timeoutWriter, r.WithContext(ctx))
+			}()
+
+			select {
+			case <-done:
+			case <-ctx.Done():
+				http.Error(w, "request timeout", http.StatusServiceUnavailable)
+			}
+		})
+	}
 }

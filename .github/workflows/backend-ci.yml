@@ -3,6 +3,7 @@ name: Backend CI
 on:
   pull_request:
     branches:
+      - main
       - feature/go-backend
     paths:
       - "backend/**"
