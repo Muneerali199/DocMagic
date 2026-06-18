@@ -174,7 +174,7 @@
     "babel-jest": "^30.0.5",
     "cross-env": "^10.1.0",
     "esbuild": "^0.28.1",
-    "eslint-config-next": "^15.4.5",
+    "eslint-config-next": "^16.2.9",
     "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
