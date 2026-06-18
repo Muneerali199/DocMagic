@@ -32,13 +32,14 @@ export async function POST(request: NextRequest) {
     }
 
     body = parsedBody.data;
-    const { text } = body;
+    const { text, documentType } = body;
+    const outputType = documentType || "resume";
 
     // Initialize Gemini model
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const prompt = `Convert the following resume text into professional LaTeX code. 
-Use the article document class with appropriate packages for a modern resume.
+    const prompt = `Convert the following ${outputType} text into professional LaTeX code.
+Use the article document class with appropriate packages for a modern ${outputType}.
 Include proper formatting, sections, and styling.
 Make it ATS-friendly and professional.
 
@@ -113,8 +114,6 @@ function generateFallbackLatex(text: string): string {
 
 `;
 
-  let currentSection = "";
-
   lines.forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed) {
@@ -129,7 +128,6 @@ function generateFallbackLatex(text: string): string {
         // Skip, handled in preamble
       } else {
         latex += `\\section{${heading}}\n`;
-        currentSection = heading.toLowerCase();
       }
     } else if (trimmed.startsWith("## ")) {
       // Subsection
@@ -137,7 +135,7 @@ function generateFallbackLatex(text: string): string {
     } else if (trimmed.startsWith("- ")) {
       // Bullet point
       latex += `\\cvitem{}{${trimmed.substring(2)}}\n`;
-    } else if (trimmed.includes("@")) {
+    } else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       // Email
       latex += `\\email{${trimmed}}\n`;
     } else if (trimmed.match(/\d{3}[-\s]?\d{3}[-\s]?\d{4}/)) {
