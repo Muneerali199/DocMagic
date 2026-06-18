@@ -103,7 +103,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "critters": "^0.0.25",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.4.0",
     "docx": "^8.5.0",
     "dotenv": "^17.3.1",
     "embla-carousel-react": "^8.3.0",
