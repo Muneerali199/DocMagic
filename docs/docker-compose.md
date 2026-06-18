@@ -33,6 +33,7 @@ docker compose up
 ```
 
 This will:
+
 - Start the PostgreSQL database and wait for it to be healthy.
 - Build and start the Next.js application in development mode (using the `docker-compose.override.yml`).
 
@@ -47,6 +48,7 @@ docker compose -f docker-compose.yml up --build
 ## Networking
 
 Services are connected via a shared bridge network named `draftdeck-network`.
+
 - The database is accessible within the network at `db:5432`.
 - The application is accessible at `http://localhost:3000`.
 

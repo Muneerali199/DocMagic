@@ -7,6 +7,7 @@ This document outlines the deployment error handling and graceful fallback syste
 ## Problem Statement
 
 **Issue #281**: Production deployments were returning raw Vercel 404 `DEPLOYMENT_NOT_FOUND` errors, creating:
+
 - Broken UX for end users
 - Exposed infrastructure-level error details
 - No graceful fallback or recovery options
@@ -16,6 +17,7 @@ This document outlines the deployment error handling and graceful fallback syste
 ### 1. **Enhanced Error Pages** (`app/error.tsx`)
 
 A branded, user-friendly error page that:
+
 - ✅ Displays graceful error messages instead of raw Vercel errors
 - ✅ Provides "Try Again" button to retry failed operations
 - ✅ Offers navigation to homepage and support resources
@@ -24,6 +26,7 @@ A branded, user-friendly error page that:
 - ✅ Logs errors to monitoring service
 
 **Features:**
+
 - Branded UI matching the application design
 - Retry functionality that clears cache before attempting again
 - Links to documentation, support, and status page
@@ -33,44 +36,49 @@ A branded, user-friendly error page that:
 ### 2. **Middleware Error Detection** (`middleware.ts`)
 
 Server-side error detection that:
+
 - ✅ Catches HTTP 503/504 (Service Unavailable) errors
 - ✅ Logs deployment errors for monitoring
 - ✅ Adds `X-Deployment-Error` header for client-side handling
 - ✅ Validates environment variables on startup
 
 **Configuration:**
+
 ```typescript
 const DEPLOYMENT_ERROR_PATTERNS = [
-  /DEPLOYMENT_NOT_FOUND/i,
-  /503|504/,
-  /service unavailable/i,
-  /deployment.*error/i,
+    /DEPLOYMENT_NOT_FOUND/i,
+    /503|504/,
+    /service unavailable/i,
+    /deployment.*error/i,
 ];
 ```
 
 ### 3. **Error Logging System** (`hooks/useErrorHandler.ts` + `app/api/logs/errors/route.ts`)
 
 Centralized error tracking that:
+
 - ✅ Captures unhandled promise rejections
 - ✅ Catches global JavaScript errors
 - ✅ Sends errors to monitoring backend
 - ✅ Works with Sentry, LogRocket, or custom monitoring
 
 **Hook Usage:**
+
 ```typescript
 const { logError } = useErrorHandler();
 logError({
-  message: 'Error message',
-  stack: error.stack,
-  timestamp: Date.now(),
-  pathname: window.location.pathname,
-  userAgent: navigator.userAgent,
+    message: "Error message",
+    stack: error.stack,
+    timestamp: Date.now(),
+    pathname: window.location.pathname,
+    userAgent: navigator.userAgent,
 });
 ```
 
 ### 4. **Health Check Endpoint** (`app/api/health/route.ts`)
 
 Deployment status monitoring:
+
 - ✅ Returns 200 when healthy
 - ✅ Returns 503 when service is down
 - ✅ Checks database connectivity
@@ -80,22 +88,24 @@ Deployment status monitoring:
 **Endpoint:** `GET /api/health`
 
 **Response:**
+
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2024-05-18T10:30:00Z",
-  "uptime": 3600,
-  "services": {
-    "database": "healthy",
-    "ai": "healthy",
-    "storage": "healthy"
-  }
+    "status": "healthy",
+    "timestamp": "2024-05-18T10:30:00Z",
+    "uptime": 3600,
+    "services": {
+        "database": "healthy",
+        "ai": "healthy",
+        "storage": "healthy"
+    }
 }
 ```
 
 ### 5. **Deployment Status Banner** (`components/deployment-status-banner.tsx`)
 
 Client-side component that:
+
 - ✅ Monitors deployment health
 - ✅ Displays banner when service is down
 - ✅ Auto-refreshes health status every 30 seconds
@@ -103,16 +113,17 @@ Client-side component that:
 - ✅ Dismissible by user
 
 **Usage:**
+
 ```tsx
-import { DeploymentStatusBanner } from '@/components/deployment-status-banner';
+import { DeploymentStatusBanner } from "@/components/deployment-status-banner";
 
 export default function RootLayout({ children }) {
-  return (
-    <>
-      <DeploymentStatusBanner />
-      {children}
-    </>
-  );
+    return (
+        <>
+            <DeploymentStatusBanner />
+            {children}
+        </>
+    );
 }
 ```
 
@@ -175,7 +186,7 @@ Sentry.captureException(error, { digest: error.digest });
 
 ```typescript
 // In app/api/logs/errors/route.ts
-const LogRocket = require('logrocket');
+const LogRocket = require("logrocket");
 LogRocket.init(process.env.NEXT_PUBLIC_LOGROCKET_ID);
 ```
 
@@ -184,9 +195,9 @@ LogRocket.init(process.env.NEXT_PUBLIC_LOGROCKET_ID);
 Update `app/api/logs/errors/route.ts` to send errors to your custom backend:
 
 ```typescript
-await fetch('https://your-monitoring-api.com/errors', {
-  method: 'POST',
-  body: JSON.stringify(error),
+await fetch("https://your-monitoring-api.com/errors", {
+    method: "POST",
+    body: JSON.stringify(error),
 });
 ```
 
@@ -208,6 +219,7 @@ curl http://localhost:3000/api/health
 ### 3. Test Error Logging
 
 Open DevTools console and check:
+
 ```bash
 # Network tab should show POST to /api/logs/errors
 ```
@@ -226,12 +238,12 @@ LOGROCKET_ID=your-logrocket-id
 
 ```json
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "outputDirectory": ".next",
-  "env": {
-    "NODE_ENV": "production"
-  }
+    "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
+    "outputDirectory": ".next",
+    "env": {
+        "NODE_ENV": "production"
+    }
 }
 ```
 
