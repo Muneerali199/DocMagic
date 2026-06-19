@@ -1,7 +1,7 @@
 import withPWACore from "next-pwa";
 import { withSentryConfig } from "@sentry/nextjs";
-import { STATIC_SECURITY_HEADERS } from "./lib/security-headers.mjs";
-import bundleAnalyzer from '@next/bundle-analyzer';
+import { CSP_HEADER } from "./lib/csp.mjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 // --- Runtime & Security Checks ---
 const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
@@ -24,8 +24,24 @@ if (isProductionLikeRuntime && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
  * It has zero impact on standard production builds when ANALYZE is not set.
  */
 const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: process.env.ANALYZE === "true",
 });
+
+const NEXT_SECURITY_HEADERS = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
+  { key: "Content-Security-Policy", value: CSP_HEADER },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+];
 
 // --- Next.js Base Configuration ---
 /** @type {import('next').NextConfig} */
@@ -58,7 +74,7 @@ const nextConfig = {
     return [
       {
         source: "/(.*)",
-        headers: STATIC_SECURITY_HEADERS,
+        headers: NEXT_SECURITY_HEADERS,
       },
     ];
   },
