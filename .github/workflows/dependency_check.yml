@@ -98,6 +98,15 @@ jobs:
             echo "No test script found in package.json, skipping tests"
           fi
 
+      - name: Run UI component tests with Vitest
+        run: |
+          if npm pkg get scripts.test:ui | grep -qv null; then
+            echo "Running Vitest UI component tests..."
+            npm run test:ui
+          else
+            echo "No test:ui script found in package.json, skipping UI tests"
+          fi
+
       - name: Check if build script exists and build
         run: |
           if npm run build --silent 2>/dev/null; then

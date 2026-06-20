@@ -40,6 +40,8 @@
     "prepare": "husky",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:ui": "vitest run",
+    "test:ui:watch": "vitest",
     "typecheck": "node scripts/typecheck-changed.mjs",
     "typecheck:changed": "node scripts/typecheck-changed.mjs",
     "setup-db": "node scripts/setup-database.cjs",
@@ -170,6 +172,8 @@
     "@types/nodemailer": "^6.4.22",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "^10.4.24",
     "babel-jest": "^30.0.5",
     "cross-env": "^10.1.0",
@@ -183,7 +187,9 @@
     "postcss": "8.5.15",
     "prettier": "^3.8.4",
     "tailwindcss": "^3.4.17",
-    "ts-jest": "^29.4.0"
+    "ts-jest": "^29.4.0",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx}": [
