@@ -143,7 +143,7 @@
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.9",
     "react-simple-typewriter": "^5.0.1",
-    "recharts": "^2.15.4",
+    "recharts": "^3.9.0",
     "sharp": "0.34.5",
     "sonner": "^1.7.4",
     "stripe": "^14.25.0",
