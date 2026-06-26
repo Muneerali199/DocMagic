@@ -126,22 +126,31 @@ function getDocumentDescription(doc: any): string {
   switch (doc.type) {
     case "resume":
       return content.resumeData?.name || content.name || "Resume";
-    case "presentation":
+
+    case "presentation": {
       const slides = getPresentationSlides(doc);
       return `${slides.length || 0} slides`;
+    }
+
     case "diagram":
       return content.type || "Diagram";
+
     case "letter":
       return content.letter_type || content.type || "Letter";
-    case "generated":
+
+    case "generated": {
       const sections =
         metadata.sections || doc.sections || content.sections || [];
-      return `${sections.length || 0} sections • ${doc.document_type?.replace(/-/g, " ") || "AI Document"}`;
+
+      return `${sections.length || 0} sections • ${
+        doc.document_type?.replace(/-/g, " ") || "AI Document"
+      }`;
+    }
+
     default:
       return doc.type || "Document";
   }
 }
-
 const ResumePreviewMini = ({ data, title }: { data: any; title: string }) => {
   const [scale, setScale] = useState(0.2);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -327,6 +336,14 @@ function HistoryDashboardContent() {
   const urlTab = (searchParams?.get("tab") as ContentType | "all") || "all";
   const [activeTab, setActiveTab] = useState<ContentType | "all">(urlTab);
 
+  useEffect(() => {
+    const currentTab =
+      (searchParams?.get("tab") as ContentType | "all") || "all";
+
+    if (currentTab !== activeTab) {
+      setActiveTab(currentTab);
+    }
+  }, [searchParams, activeTab]);
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -354,7 +371,7 @@ function HistoryDashboardContent() {
   useEffect(() => {
     fetchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, activeTab]);
+  }, [currentPage, pageSize, activeTab, sortBy]);
 
   useEffect(() => {
     let filtered = [...items];
@@ -367,28 +384,8 @@ function HistoryDashboardContent() {
       );
     }
 
-    switch (sortBy) {
-      case "oldest":
-        filtered.sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        );
-        break;
-
-      case "az":
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-
-      case "newest":
-      default:
-        filtered.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-    }
-
     setFilteredItems(filtered);
-  }, [items, searchQuery, sortBy]);
+  }, [items, searchQuery]);
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
@@ -416,12 +413,22 @@ function HistoryDashboardContent() {
         query = query.eq("type", activeTab);
       }
 
-      const {
-        data: documents,
-        count,
-        error,
-      } = await query.order("created_at", { ascending: false }).range(from, to);
+      switch (sortBy) {
+        case "oldest":
+          query = query.order("created_at", { ascending: true });
+          break;
 
+        case "az":
+          query = query.order("title", { ascending: true });
+          break;
+
+        case "newest":
+        default:
+          query = query.order("created_at", { ascending: false });
+          break;
+      }
+
+      const { data: documents, count, error } = await query.range(from, to);
       if (error) throw error;
 
       // Handle Out-Of-Bounds Pagination
