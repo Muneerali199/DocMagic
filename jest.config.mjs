@@ -19,6 +19,8 @@ const config = {
   collectCoverageFrom: ['lib/**/*.ts', 'app/api/**/*.ts', '!**/__tests__/**'],
   transformIgnorePatterns: ['node_modules/(?!(uncrypto|@upstash/redis)/)'],
   testPathIgnorePatterns: [
+    "/node_modules/",
+    "<rootDir>/__tests__/components/ui/",
     '<rootDir>/__tests__/lib/cache.test.ts',
     '<rootDir>/lib/__tests__/export.test.ts',
   ],
