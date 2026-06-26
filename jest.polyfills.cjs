@@ -6,9 +6,13 @@ const path = require('path');
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 // Hijack the normal Supabase clients during testing if test keys are present
-if (process.env.SUPABASE_TEST_URL && process.env.SUPABASE_TEST_SERVICE_KEY) {
+if (
+  process.env.SUPABASE_TEST_URL &&
+  process.env.SUPABASE_TEST_ANON_KEY &&
+  process.env.SUPABASE_TEST_SERVICE_KEY
+) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.SUPABASE_TEST_URL;
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.SUPABASE_TEST_SERVICE_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.SUPABASE_TEST_ANON_KEY;
   process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_TEST_SERVICE_KEY;
 }
 // ------------------------------------------------

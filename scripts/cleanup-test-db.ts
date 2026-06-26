@@ -17,19 +17,19 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 async function cleanup() {
   console.log('🧹 Starting test database cleanup...');
+  let hasError = false;
 
-  // 1. Delete rows from application tables
   const tables = ['usage_tracking', 'documents'];
   for (const table of tables) {
-    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Deletes everything
+    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
     if (error) {
       console.error(`❌ Failed to clean table ${table}:`, error.message);
+      hasError = true;
     } else {
       console.log(`🗑️ Cleared data from table: ${table}`);
     }
   }
 
-  // 2. Remove test users from auth system
   const targetUserIds = [
     '00000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000002'
@@ -37,12 +37,22 @@ async function cleanup() {
 
   for (const id of targetUserIds) {
     const { error } = await supabase.auth.admin.deleteUser(id);
-    if (error && error.message !== 'User not found') {
+    if (error && error.code !== 'user_not_found') {
       console.error(`❌ Failed to delete auth user ${id}:`, error.message);
+      hasError = true;
     }
   }
+  
+  if (hasError) {
+    console.error('❌ Cleanup completed with errors.');
+    process.exit(1);
+  }
+  
   console.log('👤 Cleaned up integration test auth users.');
   console.log('✅ Test database cleanup finished.');
 }
 
-cleanup();
+cleanup().catch((err) => {
+  console.error('❌ Fatal error during cleanup:', err);
+  process.exit(1);
+});
