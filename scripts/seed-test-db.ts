@@ -1,0 +1,71 @@
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' }); // Or '.env' depending on your local file
+
+const supabaseUrl = process.env.SUPABASE_TEST_URL;
+const supabaseServiceKey = process.env.SUPABASE_TEST_SERVICE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('❌ Error: SUPABASE_TEST_URL and SUPABASE_TEST_SERVICE_KEY must be set.');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false }
+});
+
+async function seed() {
+  console.log('🌱 Starting test database seeding...');
+
+  // 1. Seed Test Users into auth.users (Using Service Role admin API)
+  const testUsers = [
+    { email: 'testuser1@draftdeckai.com', password: 'Password123!', id: '00000000-0000-0000-0000-000000000001' },
+    { email: 'testuser2@draftdeckai.com', password: 'Password123!', id: '00000000-0000-0000-0000-000000000002' }
+  ];
+
+  for (const user of testUsers) {
+    const { error } = await supabase.auth.admin.createUser({
+      id: user.id,
+      email: user.email,
+      password: user.password,
+      email_confirm: true
+    });
+    if (error && error.message !== 'Email already exists') {
+      console.error(`❌ Failed to create user ${user.email}:`, error.message);
+    } else {
+      console.log(`👤 User processed: ${user.email}`);
+    }
+  }
+
+  // 2. Seed Sample Documents (Adjust table names if your schema differs)
+  const sampleDocuments = [
+    { id: '11111111-1111-1111-1111-111111111111', user_id: testUsers[0].id, title: 'Test Resume', type: 'resume', content: {}, created_at: new Date() },
+    { id: '22222222-2222-2222-2222-222222222222', user_id: testUsers[0].id, title: 'Cover Letter', type: 'letter', content: {}, created_at: new Date() },
+    { id: '33333333-3333-3333-3333-333333333333', user_id: testUsers[1].id, title: 'Business Presentation', type: 'presentation', content: {}, created_at: new Date() }
+  ];
+
+  const { error: docError } = await supabase.from('documents').upsert(sampleDocuments);
+  if (docError) {
+    console.error('❌ Failed to seed documents:', docError.message);
+  } else {
+    console.log('📄 Sample documents seeded successfully.');
+  }
+
+  // 3. Seed Usage Tracking Entries
+  const sampleUsage = [
+    { user_id: testUsers[0].id, action: 'document_generation', credits_used: 1, timestamp: new Date() },
+    { user_id: testUsers[1].id, action: 'document_generation', credits_used: 2, timestamp: new Date() }
+  ];
+
+  const { error: usageError } = await supabase.from('usage_tracking').upsert(sampleUsage);
+  if (usageError) {
+    console.error('❌ Failed to seed usage tracking:', usageError.message);
+  } else {
+    console.log('📊 Usage tracking metrics seeded successfully.');
+  }
+
+  console.log('✅ Test database seeding finished.');
+}
+
+seed();
