@@ -24,6 +24,12 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  // --- SEO UPDATE: BASE PRODUCTION DOMAIN FOR CANONICAL RESOLUTION ---
+  metadataBase: new URL("https://draftdeckai.com"),
+  alternates: {
+    canonical: "./", // Instructs Next.js to infer the canonical route per-page relative to the base URL
+  },
+  // -------------------------------------------------------------------
   title: "DraftDeckAI - AI Document Creation Platform",
   description:
     "Create beautiful resumes, presentations, CVs and letters with AI",
