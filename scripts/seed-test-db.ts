@@ -32,7 +32,7 @@ async function seed() {
       password: user.password,
       email_confirm: true
     });
-    
+
     if (error) {
       if (error.code === 'email_exists' || error.code === 'user_already_exists') {
         console.log(`👤 User already exists: ${user.email}`);
@@ -44,12 +44,14 @@ async function seed() {
       console.log(`👤 User processed: ${user.email}`);
     }
   }
+  // Hardcoded date for deterministic snapshot testing
+  const seededAt = '2024-01-01T00:00:00.000Z';
 
   // 2. Seed Sample Documents
   const sampleDocuments = [
-    { id: '11111111-1111-1111-1111-111111111111', user_id: testUsers[0].id, title: 'Test Resume', type: 'resume', content: {}, created_at: new Date() },
-    { id: '22222222-2222-2222-2222-222222222222', user_id: testUsers[0].id, title: 'Cover Letter', type: 'letter', content: {}, created_at: new Date() },
-    { id: '33333333-3333-3333-3333-333333333333', user_id: testUsers[1].id, title: 'Business Presentation', type: 'presentation', content: {}, created_at: new Date() }
+    { id: '11111111-1111-1111-1111-111111111111', user_id: testUsers[0].id, title: 'Test Resume', type: 'resume', content: {}, created_at: seededAt },
+    { id: '22222222-2222-2222-2222-222222222222', user_id: testUsers[0].id, title: 'Cover Letter', type: 'letter', content: {}, created_at: seededAt },
+    { id: '33333333-3333-3333-3333-333333333333', user_id: testUsers[1].id, title: 'Business Presentation', type: 'presentation', content: {}, created_at: seededAt }
   ];
 
   const { error: docError } = await supabase.from('documents').upsert(sampleDocuments);
@@ -62,8 +64,8 @@ async function seed() {
 
   // 3. Seed Usage Tracking Entries (Now with deterministic IDs)
   const sampleUsage = [
-    { id: '44444444-4444-4444-4444-444444444441', user_id: testUsers[0].id, action: 'document_generation', credits_used: 1, timestamp: new Date() },
-    { id: '44444444-4444-4444-4444-444444444442', user_id: testUsers[1].id, action: 'document_generation', credits_used: 2, timestamp: new Date() }
+    { id: '44444444-4444-4444-4444-444444444441', user_id: testUsers[0].id, action: 'document_generation', credits_used: 1, timestamp: seededAt },
+    { id: '44444444-4444-4444-4444-444444444442', user_id: testUsers[1].id, action: 'document_generation', credits_used: 2, timestamp: seededAt }
   ];
 
   const { error: usageError } = await supabase.from('usage_tracking').upsert(sampleUsage);
