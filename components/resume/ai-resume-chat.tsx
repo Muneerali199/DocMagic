@@ -1,19 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Send, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  highlights?: string[];
-  atsImpact?: string;
-}
+import { useAIEditLoop } from '@/hooks/use-ai-edit-loop';
 
 interface AIResumeChatProps {
   resumeData: any;
@@ -21,92 +14,38 @@ interface AIResumeChatProps {
 }
 
 export function AIResumeChat({ resumeData, onResumeUpdate }: AIResumeChatProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: "👋 Hi! I'm your AI Resume Coach. I can help you:\n\n• Improve your professional summary\n• Enhance job descriptions with metrics\n• Optimize for ATS compatibility\n• Add powerful action verbs\n• Tailor content for specific roles\n\nWhat would you like to improve?",
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
-
-    try {
+  const {
+    messages, input, setInput, isLoading,
+    sendMessage, handleKeyDown, messagesEndRef,
+  } = useAIEditLoop({
+    endpoint: '/api/resume/improve',
+    initialMessage: "👋 Hi! I'm your AI Resume Coach. I can help you:\n\n• Improve your professional summary\n• Enhance job descriptions with metrics\n• Optimize for ATS compatibility\n• Add powerful action verbs\n• Tailor content for specific roles\n\nWhat would you like to improve?",
+    getHeaders: async (): Promise<Record<string, string>> => {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      const response = await fetch('/api/resume/improve', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        body: JSON.stringify({
-          resumeData,
-          userMessage,
-          conversationHistory: messages.slice(-4) // Last 2 exchanges for context
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data = await response.json();
-
-      // Add AI response to chat
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.advice,
+      if (!token) return {};
+      return { Authorization: `Bearer ${token}` };
+    },
+    buildBody: (userMessage, msgs) => ({
+      resumeData,
+      userMessage,
+      conversationHistory: msgs.slice(-4),
+    }),
+    parseResponse: (data: any) => ({
+      assistantContent: data.advice,
+      extraFields: {
         highlights: data.highlights,
-        atsImpact: data.atsImpact
-      }]);
-
-      // Update resume if changes were made
+        atsImpact: data.atsImpact,
+      },
+    }),
+    onData: (data: any) => {
       if (data.updatedResume) {
         onResumeUpdate(data.updatedResume);
-        toast.success('Resume updated!', {
-          description: 'Your resume has been improved based on AI suggestions.',
-          duration: 4000
-        });
       }
-
-    } catch (error) {
-      console.error('AI chat error:', error);
-      toast.error('Failed to get AI response', {
-        description: 'Please try again or rephrase your question.'
-      });
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: "I'm sorry, I encountered an error. Please try rephrasing your question or try again."
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+    },
+    successMessage: 'Resume updated!',
+  });
 
   const quickActions = [
     "Make my summary more impactful",
@@ -210,7 +149,7 @@ export function AIResumeChat({ resumeData, onResumeUpdate }: AIResumeChatProps) 
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Ask me to improve your resume..."
             className="flex-1 border-2 focus:border-purple-400"
             disabled={isLoading}

@@ -36,7 +36,7 @@ export function sanitizeHtml(s: string): string {
     .replace(/\//g, "&#x2F;");
 }
 
-export function sanitizeInput(s: string, max = LIMITS.CONTENT_MAX): string {
+export function sanitizeInput(s: string, max: number = LIMITS.CONTENT_MAX): string {
   return s.replace(/\0/g, "").replace(/\r\n/g, "\n").trim().slice(0, max);
 }
 

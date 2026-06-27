@@ -120,7 +120,7 @@ export default function SearchBar() {
             className="flex-1 outline-none text-sm text-gray-900 placeholder:text-gray-400 bg-transparent"
           />
           {query && (
-            <button onClick={handleClear}>
+            <button onClick={handleClear} aria-label="Clear search text">
               <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
             </button>
           )}

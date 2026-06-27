@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,24 +7,87 @@ import { useTheme } from '@/hooks/use-theme';
 import { useUsageStats } from '@/hooks/use-usage-stats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Sparkles, Zap, Sun, Moon, Laptop, BarChart3, FileText, Layout, TrendingUp } from 'lucide-react';
+import { Settings, Sparkles, Zap, Sun, Moon, Laptop, BarChart3, FileText, Layout, TrendingUp, Upload, Rocket, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Bell, BellOff } from 'lucide-react';
+import { useOnboarding } from '@/hooks/use-onboarding';
+import { useToast } from '@/hooks/use-toast';
 import { logger } from "@/lib/logger";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
-  const { theme, setTheme, resolvedTheme, isDark, isUsingSystemTheme, systemPreference, mounted: themeMounted } = useTheme();
+  const {
+    theme,
+    setTheme,
+    resolvedTheme,
+    isDark,
+    isUsingSystemTheme,
+    systemPreference,
+    mounted: themeMounted,
+  } = useTheme();
   const router = useRouter();
-  const { 
-    documentsCreated, 
-    templatesUsed, 
-    templatesCreated, 
-    successRate, 
-    loading: statsLoading, 
-    error: statsError 
+  const {
+    documentsCreated,
+    templatesUsed,
+    templatesCreated,
+    successRate,
+    loading: statsLoading,
+    error: statsError,
   } = useUsageStats();
+  const onboarding = useOnboarding();
+  const { toast } = useToast();
+  const [isRestartingOnboarding, setIsRestartingOnboarding] = useState(false);
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
+  useEffect(() => {
+    // Check local storage for notification preference
+    const prefs = localStorage.getItem('documentGenerationNotifications');
+    if (prefs !== null) {
+      setNotificationsEnabled(prefs === 'true');
+    } else {
+      // Default to true if not set, but respect Notification permission if denied
+      setNotificationsEnabled(typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'denied');
+    }
+  }, []);
+
+  const toggleNotifications = async (enabled: boolean) => {
+    if (enabled && 'Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        localStorage.setItem('documentGenerationNotifications', 'true');
+        setNotificationsEnabled(true);
+      } else {
+        localStorage.setItem('documentGenerationNotifications', 'false');
+        setNotificationsEnabled(false);
+      }
+    } else {
+      localStorage.setItem('documentGenerationNotifications', 'false');
+      setNotificationsEnabled(false);
+    }
+  };
+
+  const restartOnboarding = async () => {
+    try {
+      await onboarding.reset();
+      router.push("/onboarding");
+    } catch (error) {
+      logger.error(
+        { component: "SettingsPage" },
+        "Failed to restart onboarding",
+        error,
+      );
+      toast({
+        title: "Could not restart onboarding",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestartingOnboarding(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -51,11 +114,12 @@ export default function SettingsPage() {
                   Access Your Settings
                 </h1>
                 <p className="text-muted-foreground">
-                  Sign in to manage your profile, preferences, and account settings
+                  Sign in to manage your profile, preferences, and account
+                  settings
                 </p>
               </div>
-              <Button 
-                onClick={() => router.push('/auth/signin')}
+              <Button
+                onClick={() => router.push("/auth/signin")}
                 className="w-full bg-gradient-to-r from-yellow-400 to-blue-600 text-white font-semibold"
                 size="lg"
               >
@@ -78,9 +142,13 @@ export default function SettingsPage() {
             <span className="text-sm font-medium">Account Settings</span>
             <Sparkles className="h-4 w-4 text-blue-500" />
           </div>
-          
+
           <h1 className="text-3xl font-bold mb-2">
-            Your <span className="bg-gradient-to-r from-yellow-400 to-blue-600 bg-clip-text text-transparent">DraftDeckAI</span> Account
+            Your{" "}
+            <span className="bg-gradient-to-r from-yellow-400 to-blue-600 bg-clip-text text-transparent">
+              DraftDeckAI
+            </span>{" "}
+            Account
           </h1>
           <p className="text-muted-foreground">
             Manage your profile, subscription, and preferences
@@ -139,39 +207,43 @@ export default function SettingsPage() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
-                      
+
                       {/* System preference info */}
                       {isUsingSystemTheme && systemPreference && (
                         <div className="text-xs text-muted-foreground bg-muted/50 p-2.5 rounded-lg flex items-center gap-2">
                           <Laptop className="h-3.5 w-3.5 shrink-0" />
                           <span>
-                            Your system prefers <span className="font-semibold">{systemPreference}</span> mode
+                            Your system prefers{" "}
+                            <span className="font-semibold">
+                              {systemPreference}
+                            </span>{" "}
+                            mode
                           </span>
                         </div>
                       )}
-                      
+
                       {/* Theme quick-select buttons */}
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant={theme === 'light' ? 'default' : 'outline'}
-                          onClick={() => setTheme('light')}
+                        <Button
+                          size="sm"
+                          variant={theme === "light" ? "default" : "outline"}
+                          onClick={() => setTheme("light")}
                         >
                           <Sun className="h-4 w-4 mr-1" />
                           Light
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant={theme === 'dark' ? 'default' : 'outline'}
-                          onClick={() => setTheme('dark')}
+                        <Button
+                          size="sm"
+                          variant={theme === "dark" ? "default" : "outline"}
+                          onClick={() => setTheme("dark")}
                         >
                           <Moon className="h-4 w-4 mr-1" />
                           Dark
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant={theme === 'system' ? 'default' : 'outline'}
-                          onClick={() => setTheme('system')}
+                        <Button
+                          size="sm"
+                          variant={theme === "system" ? "default" : "outline"}
+                          onClick={() => setTheme("system")}
                         >
                           <Laptop className="h-4 w-4 mr-1" />
                           System
@@ -180,9 +252,98 @@ export default function SettingsPage() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                      Your preference is saved automatically and persists across sessions
+                    Your preference is saved automatically and persists across
+                    sessions
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Portability */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Data Import
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">Restore from export</p>
+                  <p className="text-sm text-muted-foreground">
+                    Import documents, presentations, diagrams, and letters from
+                    a DraftDeckAI JSON export.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/settings/import")}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Data
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Onboarding */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Rocket className="h-5 w-5" />
+                Onboarding
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">Restart product tour</p>
+                  <p className="text-sm text-muted-foreground">
+                    Revisit profile setup, templates, first document creation,
+                    and workspace tips.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={restartOnboarding}
+                  disabled={isRestartingOnboarding}
+                  aria-busy={isRestartingOnboarding}
+                >
+                  {isRestartingOnboarding ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Rocket className="h-4 w-4 mr-2" />
+                  )}
+                  {isRestartingOnboarding
+                    ? "Opening Onboarding..."
+                    : "Open Onboarding"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base flex items-center gap-2">
+                    {notificationsEnabled ? <Bell className="w-4 h-4 text-blue-500" /> : <BellOff className="w-4 h-4 text-muted-foreground" />}
+                    Document Generation
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive browser notifications when long-running AI generation completes
+                  </p>
+                </div>
+                <Switch 
+                  checked={notificationsEnabled} 
+                  onCheckedChange={toggleNotifications} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -196,7 +357,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Free Plan</p>
-                  <p className="text-sm text-muted-foreground">5 documents per month</p>
+                  <p className="text-sm text-muted-foreground">
+                    5 documents per month
+                  </p>
                 </div>
                 <Button className="bg-gradient-to-r from-yellow-400 to-blue-600 text-white">
                   Upgrade to Pro
@@ -233,31 +396,47 @@ export default function SettingsPage() {
                   <div className="text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-center mb-2">
                       <FileText className="h-5 w-5 text-blue-600 mr-2" />
-                      <div className="text-2xl font-bold text-blue-600">{documentsCreated}</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {documentsCreated}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Documents Created</div>
+                    <div className="text-sm text-muted-foreground">
+                      Documents Created
+                    </div>
                   </div>
                   <div className="text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-center mb-2">
                       <Layout className="h-5 w-5 text-green-600 mr-2" />
-                      <div className="text-2xl font-bold text-green-600">{templatesUsed}</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {templatesUsed}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Templates Used</div>
+                    <div className="text-sm text-muted-foreground">
+                      Templates Used
+                    </div>
                   </div>
                   <div className="text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-center mb-2">
                       <TrendingUp className="h-5 w-5 text-purple-600 mr-2" />
-                      <div className="text-2xl font-bold text-purple-600">{successRate}%</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {successRate}%
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Success Rate</div>
+                    <div className="text-sm text-muted-foreground">
+                      Success Rate
+                    </div>
                   </div>
                 </div>
               )}
               {templatesCreated > 0 && (
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Templates Created by You</span>
-                    <span className="font-medium text-orange-600">{templatesCreated}</span>
+                    <span className="text-muted-foreground">
+                      Templates Created by You
+                    </span>
+                    <span className="font-medium text-orange-600">
+                      {templatesCreated}
+                    </span>
                   </div>
                 </div>
               )}
@@ -266,10 +445,7 @@ export default function SettingsPage() {
 
           {/* Back to Home */}
           <div className="text-center">
-            <Button
-              onClick={() => router.push('/')}
-              variant="outline"
-            >
+            <Button onClick={() => router.push("/")} variant="outline">
               ← Back to Home
             </Button>
           </div>

@@ -5,14 +5,23 @@ declare module '@/hooks/use-user' {
 }
 
 declare module '@/hooks/use-toast' {
+  type ToastVariant = 'default' | 'destructive';
+
+  type ToastInput = {
+    title: string;
+    description?: React.ReactNode;
+    variant?: ToastVariant;
+  };
+
+  type ToastFunction = ((toast: ToastInput) => string | number) & {
+    success: (message: string, options?: Record<string, unknown>) => string | number;
+    error: (message: string, options?: Record<string, unknown>) => string | number;
+    loading: (message: string, options?: Record<string, unknown>) => string | number;
+    dismiss: (toastId?: string | number) => void;
+  };
+
   export function useToast(): {
-    toasts: Array<{
-      id: string;
-      title: string;
-      description?: string;
-      variant?: 'default' | 'destructive';
-    }>;
-    toast: (toast: Omit<{ id: string; title: string; description?: string; variant?: 'default' | 'destructive' }, 'id'>) => void;
+    toast: ToastFunction;
     dismissToast: (id: string) => void;
   };
   

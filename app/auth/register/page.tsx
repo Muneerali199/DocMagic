@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { z } from "zod";
 
 // 1. Import our custom tracker
 import { useTrackEvent } from "@/hooks/useTrackEvent";
@@ -64,6 +65,26 @@ const GitHubIcon = () => (
   </svg>
 );
 
+const registerSchema = z
+  .object({
+    name: z.string().trim().min(2, "Full name must be at least 2 characters"),
+    email: z.string().trim().email("Please enter a valid email address"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters long")
+      .regex(/[A-Z]/, "Password must include at least one uppercase letter")
+      .regex(/[a-z]/, "Password must include at least one lowercase letter")
+      .regex(/[0-9]/, "Password must include at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterField = keyof z.infer<typeof registerSchema>;
+type RegisterErrors = Partial<Record<RegisterField, string>>;
+
 function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -79,10 +100,11 @@ function RegisterForm() {
   const [success, setSuccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState<string>("");
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<RegisterErrors>({});
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
-  
+
   // 2. Initialize the tracker
   const { trackEvent } = useTrackEvent();
 
@@ -108,10 +130,10 @@ function RegisterForm() {
   // OAuth Sign In Handler
   const handleOAuthSignIn = async (provider: "google" | "github") => {
     setIsOAuthLoading(provider);
-    
+
     // Track OAuth clicks
     trackEvent("OAuth Signup Clicked", { provider });
-    
+
     try {
       const redirectTo = `${window.location.origin}/auth/callback?type=signup${referralCode ? `&ref=${referralCode}` : ""}`;
 
@@ -143,37 +165,24 @@ function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure both passwords are identical.",
-        variant: "destructive",
+    const validation = registerSchema.safeParse({
+      name,
+      email,
+      password,
+      confirmPassword,
+    });
+    if (!validation.success) {
+      const nextErrors: RegisterErrors = {};
+      validation.error.issues.forEach((issue) => {
+        const field = issue.path[0] as RegisterField;
+        nextErrors[field] = issue.message;
       });
+      setFieldErrors(nextErrors);
       return;
     }
 
-    if (password.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-
-    if (!hasUppercase || !hasLowercase || !hasNumber) {
-      toast({
-        title: "Password too simple",
-        description: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    const validatedData = validation.data;
+    setFieldErrors({});
     setIsLoading(true);
 
     try {
@@ -194,7 +203,13 @@ function RegisterForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, referralCode, utmData }),
+        body: JSON.stringify({
+          name: validatedData.name,
+          email: validatedData.email,
+          password: validatedData.password,
+          referralCode,
+          utmData,
+        }),
       });
 
       const result = await res.json();
@@ -228,7 +243,7 @@ function RegisterForm() {
           error.message.includes("User already exists") ||
           error.message.includes("email address is already registered") ||
           error.message.includes(
-            "duplicate key value violates unique constraint"
+            "duplicate key value violates unique constraint",
           )
         ) {
           userMessage =
@@ -243,7 +258,7 @@ function RegisterForm() {
           error.message.includes("Password is too short")
         ) {
           userMessage =
-            "Password is too short. Please use at least 6 characters.";
+            "Password is too short. Please use at least 8 characters.";
         } else if (
           error.message.includes("rate limit") ||
           error.message.includes("Too many requests")
@@ -265,35 +280,35 @@ function RegisterForm() {
     }
   };
 
-  const isFormValid =
-    name.trim() &&
-    email.trim() &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
-    password.trim() &&
-    confirmPassword.trim() &&
-    password === confirmPassword &&
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[a-z]/.test(password) &&
-    /[0-9]/.test(password);
+  const isFormValid = registerSchema.safeParse({
+    name,
+    email,
+    password,
+    confirmPassword,
+  }).success;
 
   // Memoized referral handler to prevent unnecessary re-renders
-  const handleReferral = useCallback((code: string | null) => {
-    setReferralCode(code);
-    if (code) {
-      toast({
-        title: "Referral Applied",
-        description: "Your referral code has been applied successfully.",
-      });
-    }
-  }, [toast]);
+  const handleReferral = useCallback(
+    (code: string | null) => {
+      setReferralCode(code);
+      if (code) {
+        toast({
+          title: "Referral Applied",
+          description: "Your referral code has been applied successfully.",
+        });
+      }
+    },
+    [toast],
+  );
 
   // Success view: show verification instructions
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden py-8">
         <div className="absolute inset-0 mesh-gradient opacity-20 animate-pulse-glow"></div>
-        <div className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div
+          className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        >
           <div className="glass-effect p-6 sm:p-8 rounded-2xl shadow-2xl border border-yellow-400/20 relative overflow-hidden group backdrop-blur-xl">
             <div className="relative z-10 space-y-6">
               <div className="text-center">
@@ -304,8 +319,12 @@ function RegisterForm() {
                   Verify Your Email
                 </h1>
                 <p className="modern-body text-muted-foreground text-sm sm:text-base">
-                  We sent a verification link to <span className="font-medium text-foreground">{submittedEmail}</span>.
-                  Please check your inbox and confirm your email to complete signup.
+                  We sent a verification link to{" "}
+                  <span className="font-medium text-foreground">
+                    {submittedEmail}
+                  </span>
+                  . Please check your inbox and confirm your email to complete
+                  signup.
                 </p>
               </div>
 
@@ -314,16 +333,21 @@ function RegisterForm() {
                   className="w-full bolt-gradient text-white font-semibold py-4 rounded-xl"
                   onClick={async () => {
                     try {
-                      const { error } = await supabase.auth.resend({ type: "signup", email: submittedEmail });
+                      const { error } = await supabase.auth.resend({
+                        type: "signup",
+                        email: submittedEmail,
+                      });
                       if (error) throw error;
                       toast({
                         title: "Verification Email Resent",
-                        description: "Check your inbox (and spam folder) for the new link.",
+                        description:
+                          "Check your inbox (and spam folder) for the new link.",
                       });
                     } catch (err: any) {
                       toast({
                         title: "Couldn't resend email",
-                        description: err.message || "Please try again in a moment.",
+                        description:
+                          err.message || "Please try again in a moment.",
                         variant: "destructive",
                       });
                     }
@@ -343,12 +367,23 @@ function RegisterForm() {
               </div>
 
               <div className="text-center text-xs text-muted-foreground">
-                <p>If you don't see the email, check your spam or promotions folder.</p>
-                <p>Make sure your Supabase project allows redirects from your current domain.</p>
+                <p>
+                  If you don't see the email, check your spam or promotions
+                  folder.
+                </p>
+                <p>
+                  Make sure your Supabase project allows redirects from your
+                  current domain.
+                </p>
               </div>
 
               <div className="text-center">
-                <Link href="/auth/signin" className="text-sm font-medium bolt-gradient-text">Back to Sign In</Link>
+                <Link
+                  href="/auth/signin"
+                  className="text-sm font-medium bolt-gradient-text"
+                >
+                  Back to Sign In
+                </Link>
               </div>
             </div>
           </div>
@@ -381,8 +416,9 @@ function RegisterForm() {
       />
 
       <div
-        className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        className={`w-full max-w-md mx-4 relative z-10 transition-all duration-1000 ease-out ${
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
       >
         {/* Enhanced card with advanced glass effect and magnetic cursor */}
         <div className="glass-effect p-6 sm:p-8 rounded-2xl shadow-2xl border border-yellow-400/20 relative overflow-hidden group hover:border-yellow-400/40 transition-all duration-500 hover:shadow-3xl backdrop-blur-xl">
@@ -409,10 +445,11 @@ function RegisterForm() {
           <div className="relative z-10">
             {/* Enhanced header with advanced animations */}
             <div
-              className={`text-center mb-6 sm:mb-8 transition-all duration-700 delay-200 ${mounted
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
-                }`}
+              className={`text-center mb-6 sm:mb-8 transition-all duration-700 delay-200 ${
+                mounted
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
             >
               {/* Professional badge with hover effects */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect mb-4 badge-bg group hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -439,13 +476,17 @@ function RegisterForm() {
             {/* Referral Badge */}
             {referralCode && (
               <div
-                className={`mb-4 transition-all duration-500 delay-250 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                  }`}
+                className={`mb-4 transition-all duration-500 delay-250 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                   <Gift className="h-5 w-5 text-green-500" />
                   <span className="text-sm text-green-600 dark:text-green-400">
-                    You were referred! Your friend will get 5 bonus credits when you sign up.
+                    You were referred! Your friend will get 5 bonus credits when
+                    you sign up.
                   </span>
                 </div>
               </div>
@@ -453,8 +494,11 @@ function RegisterForm() {
 
             {/* OAuth Buttons */}
             <div
-              className={`space-y-3 mb-6 transition-all duration-500 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                }`}
+              className={`space-y-3 mb-6 transition-all duration-500 delay-300 ${
+                mounted
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
             >
               <Button
                 type="button"
@@ -483,35 +527,43 @@ function RegisterForm() {
 
             {/* Divider */}
             <div
-              className={`relative my-6 transition-all duration-500 delay-350 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                }`}
+              className={`relative my-6 transition-all duration-500 delay-350 ${
+                mounted
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
             >
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-yellow-400/20"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Enhanced Name field with advanced interactions */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-400 ${mounted
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                  }`}
+                className={`space-y-2 transition-all duration-500 delay-400 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <Label
                   htmlFor="name"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "name" ? "text-yellow-600 scale-105" : ""
-                    }`}
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
+                    focusedField === "name" ? "text-yellow-600 scale-105" : ""
+                  }`}
                 >
                   <User
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "name"
-                      ? "text-yellow-500 animate-pulse"
-                      : ""
-                      }`}
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
+                      focusedField === "name"
+                        ? "text-yellow-500 animate-pulse"
+                        : ""
+                    }`}
                   />
                   Full Name
                   {name && (
@@ -523,7 +575,10 @@ function RegisterForm() {
                     id="name"
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                    }}
                     onFocus={() => setFocusedField("name")}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Enter your full name"
@@ -532,36 +587,47 @@ function RegisterForm() {
                     disabled={isLoading || isOAuthLoading !== null}
                   />
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "name"
-                      ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
-                      : "border-yellow-400/20"
-                      }`}
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
+                      focusedField === "name"
+                        ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        : "border-yellow-400/20"
+                    }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${name ? "w-full" : "w-0"
-                      }`}
+                    className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-yellow-400 to-blue-500 transition-all duration-300 ${
+                      name ? "w-full" : "w-0"
+                    }`}
                   ></div>
                 </div>
+                {fieldErrors.name && (
+                  <p className="text-xs text-red-500 flex items-center gap-1 animate-fade-in-up">
+                    <User className="h-3 w-3" />
+                    {fieldErrors.name}
+                  </p>
+                )}
               </div>
 
               {/* Enhanced Email field with validation animations */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-450 ${mounted
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                  }`}
+                className={`space-y-2 transition-all duration-500 delay-450 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <Label
                   htmlFor="email"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "email" ? "text-yellow-600 scale-105" : ""
-                    }`}
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
+                    focusedField === "email" ? "text-yellow-600 scale-105" : ""
+                  }`}
                 >
                   <Mail
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "email"
-                      ? "text-yellow-500 animate-pulse"
-                      : ""
-                      }`}
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
+                      focusedField === "email"
+                        ? "text-yellow-500 animate-pulse"
+                        : ""
+                    }`}
                   />
                   Email Address
                   {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
@@ -573,46 +639,64 @@ function RegisterForm() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                    }}
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Enter your email"
                     required
-                    className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
-                      ? "border-red-400/60 focus:border-red-400/80 hover:border-red-400/70"
-                      : "border-yellow-400/30 focus:border-yellow-400/60 hover:border-yellow-400/50"
-                      }`}
+                    className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-4 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${
+                      email &&
+                      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+                      email.length > 0
+                        ? "border-red-400/60 focus:border-red-400/80 hover:border-red-400/70"
+                        : "border-yellow-400/30 focus:border-yellow-400/60 hover:border-yellow-400/50"
+                    }`}
                     disabled={isLoading || isOAuthLoading !== null}
                   />
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "email"
-                      ? email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
-                        ? "border-red-400/40 shadow-lg shadow-red-400/20"
-                        : "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
-                      : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
-                        ? "border-red-400/20"
-                        : "border-yellow-400/20"
-                      }`}
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
+                      focusedField === "email"
+                        ? email &&
+                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+                          email.length > 0
+                          ? "border-red-400/40 shadow-lg shadow-red-400/20"
+                          : "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        : email &&
+                            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+                            email.length > 0
+                          ? "border-red-400/20"
+                          : "border-yellow-400/20"
+                    }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-                      ? "w-full bg-gradient-to-r from-green-400 to-blue-500"
-                      : email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length > 0
-                        ? "w-full bg-gradient-to-r from-red-400 to-orange-500"
-                        : email
-                          ? "w-1/2 bg-gradient-to-r from-yellow-400 to-blue-500"
-                          : "w-0"
-                      }`}
+                    className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${
+                      email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                        ? "w-full bg-gradient-to-r from-green-400 to-blue-500"
+                        : email &&
+                            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+                            email.length > 0
+                          ? "w-full bg-gradient-to-r from-red-400 to-orange-500"
+                          : email
+                            ? "w-1/2 bg-gradient-to-r from-yellow-400 to-blue-500"
+                            : "w-0"
+                    }`}
                   ></div>
                 </div>
 
                 {/* Email validation feedback */}
-                {email && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                {(fieldErrors.email ||
+                  (email &&
+                    email.length > 0 &&
+                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) && (
                   <div className="animate-fade-in-up">
                     <p className="text-xs text-red-500 flex items-center gap-1 animate-bounce">
                       <Mail className="h-3 w-3" />
-                      Please enter a valid email address
+                      {fieldErrors.email ||
+                        "Please enter a valid email address"}
                     </p>
                   </div>
                 )}
@@ -620,24 +704,28 @@ function RegisterForm() {
 
               {/* Enhanced Password field with strength indicator */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-500 ${mounted
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                  }`}
+                className={`space-y-2 transition-all duration-500 delay-500 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <Label
                   htmlFor="password"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "password"
-                    ? "text-yellow-600 scale-105"
-                    : ""
-                    }`}
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
+                    focusedField === "password"
+                      ? "text-yellow-600 scale-105"
+                      : ""
+                  }`}
                 >
                   <Lock
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "password"
-                      ? "text-yellow-500 animate-pulse"
-                      : ""
-                      }`}
-                  />                  Password
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
+                      focusedField === "password"
+                        ? "text-yellow-500 animate-pulse"
+                        : ""
+                    }`}
+                  />{" "}
+                  Password
                   {passwordStrength >= 3 && (
                     <Shield className="h-3 w-3 text-green-500 animate-scale-in" />
                   )}
@@ -647,7 +735,14 @@ function RegisterForm() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        password: undefined,
+                        confirmPassword: undefined,
+                      }));
+                    }}
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Create a strong password (min. 8 characters)"
@@ -671,10 +766,11 @@ function RegisterForm() {
                     )}
                   </button>
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "password"
-                      ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
-                      : "border-yellow-400/20"
-                      }`}
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
+                      focusedField === "password"
+                        ? "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        : "border-yellow-400/20"
+                    }`}
                   ></div>
                 </div>
 
@@ -685,24 +781,26 @@ function RegisterForm() {
                       {[...Array(5)].map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < passwordStrength
-                            ? i < 2
-                              ? "bg-red-400"
-                              : i < 4
-                                ? "bg-yellow-400"
-                                : "bg-green-400"
-                            : "bg-gray-200 dark:bg-gray-700"
-                            }`}
+                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                            i < passwordStrength
+                              ? i < 2
+                                ? "bg-red-400"
+                                : i < 4
+                                  ? "bg-yellow-400"
+                                  : "bg-green-400"
+                              : "bg-gray-200 dark:bg-gray-700"
+                          }`}
                         />
                       ))}
                     </div>
                     <p
-                      className={`text-xs transition-all duration-300 ${passwordStrength < 2
-                        ? "text-red-500"
-                        : passwordStrength < 4
-                          ? "text-yellow-500"
-                          : "text-green-500"
-                        }`}
+                      className={`text-xs transition-all duration-300 ${
+                        passwordStrength < 2
+                          ? "text-red-500"
+                          : passwordStrength < 4
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                      }`}
                     >
                       {passwordStrength < 2 && "Weak password"}
                       {passwordStrength >= 2 &&
@@ -712,27 +810,36 @@ function RegisterForm() {
                     </p>
                   </div>
                 )}
+                {fieldErrors.password && (
+                  <p className="text-xs text-red-500 flex items-center gap-1 animate-fade-in-up">
+                    <Lock className="h-3 w-3" />
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               {/* Enhanced Confirm Password field with advanced validation */}
               <div
-                className={`space-y-2 transition-all duration-500 delay-550 ${mounted
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                  }`}
+                className={`space-y-2 transition-all duration-500 delay-550 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <Label
                   htmlFor="confirmPassword"
-                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${focusedField === "confirmPassword"
-                    ? "text-yellow-600 scale-105"
-                    : ""
-                    }`}
+                  className={`text-sm font-medium flex items-center gap-2 professional-text transition-all duration-300 ${
+                    focusedField === "confirmPassword"
+                      ? "text-yellow-600 scale-105"
+                      : ""
+                  }`}
                 >
                   <Shield
-                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${focusedField === "confirmPassword"
-                      ? "text-yellow-500 animate-pulse"
-                      : ""
-                      }`}
+                    className={`h-4 w-4 text-muted-foreground transition-all duration-300 ${
+                      focusedField === "confirmPassword"
+                        ? "text-yellow-500 animate-pulse"
+                        : ""
+                    }`}
                   />
                   Confirm Password
                   {confirmPassword && password === confirmPassword && (
@@ -744,15 +851,22 @@ function RegisterForm() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        confirmPassword: undefined,
+                      }));
+                    }}
                     onFocus={() => setFocusedField("confirmPassword")}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Confirm your password"
                     required
-                    className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${confirmPassword && password !== confirmPassword
-                      ? "border-red-400/60 focus:border-red-400/80 hover:border-red-400/70"
-                      : "border-yellow-400/30 focus:border-yellow-400/60 hover:border-yellow-400/50"
-                      }`}
+                    className={`glass-effect focus:ring-yellow-400/20 pl-4 pr-12 py-3 text-sm sm:text-base transition-all duration-300 group-hover:shadow-lg ${
+                      confirmPassword && password !== confirmPassword
+                        ? "border-red-400/60 focus:border-red-400/80 hover:border-red-400/70"
+                        : "border-yellow-400/30 focus:border-yellow-400/60 hover:border-yellow-400/50"
+                    }`}
                     disabled={isLoading || isOAuthLoading !== null}
                   />
                   <button
@@ -773,30 +887,33 @@ function RegisterForm() {
                     )}
                   </button>
                   <div
-                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${focusedField === "confirmPassword"
-                      ? confirmPassword && password !== confirmPassword
-                        ? "border-red-400/40 shadow-lg shadow-red-400/20"
-                        : "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
-                      : confirmPassword && password !== confirmPassword
-                        ? "border-red-400/20"
-                        : "border-yellow-400/20"
-                      }`}
+                    className={`absolute inset-0 rounded-md border pointer-events-none transition-all duration-300 ${
+                      focusedField === "confirmPassword"
+                        ? confirmPassword && password !== confirmPassword
+                          ? "border-red-400/40 shadow-lg shadow-red-400/20"
+                          : "border-yellow-400/40 shadow-lg shadow-yellow-400/20"
+                        : confirmPassword && password !== confirmPassword
+                          ? "border-red-400/20"
+                          : "border-yellow-400/20"
+                    }`}
                   ></div>
                   {/* Progress indicator */}
                   <div
-                    className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${confirmPassword && password === confirmPassword
-                      ? "w-full bg-gradient-to-r from-green-400 to-blue-500"
-                      : confirmPassword && password !== confirmPassword
-                        ? "w-full bg-gradient-to-r from-red-400 to-orange-500"
-                        : "w-0"
-                      }`}
+                    className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ${
+                      confirmPassword && password === confirmPassword
+                        ? "w-full bg-gradient-to-r from-green-400 to-blue-500"
+                        : confirmPassword && password !== confirmPassword
+                          ? "w-full bg-gradient-to-r from-red-400 to-orange-500"
+                          : "w-0"
+                    }`}
                   ></div>
                 </div>
 
                 {/* Enhanced password match indicator */}
-                {confirmPassword && (
+                {(fieldErrors.confirmPassword || confirmPassword) && (
                   <div className="animate-fade-in-up">
-                    {password === confirmPassword ? (
+                    {!fieldErrors.confirmPassword &&
+                    password === confirmPassword ? (
                       <p className="text-xs text-green-500 flex items-center gap-1 animate-scale-in">
                         <Check className="h-3 w-3" />
                         Passwords match perfectly!
@@ -804,7 +921,7 @@ function RegisterForm() {
                     ) : (
                       <p className="text-xs text-red-500 flex items-center gap-1 animate-bounce">
                         <Shield className="h-3 w-3" />
-                        Passwords don't match
+                        {fieldErrors.confirmPassword || "Passwords don't match"}
                       </p>
                     )}
                   </div>
@@ -813,24 +930,29 @@ function RegisterForm() {
 
               {/* Email verification notice */}
               <div
-                className={`transition-all duration-500 delay-600 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                  }`}
+                className={`transition-all duration-500 delay-600 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <div className="glass-effect p-3 rounded-lg border border-yellow-400/20 flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Email verification is required. After you sign up, we'll send you a
-                    verification link. Please confirm your email before signing in.
+                    Email verification is required. After you sign up, we'll
+                    send you a verification link. Please confirm your email
+                    before signing in.
                   </p>
                 </div>
               </div>
 
               {/* Enhanced submit button with advanced animations */}
               <div
-                className={`transition-all duration-500 delay-650 ${mounted
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                  }`}
+                className={`transition-all duration-500 delay-650 ${
+                  mounted
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
               >
                 <Button
                   type="submit"
@@ -885,10 +1007,11 @@ function RegisterForm() {
 
             {/* Enhanced footer with advanced styling */}
             <div
-              className={`mt-6 sm:mt-8 text-center transition-all duration-500 delay-700 ${mounted
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
-                }`}
+              className={`mt-6 sm:mt-8 text-center transition-all duration-500 delay-700 ${
+                mounted
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
             >
               <div className="glass-effect p-4 rounded-xl border border-yellow-400/10 hover:border-yellow-400/20 transition-all duration-300 group hover:scale-105">
                 <p className="professional-text text-sm text-muted-foreground mb-3">
@@ -911,10 +1034,11 @@ function RegisterForm() {
 
             {/* Enhanced navigation link */}
             <div
-              className={`mt-4 text-center transition-all duration-500 delay-750 ${mounted
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
-                }`}
+              className={`mt-4 text-center transition-all duration-500 delay-750 ${
+                mounted
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
             >
               <Link
                 href="/"
@@ -935,11 +1059,13 @@ function RegisterForm() {
 
 export default function Register() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
+        </div>
+      }
+    >
       <RegisterForm />
     </Suspense>
   );

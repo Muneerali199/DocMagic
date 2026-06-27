@@ -11,15 +11,18 @@ export default function NotFound() {
   const searchData = [
     {
       keywords: ["login", "sign in", "access"],
-      answer: "To log in, Go to Homepage  click 'Signin' at the top right and enter your credentials.",
+      answer:
+        "To log in, Go to Homepage  click 'Signin' at the top right and enter your credentials.",
     },
     {
       keywords: ["register", "signup", "create account"],
-      answer: "To register, Go to Homepage click 'Signin' and complete the sign-up form.",
+      answer:
+        "To register, Go to Homepage click 'Signin' and complete the sign-up form.",
     },
     {
       keywords: ["contact", "support", "help"],
-      answer: "You can contact support through our contact form available below",
+      answer:
+        "You can contact support through our contact form available below",
     },
     //can add more queried
   ];
@@ -33,8 +36,8 @@ export default function NotFound() {
 
   const matchedResult = searchData.find((item) =>
     item.keywords.some((keyword) =>
-      submittedQuery.includes(keyword.toLowerCase())
-    )
+      submittedQuery.includes(keyword.toLowerCase()),
+    ),
   );
 
   return (
@@ -49,15 +52,23 @@ export default function NotFound() {
         />
       </div>
 
-      <h1 className="text-4xl font-bold mb-4">Uh-oh! This page has disappeared into thin air.</h1>
+      <h1 className="text-4xl font-bold mb-4">
+        Uh-oh! This page has disappeared into thin air.
+      </h1>
       <p className="text-lg mb-6">
-        Like a magician’s trick gone slightly sideways... but don’t worry—we’ve still got plenty of magic to help you out.
+        Like a magician’s trick gone slightly sideways... but don’t worry—we’ve
+        still got plenty of magic to help you out.
       </p>
 
-      <form onSubmit={handleSearch} className="flex w-full max-w-md mb-6">
+      <form
+        role="search"
+        onSubmit={handleSearch}
+        className="flex w-full max-w-md mb-6"
+      >
         <input
           type="text"
           placeholder="Search DraftDeckAI..."
+          aria-label="Search DraftDeckAI"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -71,7 +82,7 @@ export default function NotFound() {
       </form>
 
       {submittedQuery && (
-        <div className="max-w-md w-full text-left mb-8">
+        <div aria-live="polite" className="max-w-md w-full text-left mb-8">
           <h2 className="text-xl font-semibold mb-2">Search Results:</h2>
           {matchedResult ? (
             <p className="text-gray-700">{matchedResult.answer}</p>
@@ -84,7 +95,10 @@ export default function NotFound() {
       )}
 
       <div className="space-x-4 mb-6">
-        <Link href="/" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+        <Link
+          href="/"
+          className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+        >
           Back to Homepage
         </Link>
       </div>

@@ -258,11 +258,8 @@ export async function POST(request: Request) {
   } catch (error) {
     logger.error({ route: 'app/api/generate/letter/route.ts' }, "Error generating letter:", error);
     return NextResponse.json(
-      {
-        error: "Failed to generate letter",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
+      { error: 'Failed to generate letter' },
+      { status: 500 }
     );
   }
 }

@@ -8,6 +8,31 @@ const isProduction = process.env.NODE_ENV === "production";
 const isVercel = process.env.VERCEL === "1";
 const isNetlify = process.env.NETLIFY === "true";
 
+function getPositiveIntegerEnv(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+
+  if (Number.isSafeInteger(value) && value > 0) {
+    return value;
+  }
+
+  return fallback;
+}
+
+export const RATE_LIMIT_CONFIG = {
+  AUTH: {
+    windowMs: 15 * 60 * 1000,
+    max: getPositiveIntegerEnv("RATE_LIMIT_AUTH_MAX", 10),
+  },
+  GENERATE: {
+    windowMs: 5 * 60 * 1000,
+    max: getPositiveIntegerEnv("RATE_LIMIT_GENERATE_MAX", 20),
+  },
+  API: {
+    windowMs: 60 * 1000,
+    max: getPositiveIntegerEnv("RATE_LIMIT_API_MAX", 100),
+  },
+} as const;
+
 // Stripe Configuration
 export const STRIPE_CONFIG = {
   // Enable Stripe integration (set to true in production when ready)

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import os from 'os';
+import { createClient } from '@supabase/supabase-js';
 
 // Simple in-memory metrics store
 // Note: In serverless environments, this resets on every function cold start.
@@ -12,7 +13,37 @@ const metrics = {
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Metrics endpoint requires authentication (OWASP A01 - Broken Access Control)
+  const authHeader = request.headers.get('Authorization');
+  const token = authHeader?.replace('Bearer ', '');
+
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Unauthorized - Authentication required to access metrics' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid token' },
+        { status: 401 }
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: 'Authentication service unavailable' },
+      { status: 503 }
+    );
+  }
   const uptime = Math.floor((Date.now() - metrics.startTime) / 1000);
   const memoryUsage = process.memoryUsage();
   

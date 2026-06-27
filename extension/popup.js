@@ -1,6 +1,14 @@
 // DraftDeckAI Smart AI Extension - Popup Script
 // Uses Gemini AI directly - No backend needed!
 
+const DEBUG = false;
+const Logger = {
+    debug: (...args) => { if (DEBUG) console.debug(...args); },
+    info: (...args) => { if (DEBUG) console.info(...args); },
+    warn: (...args) => { if (DEBUG) console.warn(...args); },
+    error: (...args) => { console.error(...args); }
+};
+
 let currentApiKey = '';
 
 // Gamification System
@@ -317,29 +325,29 @@ document.addEventListener('keydown', trapInterviewConfigFocus);
 const settingsBtn = document.getElementById('open-settings');
 if (settingsBtn) {
     settingsBtn.addEventListener('click', () => {
-        console.log('Opening settings page...');
+        Logger.debug('Opening settings page...');
         // Try to open settings page
         try {
             chrome.runtime.openOptionsPage(() => {
                 if (chrome.runtime.lastError) {
                     // Fallback: open in new tab
-                    console.log('Using fallback method...');
+                    Logger.debug('Using fallback method...');
                     chrome.tabs.create({
                         url: chrome.runtime.getURL('settings.html')
                     });
                 }
             });
         } catch (error) {
-            console.error('Error opening settings:', error);
+            Logger.error('Error opening settings:', error);
             // Direct fallback
             chrome.tabs.create({
                 url: chrome.runtime.getURL('settings.html')
             });
         }
     });
-    console.log('Settings button listener attached');
+    Logger.debug('Settings button listener attached');
 } else {
-    console.error('Settings button not found in DOM');
+    Logger.error('Settings button not found in DOM');
 }
 
 // DSA Problem Solver
@@ -365,7 +373,7 @@ document.getElementById('solve-dsa').addEventListener('click', async () => {
         incrementStat('problems-solved');
     } catch (error) {
         showNotification('Failed to solve problem. Please try again.', 'error');
-        console.error(error);
+        Logger.error(error);
     } finally {
         showLoading(false);
     }
@@ -385,7 +393,7 @@ document.getElementById('generate-questions').addEventListener('click', async ()
         incrementStat('questions-practiced', questions.length);
     } catch (error) {
         showNotification('Failed to generate questions. Please try again.', 'error');
-        console.error(error);
+        Logger.error(error);
     } finally {
         showLoading(false);
     }
@@ -402,7 +410,7 @@ document.querySelectorAll('.action-card').forEach(card => {
             displayResumeResult(action, result);
         } catch (error) {
             showNotification('Failed to process request. Please try again.', 'error');
-            console.error(error);
+            Logger.error(error);
         } finally {
             showLoading(false);
         }
@@ -428,37 +436,7 @@ document.getElementById('generate-plan').addEventListener('click', async () => {
         displayStudyPlan(plan);
     } catch (error) {
         showNotification('Failed to generate plan. Please try again.', 'error');
-        console.error(error);
-    } finally {
-        showLoading(false);
-    }
-});
-
-document.getElementById('copy-plan').addEventListener('click', () => {
-    const content = document.getElementById('study-content').textContent;
-    navigator.clipboard.writeText(content);
-    showNotification('Study plan copied!', 'success');
-});
-
-// Study Plan Generator
-document.getElementById('generate-plan').addEventListener('click', async () => {
-    const goal = document.getElementById('study-goal').value.trim();
-    const duration = document.getElementById('study-duration').value;
-    const hours = document.getElementById('study-hours').value;
-    
-    if (!goal) {
-        showNotification('Please enter your study goal', 'error');
-        return;
-    }
-    
-    showLoading(true);
-    
-    try {
-        const plan = await generateStudyPlan(goal, duration, hours);
-        displayStudyPlan(plan);
-    } catch (error) {
-        showNotification('Failed to generate plan. Please try again.', 'error');
-        console.error(error);
+        Logger.error(error);
     } finally {
         showLoading(false);
     }
@@ -559,7 +537,7 @@ async function handleResumeAction(action) {
                 }
             }
         } catch (e) {
-            console.log('Could not fetch LinkedIn data:', e);
+            Logger.warn('Could not fetch LinkedIn data:', e);
         }
     }
 

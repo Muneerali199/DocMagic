@@ -7,22 +7,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DiagramPreview } from "@/components/diagram/diagram-preview";
 import { DiagramTemplates } from "@/components/diagram/diagram-templates";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { createClient } from "@/lib/supabase/client";
-import { broadcastDiagramChange, subscribeToDiagramChanges } from "@/lib/collaboration-service";
-import { 
-  Loader2, 
-  Sparkles, 
-  Download, 
-  Copy, 
-  Check, 
-  Wand2, 
-  Code, 
-  Eye, 
+import {
+  broadcastDiagramChange,
+  subscribeToDiagramChanges,
+} from "@/lib/collaboration-service";
+import {
+  Loader2,
+  Sparkles,
+  Download,
+  Copy,
+  Check,
+  Wand2,
+  Code,
+  Eye,
   FileImage,
   Share2,
   Save,
@@ -32,23 +41,23 @@ import {
   GitBranch,
   Database,
   Network,
-  Zap
+  Zap,
 } from "lucide-react";
-import { toPng, toSvg } from 'html-to-image';
+import { toPng, toSvg } from "html-to-image";
 import { GenerationLoadingOverlay } from "@/components/loading-screen";
 
 const DIAGRAM_TYPES = [
-  { value: 'flowchart', label: 'Flowchart', icon: '📊' },
-  { value: 'sequence', label: 'Sequence Diagram', icon: '🔄' },
-  { value: 'classDiagram', label: 'Class Diagram', icon: '📦' },
-  { value: 'erDiagram', label: 'ER Diagram', icon: '🗄️' },
-  { value: 'stateDiagram', label: 'State Diagram', icon: '⚡' },
-  { value: 'gantt', label: 'Gantt Chart', icon: '📅' },
-  { value: 'pie', label: 'Pie Chart', icon: '🥧' },
-  { value: 'gitGraph', label: 'Git Graph', icon: '🌿' },
-  { value: 'mindmap', label: 'Mindmap', icon: '🧠' },
-  { value: 'timeline', label: 'Timeline', icon: '⏳' },
-  { value: 'journey', label: 'User Journey', icon: '🚶' },
+  { value: "flowchart", label: "Flowchart", icon: "📊" },
+  { value: "sequence", label: "Sequence Diagram", icon: "🔄" },
+  { value: "classDiagram", label: "Class Diagram", icon: "📦" },
+  { value: "erDiagram", label: "ER Diagram", icon: "🗄️" },
+  { value: "stateDiagram", label: "State Diagram", icon: "⚡" },
+  { value: "gantt", label: "Gantt Chart", icon: "📅" },
+  { value: "pie", label: "Pie Chart", icon: "🥧" },
+  { value: "gitGraph", label: "Git Graph", icon: "🌿" },
+  { value: "mindmap", label: "Mindmap", icon: "🧠" },
+  { value: "timeline", label: "Timeline", icon: "⏳" },
+  { value: "journey", label: "User Journey", icon: "🚶" },
 ];
 
 const DIAGRAM_EXAMPLES = {
@@ -58,14 +67,14 @@ const DIAGRAM_EXAMPLES = {
     B -->|No| D[Debug]
     D --> B
     C --> E[End]`,
-  
+
   sequence: `sequenceDiagram
     participant A as Alice
     participant B as Bob
     A->>B: Hello Bob, how are you?
     B-->>A: Great!
     A-)B: See you later!`,
-  
+
   classDiagram: `classDiagram
     class Animal {
         +String name
@@ -77,7 +86,7 @@ const DIAGRAM_EXAMPLES = {
         +bark()
     }
     Animal <|-- Dog`,
-  
+
   erDiagram: `erDiagram
     CUSTOMER ||--o{ ORDER : places
     CUSTOMER {
@@ -91,7 +100,7 @@ const DIAGRAM_EXAMPLES = {
         date orderDate
     }
     CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`,
-  
+
   stateDiagram: `stateDiagram-v2
     [*] --> Idle
     Idle --> Processing : Start
@@ -100,7 +109,7 @@ const DIAGRAM_EXAMPLES = {
     Failed --> Processing : Retry
     Success --> [*]
     Failed --> [*]`,
-  
+
   gantt: `gantt
     title Project Timeline
     dateFormat YYYY-MM-DD
@@ -112,14 +121,14 @@ const DIAGRAM_EXAMPLES = {
     Backend :dev2, 2024-01-18, 14d
     section Testing
     QA Testing :test, 2024-02-01, 7d`,
-  
+
   pie: `pie title Project Distribution
     "Development" : 45
     "Testing" : 20
     "Design" : 15
     "Documentation" : 10
     "Deployment" : 10`,
-  
+
   gitGraph: `gitGraph
     commit
     branch develop
@@ -129,7 +138,7 @@ const DIAGRAM_EXAMPLES = {
     checkout main
     merge develop
     commit`,
-  
+
   mindmap: `mindmap
   root((DraftDeckAI))
     Features
@@ -144,14 +153,14 @@ const DIAGRAM_EXAMPLES = {
       Fast
       Professional
       Easy to Use`,
-  
+
   timeline: `timeline
     title Product Development Timeline
     2024-Q1 : Planning Phase : Market Research
     2024-Q2 : Development : MVP Launch
     2024-Q3 : Growth : User Acquisition
     2024-Q4 : Scale : Enterprise Features`,
-  
+
   journey: `journey
     title My working day
     section Go to work
@@ -160,7 +169,7 @@ const DIAGRAM_EXAMPLES = {
       Do work: 1: Me, Cat
     section Go home
       Go downstairs: 5: Me
-      Sit down: 5: Me`
+      Sit down: 5: Me`,
 };
 
 interface DiagramGeneratorProps {
@@ -198,7 +207,9 @@ interface DiagramComment {
 
 export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramCode, setDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
-  const [previewDiagramCode, setPreviewDiagramCode] = useState(DIAGRAM_EXAMPLES.flowchart);
+  const [previewDiagramCode, setPreviewDiagramCode] = useState(
+    DIAGRAM_EXAMPLES.flowchart,
+  );
   const [selectedTemplate, setSelectedTemplate] = useState("flowchart");
   const [prompt, setPrompt] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState("flowchart");
@@ -215,7 +226,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const [diagramComments, setDiagramComments] = useState<DiagramComment[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
-  const [exportingFormat, setExportingFormat] = useState<'png' | 'svg' | null>(null);
+  const [exportingFormat, setExportingFormat] = useState<"png" | "svg" | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState("editor");
   const { toast } = useToast();
   const { user } = useAuth();
@@ -231,22 +244,25 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     };
   }, []);
 
-  const updateDiagramCode = useCallback((code: string, debouncePreview = false) => {
-    setDiagramCode(code);
+  const updateDiagramCode = useCallback(
+    (code: string, debouncePreview = false) => {
+      setDiagramCode(code);
 
-    if (previewDebounceRef.current) {
-      clearTimeout(previewDebounceRef.current);
-    }
+      if (previewDebounceRef.current) {
+        clearTimeout(previewDebounceRef.current);
+      }
 
-    if (debouncePreview) {
-      previewDebounceRef.current = setTimeout(() => {
+      if (debouncePreview) {
+        previewDebounceRef.current = setTimeout(() => {
+          setPreviewDiagramCode(code);
+          previewDebounceRef.current = null;
+        }, 500);
+      } else {
         setPreviewDiagramCode(code);
-        previewDebounceRef.current = null;
-      }, 500);
-    } else {
-      setPreviewDiagramCode(code);
-    }
-  }, []);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!sessionId) return;
@@ -265,26 +281,31 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const syncDiagramChange = (mermaidCode: string, diagramType: string) => {
     if (!sessionId) return;
 
-    broadcastDiagramChange(sessionId, mermaidCode, diagramType).catch((error) => {
-      console.error('Diagram collaboration error:', error);
-    });
+    broadcastDiagramChange(sessionId, mermaidCode, diagramType).catch(
+      (error) => {
+        console.error("Diagram collaboration error:", error);
+      },
+    );
   };
 
   const loadSavedDiagrams = useCallback(async () => {
     setIsLoadingDiagrams(true);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session?.user) {
-        throw new Error('Please sign in to load saved diagrams');
+        throw new Error("Please sign in to load saved diagrams");
       }
 
       const { data, error } = await supabase
-        .from('diagrams')
-        .select('id,title,type,code,prompt,created_at')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .from("diagrams")
+        .select("id,title,type,code,prompt,created_at")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
 
       if (error) {
         throw error;
@@ -292,10 +313,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
       setSavedDiagrams(data || []);
     } catch (error) {
-      console.error('Load diagrams error:', error);
+      console.error("Load diagrams error:", error);
       toast({
         title: "Load failed",
-        description: error instanceof Error ? error.message : "Failed to load saved diagrams. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to load saved diagrams. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -303,82 +327,94 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     }
   }, [supabase, toast]);
 
-  const loadDiagramVersions = useCallback(async (diagramId = currentDiagramId) => {
-    if (!diagramId) {
-      setDiagramVersions([]);
-      return;
-    }
-
-    setIsLoadingVersions(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('document_versions')
-        .select('id,version_number,content,changes_summary,created_at')
-        .eq('document_id', diagramId)
-        .order('version_number', { ascending: false });
-
-      if (error) {
-        throw error;
+  const loadDiagramVersions = useCallback(
+    async (diagramId = currentDiagramId) => {
+      if (!diagramId) {
+        setDiagramVersions([]);
+        return;
       }
 
-      setDiagramVersions((data || []) as DiagramVersion[]);
-    } catch (error) {
-      console.error('Load versions error:', error);
-      toast({
-        title: "Load failed",
-        description: error instanceof Error ? error.message : "Failed to load diagram history. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingVersions(false);
-    }
-  }, [currentDiagramId, supabase, toast]);
+      setIsLoadingVersions(true);
 
-  const loadDiagramComments = useCallback(async (diagramId = currentDiagramId) => {
-    if (!diagramId) {
-      setDiagramComments([]);
-      return;
-    }
+      try {
+        const { data, error } = await supabase
+          .from("document_versions")
+          .select("id,version_number,content,changes_summary,created_at")
+          .eq("document_id", diagramId)
+          .order("version_number", { ascending: false });
 
-    setIsLoadingComments(true);
+        if (error) {
+          throw error;
+        }
 
-    try {
-      const { data, error } = await supabase
-        .from('diagram_comments')
-        .select('id,diagram_id,user_id,user_name,body,created_at')
-        .eq('diagram_id', diagramId)
-        .order('created_at', { ascending: true });
+        setDiagramVersions((data || []) as DiagramVersion[]);
+      } catch (error) {
+        console.error("Load versions error:", error);
+        toast({
+          title: "Load failed",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to load diagram history. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingVersions(false);
+      }
+    },
+    [currentDiagramId, supabase, toast],
+  );
 
-      if (error) {
-        throw error;
+  const loadDiagramComments = useCallback(
+    async (diagramId = currentDiagramId) => {
+      if (!diagramId) {
+        setDiagramComments([]);
+        return;
       }
 
-      setDiagramComments(data || []);
-    } catch (error) {
-      console.error('Load comments error:', error);
-      toast({
-        title: "Load failed",
-        description: error instanceof Error ? error.message : "Failed to load comments. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingComments(false);
-    }
-  }, [currentDiagramId, supabase, toast]);
+      setIsLoadingComments(true);
+
+      try {
+        const { data, error } = await supabase
+          .from("diagram_comments")
+          .select("id,diagram_id,user_id,user_name,body,created_at")
+          .eq("diagram_id", diagramId)
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+
+        setDiagramComments(data || []);
+      } catch (error) {
+        console.error("Load comments error:", error);
+        toast({
+          title: "Load failed",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to load comments. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingComments(false);
+      }
+    },
+    [currentDiagramId, supabase, toast],
+  );
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
 
-    if (value === 'my-diagrams') {
+    if (value === "my-diagrams") {
       loadSavedDiagrams();
     }
 
-    if (value === 'history') {
+    if (value === "history") {
       loadDiagramVersions();
     }
 
-    if (value === 'comments') {
+    if (value === "comments") {
       loadDiagramComments();
     }
   };
@@ -387,10 +423,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     setIsSavingDiagram(true);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session?.user) {
-        throw new Error('Please sign in to save diagrams');
+        throw new Error("Please sign in to save diagrams");
       }
 
       const title = prompt.trim().slice(0, 50) || "Untitled Diagram";
@@ -399,25 +438,25 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
       if (currentDiagramId) {
         const { data: updated, error } = await supabase
-          .from('diagrams')
+          .from("diagrams")
           .update({
             title,
             type: selectedDiagramType,
             code: diagramCode,
             prompt,
           })
-          .eq('id', currentDiagramId)
-          .select('id')
+          .eq("id", currentDiagramId)
+          .select("id")
           .single();
 
         if (error || !updated) {
-          throw error || new Error('Failed to update diagram');
+          throw error || new Error("Failed to update diagram");
         }
 
         savedDiagram = updated;
       } else {
         const { data: inserted, error } = await supabase
-          .from('diagrams')
+          .from("diagrams")
           .insert({
             user_id: session.user.id,
             title,
@@ -425,11 +464,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
             code: diagramCode,
             prompt,
           })
-          .select('id')
+          .select("id")
           .single();
 
         if (error || !inserted) {
-          throw error || new Error('Failed to save diagram');
+          throw error || new Error("Failed to save diagram");
         }
 
         savedDiagram = inserted;
@@ -437,26 +476,28 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
       }
 
       const { count, error: countError } = await supabase
-        .from('document_versions')
-        .select('id', { count: 'exact', head: true })
-        .eq('document_id', savedDiagram.id);
+        .from("document_versions")
+        .select("id", { count: "exact", head: true })
+        .eq("document_id", savedDiagram.id);
 
       if (countError) {
         throw countError;
       }
 
-      const { error: versionError } = await supabase.from('document_versions').insert({
-        document_id: savedDiagram.id,
-        version_number: (count || 0) + 1,
-        content: {
-          code: diagramCode,
-          type: selectedDiagramType,
-        },
-        changes_summary: "Manual save",
-        created_by: session.user.id,
-        created_by_name: session.user.email || "Anonymous",
-        is_auto_save: false,
-      });
+      const { error: versionError } = await supabase
+        .from("document_versions")
+        .insert({
+          document_id: savedDiagram.id,
+          version_number: (count || 0) + 1,
+          content: {
+            code: diagramCode,
+            type: selectedDiagramType,
+          },
+          changes_summary: "Manual save",
+          created_by: session.user.id,
+          created_by_name: session.user.email || "Anonymous",
+          is_auto_save: false,
+        });
 
       if (versionError) {
         throw versionError;
@@ -467,22 +508,25 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
         description: "Your diagram has been saved successfully",
       });
 
-      if (activeTab === 'my-diagrams') {
+      if (activeTab === "my-diagrams") {
         loadSavedDiagrams();
       }
 
-      if (activeTab === 'history') {
+      if (activeTab === "history") {
         loadDiagramVersions(savedDiagram.id);
       }
 
-      if (activeTab === 'comments') {
+      if (activeTab === "comments") {
         loadDiagramComments(savedDiagram.id);
       }
     } catch (error) {
-      console.error('Save diagram error:', error);
+      console.error("Save diagram error:", error);
       toast({
         title: "Save failed",
-        description: error instanceof Error ? error.message : "Failed to save diagram. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to save diagram. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -496,13 +540,16 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     setIsSubmittingComment(true);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session?.user) {
-        throw new Error('Please sign in to add comments');
+        throw new Error("Please sign in to add comments");
       }
 
-      const { error } = await supabase.from('diagram_comments').insert({
+      const { error } = await supabase.from("diagram_comments").insert({
         diagram_id: currentDiagramId,
         user_id: session.user.id,
         user_name: session.user.email || "Anonymous",
@@ -520,10 +567,13 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
       });
       loadDiagramComments(currentDiagramId);
     } catch (error) {
-      console.error('Submit comment error:', error);
+      console.error("Submit comment error:", error);
       toast({
         title: "Comment failed",
-        description: error instanceof Error ? error.message : "Failed to add comment. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to add comment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -556,7 +606,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   };
 
   const handleTemplateSelect = (template: string) => {
-    const code = DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] || DIAGRAM_EXAMPLES.flowchart;
+    const code =
+      DIAGRAM_EXAMPLES[template as keyof typeof DIAGRAM_EXAMPLES] ||
+      DIAGRAM_EXAMPLES.flowchart;
 
     setSelectedTemplate(template);
     updateDiagramCode(code);
@@ -584,69 +636,78 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     }
 
     setIsGenerating(true);
-    
+
     try {
       // Get the current session token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError || !session?.access_token) {
-        throw new Error('Failed to get authentication token');
+        throw new Error("Failed to get authentication token");
       }
 
-      const response = await fetch('/api/generate/diagram', {
-        method: 'POST',
+      const response = await fetch("/api/generate/diagram", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           prompt: prompt,
-          diagramType: selectedDiagramType
+          diagramType: selectedDiagramType,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        const errorMessage = errorData.message || errorData.error || 'Failed to generate diagram';
-        const hint = errorData.hint ? `\n\n💡 ${errorData.hint}` : '';
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        const errorMessage =
+          errorData.message || errorData.error || "Failed to generate diagram";
+        const hint = errorData.hint ? `\n\n💡 ${errorData.hint}` : "";
         throw new Error(errorMessage + hint);
       }
 
       const data = await response.json();
-      
+
       // Validate response has required fields
       if (!data || !data.code) {
-        throw new Error('Invalid response from API - missing diagram code');
+        throw new Error("Invalid response from API - missing diagram code");
       }
-      
+
       if (data.code.trim().length === 0) {
-        throw new Error('Generated diagram code is empty');
+        throw new Error("Generated diagram code is empty");
       }
-      
+
       updateDiagramCode(data.code);
       syncDiagramChange(data.code, selectedDiagramType);
       setActiveTab("preview");
-      
+
       toast({
         title: "🎯 AI Diagram Generated!",
         description: data.title || "Your diagram has been created successfully",
       });
     } catch (error) {
-      console.error('Diagram generation error:', error);
+      console.error("Diagram generation error:", error);
       let errorMessage = "Failed to generate diagram. Please try again.";
-      
+
       if (error instanceof Error) {
-        if (error.message.includes('parse')) {
-          errorMessage = "AI response format error. Try a simpler description like 'Create a flowchart for user registration'";
-        } else if (error.message.includes('missing')) {
-          errorMessage = "Invalid diagram generated. Try rephrasing your description.";
-        } else if (error.message.includes('empty')) {
-          errorMessage = "Generated diagram is empty. Try a more detailed description.";
+        if (error.message.includes("parse")) {
+          errorMessage =
+            "AI response format error. Try a simpler description like 'Create a flowchart for user registration'";
+        } else if (error.message.includes("missing")) {
+          errorMessage =
+            "Invalid diagram generated. Try rephrasing your description.";
+        } else if (error.message.includes("empty")) {
+          errorMessage =
+            "Generated diagram is empty. Try a more detailed description.";
         } else {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
         title: "Generation Failed",
         description: errorMessage,
@@ -659,10 +720,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
   const copyToClipboard = async () => {
     setIsCopying(true);
-    
+
     try {
       await navigator.clipboard.writeText(diagramCode);
-      
+
       toast({
         title: "Copied to clipboard!",
         description: "Mermaid code has been copied to your clipboard",
@@ -678,29 +739,29 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
     }
   };
 
-  const exportDiagram = async (format: 'png' | 'svg') => {
+  const exportDiagram = async (format: "png" | "svg") => {
     if (!diagramRef.current) return;
-    
+
     setExportingFormat(format);
-    
+
     try {
-      const element = diagramRef.current.querySelector('#mermaid-diagram');
-      if (!element) throw new Error('Diagram element not found');
-      
+      const element = diagramRef.current.querySelector("#mermaid-diagram");
+      if (!element) throw new Error("Diagram element not found");
+
       let dataUrl: string;
-      
+
       // Enhanced export options to preserve colors and styling
       const exportOptions = {
-        backgroundColor: '#ffffff',
+        backgroundColor: "transparent",
         quality: 1.0,
         pixelRatio: 3, // Higher resolution for better quality
         cacheBust: true,
         width: element.scrollWidth + 60, // Add padding
         height: element.scrollHeight + 60, // Add padding
         style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
-          padding: '30px',
+          transform: "scale(1)",
+          transformOrigin: "top left",
+          padding: "30px",
         },
         // Include all CSS styles
         includeQueryParams: true,
@@ -709,15 +770,15 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
         fontEmbedCSS: true,
         filter: (node: HTMLElement) => {
           // Ensure all text elements are captured with black color
-          if (node.tagName === 'text' || node.tagName === 'tspan') {
-            node.setAttribute('fill', '#000000');
-            node.style.fill = '#000000';
+          if (node.tagName === "text" || node.tagName === "tspan") {
+            node.setAttribute("fill", "#000000");
+            node.style.fill = "#000000";
           }
           return true;
         },
       };
-      
-      if (format === 'png') {
+
+      if (format === "png") {
         dataUrl = await toPng(element as HTMLElement, exportOptions);
       } else {
         dataUrl = await toSvg(element as HTMLElement, {
@@ -726,20 +787,21 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           skipFonts: false,
         });
       }
-      
+
       // Create download link with timestamp
       const timestamp = new Date().toISOString().slice(0, 10);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.download = `diagram-${timestamp}.${format}`;
       link.href = dataUrl;
       link.click();
-      
+
       toast({
         title: `Diagram exported as ${format.toUpperCase()}!`,
-        description: "Your diagram has been downloaded with full styling preserved",
+        description:
+          "Your diagram has been downloaded with full styling preserved",
       });
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       toast({
         title: "Export failed",
         description: `Failed to export diagram as ${format.toUpperCase()}. Please try again.`,
@@ -753,11 +815,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
   const shareDiagram = async () => {
     try {
       const shareData = {
-        title: 'DraftDeckAI Diagram',
-        text: 'Check out this diagram I created with DraftDeckAI!',
-        url: window.location.href
+        title: "DraftDeckAI Diagram",
+        text: "Check out this diagram I created with DraftDeckAI!",
+        url: window.location.href,
       };
-      
+
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
@@ -790,9 +852,17 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
         ]}
         variant="diagram"
       />
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <div className="flex justify-center mb-4 sm:mb-6 px-2 overflow-x-auto">
-          <TabsList role="tablist" className="glass-effect border border-yellow-400/20 p-1 h-auto flex-nowrap"  style={{ scrollbarWidth: 'none' }}>
+          <TabsList
+            role="tablist"
+            className="glass-effect border border-yellow-400/20 p-1 h-auto flex-nowrap"
+            style={{ scrollbarWidth: "none" }}
+          >
             <TabsTrigger
               value="editor"
               className="data-[state=active]:bolt-gradient data-[state=active]:text-white font-semibold px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
@@ -840,20 +910,26 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="editor" className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+        <TabsContent
+          value="editor"
+          className="space-y-4 sm:space-y-6 px-2 sm:px-0"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 lg:gap-8 auto-rows-max lg:auto-rows-auto">
             {/* Left Side - Code Editor */}
             <div className="space-y-4 sm:space-y-6">
               <div className="text-center lg:text-left">
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full glass-effect mb-2 sm:mb-3">
                   <Code className="h-3 w-3 text-yellow-500" />
-                  <span className="text-[10px] sm:text-xs font-medium">Mermaid Editor</span>
+                  <span className="text-[10px] sm:text-xs font-medium">
+                    Mermaid Editor
+                  </span>
                 </div>
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1.5 sm:mb-2 bolt-gradient-text">
                   Write Your Diagram
                 </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Use Mermaid syntax to create professional diagrams with live preview
+                  Use Mermaid syntax to create professional diagrams with live
+                  preview
                 </p>
               </div>
 
@@ -864,14 +940,24 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     <Wand2 className="h-4 w-4 text-yellow-500" />
                     AI Diagram Generator
                   </Label>
-                  
+
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="diagramType" className="text-xs text-muted-foreground mb-1.5 block">
+                      <Label
+                        htmlFor="diagramType"
+                        className="text-xs text-muted-foreground mb-1.5 block"
+                      >
                         Diagram Type
                       </Label>
-                      <Select value={selectedDiagramType} onValueChange={setSelectedDiagramType}>
-                        <SelectTrigger id="diagramType" aria-label="Select diagram type" className="glass-effect border-yellow-400/20">
+                      <Select
+                        value={selectedDiagramType}
+                        onValueChange={setSelectedDiagramType}
+                      >
+                        <SelectTrigger
+                          id="diagramType"
+                          aria-label="Select diagram type"
+                          className="glass-effect border-yellow-400/20"
+                        >
                           <SelectValue placeholder="Select diagram type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -888,9 +974,14 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     </div>
 
                     <div>
-                      <Label htmlFor="aiPrompt" className="text-xs text-muted-foreground mb-1.5 block flex items-center justify-between">
+                      <Label
+                        htmlFor="aiPrompt"
+                        className="text-xs text-muted-foreground mb-1.5 block flex items-center justify-between"
+                      >
                         <span>Describe Your Diagram</span>
-                        <span className="text-[10px] text-yellow-600 font-medium">Be specific & concise</span>
+                        <span className="text-[10px] text-yellow-600 font-medium">
+                          Be specific & concise
+                        </span>
                       </Label>
                       <Textarea
                         id="aiPrompt"
@@ -898,61 +989,71 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                         onChange={(e) => setPrompt(e.target.value)}
                         aria-label="Describe Your Diagram"
                         placeholder={
-                          selectedDiagramType === 'flowchart' 
+                          selectedDiagramType === "flowchart"
                             ? "E.g., User login process with email verification and password reset options"
-                            : selectedDiagramType === 'sequence'
-                            ? "E.g., Customer places order with payment processing and order confirmation"
-                            : selectedDiagramType === 'classDiagram'
-                            ? "E.g., E-commerce system with User, Product, Order, and Payment classes"
-                            : selectedDiagramType === 'erDiagram'
-                            ? "E.g., Database for blog with Users, Posts, Comments, and Tags entities"
-                            : "Describe what your diagram should show..."
+                            : selectedDiagramType === "sequence"
+                              ? "E.g., Customer places order with payment processing and order confirmation"
+                              : selectedDiagramType === "classDiagram"
+                                ? "E.g., E-commerce system with User, Product, Order, and Payment classes"
+                                : selectedDiagramType === "erDiagram"
+                                  ? "E.g., Database for blog with Users, Posts, Comments, and Tags entities"
+                                  : "Describe what your diagram should show..."
                         }
                         className="min-h-[100px] text-sm glass-effect border-yellow-400/20 focus:border-yellow-400/60 resize-none"
                       />
                       <p className="text-[10px] text-muted-foreground mt-1.5">
-                        💡 Tip: Be specific and concise. Example: "Show a flowchart with start, check password, success, and error states"
+                        💡 Tip: Be specific and concise. Example: "Show a
+                        flowchart with start, check password, success, and error
+                        states"
                       </p>
-                      
+
                       {/* Quick Example Prompts */}
                       <div className="grid grid-cols-2 gap-2 mt-3">
                         <button
                           onClick={() => {
-                            if (selectedDiagramType === 'flowchart') {
-                              setPrompt('User registration flow: enter email, verify, create password, confirm account');
+                            if (selectedDiagramType === "flowchart") {
+                              setPrompt(
+                                "User registration flow: enter email, verify, create password, confirm account",
+                              );
                             }
                           }}
-                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-50 transition-colors text-left text-muted-foreground hover:text-foreground"
+                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-400/10 transition-colors text-left text-muted-foreground hover:text-foreground"
                         >
                           📝 User Registration
                         </button>
                         <button
                           onClick={() => {
-                            if (selectedDiagramType === 'flowchart') {
-                              setPrompt('E-commerce checkout: add to cart, enter shipping, payment, order confirmation');
+                            if (selectedDiagramType === "flowchart") {
+                              setPrompt(
+                                "E-commerce checkout: add to cart, enter shipping, payment, order confirmation",
+                              );
                             }
                           }}
-                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-50 transition-colors text-left text-muted-foreground hover:text-foreground"
+                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-400/10 transition-colors text-left text-muted-foreground hover:text-foreground"
                         >
                           🛒 Checkout Flow
                         </button>
                         <button
                           onClick={() => {
-                            if (selectedDiagramType === 'flowchart') {
-                              setPrompt('API request handling: receive request, validate, process, return response');
+                            if (selectedDiagramType === "flowchart") {
+                              setPrompt(
+                                "API request handling: receive request, validate, process, return response",
+                              );
                             }
                           }}
-                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-50 transition-colors text-left text-muted-foreground hover:text-foreground"
+                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-400/10 transition-colors text-left text-muted-foreground hover:text-foreground"
                         >
                           🔗 API Flow
                         </button>
                         <button
                           onClick={() => {
-                            if (selectedDiagramType === 'flowchart') {
-                              setPrompt('Project timeline: planning, design, development, testing, deployment');
+                            if (selectedDiagramType === "flowchart") {
+                              setPrompt(
+                                "Project timeline: planning, design, development, testing, deployment",
+                              );
                             }
                           }}
-                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-50 transition-colors text-left text-muted-foreground hover:text-foreground"
+                          className="text-xs px-2 py-1 rounded border border-yellow-400/20 hover:bg-yellow-400/10 transition-colors text-left text-muted-foreground hover:text-foreground"
                         >
                           📅 Project Timeline
                         </button>
@@ -967,9 +1068,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                       className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                     >
                       {isGenerating ? (
-                        <>
-                          Generating with AI...
-                        </>
+                        <>Generating with AI...</>
                       ) : (
                         <>
                           <Sparkles className="mr-2 h-4 w-4" />
@@ -990,16 +1089,22 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     {Object.keys(DIAGRAM_EXAMPLES).map((template) => (
                       <Button
                         key={template}
-                        variant={selectedTemplate === template ? "default" : "outline"}
+                        variant={
+                          selectedTemplate === template ? "default" : "outline"
+                        }
                         size="sm"
                         onClick={() => handleTemplateSelect(template)}
                         className="text-xs capitalize"
                       >
-                        {template === 'classDiagram' ? 'Class' : 
-                         template === 'erDiagram' ? 'ER Diagram' :
-                         template === 'gitGraph' ? 'Git Graph' :
-                         template === 'stateDiagram' ? 'State' :
-                         template}
+                        {template === "classDiagram"
+                          ? "Class"
+                          : template === "erDiagram"
+                            ? "ER Diagram"
+                            : template === "gitGraph"
+                              ? "Git Graph"
+                              : template === "stateDiagram"
+                                ? "State"
+                                : template}
                       </Button>
                     ))}
                   </div>
@@ -1007,7 +1112,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
 
                 {/* Code Editor */}
                 <div className="space-y-2">
-                  <Label htmlFor="diagramCode" className="text-sm font-medium flex items-center gap-2">
+                  <Label
+                    htmlFor="diagramCode"
+                    className="text-sm font-medium flex items-center gap-2"
+                  >
                     <Sparkles className="h-4 w-4 text-yellow-500" />
                     Mermaid Code
                   </Label>
@@ -1030,9 +1138,7 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     className="w-full bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300"
                   >
                     {isGenerating ? (
-                      <>
-                        Generating with AI...
-                      </>
+                      <>Generating with AI...</>
                     ) : (
                       <>
                         <Sparkles className="mr-2 h-4 w-4" />
@@ -1051,11 +1157,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => exportDiagram('png')}
-                      isLoading={exportingFormat === 'png'}
+                      onClick={() => exportDiagram("png")}
+                      isLoading={exportingFormat === "png"}
                       className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
                     >
-                      {exportingFormat === 'png' ? (
+                      {exportingFormat === "png" ? (
                         "Export PNG"
                       ) : (
                         <>
@@ -1066,11 +1172,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => exportDiagram('svg')}
-                      isLoading={exportingFormat === 'svg'}
+                      onClick={() => exportDiagram("svg")}
+                      isLoading={exportingFormat === "svg"}
                       className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 min-h-[44px]"
                     >
-                      {exportingFormat === 'svg' ? (
+                      {exportingFormat === "svg" ? (
                         "Export SVG"
                       ) : (
                         <>
@@ -1141,12 +1247,20 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
               <div className="text-center lg:text-left">
                 <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full glass-effect mb-2 sm:mb-3">
                   <Eye className="h-3 w-3 text-blue-500" />
-                  <span className="text-[10px] sm:text-xs font-medium">Live Preview</span>
+                  <span className="text-[10px] sm:text-xs font-medium">
+                    Live Preview
+                  </span>
                 </div>
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold bolt-gradient-text">Preview</h2>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold bolt-gradient-text">
+                  Preview
+                </h2>
               </div>
 
-              <div ref={diagramRef} aria-live="polite" className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[300px] sm:min-h-[450px] lg:min-h-[550px] shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div
+                ref={diagramRef}
+                aria-live="polite"
+                className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-background via-background to-background from-white via-blue-50/30 to-white relative min-h-[300px] sm:min-h-[450px] lg:min-h-[550px] shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
                 <div className="absolute inset-0 shimmer opacity-20"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
                 <div className="relative z-10 h-full">
@@ -1163,11 +1277,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => exportDiagram('png')}
-                    isLoading={exportingFormat === 'png'}
+                    onClick={() => exportDiagram("png")}
+                    isLoading={exportingFormat === "png"}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
-                    {exportingFormat === 'png' ? (
+                    {exportingFormat === "png" ? (
                       "Export PNG"
                     ) : (
                       <>
@@ -1178,11 +1292,11 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => exportDiagram('svg')}
-                    isLoading={exportingFormat === 'svg'}
+                    onClick={() => exportDiagram("svg")}
+                    isLoading={exportingFormat === "svg"}
                     className="glass-effect border-yellow-400/30 hover:border-yellow-400/60"
                   >
-                    {exportingFormat === 'svg' ? (
+                    {exportingFormat === "svg" ? (
                       "Export SVG"
                     ) : (
                       <>
@@ -1253,7 +1367,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">My Diagrams</h2>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">
+                  My Diagrams
+                </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Load a saved diagram into the editor
                 </p>
@@ -1309,7 +1425,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">History</h2>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">
+                  History
+                </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Load a saved version of the current diagram
                 </p>
@@ -1373,7 +1491,9 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
           <div className="glass-effect p-4 sm:p-6 rounded-xl border border-yellow-400/20 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">Comments</h2>
+                <h2 className="text-lg sm:text-xl font-bold bolt-gradient-text">
+                  Comments
+                </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Discuss the current diagram
                 </p>
@@ -1435,7 +1555,10 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 )}
 
                 <div className="space-y-3 border-t border-yellow-400/20 pt-4">
-                  <Label htmlFor="diagramComment" className="text-sm font-medium">
+                  <Label
+                    htmlFor="diagramComment"
+                    className="text-sm font-medium"
+                  >
                     Add Comment
                   </Label>
                   <Textarea
@@ -1474,11 +1597,16 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                 Full Screen Diagram View
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto px-4">
-                Beautiful, responsive view optimized for both desktop and mobile devices
+                Beautiful, responsive view optimized for both desktop and mobile
+                devices
               </p>
             </div>
 
-            <div ref={diagramRef} aria-live="polite" className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-white relative min-h-[400px] sm:min-h-[500px] md:min-h-[700px] shadow-2xl">
+            <div
+              ref={diagramRef}
+              aria-live="polite"
+              className="glass-effect border-2 border-yellow-400/30 rounded-xl overflow-hidden bg-gradient-to-br from-background via-background to-background from-white via-blue-50/30 to-white relative min-h-[400px] sm:min-h-[500px] md:min-h-[700px] shadow-2xl"
+            >
               <div className="absolute inset-0 shimmer opacity-20"></div>
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl -z-10"></div>
               <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
@@ -1488,15 +1616,15 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
             </div>
 
             {/* Full Export Panel - Responsive Grid */}
-            <div className="glass-effect p-4 sm:p-6 rounded-xl border-2 border-yellow-400/30 bg-gradient-to-br from-yellow-50/50 to-transparent">
+            <div className="glass-effect p-4 sm:p-6 rounded-xl border-2 border-yellow-400/30 bg-gradient-to-br from-yellow-500/10 to-transparent">
               <h3 className="text-lg sm:text-xl font-medium mb-4 flex items-center gap-2">
                 <Download className="h-5 w-5 text-yellow-500" />
                 Export & Share Options
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
                 <Button
-                  onClick={() => exportDiagram('png')}
-                  disabled={exportingFormat === 'png'}
+                  onClick={() => exportDiagram("png")}
+                  disabled={exportingFormat === "png"}
                   className="bolt-gradient text-white font-semibold hover:scale-105 transition-all duration-300 text-sm sm:text-base py-2 sm:py-3"
                 >
                   <FileImage className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -1519,8 +1647,8 @@ export function DiagramGenerator({ sessionId }: DiagramGeneratorProps) {
                   )}
                 </Button>
                 <Button
-                  onClick={() => exportDiagram('svg')}
-                  disabled={exportingFormat === 'svg'}
+                  onClick={() => exportDiagram("svg")}
+                  disabled={exportingFormat === "svg"}
                   variant="outline"
                   className="glass-effect border-yellow-400/30 hover:border-yellow-400/60 text-sm sm:text-base py-2 sm:py-3"
                 >

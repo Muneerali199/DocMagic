@@ -1,6 +1,14 @@
 // DraftDeckAI Interviewer Mode
 // Interactive interviewer that asks questions, evaluates answers, and provides feedback
 
+const DEBUG = false;
+const Logger = {
+    debug: (...args) => { if (DEBUG) console.debug(...args); },
+    info: (...args) => { if (DEBUG) console.info(...args); },
+    warn: (...args) => { if (DEBUG) console.warn(...args); },
+    error: (...args) => { console.error(...args); }
+};
+
 class InterviewerMode {
     constructor() {
         this.isActive = false;
@@ -85,7 +93,7 @@ class InterviewerMode {
             this.askQuestion(question);
             
         } catch (error) {
-            console.error('Failed to generate question:', error);
+            Logger.error('Failed to generate question:', error);
             this.speak('I apologize, but I encountered an issue generating the next question. Let me try again.');
             setTimeout(() => this.generateNextQuestion(), 2000);
         }
@@ -145,7 +153,7 @@ class InterviewerMode {
                 endTime: null
             };
         } catch (error) {
-            console.error('Failed to parse question:', error);
+            Logger.error('Failed to parse question:', error);
             return {
                 id: this.generateQuestionId(),
                 question: response.content || response,
@@ -163,7 +171,7 @@ class InterviewerMode {
     }
     
     askQuestion(question) {
-        console.log('❓ Asking question:', question.question);
+        Logger.debug('❓ Asking question');
         
         // Display question in UI
         this.displayQuestion(question);
@@ -250,7 +258,7 @@ class InterviewerMode {
             const response = await this.callAI(fullPrompt);
             return typeof response === 'string' ? JSON.parse(response) : response;
         } catch (error) {
-            console.error('Evaluation failed:', error);
+            Logger.error('Evaluation failed:', error);
             return this.generateDefaultEvaluation();
         }
     }
@@ -469,4 +477,4 @@ class InterviewerMode {
 // Create global instance
 window.interviewerMode = new InterviewerMode();
 
-console.log('🎤 Interviewer Mode initialized');
+Logger.info('🎤 Interviewer Mode initialized');

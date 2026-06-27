@@ -43,6 +43,7 @@ export default function AnalyticsDashboard() {
   const [versions, setVersions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -83,6 +84,7 @@ export default function AnalyticsDashboard() {
 
   const fetchDocAnalytics = async (docId: string) => {
     setIsStatsLoading(true);
+    setAnalyticsError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -90,6 +92,9 @@ export default function AnalyticsDashboard() {
       const response = await fetch(`/api/analytics/${docId}?range=30d`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
+      if (!response.ok) {
+        throw new Error("Could not load analytics for this document.");
+      }
       const data = await response.json();
       setSummary(data);
 
@@ -102,6 +107,9 @@ export default function AnalyticsDashboard() {
       setVersions(vData || []);
     } catch (error) {
       console.error('Error fetching doc analytics:', error);
+      setSummary(null);
+      setVersions([]);
+      setAnalyticsError(error instanceof Error ? error.message : "Could not load analytics for this document.");
     } finally {
       setIsStatsLoading(false);
     }
@@ -242,7 +250,10 @@ export default function AnalyticsDashboard() {
                   
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
                     <div className="xl:col-span-8 space-y-10">
-                      <ViewsChart data={summary?.views_trend || []} />
+                      <ViewsChart
+                        data={summary?.views_trend || []}
+                        error={analyticsError}
+                      />
                       
                       <Tabs defaultValue="engagement" className="w-full">
                         <div className="flex items-center justify-between mb-8">
@@ -260,7 +271,10 @@ export default function AnalyticsDashboard() {
                         </div>
                         
                         <TabsContent value="engagement" className="mt-0 focus-visible:outline-none">
-                          <EngagementTable data={summary?.recent_activity || []} />
+                          <EngagementTable
+                            data={summary?.recent_activity || []}
+                            error={analyticsError}
+                          />
                         </TabsContent>
                         
                         <TabsContent value="history" className="mt-0 focus-visible:outline-none">

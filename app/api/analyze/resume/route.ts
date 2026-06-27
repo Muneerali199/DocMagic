@@ -1,7 +1,11 @@
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
+
+const MAX_FILE_BYTES = 1 * 1024 * 1024;
+const MAX_JD_CHARS = 10000;
 
 async function extractTextFromFile(file: File): Promise<string> {
   return await file.text();
@@ -200,6 +204,37 @@ export async function POST(request: Request) {
   }
 
   try {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No token provided' },
+        { status: 401, headers }
+      );
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401, headers }
+      );
+    }
+
     const formData = await request.formData();
 
     const file = formData.get('file') as File | null;
@@ -214,6 +249,24 @@ export async function POST(request: Request) {
           error: 'Resume file and job description are required',
         },
         { status: 400, headers }
+      );
+    }
+
+    if (file.size > MAX_FILE_BYTES) {
+      return NextResponse.json(
+        {
+          error: `File too large. Maximum size is ${MAX_FILE_BYTES / 1024 / 1024} MB.`,
+        },
+        { status: 413, headers }
+      );
+    }
+
+    if (jobDescription.length > MAX_JD_CHARS) {
+      return NextResponse.json(
+        {
+          error: `Job description too long. Maximum length is ${MAX_JD_CHARS} characters.`,
+        },
+        { status: 413, headers }
       );
     }
 

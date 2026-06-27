@@ -1,5 +1,5 @@
 /**
- * SSRF Protection Utilities
+ * SSRF Protection Utilities (OWASP A10 / CWE-918)
  * Prevents Server-Side Request Forgery attacks by validating URLs
  * before the server makes any outbound fetch requests.
  */
@@ -9,7 +9,9 @@ const BLOCKED_HOSTNAMES = new Set([
   'localhost',
   'metadata.google.internal',  // GCP metadata
   '169.254.169.254',           // AWS/GCP metadata IP
-  'instance-data',
+  'metadata.google.com',       // GCP alt
+  'metadata',                  // Short metadata hostname
+  'instance-data',             // AWS instance data
 ]);
 
 // Only http and https are safe protocols
@@ -22,7 +24,8 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 export const isPrivateUrl = (url: string): boolean => {
   try {
     const parsed = new URL(url);
-    const hostname = parsed.hostname.toLowerCase();
+    // Strip brackets from IPv6 literals (URL.hostname keeps them)
+    const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
 
     // Block non-http/https protocols (file://, ftp://, javascript://, etc.)
     if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
@@ -46,6 +49,7 @@ export const isPrivateUrl = (url: string): boolean => {
       /^192\.168\./.test(hostname) ||                         // 192.168.x.x private
       /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||    // 172.16-31.x.x private
       /^169\.254\./.test(hostname) ||                         // 169.254.x.x link-local (AWS metadata!)
+      /^0+\./.test(hostname) ||                               // Octal zero-prefix bypass (0177.0.0.1)
       hostname === '0.0.0.0'
     ) {
       return true;
@@ -54,9 +58,22 @@ export const isPrivateUrl = (url: string): boolean => {
     // Block IPv6 internal addresses
     if (
       hostname === '::1' ||
-      hostname === '[::1]' ||
+      hostname === '::' ||
       /^fc[0-9a-f]{2}:/i.test(hostname) ||   // IPv6 ULA range fc00::/7
-      /^fd[0-9a-f]{2}:/i.test(hostname)       // IPv6 ULA range fd00::/8
+      /^fd[0-9a-f]{2}:/i.test(hostname) ||   // IPv6 ULA range fd00::/8
+      /^fc00:/i.test(hostname) ||             // IPv6 Unique Local Address
+      /^fe80:/i.test(hostname)                // IPv6 Link-Local
+    ) {
+      return true;
+    }
+
+    // Block internal/local TLDs commonly used in corporate environments
+    if (
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.corp') ||
+      hostname.endsWith('.home') ||
+      hostname.endsWith('.lan')
     ) {
       return true;
     }

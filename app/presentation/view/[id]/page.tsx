@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -35,10 +35,12 @@ export default function ViewPresentationPage() {
 
   const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState('');
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape');
+  const [exportError, setExportError] = useState("");
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">(
+    "landscape",
+  );
 
   useEffect(() => {
     if (!id) return;
@@ -48,18 +50,18 @@ export default function ViewPresentationPage() {
     async function loadPresentation() {
       try {
         const response = await fetch(`/api/presentations/${id}`, {
-          signal: abortController.signal
+          signal: abortController.signal,
         });
         if (!response.ok) {
-          throw new Error('Presentation not found');
+          throw new Error("Presentation not found");
         }
 
         const data = await response.json();
         setPresentation(data);
       } catch (err: any) {
-        if (err.name === 'AbortError') return;
-        console.error('Error loading presentation:', err);
-        setError('Failed to load presentation');
+        if (err.name === "AbortError") return;
+        console.error("Error loading presentation:", err);
+        setError("Failed to load presentation");
       } finally {
         setLoading(false);
       }
@@ -74,29 +76,29 @@ export default function ViewPresentationPage() {
 
   async function handleExportPDF() {
     try {
-      setExportError('');
+      setExportError("");
       setExporting(true);
 
       if (!presentation) {
-        throw new Error('Presentation not loaded');
+        throw new Error("Presentation not loaded");
       }
 
       const slideElements = Array.from(
-        document.querySelectorAll('[data-presentation-slide]')
+        document.querySelectorAll("[data-presentation-slide]"),
       ) as HTMLElement[];
 
       if (!slideElements.length) {
-        throw new Error('No slides found');
+        throw new Error("No slides found");
       }
 
-      await exportAsPDF(slideElements, presentation.title || 'presentation', {
-        format: 'pdf',
+      await exportAsPDF(slideElements, presentation.title || "presentation", {
+        format: "pdf",
         quality: 2,
         orientation,
       });
     } catch (err) {
-      console.error('PDF export failed:', err);
-      setExportError('Failed to export PDF');
+      console.error("PDF export failed:", err);
+      setExportError("Failed to export PDF");
     } finally {
       setExporting(false);
     }
@@ -107,7 +109,9 @@ export default function ViewPresentationPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading presentation...</p>
+          <p className="text-muted-foreground" aria-live="polite">
+            Loading presentation...
+          </p>
         </div>
       </div>
     );
@@ -122,7 +126,8 @@ export default function ViewPresentationPage() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Presentation Not Found</h1>
           <p className="text-muted-foreground mb-6">
-            {error || 'This presentation may have been deleted or the link is invalid.'}
+            {error ||
+              "This presentation may have been deleted or the link is invalid."}
           </p>
           <Link
             href="/presentation"
@@ -160,7 +165,7 @@ export default function ViewPresentationPage() {
                   id="orientation"
                   value={orientation}
                   onChange={(e) =>
-                    setOrientation(e.target.value as 'portrait' | 'landscape')
+                    setOrientation(e.target.value as "portrait" | "landscape")
                   }
                   className="px-3 py-2 rounded-xl border border-border bg-background text-sm"
                 >
@@ -190,7 +195,10 @@ export default function ViewPresentationPage() {
           </div>
 
           {exportError ? (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div
+              aria-live="assertive"
+              className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+            >
               {exportError}
             </div>
           ) : null}
@@ -198,11 +206,17 @@ export default function ViewPresentationPage() {
       </div>
 
       <div className="pt-24 pb-16 max-w-6xl mx-auto px-6">
-        <div className="space-y-12">
+        <div
+          className="space-y-12"
+          role="region"
+          aria-label="Presentation slides"
+        >
           {presentation.slides.map((slide, index) => (
             <div
               key={index}
               data-presentation-slide
+              role="article"
+              aria-label={`Slide ${slide.slideNumber}: ${slide.title}`}
               className="bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden"
             >
               <div
@@ -210,7 +224,7 @@ export default function ViewPresentationPage() {
                 style={{
                   background:
                     slide.design?.background ||
-                    'linear-gradient(to bottom right, #3b82f6, #8b5cf6)',
+                    "linear-gradient(to bottom right, #3b82f6, #8b5cf6)",
                 }}
               >
                 <div className="absolute top-8 right-8 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-sm font-bold text-white">

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { fabric } from 'fabric';
-import { useEditorStore } from '@/lib/editor-store';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useRef, useState } from "react";
+import { fabric } from "fabric";
+import { useEditorStore } from "@/lib/editor-store";
+import { cn } from "@/lib/utils";
 
 interface VisualEditorProps {
   width?: number;
@@ -11,11 +11,15 @@ interface VisualEditorProps {
   className?: string;
 }
 
-export function VisualEditor({ width = 1920, height = 1080, className }: VisualEditorProps) {
+export function VisualEditor({
+  width = 1920,
+  height = 1080,
+  className,
+}: VisualEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
-  
+
   const {
     canvas,
     setCanvas,
@@ -33,7 +37,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
       width,
       height,
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
       preserveObjectStacking: true,
       selection: true,
       renderOnAddRemove: true,
@@ -46,7 +50,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       const scaleX = (containerWidth - 40) / width;
       const scaleY = (containerHeight - 40) / height;
       const initialZoom = Math.min(scaleX, scaleY, 1);
-      
+
       fabricCanvas.setZoom(initialZoom);
       fabricCanvas.setWidth(width * initialZoom);
       fabricCanvas.setHeight(height * initialZoom);
@@ -56,15 +60,15 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
     setIsReady(true);
 
     // Event listeners
-    fabricCanvas.on('object:modified', () => {
+    fabricCanvas.on("object:modified", () => {
       saveState();
     });
 
-    fabricCanvas.on('object:added', () => {
+    fabricCanvas.on("object:added", () => {
       saveState();
     });
 
-    fabricCanvas.on('object:removed', () => {
+    fabricCanvas.on("object:removed", () => {
       saveState();
     });
 
@@ -81,7 +85,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
 
     const newWidth = width * zoom;
     const newHeight = height * zoom;
-    
+
     canvas.setZoom(zoom);
     canvas.setWidth(newWidth);
     canvas.setHeight(newHeight);
@@ -108,7 +112,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       // Draw vertical lines
       for (let i = 0; i < canvasWidth / zoom; i += gridSize) {
         const line = new fabric.Line([i, 0, i, canvasHeight / zoom], {
-          stroke: '#e5e7eb',
+          stroke: "#e5e7eb",
           strokeWidth: 1 / zoom,
           selectable: false,
           evented: false,
@@ -121,7 +125,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       // Draw horizontal lines
       for (let i = 0; i < canvasHeight / zoom; i += gridSize) {
         const line = new fabric.Line([0, i, canvasWidth / zoom, i], {
-          stroke: '#e5e7eb',
+          stroke: "#e5e7eb",
           strokeWidth: 1 / zoom,
           selectable: false,
           evented: false,
@@ -142,24 +146,24 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
     if (!canvas) return;
 
     switch (activeTool) {
-      case 'select':
+      case "select":
         canvas.isDrawingMode = false;
         canvas.selection = true;
-        canvas.defaultCursor = 'default';
+        canvas.defaultCursor = "default";
         break;
-      case 'pan':
+      case "pan":
         canvas.isDrawingMode = false;
         canvas.selection = false;
-        canvas.defaultCursor = 'grab';
+        canvas.defaultCursor = "grab";
         break;
-      case 'draw':
+      case "draw":
         canvas.isDrawingMode = true;
         canvas.selection = false;
         break;
       default:
         canvas.isDrawingMode = false;
         canvas.selection = false;
-        canvas.defaultCursor = 'crosshair';
+        canvas.defaultCursor = "crosshair";
     }
 
     canvas.renderAll();
@@ -171,7 +175,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Delete
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key === "Delete" || e.key === "Backspace") {
         const activeObject = canvas.getActiveObject();
         if (activeObject) {
           canvas.remove(activeObject);
@@ -180,37 +184,37 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       }
 
       // Ctrl/Cmd + Z (Undo)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         useEditorStore.getState().undo();
       }
 
       // Ctrl/Cmd + Shift + Z (Redo)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && e.shiftKey) {
         e.preventDefault();
         useEditorStore.getState().redo();
       }
 
       // Ctrl/Cmd + C (Copy)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
         e.preventDefault();
         useEditorStore.getState().copy();
       }
 
       // Ctrl/Cmd + V (Paste)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         e.preventDefault();
         useEditorStore.getState().paste();
       }
 
       // Ctrl/Cmd + X (Cut)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "x") {
         e.preventDefault();
         useEditorStore.getState().cut();
       }
 
       // Ctrl/Cmd + A (Select All)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
         e.preventDefault();
         canvas.discardActiveObject();
         const sel = new fabric.ActiveSelection(canvas.getObjects(), {
@@ -221,23 +225,23 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canvas]);
 
   // Text tool - Add text on canvas click
   useEffect(() => {
-    if (!canvas || activeTool !== 'text') return;
+    if (!canvas || activeTool !== "text") return;
 
     const handleCanvasClick = (opt: any) => {
       const pointer = canvas.getPointer(opt.e);
-      
-      const text = new fabric.IText('Double click to edit', {
+
+      const text = new fabric.IText("Double click to edit", {
         left: pointer.x,
         top: pointer.y,
-        fontFamily: 'Inter',
+        fontFamily: "Inter",
         fontSize: 24,
-        fill: '#000000',
+        fill: "#000000",
       });
 
       canvas.add(text);
@@ -247,15 +251,15 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       canvas.renderAll();
     };
 
-    canvas.on('mouse:down', handleCanvasClick);
+    canvas.on("mouse:down", handleCanvasClick);
     return () => {
-      canvas.off('mouse:down', handleCanvasClick);
+      canvas.off("mouse:down", handleCanvasClick);
     };
   }, [canvas, activeTool]);
 
   // Shape tool - Draw shapes with mouse drag
   useEffect(() => {
-    if (!canvas || activeTool !== 'shape') return;
+    if (!canvas || activeTool !== "shape") return;
 
     let isDrawing = false;
     let shape: fabric.Object | null = null;
@@ -269,38 +273,38 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       startY = pointer.y;
 
       // Create shape based on activeShape
-      if (activeShape === 'rectangle') {
+      if (activeShape === "rectangle") {
         shape = new fabric.Rect({
           left: startX,
           top: startY,
           width: 0,
           height: 0,
-          fill: '#3b82f6',
-          stroke: '#1e40af',
+          fill: "#3b82f6",
+          stroke: "#1e40af",
           strokeWidth: 2,
         });
-      } else if (activeShape === 'circle') {
+      } else if (activeShape === "circle") {
         shape = new fabric.Circle({
           left: startX,
           top: startY,
           radius: 0,
-          fill: '#3b82f6',
-          stroke: '#1e40af',
+          fill: "#3b82f6",
+          stroke: "#1e40af",
           strokeWidth: 2,
         });
-      } else if (activeShape === 'triangle') {
+      } else if (activeShape === "triangle") {
         shape = new fabric.Triangle({
           left: startX,
           top: startY,
           width: 0,
           height: 0,
-          fill: '#3b82f6',
-          stroke: '#1e40af',
+          fill: "#3b82f6",
+          stroke: "#1e40af",
           strokeWidth: 2,
         });
-      } else if (activeShape === 'line') {
+      } else if (activeShape === "line") {
         shape = new fabric.Line([startX, startY, startX, startY], {
-          stroke: '#1e40af',
+          stroke: "#1e40af",
           strokeWidth: 3,
         });
       }
@@ -317,24 +321,24 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       const width = pointer.x - startX;
       const height = pointer.y - startY;
 
-      if (activeShape === 'rectangle') {
+      if (activeShape === "rectangle") {
         (shape as fabric.Rect).set({
           width: Math.abs(width),
           height: Math.abs(height),
           left: width > 0 ? startX : pointer.x,
           top: height > 0 ? startY : pointer.y,
         });
-      } else if (activeShape === 'circle') {
+      } else if (activeShape === "circle") {
         const radius = Math.sqrt(width * width + height * height) / 2;
         (shape as fabric.Circle).set({ radius });
-      } else if (activeShape === 'triangle') {
+      } else if (activeShape === "triangle") {
         (shape as fabric.Triangle).set({
           width: Math.abs(width),
           height: Math.abs(height),
           left: width > 0 ? startX : pointer.x,
           top: height > 0 ? startY : pointer.y,
         });
-      } else if (activeShape === 'line') {
+      } else if (activeShape === "line") {
         (shape as fabric.Line).set({
           x2: pointer.x,
           y2: pointer.y,
@@ -352,14 +356,14 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       shape = null;
     };
 
-    canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:move', handleMouseMove);
-    canvas.on('mouse:up', handleMouseUp);
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
 
     return () => {
-      canvas.off('mouse:down', handleMouseDown);
-      canvas.off('mouse:move', handleMouseMove);
-      canvas.off('mouse:up', handleMouseUp);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
     };
   }, [canvas, activeTool, activeShape]);
 
@@ -389,9 +393,9 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       }
     };
 
-    canvas.on('mouse:wheel', handleWheel);
+    canvas.on("mouse:wheel", handleWheel);
     return () => {
-      canvas.off('mouse:wheel', handleWheel);
+      canvas.off("mouse:wheel", handleWheel);
     };
   }, [canvas]);
 
@@ -405,18 +409,22 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
 
     const handleMouseDown = (opt: any) => {
       const e = opt.e;
-      if (e.button === 1 || (activeTool === 'pan' && e.button === 0) || e.spaceKey) {
+      if (
+        e.button === 1 ||
+        (activeTool === "pan" && e.button === 0) ||
+        e.spaceKey
+      ) {
         isPanning = true;
         canvas.selection = false;
         lastPosX = e.clientX;
         lastPosY = e.clientY;
-        canvas.defaultCursor = 'grabbing';
+        canvas.defaultCursor = "grabbing";
       }
     };
 
     const handleMouseMove = (opt: any) => {
       if (!isPanning) return;
-      
+
       const e = opt.e;
       const vpt = canvas.viewportTransform!;
       vpt[4] += e.clientX - lastPosX;
@@ -430,18 +438,18 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       if (isPanning) {
         isPanning = false;
         canvas.selection = true;
-        canvas.defaultCursor = activeTool === 'pan' ? 'grab' : 'default';
+        canvas.defaultCursor = activeTool === "pan" ? "grab" : "default";
       }
     };
 
-    canvas.on('mouse:down', handleMouseDown);
-    canvas.on('mouse:move', handleMouseMove);
-    canvas.on('mouse:up', handleMouseUp);
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
 
     return () => {
-      canvas.off('mouse:down', handleMouseDown);
-      canvas.off('mouse:move', handleMouseMove);
-      canvas.off('mouse:up', handleMouseUp);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
     };
   }, [canvas, activeTool]);
 
@@ -449,13 +457,13 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
     <div
       ref={containerRef}
       className={cn(
-        'relative w-full h-full flex items-center justify-center overflow-hidden bg-gray-100',
-        className
+        "relative w-full h-full flex items-center justify-center overflow-hidden bg-background",
+        className,
       )}
     >
       {/* Loading State */}
       {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-background">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">Loading editor...</p>
@@ -469,7 +477,7 @@ export function VisualEditor({ width = 1920, height = 1080, className }: VisualE
       </div>
 
       {/* Zoom Level Indicator */}
-      <div className="absolute bottom-4 right-4 bg-white px-3 py-1.5 rounded-lg shadow-lg border border-border text-sm font-medium">
+      <div className="absolute bottom-4 right-4 bg-card text-foreground px-3 py-1.5 rounded-lg shadow-lg border border-border text-sm font-medium">
         {Math.round(zoom * 100)}%
       </div>
     </div>

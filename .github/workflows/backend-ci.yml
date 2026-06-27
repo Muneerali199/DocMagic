@@ -1,0 +1,52 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches:
+      - feature/go-backend
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  go-ci:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/go
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Verify Go module files
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./... -v
+
+      - name: Build backend
+        run: go build ./...

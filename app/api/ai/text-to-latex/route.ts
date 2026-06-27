@@ -1,27 +1,45 @@
-import { logger } from '@/lib/logger';
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { logger } from "@/lib/logger";
+import type { NextRequest } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { z } from "zod";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const { NextResponse } = require("next/server");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+const textToLatexSchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(1, "Text is required")
+    .max(50000, "Text is too long"),
+  documentType: z.string().trim().max(80).optional(),
+});
 
 export async function POST(request: NextRequest) {
-  let body: any = null;
+  let body: z.infer<typeof textToLatexSchema> | null = null;
   try {
-    body = await request.json();
-    const { text, documentType } = body;
+    const rawBody = await request.json();
+    const parsedBody = textToLatexSchema.safeParse(rawBody);
 
-    if (!text) {
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'Text is required' },
-        { status: 400 }
+        {
+          error: parsedBody.error.issues[0]?.message || "Invalid request body",
+        },
+        { status: 400 },
       );
     }
 
-    // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    body = parsedBody.data;
+    const { text, documentType } = body;
+    const outputType = documentType || "resume";
 
-    const prompt = `Convert the following resume text into professional LaTeX code. 
-Use the article document class with appropriate packages for a modern resume.
+    // Initialize Gemini model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    const prompt = `Convert the following ${outputType} text into professional LaTeX code.
+Use the article document class with appropriate packages for a modern ${outputType}.
 Include proper formatting, sections, and styling.
 Make it ATS-friendly and professional.
 
@@ -38,41 +56,48 @@ Generate complete LaTeX code that can be compiled directly.`;
 
       // Clean up the response (remove markdown code blocks if present)
       let cleanLatex = latexCode;
-      if (cleanLatex.includes('```latex')) {
-        cleanLatex = cleanLatex.split('```latex')[1].split('```')[0].trim();
-      } else if (cleanLatex.includes('```')) {
-        cleanLatex = cleanLatex.split('```')[1].split('```')[0].trim();
+      if (cleanLatex.includes("```latex")) {
+        cleanLatex = cleanLatex.split("```latex")[1].split("```")[0].trim();
+      } else if (cleanLatex.includes("```")) {
+        cleanLatex = cleanLatex.split("```")[1].split("```")[0].trim();
       }
 
       return NextResponse.json({
         latex: cleanLatex,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (aiError) {
-      logger.error({ route: 'app/api/ai/text-to-latex/route.ts' }, 'AI generation failed, using fallback:', aiError);
+      logger.error(
+        { route: "app/api/ai/text-to-latex/route.ts" },
+        "AI generation failed, using fallback:",
+        aiError,
+      );
       // Fallback: Generate basic LaTeX
       const fallbackLatex = generateFallbackLatex(text);
       return NextResponse.json({
         latex: fallbackLatex,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-
   } catch (error: any) {
-    logger.error({ route: 'app/api/ai/text-to-latex/route.ts' }, 'Error in text-to-latex:', error);
-    
+    logger.error(
+      { route: "app/api/ai/text-to-latex/route.ts" },
+      "Error in text-to-latex:",
+      error,
+    );
+
     // Return fallback response
-    const fallbackLatex = generateFallbackLatex(body?.text || '');
+    const fallbackLatex = generateFallbackLatex(body?.text || "");
     return NextResponse.json({
       latex: fallbackLatex,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
 
 function generateFallbackLatex(text: string): string {
-  const lines = text.split('\n');
-  
+  const lines = text.split("\n");
+
   let latex = `\\documentclass[11pt,a4paper,sans]{moderncv}
 \\moderncvstyle{banking}
 \\moderncvcolor{blue}
@@ -89,28 +114,28 @@ function generateFallbackLatex(text: string): string {
 
 `;
 
-  let currentSection = '';
-  
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed) {
-      latex += '\n';
-    } else if (trimmed.startsWith('# ')) {
+      latex += "\n";
+    } else if (trimmed.startsWith("# ")) {
       // Main heading
       const heading = trimmed.substring(2);
-      if (heading.toLowerCase().includes('name') || heading.toLowerCase().includes('contact')) {
+      if (
+        heading.toLowerCase().includes("name") ||
+        heading.toLowerCase().includes("contact")
+      ) {
         // Skip, handled in preamble
       } else {
         latex += `\\section{${heading}}\n`;
-        currentSection = heading.toLowerCase();
       }
-    } else if (trimmed.startsWith('## ')) {
+    } else if (trimmed.startsWith("## ")) {
       // Subsection
       latex += `\\subsection{${trimmed.substring(3)}}\n`;
-    } else if (trimmed.startsWith('- ')) {
+    } else if (trimmed.startsWith("- ")) {
       // Bullet point
       latex += `\\cvitem{}{${trimmed.substring(2)}}\n`;
-    } else if (trimmed.includes('@')) {
+    } else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       // Email
       latex += `\\email{${trimmed}}\n`;
     } else if (trimmed.match(/\d{3}[-\s]?\d{3}[-\s]?\d{4}/)) {
@@ -122,6 +147,6 @@ function generateFallbackLatex(text: string): string {
     }
   });
 
-  latex += '\\end{document}';
+  latex += "\\end{document}";
   return latex;
 }

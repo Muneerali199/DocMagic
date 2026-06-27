@@ -4,22 +4,53 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  FileText, Upload, Sparkles, Download, Globe, Linkedin,
-  FileDown, Loader2, CheckCircle2, AlertCircle, Edit, MessageSquare,
-  ExternalLink, Copy, Check, Crown, FileCheck, Share2, Link, Target, ArrowLeft,
-  Briefcase, BarChart3
+  FileText,
+  Upload,
+  Sparkles,
+  Download,
+  Globe,
+  Linkedin,
+  FileDown,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Edit,
+  MessageSquare,
+  ExternalLink,
+  Copy,
+  Check,
+  Crown,
+  FileCheck,
+  Share2,
+  Link,
+  Target,
+  ArrowLeft,
+  Briefcase,
+  BarChart3,
 } from "lucide-react";
 import { ResumePreview, ResumePreviewRef } from "./resume-preview";
 import { ATSScoreDisplay } from "./ats-score-display";
@@ -27,7 +58,10 @@ import { AIResumeChat } from "./ai-resume-chat";
 import { TextColorPanel } from "./text-color-panel";
 import { RESUME_TEMPLATES } from "@/lib/resume-template-data";
 import { TemplateSwitcher } from "./template-switcher";
-import { ResumeStyleColors, DEFAULT_STYLE_COLORS } from "@/lib/resume-style-colors";
+import {
+  ResumeStyleColors,
+  DEFAULT_STYLE_COLORS,
+} from "@/lib/resume-style-colors";
 import { userProfileService } from "@/lib/user-profile-service";
 import { TemplateCustomizationPanel } from "@/components/templates/template-customization-panel";
 import { VersionHistoryPanel } from "@/components/templates/version-history-panel";
@@ -101,7 +135,10 @@ const MobileBuilderSkeleton = () => (
   </div>
 );
 
-export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilderProps) {
+export function MobileResumeBuilder({
+  templateId,
+  resumeId,
+}: MobileResumeBuilderProps) {
   const { toast } = useToast();
   const resumePreviewRef = useRef<ResumePreviewRef>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -112,7 +149,9 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const [manualText, setManualText] = useState("");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [currentStep, setCurrentStep] = useState<'dashboard' | 'selection' | 'input' | 'preview' | 'job-url' | 'ats-checker'>('input');
+  const [currentStep, setCurrentStep] = useState<
+    "dashboard" | "selection" | "input" | "preview" | "job-url" | "ats-checker"
+  >("input");
   const [showAIChat, setShowAIChat] = useState(false);
   const [isCV, setIsCV] = useState(false); // Toggle between Resume (1 page) and CV (2+ pages)
   const [jobUrl, setJobUrl] = useState(""); // Job listing URL for tailored resume
@@ -145,20 +184,24 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
   const [scale, setScale] = useState(1);
   const isMobile = useIsMobile(); // Automatically detect mobile
-  const [viewMode, setViewMode] = useState<'fit' | 'actual' | 'mobile'>('mobile');
+  const [viewMode, setViewMode] = useState<"fit" | "actual" | "mobile">(
+    "mobile",
+  );
   const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null); // Track uploaded PDF file
   const containerRef = useRef<HTMLDivElement>(null);
-  const [customColors, setCustomColors] = useState<ResumeStyleColors>({ ...DEFAULT_STYLE_COLORS });
+  const [customColors, setCustomColors] = useState<ResumeStyleColors>({
+    ...DEFAULT_STYLE_COLORS,
+  });
 
   const supabase = createClient();
 
   // Load template data if templateId is provided
   useEffect(() => {
-    logger.info(null, 'Template ID received:', templateId);
+    logger.info(null, "Template ID received:", templateId);
     if (templateId) {
       setIsLoadingTemplate(true);
-      const template = RESUME_TEMPLATES.find(t => t.id === templateId);
-      logger.info(null, 'Template found:', template);
+      const template = RESUME_TEMPLATES.find((t) => t.id === templateId);
+      logger.info(null, "Template found:", template);
       if (template) {
         // Initialize with template data - create a basic resume structure
         const templateResume = {
@@ -169,7 +212,8 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
             location: "City, State",
             linkedin: "",
             portfolio: "",
-            summary: "Professional summary goes here. Click to edit and add your information."
+            summary:
+              "Professional summary goes here. Click to edit and add your information.",
           },
           experience: [
             {
@@ -182,9 +226,9 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
               description: [
                 "Click to edit your experience. Add your achievements and responsibilities here.",
                 "Describe your key accomplishments and impact",
-                "Use action verbs and quantify results when possible"
-              ]
-            }
+                "Use action verbs and quantify results when possible",
+              ],
+            },
           ],
           education: [
             {
@@ -194,28 +238,29 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
               location: "City, State",
               startDate: "2016",
               endDate: "2020",
-              gpa: "3.5"
-            }
+              gpa: "3.5",
+            },
           ],
           skills: ["JavaScript", "React", "Node.js", "Python", "SQL"],
           projects: [],
-          certifications: []
+          certifications: [],
         };
 
-        logger.info(null, 'Setting resume data:', templateResume);
+        logger.info(null, "Setting resume data:", templateResume);
         setResumeData(templateResume);
         setSelectedTemplate(template.id);
-        setCurrentStep('preview');
+        setCurrentStep("preview");
 
         toast({
           title: "✨ Template Loaded!",
           description: `Using ${template.title}. Click on any section to edit with your information.`,
         });
       } else {
-        console.error('Template not found for ID:', templateId);
+        console.error("Template not found for ID:", templateId);
         toast({
           title: "Template Not Found",
-          description: "The selected template could not be loaded. Please try another template.",
+          description:
+            "The selected template could not be loaded. Please try another template.",
           variant: "destructive",
         });
       }
@@ -229,18 +274,18 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       if (!resumeId) return;
       setIsLoadingSavedResume(true);
 
-      logger.info(null, '📄 Loading saved resume:', resumeId);
+      logger.info(null, "📄 Loading saved resume:", resumeId);
 
       try {
         // First try documents table using raw query to avoid type issues
-        const { data: docResult, error: docError } = await (supabase
-          .from('documents' as any)
-          .select('*')
-          .eq('id', resumeId)
+        const { data: docResult, error: docError } = (await supabase
+          .from("documents" as any)
+          .select("*")
+          .eq("id", resumeId)
           .single()) as { data: any; error: any };
 
         if (docResult && !docError) {
-          logger.info(null, '📄 Loaded from documents table:', docResult);
+          logger.info(null, "📄 Loaded from documents table:", docResult);
           const content = docResult.content;
 
           // Extract resume data from content
@@ -249,87 +294,120 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           // Convert saved format to component format
           const formattedResume = {
             personalInfo: {
-              fullName: savedResumeData.name || savedResumeData.personalInfo?.fullName || "Your Name",
-              email: savedResumeData.email || savedResumeData.personalInfo?.email || "",
-              phone: savedResumeData.phone || savedResumeData.personalInfo?.phone || "",
-              location: savedResumeData.location || savedResumeData.personalInfo?.location || "",
-              linkedin: savedResumeData.linkedin || savedResumeData.personalInfo?.linkedin || "",
-              portfolio: savedResumeData.portfolio || savedResumeData.personalInfo?.portfolio || "",
-              summary: savedResumeData.summary || savedResumeData.personalInfo?.summary || ""
+              fullName:
+                savedResumeData.name ||
+                savedResumeData.personalInfo?.fullName ||
+                "Your Name",
+              email:
+                savedResumeData.email ||
+                savedResumeData.personalInfo?.email ||
+                "",
+              phone:
+                savedResumeData.phone ||
+                savedResumeData.personalInfo?.phone ||
+                "",
+              location:
+                savedResumeData.location ||
+                savedResumeData.personalInfo?.location ||
+                "",
+              linkedin:
+                savedResumeData.linkedin ||
+                savedResumeData.personalInfo?.linkedin ||
+                "",
+              portfolio:
+                savedResumeData.portfolio ||
+                savedResumeData.personalInfo?.portfolio ||
+                "",
+              summary:
+                savedResumeData.summary ||
+                savedResumeData.personalInfo?.summary ||
+                "",
             },
-            experience: savedResumeData.experience || savedResumeData.work_experience || [],
+            experience:
+              savedResumeData.experience ||
+              savedResumeData.work_experience ||
+              [],
             education: savedResumeData.education || [],
-            skills: savedResumeData.skills?.technical || savedResumeData.skills || [],
+            skills:
+              savedResumeData.skills?.technical || savedResumeData.skills || [],
             projects: savedResumeData.projects || [],
-            certifications: savedResumeData.certifications || []
+            certifications: savedResumeData.certifications || [],
           };
 
           setResumeData(formattedResume);
-          setCurrentStep('preview');
+          setCurrentStep("preview");
 
           toast({
             title: "✅ Resume Loaded",
-            description: "Your saved resume has been loaded. Click any section to edit.",
+            description:
+              "Your saved resume has been loaded. Click any section to edit.",
           });
           return;
         }
 
         // Fallback: try resumes table
-        const { data: resumeResult, error: resumeError } = await (supabase
-          .from('resumes' as any)
-          .select('*')
-          .eq('id', resumeId)
+        const { data: resumeResult, error: resumeError } = (await supabase
+          .from("resumes" as any)
+          .select("*")
+          .eq("id", resumeId)
           .single()) as { data: any; error: any };
 
         if (resumeResult && !resumeError) {
-          logger.info(null, '📄 Loaded from resumes table:', resumeResult);
+          logger.info(null, "📄 Loaded from resumes table:", resumeResult);
 
           const savedContent = resumeResult.content || {};
 
           const formattedResume = {
             personalInfo: {
-              fullName: resumeResult.personal_info?.name || savedContent.name || "Your Name",
-              email: resumeResult.personal_info?.email || savedContent.email || "",
-              phone: resumeResult.personal_info?.phone || savedContent.phone || "",
-              location: resumeResult.personal_info?.location || savedContent.location || "",
+              fullName:
+                resumeResult.personal_info?.name ||
+                savedContent.name ||
+                "Your Name",
+              email:
+                resumeResult.personal_info?.email || savedContent.email || "",
+              phone:
+                resumeResult.personal_info?.phone || savedContent.phone || "",
+              location:
+                resumeResult.personal_info?.location ||
+                savedContent.location ||
+                "",
               linkedin: savedContent.linkedin || "",
               portfolio: savedContent.portfolio || "",
-              summary: savedContent.summary || ""
+              summary: savedContent.summary || "",
             },
             experience: savedContent.experience || [],
             education: savedContent.education || [],
             skills: savedContent.skills?.technical || savedContent.skills || [],
             projects: savedContent.projects || [],
-            certifications: savedContent.certifications || []
+            certifications: savedContent.certifications || [],
           };
 
           setResumeData(formattedResume);
-          setSelectedTemplate(resumeResult.template || 'modern');
-          setCurrentStep('preview');
+          setSelectedTemplate(resumeResult.template || "modern");
+          setCurrentStep("preview");
 
           toast({
             title: "✅ Resume Loaded",
-            description: "Your saved resume has been loaded. Click any section to edit.",
+            description:
+              "Your saved resume has been loaded. Click any section to edit.",
           });
           return;
         }
 
-        console.error('Resume not found in any table');
+        console.error("Resume not found in any table");
         toast({
           title: "Resume Not Found",
           description: "Could not load the saved resume.",
           variant: "destructive",
         });
-
       } catch (error) {
-        console.error('Error loading saved resume:', error);
+        console.error("Error loading saved resume:", error);
         toast({
           title: "Error",
           description: "Failed to load saved resume.",
           variant: "destructive",
         });
-      }
-      finally {
+      } finally {
         // Add this finally block! It will run no matter what happens above.
         setIsLoadingSavedResume(false);
       }
@@ -353,20 +431,22 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
     };
 
     calculateScale();
-    window.addEventListener('resize', calculateScale);
-    return () => window.removeEventListener('resize', calculateScale);
+    window.addEventListener("resize", calculateScale);
+    return () => window.removeEventListener("resize", calculateScale);
   }, [currentStep]);
 
   // Automatically switch to mobile view mode on mobile devices
   useEffect(() => {
-    if (isMobile && viewMode !== 'mobile') {
-      setViewMode('mobile');
+    if (isMobile && viewMode !== "mobile") {
+      setViewMode("mobile");
     }
   }, [isMobile, viewMode]);
 
   // Get auth token
   const getAuthToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session?.access_token;
   };
 
@@ -420,7 +500,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       const extractResponse = await fetch("/api/extract-resume-text", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -433,14 +513,19 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           // Partial extraction - use what we got
           logger.info(null, "Partial PDF extraction, using available text");
         } else {
-          throw new Error(extractData.error || "Could not extract text from PDF. Please use the Text tab to paste your resume content manually.");
+          throw new Error(
+            extractData.error ||
+              "Could not extract text from PDF. Please use the Text tab to paste your resume content manually.",
+          );
         }
       }
 
       const pdfText = extractData.text;
 
       if (!pdfText || pdfText.trim().length < 20) {
-        throw new Error("Could not extract enough text from the PDF. Please use the Text tab to paste your resume content manually.");
+        throw new Error(
+          "Could not extract enough text from the PDF. Please use the Text tab to paste your resume content manually.",
+        );
       }
 
       // Step 2: Try to extract name and email from the PDF text
@@ -448,27 +533,35 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       let extractedEmail = "";
 
       // Email extraction regex
-      const emailMatch = pdfText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      const emailMatch = pdfText.match(
+        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,
+      );
       if (emailMatch) {
         extractedEmail = emailMatch[0];
       }
 
       // Name extraction - usually the first line or first prominent text
       // Try common patterns for name at the beginning of a resume
-      const lines = pdfText.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+      const lines = pdfText
+        .split("\n")
+        .map((l: string) => l.trim())
+        .filter((l: string) => l.length > 0);
 
       // The name is usually in the first few lines, typically 2-4 words, all capitalized or title case
       for (let i = 0; i < Math.min(5, lines.length); i++) {
         const line = lines[i];
         // Check if it looks like a name (2-4 words, no special characters except spaces)
-        const nameCandidate = line.replace(/[^a-zA-Z\s]/g, '').trim();
+        const nameCandidate = line.replace(/[^a-zA-Z\s]/g, "").trim();
         const words = nameCandidate.split(/\s+/);
 
-        if (words.length >= 2 && words.length <= 4 &&
+        if (
+          words.length >= 2 &&
+          words.length <= 4 &&
           words.every((w: string) => w.length > 1 && /^[A-Z]/.test(w)) &&
-          !nameCandidate.toLowerCase().includes('resume') &&
-          !nameCandidate.toLowerCase().includes('curriculum') &&
-          !nameCandidate.toLowerCase().includes('vitae')) {
+          !nameCandidate.toLowerCase().includes("resume") &&
+          !nameCandidate.toLowerCase().includes("curriculum") &&
+          !nameCandidate.toLowerCase().includes("vitae")
+        ) {
           extractedName = nameCandidate;
           break;
         }
@@ -479,18 +572,22 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         extractedEmail = "user@example.com";
         toast({
           title: "📧 No email found",
-          description: "We couldn't find an email in the PDF. A placeholder will be used.",
+          description:
+            "We couldn't find an email in the PDF. A placeholder will be used.",
         });
       }
 
-      logger.info(null, `Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`);
+      logger.info(
+        null,
+        `Extracted from PDF - Name: ${extractedName}, Email: ${extractedEmail}`,
+      );
 
       // Step 3: Call the resume generation API with extracted text as prompt
       const response = await fetch("/api/generate/resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           prompt: `Based on the following resume/profile content, create a professional, ATS-optimized resume:\n\n${pdfText}`,
@@ -502,8 +599,12 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMsg = data.details || data.error || "Failed to generate resume";
-        console.error("Resume generation error:", { status: response.status, data });
+        const errorMsg =
+          data.details || data.error || "Failed to generate resume";
+        console.error("Resume generation error:", {
+          status: response.status,
+          data,
+        });
         throw new Error(errorMsg);
       }
 
@@ -529,7 +630,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       setResumeData(resume);
       setAtsScore(generatedAtsScore);
-      setCurrentStep('preview');
+      setCurrentStep("preview");
 
       // Clear the uploaded file after successful generation
       setUploadedPdfFile(null);
@@ -538,12 +639,13 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         title: "✨ Resume Generated from PDF!",
         description: `ATS Score: ${generatedAtsScore?.score}% (${generatedAtsScore?.grade} Grade)`,
       });
-
     } catch (error: any) {
       console.error("PDF Resume generation error:", error);
       toast({
         title: "Generation Failed",
-        description: error.message || "Please try using the Text tab to paste your resume content manually",
+        description:
+          error.message ||
+          "Please try using the Text tab to paste your resume content manually",
         variant: "destructive",
       });
     } finally {
@@ -576,7 +678,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       const response = await fetch("/api/linkedin/import-pdf", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -588,7 +690,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       const resume = convertToResume(data.profile);
       setResumeData(resume);
-      setCurrentStep('preview');
+      setCurrentStep("preview");
 
       toast({
         title: "✅ PDF Imported!",
@@ -664,12 +766,12 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           prompt: manualText.trim(),
           name: userName.trim(),
-          email: userEmail.trim()
+          email: userEmail.trim(),
         }),
       });
 
@@ -677,8 +779,12 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       if (!response.ok) {
         // Provide detailed error message
-        const errorMsg = data.details || data.error || "Failed to generate resume";
-        console.error("Resume generation error:", { status: response.status, data });
+        const errorMsg =
+          data.details || data.error || "Failed to generate resume";
+        console.error("Resume generation error:", {
+          status: response.status,
+          data,
+        });
         throw new Error(errorMsg);
       }
 
@@ -704,7 +810,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       setResumeData(resume);
       setAtsScore(atsScore);
-      setCurrentStep('preview');
+      setCurrentStep("preview");
 
       // Clear form fields after successful generation
       setUserName("");
@@ -731,10 +837,15 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   const handleAtsAnalysis = async (textContent?: string) => {
     const contentToAnalyze = textContent || atsCheckerText;
 
-    if (!contentToAnalyze || !contentToAnalyze.trim() || contentToAnalyze.trim().length < 20) {
+    if (
+      !contentToAnalyze ||
+      !contentToAnalyze.trim() ||
+      contentToAnalyze.trim().length < 20
+    ) {
       toast({
         title: "Not enough content",
-        description: "Please enter at least 20 characters of resume text to analyze",
+        description:
+          "Please enter at least 20 characters of resume text to analyze",
         variant: "destructive",
       });
       return;
@@ -749,7 +860,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ resumeText: contentToAnalyze }),
       });
@@ -779,13 +890,26 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
   };
 
   // Handle ATS File Upload - Extract text and show in textarea (don't auto-analyze)
-  const handleAtsFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAtsFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Check file type
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.doc') && !file.name.endsWith('.docx') && !file.name.endsWith('.txt')) {
+    const validTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ];
+    if (
+      !validTypes.includes(file.type) &&
+      !file.name.endsWith(".pdf") &&
+      !file.name.endsWith(".doc") &&
+      !file.name.endsWith(".docx") &&
+      !file.name.endsWith(".txt")
+    ) {
       toast({
         title: "Invalid file type",
         description: "Please upload a PDF, DOC, DOCX, or TXT file",
@@ -798,13 +922,14 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
     try {
       // For text files, read directly
-      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      if (file.type === "text/plain" || file.name.endsWith(".txt")) {
         const text = await file.text();
         if (text && text.trim().length >= 10) {
           setAtsCheckerText(text.trim());
           toast({
             title: "✅ Resume Loaded",
-            description: "Your resume content is ready. Click 'Analyze ATS Score' to check your score.",
+            description:
+              "Your resume content is ready. Click 'Analyze ATS Score' to check your score.",
           });
           setIsAnalyzingAts(false);
           return;
@@ -812,7 +937,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const token = await getAuthToken();
 
@@ -820,7 +945,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       const extractResponse = await fetch("/api/extract-resume-text", {
         method: "POST",
         headers: {
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
       });
@@ -833,18 +958,23 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
           setAtsCheckerText(extractData.text.trim());
           toast({
             title: "⚠️ Partial Extraction",
-            description: "Some text was extracted. You may need to clean it up before analyzing.",
+            description:
+              "Some text was extracted. You may need to clean it up before analyzing.",
           });
           setIsAnalyzingAts(false);
           return;
         }
-        throw new Error(extractData.error || "Failed to extract text from resume");
+        throw new Error(
+          extractData.error || "Failed to extract text from resume",
+        );
       }
 
       const { text } = extractData;
 
       if (!text || text.trim().length < 20) {
-        throw new Error("Could not extract enough text from the file. Please try pasting your resume text instead.");
+        throw new Error(
+          "Could not extract enough text from the file. Please try pasting your resume text instead.",
+        );
       }
 
       // Set the extracted text in the textarea (don't auto-analyze)
@@ -854,18 +984,18 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         title: "✅ Resume Loaded Successfully",
         description: `Extracted ${text.length} characters. Click 'Analyze ATS Score' to check your score.`,
       });
-
     } catch (error: any) {
       console.error("File upload error:", error);
       toast({
         title: "Upload Failed",
-        description: error.message || "Please try pasting your resume text manually",
+        description:
+          error.message || "Please try pasting your resume text manually",
         variant: "destructive",
       });
     } finally {
       setIsAnalyzingAts(false);
       // Reset the file input so the same file can be uploaded again
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -885,9 +1015,10 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
       // Prompt user to go to input step first to enter their details
       toast({
         title: "Please enter your details",
-        description: "We need your name and email to generate a tailored resume.",
+        description:
+          "We need your name and email to generate a tailored resume.",
       });
-      setCurrentStep('input');
+      setCurrentStep("input");
       return;
     }
 
@@ -899,7 +1030,7 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
         description: "Please enter a valid email address",
         variant: "destructive",
       });
-      setCurrentStep('input');
+      setCurrentStep("input");
       return;
     }
 
@@ -911,20 +1042,20 @@ export function MobileResumeBuilder({ templateId, resumeId }: MobileResumeBuilde
 
       // Create a detailed prompt from job data
       const jobDescription = `
-Job Title: ${jobData.title || 'Not specified'}
-Company: ${jobData.company || 'Not specified'}
-Location: ${jobData.location || 'Not specified'}
-Job Type: ${jobData.type || 'Full-time'}
+Job Title: ${jobData.title || "Not specified"}
+Company: ${jobData.company || "Not specified"}
+Location: ${jobData.location || "Not specified"}
+Job Type: ${jobData.type || "Full-time"}
 
-Required Skills: ${jobData.skills?.join(', ') || 'Various technical skills'}
+Required Skills: ${jobData.skills?.join(", ") || "Various technical skills"}
 
 Key Requirements:
-${jobData.requirements?.map((r: string) => `- ${r}`).join('\n') || '- Professional experience required'}
+${jobData.requirements?.map((r: string) => `- ${r}`).join("\n") || "- Professional experience required"}
 
 Responsibilities:
-${jobData.responsibilities?.map((r: string) => `- ${r}`).join('\n') || '- Various responsibilities'}
+${jobData.responsibilities?.map((r: string) => `- ${r}`).join("\n") || "- Various responsibilities"}
 
-Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') || 'industry relevant keywords'}
+Keywords for ATS: ${jobData.keywords?.join(", ") || jobData.skills?.join(", ") || "industry relevant keywords"}
       `.trim();
 
       // Use existing working resume generation API
@@ -932,7 +1063,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           prompt: `Create a tailored resume for this job:\n\n${jobDescription}`,
@@ -941,15 +1072,19 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
           jobTitle: jobData.title,
           targetCompany: jobData.company,
           targetSkills: jobData.skills,
-          targetKeywords: jobData.keywords
+          targetKeywords: jobData.keywords,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMsg = data.details || data.error || "Failed to generate resume";
-        console.error("Resume generation error:", { status: response.status, data });
+        const errorMsg =
+          data.details || data.error || "Failed to generate resume";
+        console.error("Resume generation error:", {
+          status: response.status,
+          data,
+        });
         throw new Error(errorMsg);
       }
 
@@ -975,11 +1110,11 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
       setResumeData(resume);
       setAtsScore(atsScore);
-      setCurrentStep('preview');
+      setCurrentStep("preview");
 
       toast({
         title: "✨ Tailored Resume Created!",
-        description: `Optimized for ${jobData.title || 'the position'} at ${jobData.company || 'target company'}. ATS Score: ${atsScore?.score}%`,
+        description: `Optimized for ${jobData.title || "the position"} at ${jobData.company || "target company"}. ATS Score: ${atsScore?.score}%`,
       });
     } catch (error: any) {
       console.error("Tailored resume generation error:", error);
@@ -1014,13 +1149,13 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
     const improvements: string[] = [];
 
     // Check contact info (20 points)
-    if (resume.name && resume.name !== 'Your Name') {
+    if (resume.name && resume.name !== "Your Name") {
       score += 5;
     } else {
       improvements.push("Add your full name");
     }
 
-    if (resume.email && resume.email.includes('@')) {
+    if (resume.email && resume.email.includes("@")) {
       score += 5;
     } else {
       improvements.push("Add a professional email");
@@ -1061,7 +1196,9 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
     // Check for quantifiable achievements
     const hasMetrics = exp.some((e: any) => {
-      const desc = Array.isArray(e.description) ? e.description.join(' ') : (e.description || '');
+      const desc = Array.isArray(e.description)
+        ? e.description.join(" ")
+        : e.description || "";
       return /\d+%|\$\d+|\d+\+/.test(desc);
     });
 
@@ -1069,7 +1206,9 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
       score += 10;
       feedback.push("✅ Includes quantifiable achievements");
     } else {
-      improvements.push("Add numbers/metrics to achievements (e.g., 'increased sales by 25%')");
+      improvements.push(
+        "Add numbers/metrics to achievements (e.g., 'increased sales by 25%')",
+      );
     }
 
     // Check achievement count
@@ -1122,26 +1261,26 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
     }
 
     // Determine grade
-    let grade = 'F';
-    let color = 'red';
+    let grade = "F";
+    let color = "red";
     if (score >= 90) {
-      grade = 'A';
-      color = 'green';
+      grade = "A";
+      color = "green";
       feedback.push("🎉 Excellent! Your resume is ATS-optimized");
     } else if (score >= 80) {
-      grade = 'B';
-      color = 'blue';
+      grade = "B";
+      color = "blue";
       feedback.push("👍 Good! A few tweaks will make it perfect");
     } else if (score >= 70) {
-      grade = 'C';
-      color = 'yellow';
+      grade = "C";
+      color = "yellow";
       feedback.push("⚠️ Decent, but needs improvement");
     } else if (score >= 60) {
-      grade = 'D';
-      color = 'orange';
+      grade = "D";
+      color = "orange";
       feedback.push("⚠️ Needs significant improvement");
     } else {
-      color = 'red';
+      color = "red";
       feedback.push("❌ Needs major improvements for ATS compatibility");
     }
 
@@ -1152,13 +1291,13 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
       feedback,
       improvements,
       breakdown: {
-        contactInfo: Math.min(20, score >= 20 ? 20 : (score > 0 ? 10 : 0)),
+        contactInfo: Math.min(20, score >= 20 ? 20 : score > 0 ? 10 : 0),
         summary: resume.summary ? 15 : 5,
         experience: Math.min(30, totalAchievements >= 6 ? 30 : 15),
         education: edu.length > 0 ? 15 : 0,
         skills: Math.min(15, totalSkills >= 10 ? 15 : 8),
-        certifications: resume.certifications?.length > 0 ? 5 : 0
-      }
+        certifications: resume.certifications?.length > 0 ? 5 : 0,
+      },
     };
   };
 
@@ -1218,7 +1357,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           subdomain,
@@ -1239,7 +1378,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
 
       toast({
         title: "🎉 Resume Published!",
-        description: `Your ${isCV ? 'CV' : 'resume'} is live! Visit: ${data.data.url}`,
+        description: `Your ${isCV ? "CV" : "resume"} is live! Visit: ${data.data.url}`,
       });
     } catch (error: any) {
       toast({
@@ -1272,8 +1411,8 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
     }
 
     const shareData = {
-      title: `${resumeData?.name || 'My'} Professional ${isCV ? 'CV' : 'Resume'}`,
-      text: `Check out my professional ${isCV ? 'CV' : 'resume'} created with DraftDeckAI!`,
+      title: `${resumeData?.name || "My"} Professional ${isCV ? "CV" : "Resume"}`,
+      text: `Check out my professional ${isCV ? "CV" : "resume"} created with DraftDeckAI!`,
       url: publishedUrl,
     };
 
@@ -1289,7 +1428,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
         setShowShareDialog(true);
       }
     } catch (error: any) {
-      if (error.name !== 'AbortError') {
+      if (error.name !== "AbortError") {
         // User didn't cancel, show platform options
         setShowShareDialog(true);
       }
@@ -1299,42 +1438,64 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
   // Share on WhatsApp
   const shareOnWhatsApp = () => {
     if (!publishedUrl) return;
-    const text = encodeURIComponent(`Check out my professional ${isCV ? 'CV' : 'resume'}: ${publishedUrl}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    const text = encodeURIComponent(
+      `Check out my professional ${isCV ? "CV" : "resume"}: ${publishedUrl}`,
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
   // Share on LinkedIn
   const shareOnLinkedIn = () => {
     if (!publishedUrl) return;
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publishedUrl)}`, '_blank');
+    window.open(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publishedUrl)}`,
+      "_blank",
+    );
   };
 
   // Share via Email
   const shareViaEmail = () => {
     if (!publishedUrl) return;
-    const subject = encodeURIComponent(`My Professional ${isCV ? 'CV' : 'Resume'}`);
-    const body = encodeURIComponent(`Hi,\n\nI'd like to share my professional ${isCV ? 'CV' : 'resume'} with you:\n\n${publishedUrl}\n\nCreated with DraftDeckAI - Professional Document Builder`);
+    const subject = encodeURIComponent(
+      `My Professional ${isCV ? "CV" : "Resume"}`,
+    );
+    const body = encodeURIComponent(
+      `Hi,\n\nI'd like to share my professional ${isCV ? "CV" : "resume"} with you:\n\n${publishedUrl}\n\nCreated with DraftDeckAI - Professional Document Builder`,
+    );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
   // Share on Twitter/X
   const shareOnTwitter = () => {
     if (!publishedUrl) return;
-    const text = encodeURIComponent(`Check out my professional ${isCV ? 'CV' : 'resume'}!`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(publishedUrl)}`, '_blank');
+    const text = encodeURIComponent(
+      `Check out my professional ${isCV ? "CV" : "resume"}!`,
+    );
+    window.open(
+      `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(publishedUrl)}`,
+      "_blank",
+    );
   };
 
   // Share on Facebook
   const shareOnFacebook = () => {
     if (!publishedUrl) return;
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publishedUrl)}`, '_blank');
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publishedUrl)}`,
+      "_blank",
+    );
   };
 
   // Share on Telegram
   const shareOnTelegram = () => {
     if (!publishedUrl) return;
-    const text = encodeURIComponent(`Check out my professional ${isCV ? 'CV' : 'resume'}`);
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(publishedUrl)}&text=${text}`, '_blank');
+    const text = encodeURIComponent(
+      `Check out my professional ${isCV ? "CV" : "resume"}`,
+    );
+    window.open(
+      `https://t.me/share/url?url=${encodeURIComponent(publishedUrl)}&text=${text}`,
+      "_blank",
+    );
   };
 
   if (isLoadingTemplate || isLoadingSavedResume) {
@@ -1389,28 +1550,33 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
           <div className="text-center mb-6 sm:mb-12 lg:mb-16 px-4">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-effect border border-blue-200/30 mb-4 sm:mb-6 hover:scale-105 transition-transform duration-300">
               <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-pulse" />
-              <span className="text-xs sm:text-sm font-semibold bolt-gradient-text">AI-Powered Resume Builder</span>
+              <span className="text-xs sm:text-sm font-semibold bolt-gradient-text">
+                AI-Powered Resume Builder
+              </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
-              <span className="block mb-1 sm:mb-2">Create Your Perfect Resume</span>
+              <span className="block mb-1 sm:mb-2">
+                Create Your Perfect Resume
+              </span>
               <span className="bolt-gradient-text">In Seconds, Not Hours</span>
             </h1>
 
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Import from LinkedIn, upload PDF, or paste your info. Our advanced AI does the rest! ✨
+              Import from LinkedIn, upload PDF, or paste your info. Our advanced
+              AI does the rest! ✨
             </p>
           </div>
 
           {/* VIEW 0: DASHBOARD - Similar to Presentation Page */}
-          {currentStep === 'dashboard' && (
+          {currentStep === "dashboard" && (
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Create Resume */}
                 <button
                   onClick={() => {
                     setIsCV(false);
-                    setCurrentStep('input');
+                    setCurrentStep("input");
                   }}
                   className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                 >
@@ -1419,8 +1585,13 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <div className="w-12 h-12 bolt-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                       <FileCheck className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Create Resume</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">Build a professional 1-page resume optimized for job applications.</p>
+                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      Create Resume
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Build a professional 1-page resume optimized for job
+                      applications.
+                    </p>
                   </div>
                 </button>
 
@@ -1428,7 +1599,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                 <button
                   onClick={() => {
                     setIsCV(true);
-                    setCurrentStep('input');
+                    setCurrentStep("input");
                   }}
                   className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                 >
@@ -1437,14 +1608,19 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <div className="w-12 h-12 cosmic-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                       <FileText className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Create CV</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">Build a detailed multi-page CV for academic or comprehensive profiles.</p>
+                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      Create CV
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Build a detailed multi-page CV for academic or
+                      comprehensive profiles.
+                    </p>
                   </div>
                 </button>
 
                 {/* Import from Job URL */}
                 <button
-                  onClick={() => setCurrentStep('job-url')}
+                  onClick={() => setCurrentStep("job-url")}
                   className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1452,14 +1628,18 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                       <Briefcase className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Job URL Import</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">Paste a job listing URL to create a tailored resume.</p>
+                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      Job URL Import
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Paste a job listing URL to create a tailored resume.
+                    </p>
                   </div>
                 </button>
 
                 {/* ATS Score Checker */}
                 <button
-                  onClick={() => setCurrentStep('ats-checker')}
+                  onClick={() => setCurrentStep("ats-checker")}
                   className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-amber-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1467,8 +1647,13 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                       <BarChart3 className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">ATS Score Checker</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">Check your resume's ATS compatibility and get improvement tips.</p>
+                    <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                      ATS Score Checker
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Check your resume's ATS compatibility and get improvement
+                      tips.
+                    </p>
                   </div>
                 </button>
               </div>
@@ -1481,23 +1666,37 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Pro Tips for Best Results</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                        Pro Tips for Best Results
+                      </h4>
                       <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
                         <div className="flex items-start gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span><strong>Resume:</strong> Best for US/Canada job applications, fits on 1 page</span>
+                          <span>
+                            <strong>Resume:</strong> Best for US/Canada job
+                            applications, fits on 1 page
+                          </span>
                         </div>
                         <div className="flex items-start gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span><strong>CV:</strong> Ideal for academic, research, or detailed profiles</span>
+                          <span>
+                            <strong>CV:</strong> Ideal for academic, research,
+                            or detailed profiles
+                          </span>
                         </div>
                         <div className="flex items-start gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span><strong>Job URL:</strong> Tailors your resume to match job requirements</span>
+                          <span>
+                            <strong>Job URL:</strong> Tailors your resume to
+                            match job requirements
+                          </span>
                         </div>
                         <div className="flex items-start gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span><strong>ATS Check:</strong> Ensures your resume passes automated screening</span>
+                          <span>
+                            <strong>ATS Check:</strong> Ensures your resume
+                            passes automated screening
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1507,13 +1706,15 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
             </div>
           )}
 
-          {currentStep === 'selection' ? (
+          {currentStep === "selection" ? (
             /* Initial Selection: Resume or CV */
             <div className="max-w-4xl mx-auto px-4">
               <Card className="glass-effect border-2 border-blue-200/50 shadow-2xl">
                 <CardHeader className="text-center p-8">
                   <CardTitle className="text-3xl font-bold mb-4">
-                    <span className="bolt-gradient-text">What would you like to create?</span>
+                    <span className="bolt-gradient-text">
+                      What would you like to create?
+                    </span>
                   </CardTitle>
                   <CardDescription className="text-lg">
                     Choose the format that best suits your needs
@@ -1525,7 +1726,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <button
                       onClick={() => {
                         setIsCV(false);
-                        setCurrentStep('input');
+                        setCurrentStep("input");
                       }}
                       className="group relative p-8 rounded-xl border-2 border-blue-200 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                     >
@@ -1533,12 +1734,18 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                         <FileCheck className="h-8 w-8 text-blue-600 group-hover:scale-110 transition-transform" />
                       </div>
                       <div className="text-left">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Resume</h3>
-                        <p className="text-gray-600 mb-4">Perfect for job applications</p>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                          Resume
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          Perfect for job applications
+                        </p>
                         <ul className="space-y-2 text-sm text-gray-700">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span>Fits on <strong>1 page</strong></span>
+                            <span>
+                              Fits on <strong>1 page</strong>
+                            </span>
                           </li>
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -1563,7 +1770,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <button
                       onClick={() => {
                         setIsCV(true);
-                        setCurrentStep('input');
+                        setCurrentStep("input");
                       }}
                       className="group relative p-8 rounded-xl border-2 border-purple-200 hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                     >
@@ -1571,12 +1778,18 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                         <FileText className="h-8 w-8 text-purple-600 group-hover:scale-110 transition-transform" />
                       </div>
                       <div className="text-left">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3">CV (Curriculum Vitae)</h3>
-                        <p className="text-gray-600 mb-4">For academic & detailed profiles</p>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                          CV (Curriculum Vitae)
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          For academic & detailed profiles
+                        </p>
                         <ul className="space-y-2 text-sm text-gray-700">
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                            <span><strong>2+ pages</strong> allowed</span>
+                            <span>
+                              <strong>2+ pages</strong> allowed
+                            </span>
                           </li>
                           <li className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -1603,12 +1816,16 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     <div className="flex items-start gap-3">
                       <Sparkles className="h-6 w-6 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Not sure which to choose?</h4>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                          Not sure which to choose?
+                        </h4>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                          <strong>Choose Resume</strong> if you're applying for jobs in the US, Canada, or most industries.
+                          <strong>Choose Resume</strong> if you're applying for
+                          jobs in the US, Canada, or most industries.
                         </p>
                         <p className="text-sm text-gray-700 dark:text-gray-300">
-                          <strong>Choose CV</strong> if you're in academia, research, or need to showcase extensive experience.
+                          <strong>Choose CV</strong> if you're in academia,
+                          research, or need to showcase extensive experience.
                         </p>
                       </div>
                     </div>
@@ -1616,7 +1833,7 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                 </CardContent>
               </Card>
             </div>
-          ) : currentStep === 'input' ? (
+          ) : currentStep === "input" ? (
             /* Input Section - Combined with Dashboard Options */
             <>
               {/* Div A: Dashboard Options */}
@@ -1627,15 +1844,20 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     onClick={() => {
                       setIsCV(false);
                     }}
-                    className={`group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105 ${!isCV ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105 ${!isCV ? "ring-2 ring-blue-500" : ""}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="bg-card/60 backdrop-blur-xl w-full h-full rounded-[20px] p-6 flex flex-col relative overflow-hidden border border-border hover:border-blue-500/50 shadow-lg hover:shadow-blue-500/10 transition-all min-h-[200px]">
                       <div className="w-12 h-12 bolt-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                         <FileCheck className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Create Resume</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">Build a professional 1-page resume optimized for job applications.</p>
+                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        Create Resume
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Build a professional 1-page resume optimized for job
+                        applications.
+                      </p>
                     </div>
                   </button>
 
@@ -1644,21 +1866,26 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                     onClick={() => {
                       setIsCV(true);
                     }}
-                    className={`group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105 ${isCV ? 'ring-2 ring-purple-500' : ''}`}
+                    className={`group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105 ${isCV ? "ring-2 ring-purple-500" : ""}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="bg-card/60 backdrop-blur-xl w-full h-full rounded-[20px] p-6 flex flex-col relative overflow-hidden border border-border hover:border-purple-500/50 shadow-lg hover:shadow-purple-500/10 transition-all min-h-[200px]">
                       <div className="w-12 h-12 cosmic-gradient rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                         <FileText className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Create CV</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">Build a detailed multi-page CV for academic or comprehensive profiles.</p>
+                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        Create CV
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Build a detailed multi-page CV for academic or
+                        comprehensive profiles.
+                      </p>
                     </div>
                   </button>
 
                   {/* Import from Job URL */}
                   <button
-                    onClick={() => setCurrentStep('job-url')}
+                    onClick={() => setCurrentStep("job-url")}
                     className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1666,14 +1893,18 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                       <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                         <Briefcase className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Job URL Import</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">Paste a job listing URL to create a tailored resume.</p>
+                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        Job URL Import
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Paste a job listing URL to create a tailored resume.
+                      </p>
                     </div>
                   </button>
 
                   {/* ATS Score Checker */}
                   <button
-                    onClick={() => setCurrentStep('ats-checker')}
+                    onClick={() => setCurrentStep("ats-checker")}
                     className="group relative flex flex-col p-1 rounded-3xl transition-all duration-300 hover:scale-105"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 to-amber-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1681,8 +1912,13 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg">
                         <BarChart3 className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">ATS Score Checker</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">Check your resume's ATS compatibility and get improvement tips.</p>
+                      <h3 className="text-xl font-bold professional-heading mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                        ATS Score Checker
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Check your resume's ATS compatibility and get
+                        improvement tips.
+                      </p>
                     </div>
                   </button>
                 </div>
@@ -1695,23 +1931,37 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                         <Sparkles className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">Pro Tips for Best Results</h4>
+                        <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
+                          Pro Tips for Best Results
+                        </h4>
                         <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
                           <div className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span><strong>Resume:</strong> Best for US/Canada job applications, fits on 1 page</span>
+                            <span>
+                              <strong>Resume:</strong> Best for US/Canada job
+                              applications, fits on 1 page
+                            </span>
                           </div>
                           <div className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span><strong>CV:</strong> Ideal for academic, research, or detailed profiles</span>
+                            <span>
+                              <strong>CV:</strong> Ideal for academic, research,
+                              or detailed profiles
+                            </span>
                           </div>
                           <div className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span><strong>Job URL:</strong> Tailors your resume to match job requirements</span>
+                            <span>
+                              <strong>Job URL:</strong> Tailors your resume to
+                              match job requirements
+                            </span>
                           </div>
                           <div className="flex items-start gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span><strong>ATS Check:</strong> Ensures your resume passes automated screening</span>
+                            <span>
+                              <strong>ATS Check:</strong> Ensures your resume
+                              passes automated screening
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1727,8 +1977,14 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                   <CardHeader className="p-4 sm:p-6 relative">
                     <div className="pt-0">
                       <CardTitle className="text-xl sm:text-2xl font-bold professional-heading">
-                        <span className="bolt-gradient-text">Import Your Profile</span>
-                        {isCV && <span className="ml-2 text-sm font-normal text-purple-600">(CV Mode)</span>}
+                        <span className="bolt-gradient-text">
+                          Import Your Profile
+                        </span>
+                        {isCV && (
+                          <span className="ml-2 text-sm font-normal text-purple-600">
+                            (CV Mode)
+                          </span>
+                        )}
                       </CardTitle>
                       <CardDescription className="text-muted-foreground text-sm sm:text-base">
                         Choose your preferred method to get started
@@ -1738,20 +1994,32 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                   <CardContent className="p-4 sm:p-6">
                     <Tabs defaultValue="pdf" className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 glass-effect h-auto">
-                        <TabsTrigger value="pdf" className="text-xs sm:text-sm data-[state=active]:sunset-gradient data-[state=active]:text-white py-2 sm:py-2.5">
+                        <TabsTrigger
+                          value="pdf"
+                          className="text-xs sm:text-sm data-[state=active]:sunset-gradient data-[state=active]:text-white py-2 sm:py-2.5"
+                        >
                           <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                           PDF/File
                         </TabsTrigger>
-                        <TabsTrigger value="text" className="text-xs sm:text-sm data-[state=active]:forest-gradient data-[state=active]:text-white py-2 sm:py-2.5">
+                        <TabsTrigger
+                          value="text"
+                          className="text-xs sm:text-sm data-[state=active]:forest-gradient data-[state=active]:text-white py-2 sm:py-2.5"
+                        >
                           <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
                           Text
                         </TabsTrigger>
                       </TabsList>
 
                       {/* PDF Tab */}
-                      <TabsContent value="pdf" className="space-y-3 sm:space-y-4">
+                      <TabsContent
+                        value="pdf"
+                        className="space-y-3 sm:space-y-4"
+                      >
                         <div className="space-y-2 sm:space-y-3">
-                          <Label htmlFor="pdf-upload" className="text-sm font-medium">
+                          <Label
+                            htmlFor="pdf-upload"
+                            className="text-sm font-medium"
+                          >
                             Upload Resume PDF or LinkedIn Export
                           </Label>
 
@@ -1769,7 +2037,8 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                                       {uploadedPdfFile.name}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                      {(uploadedPdfFile.size / 1024).toFixed(1)} KB • PDF File
+                                      {(uploadedPdfFile.size / 1024).toFixed(1)}{" "}
+                                      KB • PDF File
                                     </p>
                                   </div>
                                 </div>
@@ -1778,8 +2047,19 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                                   className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 hover:text-red-600 transition-colors"
                                   title="Remove file"
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M18 6 6 18" />
+                                    <path d="m6 6 12 12" />
                                   </svg>
                                 </button>
                               </div>
@@ -1794,7 +2074,10 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                                 onChange={handlePdfFileSelect}
                                 className="hidden"
                               />
-                              <label htmlFor="pdf-upload" className="cursor-pointer">
+                              <label
+                                htmlFor="pdf-upload"
+                                className="cursor-pointer"
+                              >
                                 <Upload className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 mx-auto mb-2 sm:mb-3 text-gray-400" />
                                 <p className="text-xs sm:text-sm font-medium text-gray-700">
                                   Click to upload PDF
@@ -1818,34 +2101,46 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                             {isImporting ? (
                               <>
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                <span className="font-semibold">Generating Professional Resume...</span>
+                                <span className="font-semibold">
+                                  Generating Professional Resume...
+                                </span>
                               </>
                             ) : (
                               <>
                                 <Sparkles className="mr-2 h-5 w-5" />
-                                <span className="font-semibold">Generate Resume with AI</span>
+                                <span className="font-semibold">
+                                  Generate Resume with AI
+                                </span>
                               </>
                             )}
                           </Button>
                         )}
 
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-3">
-                          <p className="text-[10px] sm:text-xs text-blue-800 font-medium mb-1.5 sm:mb-2">
+                        <div className="bg-card bg-background/100 border border-border rounded-lg p-3">
+                          <p className="text-[10px] sm:text-xs text-blue-800 bg-background/5 text-foreground font-medium mb-1.5 sm:mb-2">
                             💡 How to export from LinkedIn:
                           </p>
-                          <ol className="text-[10px] sm:text-xs text-blue-700 space-y-0.5 sm:space-y-1 list-decimal list-inside">
+                          <ol className="text-[10px] sm:text-xs text-blue-700 bg-background/5 text-foreground space-y-0.5 sm:space-y-1 list-decimal list-inside">
                             <li>Go to your LinkedIn profile</li>
-                            <li>Click &quot;More&quot; → &quot;Save to PDF&quot;</li>
+                            <li>
+                              Click &quot;More&quot; → &quot;Save to PDF&quot;
+                            </li>
                             <li>Upload the downloaded PDF here</li>
                           </ol>
                         </div>
                       </TabsContent>
 
                       {/* Manual Text Tab - Using Working Resume Generation */}
-                      <TabsContent value="text" className="space-y-3 sm:space-y-4">
+                      <TabsContent
+                        value="text"
+                        className="space-y-3 sm:space-y-4"
+                      >
                         <div className="space-y-2 sm:space-y-3">
                           <div>
-                            <Label htmlFor="user-name" className="text-sm font-medium">
+                            <Label
+                              htmlFor="user-name"
+                              className="text-sm font-medium"
+                            >
                               Your Name *
                             </Label>
                             <Input
@@ -1853,11 +2148,14 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                               placeholder="e.g., John Doe"
                               value={userName}
                               onChange={(e) => setUserName(e.target.value)}
-                              className="bg-white/50"
+                              className="bg-background/80 text-foreground"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="user-email" className="text-sm font-medium">
+                            <Label
+                              htmlFor="user-email"
+                              className="text-sm font-medium"
+                            >
                               Your Email *
                             </Label>
                             <Input
@@ -1866,13 +2164,16 @@ Keywords for ATS: ${jobData.keywords?.join(', ') || jobData.skills?.join(', ') |
                               placeholder="e.g., john.doe@example.com"
                               value={userEmail}
                               onChange={(e) => setUserEmail(e.target.value)}
-                              className="bg-white/50"
+                              className="bg-background/80 text-foreground"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="manual-text" className="text-sm font-medium flex items-center gap-2">
+                            <Label
+                              htmlFor="manual-text"
+                              className="text-sm font-medium flex items-center gap-2"
+                            >
                               Job Description / Target Role *
-                              <span className="px-2 py-0.5 bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 text-xs rounded-full font-bold">
+                              <span className="px-2 py-0.5 bg-background/80 text-foreground from-purple-100 to-blue-100 text-purple-700 text-xs rounded-full font-bold">
                                 AI-Powered ✨
                               </span>
                             </Label>
@@ -1890,14 +2191,18 @@ Certified AWS Solutions Architect
 ..."
                               value={manualText}
                               onChange={(e) => setManualText(e.target.value)}
-                              className="min-h-[180px] bg-white/50 resize-none"
+                              className="min-h-[180px] bg-background/80 text-foreground resize-none"
                             />
                           </div>
-                          <div className="flex items-start gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                          <div className="flex items-start gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-background/80 text-foreground from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
                             <p className="text-[10px] sm:text-xs text-gray-700">
-                              <strong className="text-blue-700">AI will create:</strong> Complete professional resume with
-                              proper formatting, quantified achievements, and ATS optimization + instant compatibility score!
+                              <strong className="text-blue-700">
+                                AI will create:
+                              </strong>{" "}
+                              Complete professional resume with proper
+                              formatting, quantified achievements, and ATS
+                              optimization + instant compatibility score!
                             </p>
                           </div>
                         </div>
@@ -1910,12 +2215,16 @@ Certified AWS Solutions Architect
                           {isImporting ? (
                             <>
                               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              <span className="font-semibold">Generating Professional Resume...</span>
+                              <span className="font-semibold">
+                                Generating Professional Resume...
+                              </span>
                             </>
                           ) : (
                             <>
                               <Sparkles className="mr-2 h-5 w-5" />
-                              <span className="font-semibold">Generate Resume with AI</span>
+                              <span className="font-semibold">
+                                Generate Resume with AI
+                              </span>
                             </>
                           )}
                         </Button>
@@ -1928,7 +2237,9 @@ Certified AWS Solutions Architect
                 <Card className="card-coral hover-coral border-2 border-amber-200/50 hover:border-amber-300/70 shadow-xl backdrop-blur-xl hidden lg:block">
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="text-xl sm:text-2xl font-bold professional-heading">
-                      <span className="sunset-gradient-text">Why Use Our Builder? ✨</span>
+                      <span className="sunset-gradient-text">
+                        Why Use Our Builder? ✨
+                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -1937,7 +2248,9 @@ Certified AWS Solutions Architect
                         <CheckCircle2 className="h-6 w-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold professional-heading mb-1">ATS-Optimized</h3>
+                        <h3 className="font-bold professional-heading mb-1">
+                          ATS-Optimized
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           Resumes formatted to pass Applicant Tracking Systems
                         </p>
@@ -1949,7 +2262,9 @@ Certified AWS Solutions Architect
                         <Sparkles className="h-6 w-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold professional-heading mb-1">AI-Powered</h3>
+                        <h3 className="font-bold professional-heading mb-1">
+                          AI-Powered
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           Intelligent parsing extracts data from any format
                         </p>
@@ -1961,7 +2276,9 @@ Certified AWS Solutions Architect
                         <Download className="h-6 w-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold professional-heading mb-1">Export Anywhere</h3>
+                        <h3 className="font-bold professional-heading mb-1">
+                          Export Anywhere
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           Download as PDF or DOCX, ready to send
                         </p>
@@ -1973,7 +2290,9 @@ Certified AWS Solutions Architect
                         <Linkedin className="h-6 w-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold professional-heading mb-1">LinkedIn Integration</h3>
+                        <h3 className="font-bold professional-heading mb-1">
+                          LinkedIn Integration
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           Import directly from LinkedIn or PDF export
                         </p>
@@ -1984,7 +2303,10 @@ Certified AWS Solutions Architect
                       <div className="flex items-start gap-3">
                         <Sparkles className="h-5 w-5 text-blue-500 animate-pulse mt-0.5" />
                         <p className="text-sm professional-text">
-                          <strong className="bolt-gradient-text">Pro Tip:</strong> For best results, use PDF export from LinkedIn.
+                          <strong className="bolt-gradient-text">
+                            Pro Tip:
+                          </strong>{" "}
+                          For best results, use PDF export from LinkedIn.
                           It&apos;s 100% reliable and includes all your data!
                         </p>
                       </div>
@@ -1993,13 +2315,13 @@ Certified AWS Solutions Architect
                 </Card>
               </div>
             </>
-          ) : currentStep === 'job-url' ? (
+          ) : currentStep === "job-url" ? (
             /* Job URL Import View */
             <div className="max-w-4xl mx-auto px-4">
               <Card className="glass-effect border-2 border-emerald-200/50 shadow-2xl">
                 <CardHeader className="text-center p-6 sm:p-8">
                   <button
-                    onClick={() => setCurrentStep('dashboard')}
+                    onClick={() => setCurrentStep("dashboard")}
                     className="absolute top-4 left-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <ArrowLeft className="h-5 w-5" />
@@ -2008,16 +2330,22 @@ Certified AWS Solutions Architect
                     <Briefcase className="h-8 w-8 text-white" />
                   </div>
                   <CardTitle className="text-2xl sm:text-3xl font-bold mb-4">
-                    <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Import from Job Listing</span>
+                    <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                      Import from Job Listing
+                    </span>
                   </CardTitle>
                   <CardDescription className="text-base sm:text-lg">
-                    Paste a job listing URL and we&apos;ll extract requirements to create a tailored resume
+                    Paste a job listing URL and we&apos;ll extract requirements
+                    to create a tailored resume
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 sm:p-8">
                   <div className="space-y-6">
                     <div className="space-y-3">
-                      <Label htmlFor="job-url" className="text-base font-medium flex items-center gap-2">
+                      <Label
+                        htmlFor="job-url"
+                        className="text-base font-medium flex items-center gap-2"
+                      >
                         <Link className="h-4 w-4" />
                         Job Listing URL
                       </Label>
@@ -2031,7 +2359,8 @@ Certified AWS Solutions Architect
                         />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Supports LinkedIn, Indeed, Glassdoor, and most job boards
+                        Supports LinkedIn, Indeed, Glassdoor, and most job
+                        boards
                       </p>
                     </div>
 
@@ -2044,20 +2373,29 @@ Certified AWS Solutions Architect
                         </h4>
                         <div className="space-y-2 text-sm">
                           {jobData.title && (
-                            <p><strong>Position:</strong> {jobData.title}</p>
+                            <p>
+                              <strong>Position:</strong> {jobData.title}
+                            </p>
                           )}
                           {jobData.company && (
-                            <p><strong>Company:</strong> {jobData.company}</p>
+                            <p>
+                              <strong>Company:</strong> {jobData.company}
+                            </p>
                           )}
                           {jobData.skills && jobData.skills.length > 0 && (
                             <div>
                               <strong>Key Skills:</strong>
                               <div className="flex flex-wrap gap-2 mt-1">
-                                {jobData.skills.slice(0, 8).map((skill: string, idx: number) => (
-                                  <span key={idx} className="px-2 py-1 bg-emerald-100 dark:bg-emerald-800 rounded-full text-xs">
-                                    {skill}
-                                  </span>
-                                ))}
+                                {jobData.skills
+                                  .slice(0, 8)
+                                  .map((skill: string, idx: number) => (
+                                    <span
+                                      key={idx}
+                                      className="px-2 py-1 bg-emerald-100 dark:bg-emerald-800 rounded-full text-xs"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
                               </div>
                             </div>
                           )}
@@ -2069,7 +2407,12 @@ Certified AWS Solutions Architect
                     {jobData && (
                       <div className="grid sm:grid-cols-2 gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
                         <div className="space-y-2">
-                          <Label htmlFor="tailor-name" className="text-sm font-medium">Your Full Name *</Label>
+                          <Label
+                            htmlFor="tailor-name"
+                            className="text-sm font-medium"
+                          >
+                            Your Full Name *
+                          </Label>
                           <Input
                             id="tailor-name"
                             placeholder="John Doe"
@@ -2079,7 +2422,12 @@ Certified AWS Solutions Architect
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="tailor-email" className="text-sm font-medium">Your Email *</Label>
+                          <Label
+                            htmlFor="tailor-email"
+                            className="text-sm font-medium"
+                          >
+                            Your Email *
+                          </Label>
                           <Input
                             id="tailor-email"
                             type="email"
@@ -2104,9 +2452,9 @@ Certified AWS Solutions Architect
                           }
                           setIsExtractingJob(true);
                           try {
-                            const response = await fetch('/api/extract-job', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                            const response = await fetch("/api/extract-job", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ url: jobUrl }),
                             });
                             if (response.ok) {
@@ -2114,15 +2462,17 @@ Certified AWS Solutions Architect
                               setJobData(data);
                               toast({
                                 title: "✅ Job data extracted!",
-                                description: "Enter your details and create your tailored resume.",
+                                description:
+                                  "Enter your details and create your tailored resume.",
                               });
                             } else {
-                              throw new Error('Failed to extract job data');
+                              throw new Error("Failed to extract job data");
                             }
                           } catch (error) {
                             toast({
                               title: "Failed to extract job data",
-                              description: "Please check the URL and try again.",
+                              description:
+                                "Please check the URL and try again.",
                               variant: "destructive",
                             });
                           } finally {
@@ -2148,7 +2498,9 @@ Certified AWS Solutions Architect
                       {jobData && (
                         <Button
                           onClick={handleGenerateTailoredResume}
-                          disabled={isImporting || !userName.trim() || !userEmail.trim()}
+                          disabled={
+                            isImporting || !userName.trim() || !userEmail.trim()
+                          }
                           className="flex-1 h-12 bolt-gradient text-white font-semibold"
                         >
                           {isImporting ? (
@@ -2171,29 +2523,45 @@ Certified AWS Solutions Architect
                       <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
                         <div>
-                          <p className="font-medium text-sm">Keyword Matching</p>
-                          <p className="text-xs text-muted-foreground">Automatically includes relevant keywords</p>
+                          <p className="font-medium text-sm">
+                            Keyword Matching
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Automatically includes relevant keywords
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
                         <div>
-                          <p className="font-medium text-sm">Skills Alignment</p>
-                          <p className="text-xs text-muted-foreground">Highlights matching skills from job listing</p>
+                          <p className="font-medium text-sm">
+                            Skills Alignment
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Highlights matching skills from job listing
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
                         <div>
-                          <p className="font-medium text-sm">ATS Optimization</p>
-                          <p className="text-xs text-muted-foreground">Format optimized for tracking systems</p>
+                          <p className="font-medium text-sm">
+                            ATS Optimization
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Format optimized for tracking systems
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5" />
                         <div>
-                          <p className="font-medium text-sm">Smart Suggestions</p>
-                          <p className="text-xs text-muted-foreground">AI suggests improvements based on job</p>
+                          <p className="font-medium text-sm">
+                            Smart Suggestions
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            AI suggests improvements based on job
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -2201,14 +2569,14 @@ Certified AWS Solutions Architect
                 </CardContent>
               </Card>
             </div>
-          ) : currentStep === 'ats-checker' ? (
+          ) : currentStep === "ats-checker" ? (
             /* ATS Score Checker View */
             <div className="max-w-4xl mx-auto px-4">
               <Card className="glass-effect border-2 border-orange-200/50 shadow-2xl">
                 <CardHeader className="text-center p-6 sm:p-8 relative">
                   <button
                     onClick={() => {
-                      setCurrentStep('dashboard');
+                      setCurrentStep("dashboard");
                       setAtsCheckerResult(null);
                       setAtsCheckerText("");
                     }}
@@ -2220,10 +2588,13 @@ Certified AWS Solutions Architect
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
                   <CardTitle className="text-2xl sm:text-3xl font-bold mb-4">
-                    <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">ATS Resume Checker</span>
+                    <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                      ATS Resume Checker
+                    </span>
                   </CardTitle>
                   <CardDescription className="text-base sm:text-lg">
-                    Check how well your resume performs against Applicant Tracking Systems
+                    Check how well your resume performs against Applicant
+                    Tracking Systems
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 sm:p-8">
@@ -2248,83 +2619,114 @@ Certified AWS Solutions Architect
                             </div>
                           </div>
                           <p className="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">
-                            {atsCheckerResult.summary || "Your resume has been analyzed!"}
+                            {atsCheckerResult.summary ||
+                              "Your resume has been analyzed!"}
                           </p>
                         </div>
 
                         {/* Category Scores */}
                         {atsCheckerResult.categories && (
                           <div className="grid sm:grid-cols-2 gap-4">
-                            {Object.entries(atsCheckerResult.categories).map(([category, score]: [string, any]) => (
-                              <div key={category} className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="text-sm font-medium capitalize">{category.replace(/_/g, ' ')}</span>
-                                  <span className="text-sm font-bold text-orange-600">{score}%</span>
+                            {Object.entries(atsCheckerResult.categories).map(
+                              ([category, score]: [string, any]) => (
+                                <div
+                                  key={category}
+                                  className="p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
+                                >
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm font-medium capitalize">
+                                      {category.replace(/_/g, " ")}
+                                    </span>
+                                    <span className="text-sm font-bold text-orange-600">
+                                      {score}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div
+                                      className="bg-gradient-to-r from-orange-400 to-amber-500 h-2 rounded-full transition-all duration-500"
+                                      style={{ width: `${score}%` }}
+                                    />
+                                  </div>
                                 </div>
-                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-400 to-amber-500 h-2 rounded-full transition-all duration-500"
-                                    style={{ width: `${score}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ))}
+                              ),
+                            )}
                           </div>
                         )}
 
                         {/* Suggestions */}
-                        {atsCheckerResult.suggestions && atsCheckerResult.suggestions.length > 0 && (
-                          <div className="p-6 bg-blue-50/80 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-                            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                              <Sparkles className="h-5 w-5 text-blue-600" />
-                              Suggestions to Improve
-                            </h4>
-                            <ul className="space-y-3">
-                              {atsCheckerResult.suggestions.map((suggestion: string, index: number) => (
-                                <li key={index} className="flex items-start gap-3 text-sm">
-                                  <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-bold text-blue-600">
-                                    {index + 1}
-                                  </span>
-                                  <span className="text-gray-700 dark:text-gray-300">{suggestion}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {atsCheckerResult.suggestions &&
+                          atsCheckerResult.suggestions.length > 0 && (
+                            <div className="p-6 bg-blue-50/80 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
+                              <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-blue-600" />
+                                Suggestions to Improve
+                              </h4>
+                              <ul className="space-y-3">
+                                {atsCheckerResult.suggestions.map(
+                                  (suggestion: string, index: number) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-start gap-3 text-sm"
+                                    >
+                                      <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-bold text-blue-600">
+                                        {index + 1}
+                                      </span>
+                                      <span className="text-gray-700 dark:text-gray-300">
+                                        {suggestion}
+                                      </span>
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
+                            </div>
+                          )}
 
                         {/* Keywords Found/Missing */}
-                        {(atsCheckerResult.keywords_found || atsCheckerResult.keywords_missing) && (
+                        {(atsCheckerResult.keywords_found ||
+                          atsCheckerResult.keywords_missing) && (
                           <div className="grid sm:grid-cols-2 gap-4">
-                            {atsCheckerResult.keywords_found && atsCheckerResult.keywords_found.length > 0 && (
-                              <div className="p-4 bg-green-50/80 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
-                                <h5 className="font-medium text-green-700 dark:text-green-400 mb-3 flex items-center gap-2">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  Keywords Found
-                                </h5>
-                                <div className="flex flex-wrap gap-2">
-                                  {atsCheckerResult.keywords_found.slice(0, 10).map((kw: string, i: number) => (
-                                    <span key={i} className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded-full">
-                                      {kw}
-                                    </span>
-                                  ))}
+                            {atsCheckerResult.keywords_found &&
+                              atsCheckerResult.keywords_found.length > 0 && (
+                                <div className="p-4 bg-green-50/80 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-700">
+                                  <h5 className="font-medium text-green-700 dark:text-green-400 mb-3 flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Keywords Found
+                                  </h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {atsCheckerResult.keywords_found
+                                      .slice(0, 10)
+                                      .map((kw: string, i: number) => (
+                                        <span
+                                          key={i}
+                                          className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded-full"
+                                        >
+                                          {kw}
+                                        </span>
+                                      ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                            {atsCheckerResult.keywords_missing && atsCheckerResult.keywords_missing.length > 0 && (
-                              <div className="p-4 bg-red-50/80 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
-                                <h5 className="font-medium text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
-                                  <AlertCircle className="h-4 w-4" />
-                                  Consider Adding
-                                </h5>
-                                <div className="flex flex-wrap gap-2">
-                                  {atsCheckerResult.keywords_missing.slice(0, 10).map((kw: string, i: number) => (
-                                    <span key={i} className="px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs rounded-full">
-                                      {kw}
-                                    </span>
-                                  ))}
+                              )}
+                            {atsCheckerResult.keywords_missing &&
+                              atsCheckerResult.keywords_missing.length > 0 && (
+                                <div className="p-4 bg-red-50/80 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
+                                  <h5 className="font-medium text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    Consider Adding
+                                  </h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {atsCheckerResult.keywords_missing
+                                      .slice(0, 10)
+                                      .map((kw: string, i: number) => (
+                                        <span
+                                          key={i}
+                                          className="px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs rounded-full"
+                                        >
+                                          {kw}
+                                        </span>
+                                      ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>
                         )}
 
@@ -2343,7 +2745,9 @@ Certified AWS Solutions Architect
                     ) : (
                       <>
                         {/* File Upload Area */}
-                        <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${isAnalyzingAts ? 'border-orange-500 bg-orange-100/50' : 'border-orange-300 dark:border-orange-700 hover:border-orange-500 bg-orange-50/50 dark:bg-orange-900/10'}`}>
+                        <div
+                          className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${isAnalyzingAts ? "border-orange-500 bg-orange-100/50" : "border-orange-300 dark:border-orange-700 hover:border-orange-500 bg-orange-50/50 dark:bg-orange-900/10"}`}
+                        >
                           <input
                             type="file"
                             id="ats-upload"
@@ -2352,7 +2756,10 @@ Certified AWS Solutions Architect
                             disabled={isAnalyzingAts}
                             onChange={handleAtsFileUpload}
                           />
-                          <label htmlFor="ats-upload" className={`cursor-pointer ${isAnalyzingAts ? 'pointer-events-none' : ''}`}>
+                          <label
+                            htmlFor="ats-upload"
+                            className={`cursor-pointer ${isAnalyzingAts ? "pointer-events-none" : ""}`}
+                          >
                             {isAnalyzingAts ? (
                               <>
                                 <Loader2 className="h-12 w-12 text-orange-500 mx-auto mb-4 animate-spin" />
@@ -2367,14 +2774,21 @@ Certified AWS Solutions Architect
                               <>
                                 <Upload className="h-12 w-12 text-orange-500 mx-auto mb-4" />
                                 <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                  {atsCheckerText ? 'Upload a Different Resume' : 'Drop your resume here'}
+                                  {atsCheckerText
+                                    ? "Upload a Different Resume"
+                                    : "Drop your resume here"}
                                 </p>
                                 <p className="text-sm text-muted-foreground mb-4">
                                   or click to browse (PDF, DOC, DOCX, TXT)
                                 </p>
-                                <Button variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-100">
+                                <Button
+                                  variant="outline"
+                                  className="border-orange-300 text-orange-600 hover:bg-orange-100"
+                                >
                                   <Upload className="mr-2 h-4 w-4" />
-                                  {atsCheckerText ? 'Replace Resume' : 'Upload Resume'}
+                                  {atsCheckerText
+                                    ? "Replace Resume"
+                                    : "Upload Resume"}
                                 </Button>
                               </>
                             )}
@@ -2386,7 +2800,10 @@ Certified AWS Solutions Architect
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-green-600">
                               <CheckCircle2 className="h-5 w-5" />
-                              <span className="font-medium">Resume content loaded ({atsCheckerText.length} characters)</span>
+                              <span className="font-medium">
+                                Resume content loaded ({atsCheckerText.length}{" "}
+                                characters)
+                              </span>
                             </div>
                             <Button
                               variant="ghost"
@@ -2406,7 +2823,9 @@ Certified AWS Solutions Architect
                           </div>
                           <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-card px-2 text-muted-foreground">
-                              {atsCheckerText ? 'Review & edit your resume text' : 'Or paste your resume text'}
+                              {atsCheckerText
+                                ? "Review & edit your resume text"
+                                : "Or paste your resume text"}
                             </span>
                           </div>
                         </div>
@@ -2483,7 +2902,7 @@ Certified AWS Solutions Architect
               <div className="lg:col-span-2 space-y-6">
                 {/* Back Button */}
                 <button
-                  onClick={() => setCurrentStep('input')}
+                  onClick={() => setCurrentStep("input")}
                   className="mb-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -2494,7 +2913,9 @@ Certified AWS Solutions Architect
                   <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-1">
                       <CardTitle className="text-2xl font-bold professional-heading mb-2">
-                        <span className="cosmic-gradient-text">Your Resume Preview</span>
+                        <span className="cosmic-gradient-text">
+                          Your Resume Preview
+                        </span>
                       </CardTitle>
                       <CardDescription className="text-muted-foreground text-base">
                         Review, edit, and download your professional resume
@@ -2507,11 +2928,11 @@ Certified AWS Solutions Architect
                         className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        {showAIChat ? 'Hide' : 'Show'} AI Coach
+                        {showAIChat ? "Hide" : "Show"} AI Coach
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setCurrentStep('input')}
+                        onClick={() => setCurrentStep("input")}
                         className="border-purple-300/50 hover:border-purple-400 hover:scale-105 transition-all"
                       >
                         <FileText className="mr-2 h-4 w-4" />
@@ -2523,11 +2944,16 @@ Certified AWS Solutions Architect
                     {/* Resume/CV Toggle */}
                     <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                       <div className="flex flex-col">
-                        <Label htmlFor="cv-mode" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                          {isCV ? 'CV Mode (2+ pages)' : 'Resume Mode (1 page)'}
+                        <Label
+                          htmlFor="cv-mode"
+                          className="text-sm font-semibold text-gray-700 dark:text-gray-200"
+                        >
+                          {isCV ? "CV Mode (2+ pages)" : "Resume Mode (1 page)"}
                         </Label>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {isCV ? 'Allows multiple pages for detailed experience' : 'Fits content to a single page'}
+                          {isCV
+                            ? "Allows multiple pages for detailed experience"
+                            : "Fits content to a single page"}
                         </p>
                       </div>
                       <Switch
@@ -2537,17 +2963,18 @@ Certified AWS Solutions Architect
                       />
                     </div>
 
-
                     {/* Resume Preview */}
                     {/* View Mode Toggle - Only show on desktop/tablet */}
                     {!isMobile && (
                       <div className="flex justify-end px-1 mb-2">
                         <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto max-w-full">
                           <Button
-                            variant={viewMode === 'mobile' ? 'default' : 'ghost'}
+                            variant={
+                              viewMode === "mobile" ? "default" : "ghost"
+                            }
                             size="sm"
                             onClick={() => {
-                              setViewMode('mobile');
+                              setViewMode("mobile");
                               setScale(1);
                             }}
                             className="h-7 text-xs whitespace-nowrap"
@@ -2555,17 +2982,19 @@ Certified AWS Solutions Architect
                             📱 Mobile View
                           </Button>
                           <Button
-                            variant={viewMode === 'fit' ? 'default' : 'ghost'}
+                            variant={viewMode === "fit" ? "default" : "ghost"}
                             size="sm"
-                            onClick={() => setViewMode('fit')}
+                            onClick={() => setViewMode("fit")}
                             className="h-7 text-xs whitespace-nowrap"
                           >
                             📄 Fit to Screen
                           </Button>
                           <Button
-                            variant={viewMode === 'actual' ? 'default' : 'ghost'}
+                            variant={
+                              viewMode === "actual" ? "default" : "ghost"
+                            }
                             size="sm"
-                            onClick={() => setViewMode('actual')}
+                            onClick={() => setViewMode("actual")}
                             className="h-7 text-xs whitespace-nowrap"
                           >
                             🔍 Actual Size
@@ -2575,14 +3004,15 @@ Certified AWS Solutions Architect
                     )}
 
                     {/* Resume Preview Container */}
-                    {viewMode === 'mobile' ? (
+                    {viewMode === "mobile" ? (
                       // Mobile Read Mode - Simple, fully responsive, no constraints
                       <div
                         className="w-full bg-white rounded-lg shadow-2xl border border-gray-200"
                         style={{
-                          maxWidth: '100%',
-                          overflow: 'visible',
-                          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)'
+                          maxWidth: "100%",
+                          overflow: "visible",
+                          boxShadow:
+                            "0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)",
                         }}
                       >
                         <ResumePreview
@@ -2591,8 +3021,8 @@ Certified AWS Solutions Architect
                           template={selectedTemplate}
                           showControls={false}
                           isCV={isCV}
-                          layoutMode='responsive'
-                          viewType='mobile'
+                          layoutMode="responsive"
+                          viewType="mobile"
                           customColors={customColors}
                         />
                       </div>
@@ -2600,20 +3030,22 @@ Certified AWS Solutions Architect
                       // PDF Preview or Full Size - with scaling/scrolling
                       <div
                         ref={containerRef}
-                        className={`bg-white rounded-lg border border-gray-200 shadow-lg transition-all duration-300 ${viewMode === 'fit' ? 'overflow-hidden' : 'overflow-auto'
-                          }`}
+                        className={`bg-white rounded-lg border border-gray-200 shadow-lg transition-all duration-300 ${
+                          viewMode === "fit"
+                            ? "overflow-hidden"
+                            : "overflow-auto"
+                        }`}
                         style={{
-                          height: viewMode === 'fit'
-                            ? 'auto'
-                            : '600px',
-                          maxHeight: viewMode === 'fit' ? '80vh' : 'none'
+                          height: viewMode === "fit" ? "auto" : "600px",
+                          maxHeight: viewMode === "fit" ? "80vh" : "none",
                         }}
                       >
                         <div
                           style={{
-                            transform: viewMode === 'fit' ? `scale(${scale})` : 'none',
-                            transformOrigin: 'top left',
-                            width: viewMode === 'fit' ? '210mm' : 'auto',
+                            transform:
+                              viewMode === "fit" ? `scale(${scale})` : "none",
+                            transformOrigin: "top left",
+                            width: viewMode === "fit" ? "210mm" : "auto",
                           }}
                         >
                           <ResumePreview
@@ -2622,8 +3054,10 @@ Certified AWS Solutions Architect
                             template={selectedTemplate}
                             showControls={false}
                             isCV={isCV}
-                            layoutMode={viewMode === 'fit' ? 'fixed' : 'responsive'}
-                            viewType='print'
+                            layoutMode={
+                              viewMode === "fit" ? "fixed" : "responsive"
+                            }
+                            viewType="print"
                             customColors={customColors}
                           />
                         </div>
@@ -2632,7 +3066,11 @@ Certified AWS Solutions Architect
 
                     {/* Text Color Controls (#429) */}
                     <div className="mt-4">
-                      <TextColorPanel colors={customColors} onChange={setCustomColors} compact />
+                      <TextColorPanel
+                        colors={customColors}
+                        onChange={setCustomColors}
+                        compact
+                      />
                     </div>
 
                     {/* Template Switcher (#430) — compact horizontal strip */}
@@ -2651,7 +3089,9 @@ Certified AWS Solutions Architect
                         size="lg"
                       >
                         <FileDown className="mr-2 h-5 w-5" />
-                        <span className="font-semibold">Download {isCV ? 'CV' : 'Resume'} PDF</span>
+                        <span className="font-semibold">
+                          Download {isCV ? "CV" : "Resume"} PDF
+                        </span>
                       </Button>
                       <Button
                         onClick={() => resumePreviewRef.current?.exportToWord()}
@@ -2668,7 +3108,9 @@ Certified AWS Solutions Architect
                         size="lg"
                       >
                         <Edit className="mr-2 h-5 w-5" />
-                        <span className="font-semibold">Edit {isCV ? 'CV' : 'Resume'}</span>
+                        <span className="font-semibold">
+                          Edit {isCV ? "CV" : "Resume"}
+                        </span>
                       </Button>
                     </div>
 
@@ -2680,10 +3122,11 @@ Certified AWS Solutions Architect
                         </div>
                         <div className="flex-1">
                           <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1">
-                            Publish Your {isCV ? 'CV' : 'Resume'} Online
+                            Publish Your {isCV ? "CV" : "Resume"} Online
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Get a free subdomain or use your custom domain (premium)
+                            Get a free subdomain or use your custom domain
+                            (premium)
                           </p>
                         </div>
                       </div>
@@ -2695,7 +3138,8 @@ Certified AWS Solutions Architect
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
                                 <span className="text-sm font-mono text-gray-700 dark:text-gray-300 truncate">
-                                  {publishedUrl || `${subdomain}.draftdeckai.app`}
+                                  {publishedUrl ||
+                                    `${subdomain}.draftdeckai.app`}
                                 </span>
                               </div>
                               <div className="flex gap-2">
@@ -2720,7 +3164,9 @@ Certified AWS Solutions Architect
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(publishedUrl, '_blank')}
+                                  onClick={() =>
+                                    window.open(publishedUrl, "_blank")
+                                  }
                                   className="flex-shrink-0"
                                   title="Open in new tab"
                                 >
@@ -2777,7 +3223,9 @@ Certified AWS Solutions Architect
                     <CardContent className="space-y-3 text-sm">
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Use the AI Coach to improve your resume in real-time</span>
+                        <span>
+                          Use the AI Coach to improve your resume in real-time
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
@@ -2789,7 +3237,9 @@ Certified AWS Solutions Architect
                       </div>
                       <div className="flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>Use keywords from your target job description</span>
+                        <span>
+                          Use keywords from your target job description
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -2805,10 +3255,12 @@ Certified AWS Solutions Architect
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              <span className="bolt-gradient-text">Publish Your {isCV ? 'CV' : 'Resume'} Online</span>
+              <span className="bolt-gradient-text">
+                Publish Your {isCV ? "CV" : "Resume"} Online
+              </span>
             </DialogTitle>
             <DialogDescription>
-              Choose how you want to host your {isCV ? 'CV' : 'resume'} online
+              Choose how you want to host your {isCV ? "CV" : "resume"} online
             </DialogDescription>
           </DialogHeader>
 
@@ -2821,7 +3273,9 @@ Certified AWS Solutions Architect
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Free Subdomain</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">yourname.draftdeckai.app</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    yourname.draftdeckai.app
+                  </p>
                 </div>
               </div>
 
@@ -2832,7 +3286,11 @@ Certified AWS Solutions Architect
                     id="subdomain"
                     placeholder="yourname"
                     value={subdomain}
-                    onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    onChange={(e) =>
+                      setSubdomain(
+                        e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                      )
+                    }
                     className="flex-1"
                   />
                   <span className="flex items-center text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
@@ -2860,7 +3318,9 @@ Certified AWS Solutions Architect
                 <span className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500">Or</span>
+                <span className="bg-white dark:bg-gray-800 px-2 text-gray-500">
+                  Or
+                </span>
               </div>
             </div>
 
@@ -2877,7 +3337,9 @@ Certified AWS Solutions Architect
                       PREMIUM
                     </span>
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">yourdomain.com</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    yourdomain.com
+                  </p>
                 </div>
               </div>
 
@@ -2904,7 +3366,8 @@ Certified AWS Solutions Architect
 
               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
                 <p className="text-xs text-gray-700 dark:text-gray-300">
-                  <strong>Premium features:</strong> Custom domain, remove branding, advanced analytics, priority support
+                  <strong>Premium features:</strong> Custom domain, remove
+                  branding, advanced analytics, priority support
                 </p>
               </div>
             </div>
@@ -2918,17 +3381,22 @@ Certified AWS Solutions Architect
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Share2 className="h-6 w-6 text-blue-600" />
-              <span className="bolt-gradient-text">Share Your {isCV ? 'CV' : 'Resume'}</span>
+              <span className="bolt-gradient-text">
+                Share Your {isCV ? "CV" : "Resume"}
+              </span>
             </DialogTitle>
             <DialogDescription>
-              Share your professional {isCV ? 'CV' : 'resume'} with recruiters, colleagues, or on social media
+              Share your professional {isCV ? "CV" : "resume"} with recruiters,
+              colleagues, or on social media
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {/* URL Display */}
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Your resume URL:</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Your resume URL:
+              </p>
               <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
                 {publishedUrl}
               </p>
@@ -2945,7 +3413,11 @@ Certified AWS Solutions Architect
                   variant="outline"
                   className="w-full justify-start hover:bg-green-50 hover:border-green-500 dark:hover:bg-green-900/20"
                 >
-                  <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                   </svg>
                   WhatsApp
@@ -2965,7 +3437,11 @@ Certified AWS Solutions Architect
                   variant="outline"
                   className="w-full justify-start hover:bg-sky-50 hover:border-sky-500 dark:hover:bg-sky-900/20"
                 >
-                  <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
                   Twitter/X
@@ -2976,7 +3452,11 @@ Certified AWS Solutions Architect
                   variant="outline"
                   className="w-full justify-start hover:bg-blue-50 hover:border-blue-600 dark:hover:bg-blue-900/20"
                 >
-                  <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   Facebook
@@ -2987,7 +3467,11 @@ Certified AWS Solutions Architect
                   variant="outline"
                   className="w-full justify-start hover:bg-blue-50 hover:border-blue-400 dark:hover:bg-blue-900/20"
                 >
-                  <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                   </svg>
                   Telegram
@@ -2998,8 +3482,18 @@ Certified AWS Solutions Architect
                   variant="outline"
                   className="w-full justify-start hover:bg-gray-50 hover:border-gray-500 dark:hover:bg-gray-800"
                 >
-                  <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                   Email
                 </Button>

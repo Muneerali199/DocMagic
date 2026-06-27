@@ -14,6 +14,10 @@ import (
 const shutdownTimeout = 30 * time.Second
 
 func main() {
+	run()
+}
+
+func run() {
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      routes(),

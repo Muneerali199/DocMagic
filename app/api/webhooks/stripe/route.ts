@@ -1,21 +1,21 @@
-import { logger } from '@/lib/logger';
-import { headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
-import { createClient } from '@supabase/supabase-js';
-import Stripe from 'stripe';
+import { logger } from "@/lib/logger";
+import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe";
+import { createClient } from "@supabase/supabase-js";
+import Stripe from "stripe";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('stripe-signature');
+  const signature = headers().get("stripe-signature");
 
   if (!signature) {
-    return NextResponse.json({ error: 'No signature' }, { status: 400 });
+    return NextResponse.json({ error: "No signature" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -24,70 +24,141 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET!,
     );
   } catch (err: any) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, '⚠️ Webhook signature verification failed:', err.message);
-    return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "⚠️ Webhook signature verification failed:",
+      err.message,
+    );
+    return NextResponse.json(
+      { error: "Webhook signature verification failed" },
+      { status: 400 },
+    );
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Webhook event received:', event.type);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "✅ Webhook event received:",
+    event.type,
+  );
 
   try {
+    const shouldProcessEvent = await shouldProcessWebhookEvent(event);
+    if (!shouldProcessEvent) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutSessionCompleted(session);
         break;
       }
 
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionUpdate(subscription);
         break;
       }
 
-      case 'customer.subscription.deleted': {
+      case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionDeleted(subscription);
         break;
       }
 
-      case 'invoice.payment_succeeded': {
+      case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         await handleInvoicePaymentSucceeded(invoice);
         break;
       }
 
-      case 'invoice.payment_failed': {
+      case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         await handleInvoicePaymentFailed(invoice);
         break;
       }
 
       default:
-        logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, `Unhandled event type: ${event.type}`);
+        logger.info(
+          { route: "app/api/webhooks/stripe/route.ts" },
+          `Unhandled event type: ${event.type}`,
+        );
     }
+
+    await recordProcessedWebhookEvent(event);
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error processing webhook:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error processing webhook:",
+      error,
+    );
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 },
+    );
   }
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+async function shouldProcessWebhookEvent(event: Stripe.Event) {
+  const { data, error } = await supabase
+    .from("stripe_webhook_events")
+    .select("stripe_event_id")
+    .eq("stripe_event_id", event.id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (data) {
+    logger.info(
+      { route: "app/api/webhooks/stripe/route.ts", stripeEventId: event.id },
+      "Duplicate Stripe webhook event skipped",
+    );
+    return false;
+  }
+
+  return true;
+}
+
+async function recordProcessedWebhookEvent(event: Stripe.Event) {
+  const { error } = await supabase.from("stripe_webhook_events").insert({
+    stripe_event_id: event.id,
+    event_type: event.type,
+    processed_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session,
+) {
   const userId = session.metadata?.userId;
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
 
   if (!userId) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in session metadata');
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No userId in session metadata",
+    );
     return;
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '💰 Checkout completed for user:', userId);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "💰 Checkout completed for user:",
+    userId,
+  );
 
   // Get subscription details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -95,34 +166,48 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   // Get plan from database
   const { data: plan } = await supabase
-    .from('subscription_plans')
-    .select('id')
-    .eq('stripe_price_id', priceId)
+    .from("subscription_plans")
+    .select("id")
+    .eq("stripe_price_id", priceId)
     .single();
 
   if (!plan) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No plan found for price:', priceId);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No plan found for price:",
+      priceId,
+    );
     return;
   }
 
   // Create or update user subscription
-  const { error } = await supabase
-    .from('user_subscriptions')
-    .upsert({
-      user_id: userId,
-      plan_id: plan.id,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
-      status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-    });
+  const { error } = await supabase.from("user_subscriptions").upsert({
+    user_id: userId,
+    plan_id: plan.id,
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscriptionId,
+    status: subscription.status,
+    current_period_start: new Date(
+      subscription.current_period_start * 1000,
+    ).toISOString(),
+    current_period_end: new Date(
+      subscription.current_period_end * 1000,
+    ).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    trial_start: subscription.trial_start
+      ? new Date(subscription.trial_start * 1000).toISOString()
+      : null,
+    trial_end: subscription.trial_end
+      ? new Date(subscription.trial_end * 1000).toISOString()
+      : null,
+  });
 
   if (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription:', error);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error updating subscription:",
+      error,
+    );
   }
 }
 
@@ -130,42 +215,61 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in subscription metadata');
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No userId in subscription metadata",
+    );
     return;
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '🔄 Subscription updated for user:', userId);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "🔄 Subscription updated for user:",
+    userId,
+  );
 
   const priceId = subscription.items.data[0].price.id;
 
   // Get plan from database
   const { data: plan } = await supabase
-    .from('subscription_plans')
-    .select('id')
-    .eq('stripe_price_id', priceId)
+    .from("subscription_plans")
+    .select("id")
+    .eq("stripe_price_id", priceId)
     .single();
 
   if (!plan) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No plan found for price:', priceId);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No plan found for price:",
+      priceId,
+    );
     return;
   }
 
   // Update user subscription
-  const { error } = await supabase
-    .from('user_subscriptions')
-    .upsert({
-      user_id: userId,
-      plan_id: plan.id,
-      stripe_subscription_id: subscription.id,
-      status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-    });
+  const { error } = await supabase.from("user_subscriptions").upsert({
+    user_id: userId,
+    plan_id: plan.id,
+    stripe_subscription_id: subscription.id,
+    status: subscription.status,
+    current_period_start: new Date(
+      subscription.current_period_start * 1000,
+    ).toISOString(),
+    current_period_end: new Date(
+      subscription.current_period_end * 1000,
+    ).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    canceled_at: subscription.canceled_at
+      ? new Date(subscription.canceled_at * 1000).toISOString()
+      : null,
+  });
 
   if (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription:', error);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error updating subscription:",
+      error,
+    );
   }
 }
 
@@ -173,23 +277,34 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const userId = subscription.metadata?.userId;
 
   if (!userId) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No userId in subscription metadata');
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No userId in subscription metadata",
+    );
     return;
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '❌ Subscription deleted for user:', userId);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "❌ Subscription deleted for user:",
+    userId,
+  );
 
   // Update subscription status to canceled
   const { error } = await supabase
-    .from('user_subscriptions')
+    .from("user_subscriptions")
     .update({
-      status: 'canceled',
+      status: "canceled",
       canceled_at: new Date().toISOString(),
     })
-    .eq('user_id', userId);
+    .eq("user_id", userId);
 
   if (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error canceling subscription:', error);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error canceling subscription:",
+      error,
+    );
   }
 }
 
@@ -199,36 +314,47 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   // Get user from customer ID
   const { data: subscription } = await supabase
-    .from('user_subscriptions')
-    .select('user_id, id')
-    .eq('stripe_customer_id', customerId)
+    .from("user_subscriptions")
+    .select("user_id, id")
+    .eq("stripe_customer_id", customerId)
     .single();
 
   if (!subscription) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No subscription found for customer:', customerId);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No subscription found for customer:",
+      customerId,
+    );
     return;
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '✅ Payment succeeded for user:', subscription.user_id);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "✅ Payment succeeded for user:",
+    subscription.user_id,
+  );
 
   // Record payment in history
-  const { error } = await supabase
-    .from('payment_history')
-    .insert({
-      user_id: subscription.user_id,
-      subscription_id: subscription.id,
-      stripe_payment_intent_id: invoice.payment_intent as string,
-      stripe_invoice_id: invoice.id,
-      amount: invoice.amount_paid / 100, // Convert from cents
-      currency: invoice.currency,
-      status: 'succeeded',
-      payment_method: invoice.payment_settings?.payment_method_types?.[0] || 'card',
-      description: invoice.description || 'Subscription payment',
-      receipt_url: invoice.hosted_invoice_url,
-    });
+  const { error } = await supabase.from("payment_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    stripe_payment_intent_id: invoice.payment_intent as string,
+    stripe_invoice_id: invoice.id,
+    amount: invoice.amount_paid / 100, // Convert from cents
+    currency: invoice.currency,
+    status: "succeeded",
+    payment_method:
+      invoice.payment_settings?.payment_method_types?.[0] || "card",
+    description: invoice.description || "Subscription payment",
+    receipt_url: invoice.hosted_invoice_url,
+  });
 
   if (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error recording payment:', error);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error recording payment:",
+      error,
+    );
   }
 }
 
@@ -237,44 +363,59 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   // Get user from customer ID
   const { data: subscription } = await supabase
-    .from('user_subscriptions')
-    .select('user_id, id')
-    .eq('stripe_customer_id', customerId)
+    .from("user_subscriptions")
+    .select("user_id, id")
+    .eq("stripe_customer_id", customerId)
     .single();
 
   if (!subscription) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'No subscription found for customer:', customerId);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "No subscription found for customer:",
+      customerId,
+    );
     return;
   }
 
-  logger.info({ route: 'app/api/webhooks/stripe/route.ts' }, '❌ Payment failed for user:', subscription.user_id);
+  logger.info(
+    { route: "app/api/webhooks/stripe/route.ts" },
+    "❌ Payment failed for user:",
+    subscription.user_id,
+  );
 
   // Update subscription status
   const { error: subError } = await supabase
-    .from('user_subscriptions')
-    .update({ status: 'past_due' })
-    .eq('user_id', subscription.user_id);
+    .from("user_subscriptions")
+    .update({ status: "past_due" })
+    .eq("user_id", subscription.user_id);
 
   if (subError) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error updating subscription status:', subError);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error updating subscription status:",
+      subError,
+    );
   }
 
   // Record failed payment
-  const { error } = await supabase
-    .from('payment_history')
-    .insert({
-      user_id: subscription.user_id,
-      subscription_id: subscription.id,
-      stripe_payment_intent_id: invoice.payment_intent as string,
-      stripe_invoice_id: invoice.id,
-      amount: invoice.amount_due / 100,
-      currency: invoice.currency,
-      status: 'failed',
-      payment_method: invoice.payment_settings?.payment_method_types?.[0] || 'card',
-      description: invoice.description || 'Subscription payment (failed)',
-    });
+  const { error } = await supabase.from("payment_history").insert({
+    user_id: subscription.user_id,
+    subscription_id: subscription.id,
+    stripe_payment_intent_id: invoice.payment_intent as string,
+    stripe_invoice_id: invoice.id,
+    amount: invoice.amount_due / 100,
+    currency: invoice.currency,
+    status: "failed",
+    payment_method:
+      invoice.payment_settings?.payment_method_types?.[0] || "card",
+    description: invoice.description || "Subscription payment (failed)",
+  });
 
   if (error) {
-    logger.error({ route: 'app/api/webhooks/stripe/route.ts' }, 'Error recording failed payment:', error);
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Error recording failed payment:",
+      error,
+    );
   }
 }

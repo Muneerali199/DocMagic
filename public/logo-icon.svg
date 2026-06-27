@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" fill="none">
+  <defs>
+    <!-- Brand gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+
+  <!-- Center the icon group -->
+  <g transform="translate(8, 8)">
+    <!-- Back card of the deck (stylized D shape) -->
+    <path d="M 8 12 L 24 12 C 32 12 37 17 37 24 C 37 31 32 36 24 36 L 8 36 Z" 
+          fill="#8B5CF6" opacity="0.25" transform="rotate(-6 22 24)"/>
+    
+    <!-- Middle card of the deck (stylized D shape) -->
+    <path d="M 10 10 L 26 10 C 34 10 39 15 39 22 C 39 29 34 34 26 34 L 10 34 Z" 
+          fill="#3B82F6" opacity="0.45" transform="rotate(-3 24 22)"/>
+
+    <!-- Front card of the deck (stylized D shape) -->
+    <path d="M 12 8 L 28 8 C 36 8 41 13 41 20 C 41 27 36 32 28 32 L 12 32 Z" 
+          fill="url(#brand-grad)" />
+          
+    <!-- Inner cutout to form a D monogram -->
+    <path d="M 18 14 L 25 14 C 29 14 32 16 32 20 C 32 24 29 26 25 26 L 18 26 Z" 
+          fill="#FFFFFF" opacity="0.9" />
+
+    <!-- Drafting pen line inside D to represent Draft -->
+    <line x1="21" y1="18" x2="29" y2="18" stroke="url(#brand-grad)" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="21" y1="22" x2="27" y2="22" stroke="url(#brand-grad)" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- AI Sparkle at top right -->
+    <g transform="translate(36, 6)">
+      <path d="M 0,-6 L 1.5,-1.5 L 6,0 L 1.5,1.5 L 0,6 L -1.5,1.5 L -6,0 L -1.5,-1.5 Z" fill="url(#spark-grad)"/>
+    </g>
+  </g>
+</svg>

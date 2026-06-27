@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 //changed ring-ring to ring-yellow-400
 const buttonVariants = cva(
-'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 touch-target',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 touch-target',
   {
     variants: {
       variant: {
@@ -19,6 +19,8 @@ const buttonVariants = cva(
           'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
+        // FIXED: Replaced 'bolt-gradient' with raw Tailwind gradient classes
+        gradient: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-6 rounded-xl hover:scale-105 transition-all duration-300 shadow-md',
       },
       size: {
         default: 'h-11 sm:h-10 px-5 sm:px-4 py-2',

@@ -1,128 +1,139 @@
-import withPWACore from 'next-pwa';
-import { withSentryConfig } from '@sentry/nextjs';
-import { STATIC_SECURITY_HEADERS } from './lib/security-headers.mjs';
+import withPWACore from "next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
+import { CSP_HEADER } from "./lib/csp.mjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
+// --- Runtime & Security Checks ---
 const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
 const isProductionLikeRuntime =
-  (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== 'development')
-  || process.env.NODE_ENV === 'production'
-  || process.env.npm_lifecycle_event === 'start';
+  (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== "development") ||
+  process.env.NODE_ENV === "production" ||
+  process.env.npm_lifecycle_event === "start";
 
 if (isProductionLikeRuntime && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
   throw new Error(
-    'Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production. Use auditable grants instead.'
+    "Security misconfiguration: DEVELOPER_BYPASS_EMAILS must not be set in production. Use auditable grants instead.",
   );
 }
 
+// --- Bundle Analyzer Configuration ---
+/**
+ * To run the bundle analyzer, use the following command:
+ * npm run analyze
+ * This will generate HTML reports in the .next/analyze/ directory.
+ * It has zero impact on standard production builds when ANALYZE is not set.
+ */
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const NEXT_SECURITY_HEADERS = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
+  { key: "Content-Security-Policy", value: CSP_HEADER },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+];
+
+// --- Next.js Base Configuration ---
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  allowedDevOrigins: ['https://kindlier-tawna-nontypographic.ngrok-free.dev'],
-images: {
+  allowedDevOrigins: ["https://kindlier-tawna-nontypographic.ngrok-free.dev"],
+  images: {
     unoptimized: false,
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.pexels.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.pixabay.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.nebius.cloud',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
+      { protocol: "https", hostname: "**.unsplash.com" },
+      { protocol: "https", hostname: "**.pexels.com" },
+      { protocol: "https", hostname: "**.pixabay.com" },
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "**.nebius.cloud" },
+      { protocol: "https", hostname: "placehold.co" },
     ],
   },
-trailingSlash: false,
-  // Optimize for production
+  trailingSlash: false,
   swcMinify: true,
   compress: true,
   poweredByHeader: false,
-  // Performance optimizations
   experimental: {
-    optimizeCss: process.env.NODE_ENV !== 'development', // Disable in dev to prevent critters module error
+    optimizeCss: process.env.NODE_ENV !== "development",
     scrollRestoration: true,
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
   async headers() {
     return [
       {
-        source: '/(.*)',
-        headers: STATIC_SECURITY_HEADERS
-      }
+        source: "/(.*)",
+        headers: NEXT_SECURITY_HEADERS,
+      },
     ];
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    tsconfigPath: './tsconfig.build.json',
+    tsconfigPath: "./tsconfig.build.json",
     ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
+    // Aliases added from the main branch update
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
       jsdom: false,
-      'jsdom/lib/jsdom/living/generated/utils': false,
-      'jsdom/lib/jsdom/utils': false,
+      "jsdom/lib/jsdom/living/generated/utils": false,
+      "jsdom/lib/jsdom/utils": false,
     };
 
     config.module.rules.push({
       test: /\.pdf$/,
-      type: 'asset/resource',
+      type: "asset/resource",
       generator: {
-        filename: 'static/files/[name][ext]',
+        filename: "static/files/[name][ext]",
       },
     });
-    
+
     // Bundle size optimizations
     if (!isServer) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
-          chunks: 'all',
+          chunks: "all",
           maxInitialRequests: 25,
           cacheGroups: {
             default: false,
             vendors: false,
             framework: {
-              name: 'framework',
+              name: "framework",
               test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              chunks: 'all',
+              chunks: "all",
               priority: 40,
               enforce: true,
             },
             lib: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'lib',
+              name: "lib",
               priority: 30,
               minChunks: 1,
               reuseExistingChunk: true,
             },
             commons: {
-              name: 'commons',
+              name: "commons",
               minChunks: 2,
               priority: 20,
             },
             shared: {
-              name: 'shared',
+              name: "shared",
               minChunks: 2,
               priority: 10,
               reuseExistingChunk: true,
@@ -131,22 +142,44 @@ trailingSlash: false,
         },
       };
     }
-    
+
     return config;
   },
 };
 
+// --- PWA Configuration ---
 const withPWA = withPWACore({
-  dest: 'public',
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  cacheOnFrontEndNav: true,
+  fallbacks: {
+    document: "/offline.html",
+  },
+  disable: process.env.NODE_ENV === "development",
   runtimeCaching: [
     {
-      urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
-      handler: 'CacheFirst',
+      urlPattern: ({ url, request }) =>
+        request.method === "GET" &&
+        url.origin === self.location.origin &&
+        /^\/(documents|templates|editor|resume|presentation|cv|letter)(\/.*)?$/.test(
+          url.pathname,
+        ),
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'static-resources',
+        cacheName: "draftdeck-pages",
+        expiration: {
+          maxEntries: 40,
+          maxAgeSeconds: 24 * 60 * 60 * 7,
+        },
+        networkTimeoutSeconds: 5,
+      },
+    },
+    {
+      urlPattern: /^https?.*\.(png|jpe?g|webp|svg|gif|tiff|js|css)$/,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-resources",
         expiration: {
           maxEntries: 64,
           maxAgeSeconds: 24 * 60 * 60 * 30,
@@ -155,9 +188,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'google-fonts-cache',
+        cacheName: "google-fonts-cache",
         expiration: {
           maxEntries: 10,
           maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -166,9 +199,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'gstatic-fonts-cache',
+        cacheName: "gstatic-fonts-cache",
         expiration: {
           maxEntries: 10,
           maxAgeSeconds: 60 * 60 * 24 * 365,
@@ -177,9 +210,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /\/api\/.*$/i,
-      handler: 'NetworkFirst',
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'apis-cache',
+        cacheName: "apis-cache",
         expiration: {
           maxEntries: 16,
           maxAgeSeconds: 24 * 60 * 60,
@@ -189,9 +222,9 @@ const withPWA = withPWACore({
     },
     {
       urlPattern: /.*/i,
-      handler: 'NetworkFirst',
+      handler: "NetworkFirst",
       options: {
-        cacheName: 'others-cache',
+        cacheName: "others-cache",
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60,
@@ -202,7 +235,9 @@ const withPWA = withPWACore({
   ],
 });
 
-const pwaConfig = withPWA(nextConfig);
+// Chain the wrappers: Analyzer -> PWA -> Sentry
+const analyzedConfig = withBundleAnalyzer(nextConfig);
+const pwaConfig = withPWA(analyzedConfig);
 
 export default withSentryConfig(pwaConfig, {
   // For all available options, see:

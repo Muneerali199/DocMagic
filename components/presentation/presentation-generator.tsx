@@ -1,5 +1,6 @@
 "use client";
 import { logger } from "@/lib/logger";
+import { requestNotificationPermission, showDocumentNotification } from "@/lib/notifications";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -226,6 +227,9 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
     setGenerationProgress(0);
     setGenerationStage('Initializing AI...');
 
+    // Request notification permissions for long-running task
+    requestNotificationPermission().catch(console.error);
+
     try {
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -283,12 +287,25 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         title: "🎉 Professional Presentation Ready!",
         description: `${data.slides.length} slides created with unique images, professional design, and interactive charts!`,
       });
+
+      // Show push notification
+      showDocumentNotification("🎉 Presentation Ready!", {
+        body: `${data.slides.length} slides created successfully. Click to view!`,
+        data: { url: window.location.pathname }
+      }).catch(console.error);
+
     } catch (error: any) {
       toast({
         title: "Error",
         description: error?.message || "Failed to generate presentation. Please try again.",
         variant: "destructive",
       });
+
+      // Show failure notification
+      showDocumentNotification("❌ Generation Failed", {
+        body: "Failed to generate your presentation. Please try again.",
+        data: { url: window.location.pathname }
+      }).catch(console.error);
     } finally {
       setIsGenerating(false);
       setGenerationProgress(0);
