@@ -112,7 +112,7 @@
     "dotenv": "^17.3.1",
     "embla-carousel-react": "^8.3.0",
     "eslint": "^8.56.0",
-    "fabric": "^5.4.2",
+    "fabric": "^7.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.38.0",
     "html-to-image": "^1.11.13",
