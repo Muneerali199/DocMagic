@@ -1,7 +1,9 @@
 import withPWACore from "next-pwa";
 import { withSentryConfig } from "@sentry/nextjs";
-import { STATIC_SECURITY_HEADERS } from "./lib/security-headers.mjs";
+import { CSP_HEADER } from "./lib/csp.mjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
+// --- Runtime & Security Checks ---
 const draftdeckRuntimeEnv = process.env.DRAFTDECK_RUNTIME_ENV?.trim();
 const isProductionLikeRuntime =
   (!!draftdeckRuntimeEnv && draftdeckRuntimeEnv !== "development") ||
@@ -14,6 +16,34 @@ if (isProductionLikeRuntime && process.env.DEVELOPER_BYPASS_EMAILS?.trim()) {
   );
 }
 
+// --- Bundle Analyzer Configuration ---
+/**
+ * To run the bundle analyzer, use the following command:
+ * npm run analyze
+ * This will generate HTML reports in the .next/analyze/ directory.
+ * It has zero impact on standard production builds when ANALYZE is not set.
+ */
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const NEXT_SECURITY_HEADERS = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
+  { key: "Content-Security-Policy", value: CSP_HEADER },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+];
+
+// --- Next.js Base Configuration ---
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -21,40 +51,20 @@ const nextConfig = {
   images: {
     unoptimized: false,
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.pexels.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.pixabay.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "**.nebius.cloud",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
+      { protocol: "https", hostname: "**.unsplash.com" },
+      { protocol: "https", hostname: "**.pexels.com" },
+      { protocol: "https", hostname: "**.pixabay.com" },
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "**.nebius.cloud" },
+      { protocol: "https", hostname: "placehold.co" },
     ],
   },
   trailingSlash: false,
-  // Optimize for production
   swcMinify: true,
   compress: true,
   poweredByHeader: false,
-  // Performance optimizations
   experimental: {
-    optimizeCss: process.env.NODE_ENV !== "development", // Disable in dev to prevent critters module error
+    optimizeCss: process.env.NODE_ENV !== "development",
     scrollRestoration: true,
   },
   compiler: {
@@ -64,7 +74,7 @@ const nextConfig = {
     return [
       {
         source: "/(.*)",
-        headers: STATIC_SECURITY_HEADERS,
+        headers: NEXT_SECURITY_HEADERS,
       },
     ];
   },
@@ -76,6 +86,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
+    // Aliases added from the main branch update
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
@@ -136,6 +147,7 @@ const nextConfig = {
   },
 };
 
+// --- PWA Configuration ---
 const withPWA = withPWACore({
   dest: "public",
   register: true,
@@ -223,7 +235,9 @@ const withPWA = withPWACore({
   ],
 });
 
-const pwaConfig = withPWA(nextConfig);
+// Chain the wrappers: Analyzer -> PWA -> Sentry
+const analyzedConfig = withBundleAnalyzer(nextConfig);
+const pwaConfig = withPWA(analyzedConfig);
 
 export default withSentryConfig(pwaConfig, {
   // For all available options, see:

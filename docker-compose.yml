@@ -38,6 +38,23 @@ services:
     networks:
       - draftdeck-network
 
+  backend:
+    build:
+      context: ./backend/go
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/draftdeck
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-your-super-secret-jwt-key}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - draftdeck-network
+
 networks:
   draftdeck-network:
     driver: bridge

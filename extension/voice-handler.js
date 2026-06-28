@@ -1,6 +1,14 @@
 // DraftDeckAI Voice Interaction Handler
 // Full voice communication with speech recognition and synthesis
 
+const DEBUG = false;
+const Logger = {
+    debug: (...args) => { if (DEBUG) console.debug(...args); },
+    info: (...args) => { if (DEBUG) console.info(...args); },
+    warn: (...args) => { if (DEBUG) console.warn(...args); },
+    error: (...args) => { console.error(...args); }
+};
+
 class VoiceHandler {
     constructor() {
         this.recognition = null;
@@ -29,9 +37,9 @@ class VoiceHandler {
             this.recognition.lang = this.voiceSettings.language;
             
             this.setupRecognitionHandlers();
-            console.log('✅ Voice recognition initialized');
+            Logger.info('✅ Voice recognition initialized');
         } else {
-            console.warn('⚠️ Speech recognition not supported in this browser');
+            Logger.warn('⚠️ Speech recognition not supported in this browser');
         }
         
         // Load available voices
@@ -49,14 +57,14 @@ class VoiceHandler {
             v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Enhanced'))
         ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
         
-        console.log('📢 Available voices loaded:', voices.length);
+        Logger.debug('📢 Available voices loaded:', voices.length);
     }
     
     setupRecognitionHandlers() {
         this.recognition.onstart = () => {
             this.isListening = true;
             this.notifyListeningState(true);
-            console.log('🎤 Voice recognition started');
+            Logger.debug('🎤 Voice recognition started');
         };
         
         this.recognition.onend = () => {
@@ -67,7 +75,7 @@ class VoiceHandler {
             if (this.isEnabled) {
                 setTimeout(() => this.startListening(), 100);
             }
-            console.log('🎤 Voice recognition ended');
+            Logger.debug('🎤 Voice recognition ended');
         };
         
         this.recognition.onresult = (event) => {
@@ -92,7 +100,7 @@ class VoiceHandler {
         };
         
         this.recognition.onerror = (event) => {
-            console.error('Voice recognition error:', event.error);
+            Logger.error('Voice recognition error:', event.error);
             if (event.error === 'no-speech') {
                 // Ignore no-speech errors
                 return;
@@ -113,7 +121,7 @@ class VoiceHandler {
             this.isEnabled = true;
             this.recognition.start();
         } catch (error) {
-            console.error('Failed to start recognition:', error);
+            Logger.error('Failed to start recognition:', error);
         }
     }
     
@@ -134,7 +142,7 @@ class VoiceHandler {
     
     speak(text, interrupt = false) {
         if (!this.synthesis) {
-            console.warn('Speech synthesis not available');
+            Logger.warn('Speech synthesis not available');
             return;
         }
         
@@ -151,11 +159,11 @@ class VoiceHandler {
         utterance.lang = this.voiceSettings.language;
         
         utterance.onstart = () => {
-            console.log('🔊 Speaking:', text.substring(0, 50) + '...');
+            Logger.debug('🔊 Speaking text');
         };
         
         utterance.onerror = (event) => {
-            console.error('Speech synthesis error:', event);
+            Logger.error('Speech synthesis error:', event);
         };
         
         this.synthesis.speak(utterance);
@@ -168,7 +176,7 @@ class VoiceHandler {
     }
     
     handleVoiceCommand(command) {
-        console.log('🎤 Voice command:', command);
+        Logger.debug('🎤 Voice command received');
         
         const lowerCommand = command.toLowerCase();
         
@@ -270,4 +278,4 @@ class VoiceHandler {
 // Create global instance
 window.voiceHandler = new VoiceHandler();
 
-console.log('🎤 Voice Handler initialized');
+Logger.info('🎤 Voice Handler initialized');

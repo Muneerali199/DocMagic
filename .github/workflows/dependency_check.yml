@@ -1,4 +1,4 @@
-name: Dependency Check and CI
+name: CI Pipeline
 
 on:
   schedule:
@@ -9,18 +9,18 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
-  contents: read 
+  contents: read
 
 jobs:
   dependency-audit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
 
     name: Dependency Audit and Security Check
 
@@ -32,11 +32,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache-dependency-path: '**/package-lock.json'
-      
+          cache-dependency-path: "**/package-lock.json"
+
       - name: Cache node_modules
         id: cache-npm
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -53,17 +53,19 @@ jobs:
           echo "Note: This is for information only and won't fail the build"
 
       - name: Audit dependencies for vulnerabilities
-        run: npm audit --audit-level=moderate || echo "Audit completed with warnings"
-        continue-on-error: true
+        run: |
+          echo "Running dependency vulnerability audit..."
+          npm audit --audit-level=critical
+        continue-on-error: false
 
-      - name: Check for security advisories
-        run: npm audit --audit-level=high --production || echo "Audit completed with warnings"
+      - name: Check for high-severity advisories in production dependencies
+        run: npm audit --audit-level=high --omit=dev
 
   test-and-build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
 
     steps:
       - name: Checkout code
@@ -73,11 +75,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache-dependency-path: '**/package-lock.json'
-      
+          cache-dependency-path: "**/package-lock.json"
+
       - name: Cache node_modules
         id: cache-npm
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -86,6 +88,23 @@ jobs:
       - name: Install dependencies
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci || (echo "Retrying npm install..." && rm -rf node_modules && npm install)
+
+      # --- NEW LINT AND TYPE CHECK STEPS ---
+      - name: Run Linting
+        run: npm run lint
+
+      - name: Cache TypeScript build info
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: .tsbuildinfo
+          key: ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.build.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.build.json') }}-
+            ${{ runner.os }}-tsbuildinfo-
+
+      - name: Run Type Checking
+        run: npm run typecheck
+      # -------------------------------------
 
       - name: Run tests with Jest
         run: |
@@ -96,6 +115,15 @@ jobs:
             echo "No test script found in package.json, skipping tests"
           fi
 
+      - name: Run UI component tests with Vitest
+        run: |
+          if npm pkg get scripts.test:ui | grep -qv null; then
+            echo "Running Vitest UI component tests..."
+            npm run test:ui
+          else
+            echo "No test:ui script found in package.json, skipping UI tests"
+          fi
+
       - name: Check if build script exists and build
         run: |
           if npm run build --silent 2>/dev/null; then
@@ -104,9 +132,6 @@ jobs:
           else
             echo "No build script found in package.json, skipping build"
           fi
-
-      - name: Run type checking (if TypeScript)
-        run: echo "TypeScript compilation is handled during build time by Next.js"
 
   dependabot-auto-merge:
     runs-on: ubuntu-latest

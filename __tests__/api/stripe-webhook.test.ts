@@ -43,6 +43,7 @@ function makeBuilder(): Builder {
     "select",
     "eq",
     "single",
+    "maybeSingle",
     "upsert",
     "update",
     "insert",
@@ -58,6 +59,7 @@ function makeSupabase() {
     "subscription_plans",
     "user_subscriptions",
     "payment_history",
+    "stripe_webhook_events",
   ]) {
     tableBuilders.set(table, makeBuilder());
   }
@@ -182,6 +184,109 @@ describe("Stripe webhook route", () => {
         status: "active",
       }),
     );
+    expect(
+      supabase.tableBuilders.get("stripe_webhook_events")!.insert,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stripe_event_id: "evt_checkout.session.completed",
+        event_type: "checkout.session.completed",
+      }),
+    );
+  });
+
+  it("acknowledges duplicate events without applying database writes again", async () => {
+    const { route, supabase } = await loadRoute();
+    constructEvent.mockReturnValue(
+      eventFixture("checkout.session.completed", {
+        metadata: { userId: "user-1" },
+        customer: "cus_123",
+        subscription: "sub_123",
+      }),
+    );
+    supabase.tableBuilders
+      .get("stripe_webhook_events")!
+      .maybeSingle.mockResolvedValue({
+        data: { stripe_event_id: "evt_checkout.session.completed" },
+        error: null,
+      });
+
+    const response = await route.POST(makeRequest());
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      received: true,
+      duplicate: true,
+    });
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(
+      supabase.tableBuilders.get("user_subscriptions")!.upsert,
+    ).not.toHaveBeenCalled();
+    expect(
+      supabase.tableBuilders.get("stripe_webhook_events")!.insert,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when the webhook idempotency lookup fails", async () => {
+    const { route, supabase } = await loadRoute();
+    constructEvent.mockReturnValue(
+      eventFixture("checkout.session.completed", {
+        metadata: { userId: "user-1" },
+        customer: "cus_123",
+        subscription: "sub_123",
+      }),
+    );
+    supabase.tableBuilders
+      .get("stripe_webhook_events")!
+      .maybeSingle.mockResolvedValue({
+        data: null,
+        error: new Error("lookup failed"),
+      });
+
+    const response = await route.POST(makeRequest());
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "Webhook processing failed",
+    });
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(
+      supabase.tableBuilders.get("stripe_webhook_events")!.insert,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("upserts subscription details for customer.subscription.created", async () => {
+    const { route, supabase } = await loadRoute();
+    constructEvent.mockReturnValue(
+      eventFixture("customer.subscription.created", subscriptionFixture()),
+    );
+    supabase.tableBuilders
+      .get("subscription_plans")!
+      .single.mockResolvedValue({ data: { id: "plan_123" }, error: null });
+    supabase.tableBuilders
+      .get("user_subscriptions")!
+      .upsert.mockResolvedValue({ error: null });
+
+    const response = await route.POST(makeRequest());
+
+    expect(response.status).toBe(200);
+    expect(
+      supabase.tableBuilders.get("user_subscriptions")!.upsert,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-1",
+        plan_id: "plan_123",
+        stripe_subscription_id: "sub_123",
+        status: "active",
+      }),
+    );
+    expect(
+      supabase.tableBuilders.get("stripe_webhook_events")!.insert,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stripe_event_id: "evt_customer.subscription.created",
+        event_type: "customer.subscription.created",
+      }),
+    );
   });
 
   it("upserts current subscription details for customer.subscription.updated", async () => {
@@ -241,12 +346,10 @@ describe("Stripe webhook route", () => {
         description: "Monthly plan",
       }),
     );
-    supabase.tableBuilders
-      .get("user_subscriptions")!
-      .single.mockResolvedValue({
-        data: { user_id: "user-1", id: "usub_1" },
-        error: null,
-      });
+    supabase.tableBuilders.get("user_subscriptions")!.single.mockResolvedValue({
+      data: { user_id: "user-1", id: "usub_1" },
+      error: null,
+    });
     supabase.tableBuilders
       .get("payment_history")!
       .insert.mockResolvedValue({ error: null });
@@ -279,12 +382,10 @@ describe("Stripe webhook route", () => {
         payment_settings: { payment_method_types: ["card"] },
       }),
     );
-    supabase.tableBuilders
-      .get("user_subscriptions")!
-      .single.mockResolvedValue({
-        data: { user_id: "user-1", id: "usub_1" },
-        error: null,
-      });
+    supabase.tableBuilders.get("user_subscriptions")!.single.mockResolvedValue({
+      data: { user_id: "user-1", id: "usub_1" },
+      error: null,
+    });
     supabase.tableBuilders
       .get("payment_history")!
       .insert.mockResolvedValue({ error: null });
@@ -316,6 +417,8 @@ describe("Stripe webhook route", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ received: true });
-    expect(supabase.from).not.toHaveBeenCalled();
+    expect(supabase.from).not.toHaveBeenCalledWith("subscription_plans");
+    expect(supabase.from).not.toHaveBeenCalledWith("user_subscriptions");
+    expect(supabase.from).not.toHaveBeenCalledWith("payment_history");
   });
 });

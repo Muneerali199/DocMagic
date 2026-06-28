@@ -956,9 +956,7 @@ function RegisterForm() {
               >
                 <Button
                   type="submit"
-                  disabled={
-                    isLoading || isOAuthLoading !== null || !isFormValid
-                  }
+                  disabled={isOAuthLoading !== null || !isFormValid}
                   isLoading={isLoading}
                   className="w-full bolt-gradient text-white font-semibold py-4 sm:py-5 rounded-xl relative text-lg sm:text-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-300 focus:outline-none"
                   aria-label="Create your DraftDeckAI account"

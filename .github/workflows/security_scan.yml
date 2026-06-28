@@ -1,0 +1,132 @@
+# Security Scanning Workflow (Issue #542)
+# Automated security scanning as part of the Security Audit & Compliance Framework
+# Runs on every PR to main and weekly on schedule
+
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly Monday 2 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-audit:
+    name: OWASP Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # OWASP A06 - Vulnerable and Outdated Components
+      - name: Dependency vulnerability audit (critical)
+        run: |
+          set -o pipefail
+          echo "=== OWASP A06: Dependency Vulnerability Scan ==="
+          npm audit --audit-level=critical 2>&1 | tee audit-results.txt
+          echo "Audit completed."
+
+      - name: Dependency vulnerability audit (high - production)
+        run: |
+          echo "=== Production dependency audit (high severity) ==="
+          npm audit --audit-level=high --omit=dev 2>&1 | tee audit-prod-results.txt
+        continue-on-error: true
+
+      # OWASP A05 - Security Misconfiguration
+      - name: Check for hardcoded secrets
+        run: |
+          echo "=== OWASP A05: Secret Detection ==="
+          # Check for common secret patterns in source code
+          SECRET_PATTERNS='(sk_live_|pk_live_|AKIA[A-Z0-9]{16}|ghp_[a-zA-Z0-9]{36}|xox[bpoa]-[a-zA-Z0-9-]+|-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----|password\s*=\s*["\x27][^"\x27]{8,})'
+          
+          if grep -rEn "$SECRET_PATTERNS" --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' --include='*.json' --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=.git . ; then
+            echo "::error::Potential hardcoded secrets detected!"
+            exit 1
+          else
+            echo "✅ No hardcoded secrets found."
+          fi
+
+      # OWASP A03 - Injection / XSS
+      - name: Check for dangerous patterns
+        run: |
+          echo "=== OWASP A03: Dangerous Pattern Detection ==="
+          
+          # Check for eval() usage
+          EVAL_COUNT=$(grep -rn 'eval(' --include='*.ts' --include='*.tsx' --include='*.js' --exclude-dir=node_modules --exclude-dir=.next . | wc -l)
+          echo "eval() occurrences: $EVAL_COUNT"
+          
+          # Check for dangerouslySetInnerHTML usage  
+          DSET_COUNT=$(grep -rn 'dangerouslySetInnerHTML' --include='*.tsx' --include='*.jsx' --exclude-dir=node_modules --exclude-dir=.next . | wc -l)
+          echo "dangerouslySetInnerHTML occurrences: $DSET_COUNT"
+          
+          # Report findings without failing (known intentional usages exist)
+          echo "⚠️  Review: $EVAL_COUNT eval() and $DSET_COUNT dangerouslySetInnerHTML instances require manual review."
+
+      # OWASP A05 - Security Headers
+      - name: Validate security headers configuration
+        run: |
+          echo "=== OWASP A05: Security Headers Validation ==="
+          
+          MISSING_HEADERS=0
+          
+          # Check next.config.js for required security headers
+          for header in "X-Frame-Options" "X-Content-Type-Options" "Strict-Transport-Security" "Content-Security-Policy" "Referrer-Policy" "Permissions-Policy" "X-Permitted-Cross-Domain-Policies"; do
+            if grep -q "$header" next.config.js; then
+              echo "✅ $header: configured"
+            else
+              echo "❌ $header: MISSING"
+              MISSING_HEADERS=$((MISSING_HEADERS + 1))
+            fi
+          done
+          
+          if [ $MISSING_HEADERS -gt 0 ]; then
+            echo "::error::$MISSING_HEADERS required security headers are missing!"
+            exit 1
+          fi
+          
+          echo "✅ All required security headers are configured."
+
+      # OWASP A10 - SSRF Protection
+      - name: Validate SSRF protection
+        run: |
+          echo "=== OWASP A10: SSRF Protection Validation ==="
+          
+          # Check that URL-fetching routes use isPrivateUrl guard
+          for route in "proxy-image" "extract-job" "fetch-url-content"; do
+            ROUTE_FILE=$(find app/api -path "*$route*route.ts" 2>/dev/null | head -1)
+            if [ -n "$ROUTE_FILE" ]; then
+              if grep -q "isPrivateUrl" "$ROUTE_FILE"; then
+                echo "✅ $route: SSRF guard present"
+              else
+                echo "❌ $route: SSRF guard MISSING"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-results
+          path: |
+            audit-results.txt
+            audit-prod-results.txt
+          retention-days: 30

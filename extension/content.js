@@ -4,11 +4,19 @@
 (function() {
     'use strict';
     
-    console.log('🚀 DraftDeckAI Smart Extension activated!');
+    const DEBUG = false;
+    const Logger = {
+        debug: (...args) => { if (DEBUG) console.debug(...args); },
+        info: (...args) => { if (DEBUG) console.info(...args); },
+        warn: (...args) => { if (DEBUG) console.warn(...args); },
+        error: (...args) => { console.error(...args); }
+    };
+    
+    Logger.info('🚀 DraftDeckAI Smart Extension activated!');
     
     // Check if extension context is valid on load
     if (!chrome.runtime || !chrome.runtime.id) {
-        console.warn('⚠️ Extension context may be invalid. Try refreshing the page.');
+        Logger.warn('⚠️ Extension context may be invalid. Try refreshing the page.');
         showReloadNotification();
         return;
     }
@@ -17,10 +25,10 @@
     const platform = detectPlatform();
     
     if (platform) {
-        console.log('✅ Detected platform:', platform);
+        Logger.debug('✅ Detected platform:', platform);
         initializeExtension(platform);
     } else {
-        console.log('ℹ️ Not on a supported coding platform');
+        Logger.debug('ℹ️ Not on a supported coding platform');
     }
     
     function initializeExtension(platform) {
@@ -60,7 +68,7 @@
             try {
                 chrome.storage.local.get([key], (result) => {
                     if (chrome.runtime.lastError) {
-                        console.warn('DraftDeckAI storage read failed:', chrome.runtime.lastError);
+                        Logger.warn('DraftDeckAI storage read failed:', chrome.runtime.lastError);
                         resolve(undefined);
                         return;
                     }
@@ -68,7 +76,7 @@
                     resolve(result?.[key]);
                 });
             } catch (error) {
-                console.warn('DraftDeckAI storage read failed:', error);
+                Logger.warn('DraftDeckAI storage read failed:', error);
                 resolve(undefined);
             }
         });
@@ -79,13 +87,13 @@
             try {
                 chrome.storage.local.set({ [key]: value }, () => {
                     if (chrome.runtime.lastError) {
-                        console.warn('DraftDeckAI storage write failed:', chrome.runtime.lastError);
+                        Logger.warn('DraftDeckAI storage write failed:', chrome.runtime.lastError);
                     }
 
                     resolve();
                 });
             } catch (error) {
-                console.warn('DraftDeckAI storage write failed:', error);
+                Logger.warn('DraftDeckAI storage write failed:', error);
                 resolve();
             }
         });
@@ -96,13 +104,13 @@
             try {
                 chrome.storage.local.remove(key, () => {
                     if (chrome.runtime.lastError) {
-                        console.warn('DraftDeckAI storage remove failed:', chrome.runtime.lastError);
+                        Logger.warn('DraftDeckAI storage remove failed:', chrome.runtime.lastError);
                     }
 
                     resolve();
                 });
             } catch (error) {
-                console.warn('DraftDeckAI storage remove failed:', error);
+                Logger.warn('DraftDeckAI storage remove failed:', error);
                 resolve();
             }
         });
@@ -337,7 +345,7 @@
         const observer = new MutationObserver(() => {
             if (window.location.href !== lastUrl) {
                 lastUrl = window.location.href;
-                console.log('🔄 Page changed, re-initializing...');
+                Logger.debug('🔄 Page changed, re-initializing...');
                 
                 // Remove old helper if exists
                 const oldHelper = document.getElementById('draftdeckai-helper');
@@ -464,7 +472,7 @@
     async function handleAction(action, problemData) {
         const resultDiv = document.getElementById('draftdeckai-result');
         if (!resultDiv) {
-            console.error('Result div not found!');
+            Logger.error('Result div not found!');
             return;
         }
         
@@ -495,7 +503,7 @@
             
             const prompt = prompts[action];
             
-            console.log('📤 Sending message to background:', action);
+            Logger.debug('📤 Sending message to background:', action);
             
             // Double-check context before sending
             if (!isExtensionContextValid()) {
@@ -515,7 +523,7 @@
                 (response) => {
                     // Check for Chrome runtime errors
                     if (chrome.runtime.lastError) {
-                        console.error('Chrome runtime error:', chrome.runtime.lastError);
+                        Logger.error('Chrome runtime error:', chrome.runtime.lastError);
                         
                         // Check if it's a context invalidation error
                         if (chrome.runtime.lastError.message.includes('Extension context invalidated')) {
@@ -534,7 +542,7 @@
                         return;
                     }
                     
-                    console.log('📥 Received response:', response);
+                    Logger.debug('📥 Received response');
                     
                     if (!response) {
                         resultDiv.innerHTML = '<div class="draftdeckai-error">❌ No response from AI. Please check your API key in settings.</div>';
@@ -552,7 +560,7 @@
             );
             
         } catch (error) {
-            console.error('Error in handleAction:', error);
+            Logger.error('Error in handleAction:', error);
             resultDiv.innerHTML = `<div class="draftdeckai-error">❌ Failed to get AI help: ${error.message}</div>`;
         }
     }
@@ -733,7 +741,7 @@
     
     // Handle voice commands
     function handleVoiceCommand(request) {
-        console.log('Voice command received:', request.action);
+        Logger.debug('Voice command received:', request.action);
         
         switch (request.action) {
             case 'solve':
@@ -925,7 +933,7 @@
                 }
             });
         } catch (error) {
-            console.error('Error generating resume:', error);
+            Logger.error('Error generating resume:', error);
             showInlineResult('Error', error.message);
         }
     }

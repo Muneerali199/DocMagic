@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { RATE_LIMIT_CONFIG } from "@/lib/config";
 import { CSP_HEADER, buildCspWithNonce } from "@/lib/csp";
 import { REQUEST_ID_HEADER, createRequestId, logger } from "@/lib/logger";
 import { applySecurityHeaders, buildCorsHeaders } from "@/lib/security-headers";
@@ -32,11 +33,7 @@ function logError(
   );
 }
 
-const RL = {
-  AUTH: { windowMs: 15 * 60 * 1000, max: 10 },
-  GENERATE: { windowMs: 5 * 60 * 1000, max: 20 },
-  API: { windowMs: 60 * 1000, max: 100 },
-} as const;
+const RL = RATE_LIMIT_CONFIG;
 
 type RLKey = keyof typeof RL;
 
@@ -116,7 +113,7 @@ export function middleware(req: NextRequest) {
     });
   }
 
-  if (/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$/i.test(pathname)) {
+  if (/\.(js|css|png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?)$/i.test(pathname)) {
     const r = NextResponse.next();
     r.headers.set("Cache-Control", "public,max-age=31536000,immutable");
     r.headers.set(REQUEST_ID_HEADER, requestId);
@@ -163,6 +160,10 @@ export function middleware(req: NextRequest) {
     const versionMatch = pathname.match(/^\/api\/(v\d+)(?:\/|$)/);
     r.headers.set("X-API-Version", versionMatch ? versionMatch[1] : "v2");
 
+    // Security headers for API responses (OWASP A05)
+    r.headers.set("X-Content-Type-Options", "nosniff");
+    r.headers.set("X-Permitted-Cross-Domain-Policies", "none");
+
     if (
       pathname.startsWith("/api/generate/") ||
       pathname.startsWith("/api/analyze-ats")
@@ -204,6 +205,7 @@ export function middleware(req: NextRequest) {
       "Permissions-Policy",
       "camera=(), microphone=(), geolocation=()",
     );
+    r.headers.set("X-Permitted-Cross-Domain-Policies", "none");
 
     if (isDeploymentError(r)) {
       logError(

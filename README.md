@@ -115,6 +115,9 @@ Run the entire application including the database with one command — no manual
 git clone https://github.com/Muneerali199/Draftdeckai.git
 cd Draftdeckai
 
+# Navigate to the project directory
+cd Draftdeckai
+
 # Set up environment variables
 cp .env.example .env.local
 # Edit .env.local with your API keys (and optionally SUPABASE_JWT_SECRET)

@@ -1,7 +1,7 @@
 /**
  * app/api/health/route.ts — Fix #18 (real health check)
  */
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { getPerformanceStats, getQueryStats } from '@/lib/performance-optimizer';
 import { queryCache } from '@/lib/query-cache';
@@ -49,9 +49,43 @@ function checkMem(): HR {
     : { status: 'healthy' };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const t = Date.now();
   try {
+    const basicHealth = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    };
+
+    // Validate Bearer token for detailed health data (OWASP A01)
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Return minimal liveness probe response for unauthenticated requests
+      return NextResponse.json(basicHealth, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      });
+    }
+
+    // Authenticate the token via Supabase
+    const token = authHeader.replace('Bearer ', '');
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Extended health data for authenticated monitoring tools
     const [db, env, mem] = await Promise.all([
       checkDb(),
       Promise.resolve(checkEnv()),
@@ -65,6 +99,7 @@ export async function GET() {
       ? 'degraded'
       : 'healthy';
     if (overall !== 'healthy') logger.warn({ route: '/api/health' }, `Health: ${overall}`);
+
     return NextResponse.json(
       {
         status: overall,
@@ -85,6 +120,16 @@ export async function GET() {
       }
     );
   } catch (e) {
-    return NextResponse.json({ status: 'unhealthy', error: (e as Error).message }, { status: 503 });
+    logger.error({ route: '/api/health' }, 'Health check failed:', e);
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 503,
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      }
+    );
   }
 }

@@ -1,6 +1,14 @@
 // DraftDeckAI MCP Server
 // Model Context Protocol server for intelligent page analysis
 
+const DEBUG = false;
+const Logger = {
+    debug: (...args) => { if (DEBUG) console.debug(...args); },
+    info: (...args) => { if (DEBUG) console.info(...args); },
+    warn: (...args) => { if (DEBUG) console.warn(...args); },
+    error: (...args) => { console.error(...args); }
+};
+
 class MCPServer {
     constructor() {
         this.isRunning = false;
@@ -24,7 +32,7 @@ class MCPServer {
     async start() {
         if (this.isRunning) return;
         
-        console.log('🚀 Starting MCP Server...');
+        Logger.info('🚀 Starting MCP Server...');
         this.isRunning = true;
         
         // Load configuration
@@ -35,17 +43,17 @@ class MCPServer {
             this.startAutoScan();
         }
         
-        console.log('✅ MCP Server started successfully');
+        Logger.info('✅ MCP Server started successfully');
     }
     
     stop() {
         if (!this.isRunning) return;
         
-        console.log('🛑 Stopping MCP Server...');
+        Logger.info('🛑 Stopping MCP Server...');
         this.stopAutoScan();
         this.isRunning = false;
         
-        console.log('✅ MCP Server stopped');
+        Logger.info('✅ MCP Server stopped');
     }
     
     async loadConfig() {
@@ -71,7 +79,7 @@ class MCPServer {
     startAutoScan() {
         if (this.scanInterval) return;
         
-        console.log('🔍 Starting auto-scan...');
+        Logger.debug('🔍 Starting auto-scan...');
         this.scanCurrentPage();
         this.scanInterval = setInterval(() => {
             this.scanCurrentPage();
@@ -126,7 +134,7 @@ class MCPServer {
             
         } catch (error) {
             // Silent fail - page might not be ready
-            console.debug('Scan failed:', error.message);
+            Logger.debug('Scan failed:', error.message);
         } finally {
             this.isScanning = false;
         }
@@ -173,7 +181,7 @@ class MCPServer {
 
             return result?.result || null;
         } catch (error) {
-            console.debug('Page state check failed:', error.message);
+            Logger.debug('Page state check failed:', error.message);
             return null;
         }
     }
@@ -203,7 +211,7 @@ class MCPServer {
             return;
         }
         
-        console.log('🔬 Analyzing page content...');
+        Logger.debug('🔬 Analyzing page content...');
         
         // Perform comprehensive analysis
         const analysis = await this.performAnalysis(content);
@@ -515,7 +523,7 @@ class MCPServer {
     }
     
     notifyAnalysisComplete(analysis, tabId) {
-        console.log('📊 Analysis complete:', analysis);
+        Logger.debug('📊 Analysis complete');
         
         // Send to background script
         chrome.runtime.sendMessage({
@@ -556,4 +564,4 @@ mcpServer.start();
 // Export for the ES-module background service worker.
 export { mcpServer, MCPServer };
 
-console.log('🚀 MCP Server module loaded');
+Logger.info('🚀 MCP Server module loaded');

@@ -4,6 +4,7 @@ import { generateCodeDrivenPresentation } from '@/lib/qwen-code-presentation';
 import { logger } from '@/lib/logger';
 import { getRequestId } from '@/lib/request-id';
 import { incrementRequestCount, incrementErrorCount } from '@/app/api/metrics/route';
+import { getSlidePlaceholder } from "@/lib/placeholder-image";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,8 +21,8 @@ function mapLegacySlides(outlines: any[]) {
       content: outline.content || outline.description || '',
       bullets: outline.bullets || outline.bulletPoints || [],
       charts: outline.chartData || null,
-      image: outline.image || outline.imageUrl || `https://placehold.co/1024x576/EEE/31343C?text=Slide+${index + 1}`,
-      layout: outline.layout || outline.type || 'title-content',
+        image: outline.image || outline.imageUrl || getSlidePlaceholder(`Slide ${index + 1}`),
+        layout: outline.layout || outline.type || 'title-content',
       imagePrompt: outline.imageQuery || outline.imagePrompt || ''
     };
   });

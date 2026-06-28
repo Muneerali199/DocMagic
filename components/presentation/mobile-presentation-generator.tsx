@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { requestNotificationPermission, showDocumentNotification } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -323,6 +324,9 @@ export function MobilePresentationGenerator() {
     setCurrentStep('preview');
     
     try {
+      // Request notification permissions for long-running task
+      requestNotificationPermission().catch(console.error);
+
       toast({
         title: "🎨 Generating Presentation...",
         description: "Creating slides with unique images and charts",
@@ -353,12 +357,26 @@ export function MobilePresentationGenerator() {
         title: "🎉 Presentation Ready!",
         description: `${data.slides.length} slides generated with code visuals!`,
       });
+
+      // Show push notification
+      showDocumentNotification("🎉 Presentation Ready!", {
+        body: `${data.slides.length} slides created successfully. Click to view!`,
+        data: { url: window.location.pathname }
+      }).catch(console.error);
+
     } catch (error: any) {
       toast({
         title: "Generation failed",
         description: error?.message || "Please try again",
         variant: "destructive",
       });
+
+      // Show failure notification
+      showDocumentNotification("❌ Generation Failed", {
+        body: "Failed to generate your presentation. Please try again.",
+        data: { url: window.location.pathname }
+      }).catch(console.error);
+
       setCurrentStep('theme');
     } finally {
       setIsGenerating(false);

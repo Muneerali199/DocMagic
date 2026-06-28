@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { getPlaceholderImage } from "@/lib/placeholder-image";
 /**
  * API Route for generating AI images for presentation slides
  * Uses FLUX model via Nebius for high-quality image generation
@@ -165,7 +166,13 @@ export async function POST(request: NextRequest) {
       const placeholderImages = Array(count)
         .fill(null)
         .map((_, i) => ({
-          url: `https://placehold.co/${size}/6366F1/FFFFFF?text=${encodeURIComponent(topic || "Image")}`,
+         url: getPlaceholderImage(
+  Number(size.split("x")[0]),
+  Number(size.split("x")[1]),
+  "6366F1",
+  "FFFFFF",
+  topic || "Image"
+),
           type: imageType,
           prompt: customPrompt || topic,
         }));

@@ -93,22 +93,30 @@ async function deleteQueuedRequest(id) {
   await runStoreTransaction("readwrite", (store) => store.delete(id));
 }
 
+let isReplaying = false;
+
 async function replayQueuedRequests() {
-  const requests = await getQueuedRequests();
+  if (isReplaying) return;
+  isReplaying = true;
+  try {
+    const requests = await getQueuedRequests();
 
-  for (const queuedRequest of requests) {
-    const response = await fetch(queuedRequest.url, {
-      method: queuedRequest.method,
-      headers: queuedRequest.headers,
-      body: queuedRequest.body,
-      credentials: "include",
-    });
+    for (const queuedRequest of requests) {
+      const response = await fetch(queuedRequest.url, {
+        method: queuedRequest.method,
+        headers: queuedRequest.headers,
+        body: queuedRequest.body,
+        credentials: "include",
+      });
 
-    if (!response.ok) {
-      throw new Error(`Queued request failed with ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Queued request failed with ${response.status}`);
+      }
+
+      await deleteQueuedRequest(queuedRequest.id);
     }
-
-    await deleteQueuedRequest(queuedRequest.id);
+  } finally {
+    isReplaying = false;
   }
 }
 

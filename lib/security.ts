@@ -64,7 +64,7 @@ export const getSecurityHeaders = (isDevelopment: boolean = false): Record<strin
     // If this directive is ever removed, PDF generation will fail with CSP violations.
     "connect-src 'self' data: https://*.supabase.co https://*.nebius.cloud https://api.stripe.com https://generativelanguage.googleapis.com https://api.mistral.ai https://api.tokenfactory.nebius.com https://latexonline.cc https://latex.ytotech.com https://cdn.jsdelivr.net",
     "frame-src 'self' blob: https://js.stripe.com",
-    "object-src 'self' blob:",
+    "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
@@ -79,7 +79,7 @@ export const getSecurityHeaders = (isDevelopment: boolean = false): Record<strin
   if (!isDevelopment) {
     return {
       ...headers,
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+      'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     };
   }
 
