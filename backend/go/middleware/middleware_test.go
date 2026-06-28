@@ -77,6 +77,7 @@ func TestTimeoutCancelsLongRequests(t *testing.T) {
 }
 
 func TestCORSAddsHeadersAndContinuesNonOptionsRequests(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", "https://draftdeckai.com, http://localhost:3000")
 	nextCalled := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nextCalled = true
@@ -84,7 +85,9 @@ func TestCORSAddsHeadersAndContinuesNonOptionsRequests(t *testing.T) {
 	})
 
 	recorder := httptest.NewRecorder()
-	CORS(next).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Origin", "https://draftdeckai.com")
+	CORS(next).ServeHTTP(recorder, req)
 
 	if !nextCalled {
 		t.Fatal("expected next handler to run")
@@ -92,8 +95,8 @@ func TestCORSAddsHeadersAndContinuesNonOptionsRequests(t *testing.T) {
 	if recorder.Code != http.StatusNoContent {
 		t.Fatalf("expected status %d, got %d", http.StatusNoContent, recorder.Code)
 	}
-	if origin := recorder.Header().Get("Access-Control-Allow-Origin"); origin != "*" {
-		t.Fatalf("expected wildcard allow origin, got %q", origin)
+	if origin := recorder.Header().Get("Access-Control-Allow-Origin"); origin != "https://draftdeckai.com" {
+		t.Fatalf("expected allowlisted origin, got %q", origin)
 	}
 	if methods := recorder.Header().Get("Access-Control-Allow-Methods"); !strings.Contains(methods, http.MethodPost) {
 		t.Fatalf("expected allowed methods to include POST, got %q", methods)
@@ -101,20 +104,29 @@ func TestCORSAddsHeadersAndContinuesNonOptionsRequests(t *testing.T) {
 	if headers := recorder.Header().Get("Access-Control-Allow-Headers"); !strings.Contains(headers, "Authorization") {
 		t.Fatalf("expected allowed headers to include Authorization, got %q", headers)
 	}
+	if vary := recorder.Header().Get("Vary"); !strings.Contains(vary, "Origin") {
+		t.Fatalf("expected Vary to include Origin, got %q", vary)
+	}
 }
 
 func TestCORSHandlesOptionsPreflight(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", "https://draftdeckai.com")
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Fatal("next handler should not run for OPTIONS preflight")
 	})
 
 	recorder := httptest.NewRecorder()
-	CORS(next).ServeHTTP(recorder, httptest.NewRequest(http.MethodOptions, "/", nil))
+	req := httptest.NewRequest(http.MethodOptions, "/", nil)
+	req.Header.Set("Origin", "https://draftdeckai.com")
+	CORS(next).ServeHTTP(recorder, req)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
 	}
-	if origin := recorder.Header().Get("Access-Control-Allow-Origin"); origin != "*" {
-		t.Fatalf("expected wildcard allow origin, got %q", origin)
+	if origin := recorder.Header().Get("Access-Control-Allow-Origin"); origin != "https://draftdeckai.com" {
+		t.Fatalf("expected allowlisted origin, got %q", origin)
+	}
+	if vary := recorder.Header().Get("Vary"); !strings.Contains(vary, "Origin") {
+		t.Fatalf("expected Vary to include Origin, got %q", vary)
 	}
 }
