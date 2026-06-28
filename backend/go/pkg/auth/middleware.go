@@ -21,8 +21,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				slog.String("reason", "SUPABASE_JWT_SECRET not set"),
 				slog.String("path", r.URL.Path),
 			)
-			http.Error(w,"internal server error",
-				
+			http.Error(w, "internal server error",
+
 				http.StatusInternalServerError,
 			)
 			return
@@ -53,11 +53,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				slog.String("path", r.URL.Path),
 				slog.String("remote_addr", r.RemoteAddr),
 				slog.String("error", func() string {
-    if err != nil {
-        return err.Error()
-    }
-    return "token invalid"
-}()),
+					if err != nil {
+						return err.Error()
+					}
+					return "token invalid"
+				}()),
 			)
 			http.Error(w, "invalid or expired token", http.StatusUnauthorized)
 			return
