@@ -761,13 +761,13 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
         const hasBullets = slide.bullets && Array.isArray(slide.bullets) && slide.bullets.length > 0;
         const isCover = index === 0;
 
-        // DEBUG: Log image status
-        logger.info(null, `📊 Slide ${index + 1}:`, {
-          hasImage,
-          imageUrl: slide.image?.substring(0, 60) + '...',
-          hasBullets,
-          hasChart
-        })
+        if (process.env.NODE_ENV !== 'production') {
+          logger.debug(null, `Slide ${index + 1} export assets`, {
+            hasImage,
+            hasBullets,
+            hasChart
+          })
+        }
 
         // --- COVER SLIDE LAYOUT ---
         if (isCover) {
