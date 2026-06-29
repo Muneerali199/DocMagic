@@ -1,5 +1,5 @@
 "use client";
-import { sanitizeFilename } from '@/lib/utils';
+import { sanitizeFilename } from "@/lib/utils";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,29 @@ import {
 } from "@/components/ui/select";
 import { LetterPreview } from "@/components/letter/letter-preview";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, CheckCircle2, Send, Copy, Download, Mail, Loader2, Sparkles, Wand2, FileText, User, MapPin, Check } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Send,
+  Copy,
+  Download,
+  Mail,
+  Loader2,
+  Sparkles,
+  Wand2,
+  FileText,
+  User,
+  MapPin,
+  Check,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 
@@ -42,7 +63,8 @@ export function LetterGenerator() {
   const supabase = createClient();
 
   // Email validation function
-  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const generateLetter = async () => {
     if (!prompt.trim()) {
@@ -66,14 +88,22 @@ export function LetterGenerator() {
     setIsGenerating(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (process.env.NODE_ENV !== "production") {
-        logger.info(null, 'DEBUG: Generating letter, Session User:', session?.user?.email);
-        logger.info(null, 'DEBUG: Access Token Present:', !!session?.access_token);
+        logger.debug(
+          null,
+          "Generating letter, Session User:",
+          session?.user?.email,
+        );
+        logger.debug(null, "Access Token Present:", !!session?.access_token);
       }
 
       if (!session?.access_token) {
-        console.error("No valid session or access token found when generating letter.");
+        console.error(
+          "No valid session or access token found when generating letter.",
+        );
         toast({
           title: "Authentication required",
           description: "Please sign in to generate a letter.",
@@ -83,11 +113,11 @@ export function LetterGenerator() {
         return;
       }
 
-      const response = await fetch('/api/generate/letter', {
-        method: 'POST',
+      const response = await fetch("/api/generate/letter", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           prompt,
@@ -100,7 +130,7 @@ export function LetterGenerator() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate letter');
+        throw new Error("Failed to generate letter");
       }
 
       const data = await response.json();
@@ -109,26 +139,29 @@ export function LetterGenerator() {
       const formattedLetter = {
         from: {
           name: data.from?.name || fromName,
-          address: data.from?.address || fromAddress || ""
+          address: data.from?.address || fromAddress || "",
         },
         to: {
           name: data.to?.name || toName,
-          address: data.to?.address || toAddress || ""
+          address: data.to?.address || toAddress || "",
         },
-        date: data.date || new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
+        date:
+          data.date ||
+          new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
         subject: data.subject || "Re: " + prompt.substring(0, 30) + "...",
-        content: data.content || "Letter content not available."
+        content: data.content || "Letter content not available.",
       };
 
       setLetterData(formattedLetter);
 
       toast({
         title: "Letter generated! ✨",
-        description: "Your professional letter is ready to preview and download",
+        description:
+          "Your professional letter is ready to preview and download",
       });
     } catch (error) {
       console.error("Error generating letter:", error);
@@ -149,17 +182,17 @@ export function LetterGenerator() {
 
     try {
       const letterText = `
-${letterData.from.name || ''}
-${letterData.from.address || ''}
+${letterData.from.name || ""}
+${letterData.from.address || ""}
 
-${letterData.date || ''}
+${letterData.date || ""}
 
-${letterData.to.name || ''}
-${letterData.to.address || ''}
+${letterData.to.name || ""}
+${letterData.to.address || ""}
 
-Subject: ${letterData.subject || ''}
+Subject: ${letterData.subject || ""}
 
-${letterData.content || ''}
+${letterData.content || ""}
       `.trim();
 
       await navigator.clipboard.writeText(letterText);
@@ -186,21 +219,22 @@ ${letterData.content || ''}
 
     try {
       // Dynamically import @react-pdf/renderer to avoid SSR issues
-      const { pdf } = await import('@react-pdf/renderer');
-      const { LetterPdf } = await import('./pdf-template');
+      const { pdf } = await import("@react-pdf/renderer");
+      const { LetterPdf } = await import("./pdf-template");
 
       // Generate filename from subject or use timestamp
-      const sanitizedSubject = sanitizeFilename(letterData.subject, `letter_${Date.now()}`);
+      const sanitizedSubject = sanitizeFilename(
+        letterData.subject,
+        `letter_${Date.now()}`,
+      );
       const filename = `${sanitizedSubject}.pdf`;
 
       // Create PDF blob
-      const blob = await pdf(
-        <LetterPdf letter={letterData} />
-      ).toBlob();
+      const blob = await pdf(<LetterPdf letter={letterData} />).toBlob();
 
       // Download the PDF
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       link.click();
@@ -214,7 +248,7 @@ ${letterData.content || ''}
         description: "Your letter has been downloaded as a PDF.",
       });
     } catch (error) {
-      console.error('Error exporting to PDF:', error);
+      console.error("Error exporting to PDF:", error);
       toast({
         title: "Export failed",
         description: "Failed to export letter to PDF. Please try again.",
@@ -229,9 +263,16 @@ ${letterData.content || ''}
     if (!letterData) return;
 
     // Pre-fill the email form
-    setEmailTo(letterData.to.name ? `${letterData.to.name} <${letterData.to.email || ''}>` : '');
-    setEmailSubject(letterData.subject || `${letterType.charAt(0).toUpperCase() + letterType.slice(1)} Letter`);
-    setEmailContent('');
+    setEmailTo(
+      letterData.to.name
+        ? `${letterData.to.name} <${letterData.to.email || ""}>`
+        : "",
+    );
+    setEmailSubject(
+      letterData.subject ||
+        `${letterType.charAt(0).toUpperCase() + letterType.slice(1)} Letter`,
+    );
+    setEmailContent("");
 
     setShowEmailDialog(true);
   };
@@ -252,10 +293,10 @@ ${letterData.content || ''}
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
+      const response = await fetch("/api/send-email", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           to: emailTo,
@@ -263,13 +304,13 @@ ${letterData.content || ''}
           content: emailContent,
           fromName: fromName,
           fromEmail: fromEmail,
-          letterContent: letterData
+          letterContent: letterData,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send email');
+        throw new Error(errorData.error || "Failed to send email");
       }
 
       const data = await response.json();
@@ -284,13 +325,16 @@ ${letterData.content || ''}
 
       // If there's a preview URL (for test emails), show it
       if (data.previewUrl) {
-        window.open(data.previewUrl, '_blank');
+        window.open(data.previewUrl, "_blank");
       }
     } catch (error) {
       console.error("Error sending email:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to send email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -319,7 +363,10 @@ ${letterData.content || ''}
           <div className="space-y-4">
             {/* Letter Type */}
             <div className="space-y-2">
-              <Label htmlFor="letterType" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="letterType"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 Letter Type
               </Label>
@@ -334,7 +381,9 @@ ${letterData.content || ''}
                   <SelectItem value="cover">Cover Letter</SelectItem>
                   <SelectItem value="business">Business Letter</SelectItem>
                   <SelectItem value="thank">Thank You Letter</SelectItem>
-                  <SelectItem value="recommendation">Recommendation Letter</SelectItem>
+                  <SelectItem value="recommendation">
+                    Recommendation Letter
+                  </SelectItem>
                   <SelectItem value="complaint">Complaint Letter</SelectItem>
                 </SelectContent>
               </Select>
@@ -343,7 +392,10 @@ ${letterData.content || ''}
             {/* From/To Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fromName" className="text-sm font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="fromName"
+                  className="text-sm font-medium flex items-center gap-2"
+                >
                   <User className="h-4 w-4 text-muted-foreground" />
                   From (Name)
                 </Label>
@@ -358,7 +410,10 @@ ${letterData.content || ''}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="toName" className="text-sm font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="toName"
+                  className="text-sm font-medium flex items-center gap-2"
+                >
                   <User className="h-4 w-4 text-muted-foreground" />
                   To (Name)
                 </Label>
@@ -375,7 +430,10 @@ ${letterData.content || ''}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fromAddress" className="text-sm font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="fromAddress"
+                  className="text-sm font-medium flex items-center gap-2"
+                >
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   From (Address)
                 </Label>
@@ -390,7 +448,10 @@ ${letterData.content || ''}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="toAddress" className="text-sm font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="toAddress"
+                  className="text-sm font-medium flex items-center gap-2"
+                >
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   To (Address)
                 </Label>
@@ -406,7 +467,10 @@ ${letterData.content || ''}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fromEmail" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="fromEmail"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 Your Email (For Sending)
               </Label>
@@ -426,7 +490,10 @@ ${letterData.content || ''}
 
             {/* Prompt */}
             <div className="space-y-2">
-              <Label htmlFor="prompt" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="prompt"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <Sparkles className="h-4 w-4 text-yellow-500" />
                 Describe your letter
               </Label>
@@ -443,7 +510,12 @@ ${letterData.content || ''}
             {/* Generate Button */}
             <Button
               onClick={generateLetter}
-              disabled={isGenerating || !prompt.trim() || !fromName.trim() || !toName.trim()}
+              disabled={
+                isGenerating ||
+                !prompt.trim() ||
+                !fromName.trim() ||
+                !toName.trim()
+              }
               className="w-full bolt-gradient text-white font-semibold py-3 rounded-xl hover:scale-105 transition-all duration-300 bolt-glow relative overflow-hidden"
             >
               <div className="flex items-center justify-center gap-2 relative z-10">
@@ -521,11 +593,16 @@ ${letterData.content || ''}
               <Mail className="h-3 w-3 text-blue-500" />
               <span className="text-xs font-medium">Live Preview</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold bolt-gradient-text">Preview</h2>
+            <h2 className="text-xl sm:text-2xl font-bold bolt-gradient-text">
+              Preview
+            </h2>
           </div>
 
           {letterData ? (
-            <div id="letter-preview" className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative">
+            <div
+              id="letter-preview"
+              className="glass-effect border border-yellow-400/20 rounded-xl overflow-hidden bg-white relative"
+            >
               <div className="absolute inset-0 shimmer opacity-10"></div>
               <div className="relative z-10">
                 <LetterPreview letter={letterData} />
@@ -549,8 +626,14 @@ ${letterData.content || ''}
                     {isGenerating && (
                       <div className="flex items-center justify-center gap-2 mt-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
                       </div>
                     )}
                   </div>
@@ -573,7 +656,10 @@ ${letterData.content || ''}
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="emailTo" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="emailTo"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 To Email Address
                 {emailTo && isValidEmail(emailTo) && (
                   <span className="text-green-500 text-xs">✓</span>
@@ -585,14 +671,17 @@ ${letterData.content || ''}
                 placeholder="recipient@example.com"
                 value={emailTo}
                 onChange={(e) => setEmailTo(e.target.value)}
-                className={`${emailTo && !isValidEmail(emailTo) && emailTo.length > 0
-                  ? "border-red-400 focus:border-red-500"
-                  : ""
-                  }`}
+                className={`${
+                  emailTo && !isValidEmail(emailTo) && emailTo.length > 0
+                    ? "border-red-400 focus:border-red-500"
+                    : ""
+                }`}
                 required
               />
               {emailTo && emailTo.length > 0 && !isValidEmail(emailTo) && (
-                <p className="text-xs text-red-500">Please enter a valid email address</p>
+                <p className="text-xs text-red-500">
+                  Please enter a valid email address
+                </p>
               )}
             </div>
 
