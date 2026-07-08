@@ -375,8 +375,256 @@ const architectureLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
   return out;
 };
 
+/**
+ * Org chart — hierarchy tree, root(s) at top. Depth is derived from edges
+ * (parent -> child). Nodes at the same depth share a row; children are
+ * connected to parents with vertical elbow connectors.
+ */
+const orgChartLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
+  // reuse the layered depth resolution, but center each tier and connect
+  // parent->child with straight connectors (drawn as lines, not arrows)
+  const nodes = diagram.nodes;
+  const out: ResolvedElement[] = [];
+  const depth = new Map<string, number>();
+  const incoming = new Map<string, string[]>();
+  for (const n of nodes) incoming.set(n.id, []);
+  for (const e of diagram.edges) incoming.get(e.to)?.push(e.from);
+
+  const resolveDepth = (nodeId: string, seen: Set<string>): number => {
+    if (depth.has(nodeId)) return depth.get(nodeId)!;
+    if (seen.has(nodeId)) return 0;
+    seen.add(nodeId);
+    const parents = incoming.get(nodeId) ?? [];
+    const d =
+      parents.length === 0
+        ? 0
+        : 1 + Math.max(...parents.map((p) => resolveDepth(p, seen)));
+    depth.set(nodeId, d);
+    return d;
+  };
+  for (const n of nodes) resolveDepth(n.id, new Set());
+
+  const maxDepth = Math.max(0, ...Array.from(depth.values()));
+  const tiers: (typeof nodes)[] = Array.from(
+    { length: maxDepth + 1 },
+    () => [],
+  );
+  for (const n of nodes) tiers[depth.get(n.id) ?? 0].push(n);
+
+  const rows = splitRows(frame, tiers.length, tokens.spacing.sectionGap);
+  const frameById = new Map<string, Frame>();
+  tiers.forEach((tier, r) => {
+    // center the tier: each node gets an equal share, but the whole tier is
+    // capped so single-node tiers (the root) don't span the full width
+    const maxNodeW = Math.min(260, rows[r].w / Math.max(1, tier.length));
+    const gap = tokens.spacing.itemGap;
+    const tierW = maxNodeW * tier.length + gap * Math.max(0, tier.length - 1);
+    const startX = rows[r].x + (rows[r].w - tierW) / 2;
+    tier.forEach((node, i) => {
+      const h = Math.min(rows[r].h, 84);
+      const f: Frame = {
+        x: startX + i * (maxNodeW + gap),
+        y: rows[r].y + (rows[r].h - h) / 2,
+        w: maxNodeW,
+        h,
+      };
+      frameById.set(node.id, f);
+      out.push(nodeShape(diagram, node, f, tokens, 1));
+    });
+  });
+  // parent -> child connectors (plain lines)
+  for (const e of diagram.edges) {
+    const from = frameById.get(e.from);
+    const to = frameById.get(e.to);
+    if (!from || !to) continue;
+    const x1 = from.x + from.w / 2;
+    const y1 = from.y + from.h;
+    const x2 = to.x + to.w / 2;
+    const y2 = to.y;
+    if (y2 <= y1) continue;
+    const f: Frame = {
+      x: Math.min(x1, x2),
+      y: y1,
+      w: Math.max(2, Math.abs(x2 - x1)),
+      h: Math.max(2, y2 - y1),
+    };
+    out.push({
+      kind: "shape",
+      id: id(diagram.id, "connector"),
+      frame: f,
+      emphasis: "tertiary",
+      z: 0,
+      shape: "line",
+      points: { x1: x1 - f.x, y1: 0, x2: x2 - f.x, y2: f.h },
+      box: {
+        borderColor: tokens.colors.border,
+        borderWidth: 2,
+        radius: 0,
+        shadow: "none",
+      },
+    });
+  }
+  return out;
+};
+
+/**
+ * Roadmap — swim-lanes derived from node.group (falls back to a single lane).
+ * Each lane is a labeled horizontal track; items are placed left-to-right in
+ * node order, so the planner controls sequencing.
+ */
+const roadmapLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
+  const nodes = diagram.nodes;
+  const out: ResolvedElement[] = [];
+  const laneNames: string[] = [];
+  for (const n of nodes) {
+    const g = n.group ?? "Roadmap";
+    if (!laneNames.includes(g)) laneNames.push(g);
+  }
+  const laneLabelW = laneNames.some((l) => l !== "Roadmap") ? 130 : 0;
+  const lanesFrame: Frame = {
+    x: frame.x + laneLabelW,
+    y: frame.y,
+    w: frame.w - laneLabelW,
+    h: frame.h,
+  };
+  const lanes = splitRows(lanesFrame, laneNames.length, tokens.spacing.unit);
+  const maxPerLane = Math.max(
+    1,
+    ...laneNames.map(
+      (l) => nodes.filter((n) => (n.group ?? "Roadmap") === l).length,
+    ),
+  );
+  laneNames.forEach((laneName, li) => {
+    const lane = lanes[li];
+    // lane background track
+    out.push({
+      kind: "shape",
+      id: id(diagram.id, `lane-${li}`),
+      frame: lane,
+      emphasis: "tertiary",
+      z: 0,
+      shape: tokens.shape.radius > 0 ? "roundRect" : "rect",
+      box: {
+        fill: tokens.colors.surfaceAlt,
+        radius: tokens.shape.radius,
+        shadow: "none",
+      },
+    });
+    if (laneLabelW > 0) {
+      out.push({
+        kind: "text",
+        id: id(diagram.id, `lane-label-${li}`),
+        frame: {
+          x: frame.x,
+          y: lane.y + lane.h / 2 - 14,
+          w: laneLabelW - tokens.spacing.unit,
+          h: 28,
+        },
+        emphasis: "tertiary",
+        z: 1,
+        role: "label",
+        content: laneName,
+        style: resolveTextStyle("label", "tertiary", tokens),
+      });
+    }
+    const laneNodes = nodes.filter((n) => (n.group ?? "Roadmap") === laneName);
+    const slotW = lane.w / maxPerLane;
+    laneNodes.forEach((node, i) => {
+      const pad = tokens.spacing.unit;
+      const f: Frame = {
+        x: lane.x + slotW * i + pad,
+        y: lane.y + pad,
+        w: slotW - pad * 2,
+        h: lane.h - pad * 2,
+      };
+      out.push(nodeShape(diagram, node, f, tokens, 2));
+    });
+  });
+  return out;
+};
+
+/**
+ * Flowchart — edge-aware branching flow, laid out left-to-right by depth.
+ * Unlike the linear flow layout, columns are derived from the edge graph so
+ * branches and merges render correctly with horizontal arrows.
+ */
+const flowchartLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
+  const nodes = diagram.nodes;
+  const out: ResolvedElement[] = [];
+  const depth = new Map<string, number>();
+  const incoming = new Map<string, string[]>();
+  for (const n of nodes) incoming.set(n.id, []);
+  for (const e of diagram.edges) incoming.get(e.to)?.push(e.from);
+
+  const resolveDepth = (nodeId: string, seen: Set<string>): number => {
+    if (depth.has(nodeId)) return depth.get(nodeId)!;
+    if (seen.has(nodeId)) return 0;
+    seen.add(nodeId);
+    const parents = incoming.get(nodeId) ?? [];
+    const d =
+      parents.length === 0
+        ? 0
+        : 1 + Math.max(...parents.map((p) => resolveDepth(p, seen)));
+    depth.set(nodeId, d);
+    return d;
+  };
+  for (const n of nodes) resolveDepth(n.id, new Set());
+
+  const maxDepth = Math.max(0, ...Array.from(depth.values()));
+  const columns: (typeof nodes)[] = Array.from(
+    { length: maxDepth + 1 },
+    () => [],
+  );
+  for (const n of nodes) columns[depth.get(n.id) ?? 0].push(n);
+
+  const cols = splitColumns(
+    frame,
+    columns.length,
+    tokens.spacing.sectionGap * 1.4,
+  );
+  const frameById = new Map<string, Frame>();
+  columns.forEach((column, ci) => {
+    const rows = splitRows(
+      cols[ci],
+      Math.max(1, column.length),
+      tokens.spacing.itemGap,
+    );
+    column.forEach((node, i) => {
+      const h = Math.min(rows[i].h, 96);
+      const f: Frame = { ...rows[i], y: rows[i].y + (rows[i].h - h) / 2, h };
+      frameById.set(node.id, f);
+      out.push(nodeShape(diagram, node, f, tokens, 1));
+    });
+  });
+  // horizontal arrows along edges, with optional edge labels
+  for (const e of diagram.edges) {
+    const from = frameById.get(e.from);
+    const to = frameById.get(e.to);
+    if (!from || !to) continue;
+    out.push(arrow(diagram, from, to, tokens, 0));
+    if (e.label) {
+      const midX = (from.x + from.w + to.x) / 2;
+      const midY = (from.y + from.h / 2 + to.y + to.h / 2) / 2;
+      out.push({
+        kind: "text",
+        id: id(diagram.id, "edge-label"),
+        frame: { x: midX - 50, y: midY - 24, w: 100, h: 20 },
+        emphasis: "tertiary",
+        z: 2,
+        role: "caption",
+        content: e.label,
+        style: resolveTextStyle("caption", "tertiary", tokens, {
+          align: "center",
+        }),
+      });
+    }
+  }
+  return out;
+};
+
 const LAYOUTS: Record<SemanticDiagram["diagramType"], DiagramLayoutFn> = {
   flow: flowLayout,
+  flowchart: flowchartLayout,
   process: flowLayout,
   timeline: timelineLayout,
   cycle: cycleLayout,
@@ -385,6 +633,8 @@ const LAYOUTS: Record<SemanticDiagram["diagramType"], DiagramLayoutFn> = {
   comparison: comparisonLayout,
   swot: swotLayout,
   architecture: architectureLayout,
+  orgchart: orgChartLayout,
+  roadmap: roadmapLayout,
 };
 
 export function layoutDiagram(

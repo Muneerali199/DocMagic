@@ -16,7 +16,7 @@ const strategy: PresentationStrategy = {
   audience: "startup founders and engineering leaders",
   goal: "persuade",
   storytellingStrategy: "problem-solution",
-  deckLength: 5,
+  deckLength: 8,
   tone: "bold",
   suggestedDesignLanguage: "stripe",
 }
@@ -101,6 +101,86 @@ const semantic: SemanticIR = {
     },
     {
       id: "s5",
+      type: "flowchart",
+      intent: "Show the branching decision flow",
+      elements: [
+        { id: "e1", kind: "text", role: "heading", content: "Decision Flow", emphasis: "primary" },
+        {
+          id: "e2",
+          kind: "diagram",
+          diagramType: "flowchart",
+          emphasis: "primary",
+          nodes: [
+            { id: "n1", label: "Prompt", emphasis: "primary" },
+            { id: "n2", label: "Has data?", emphasis: "secondary" },
+            { id: "n3", label: "Chart Engine", emphasis: "secondary" },
+            { id: "n4", label: "Diagram Engine", emphasis: "secondary" },
+            { id: "n5", label: "Compile", emphasis: "secondary" },
+          ],
+          edges: [
+            { from: "n1", to: "n2" },
+            { from: "n2", to: "n3", label: "Yes" },
+            { from: "n2", to: "n4", label: "No" },
+            { from: "n3", to: "n5" },
+            { from: "n4", to: "n5" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "s6",
+      type: "orgchart",
+      intent: "Show the engine hierarchy",
+      elements: [
+        { id: "e1", kind: "text", role: "heading", content: "Engine Hierarchy", emphasis: "primary" },
+        {
+          id: "e2",
+          kind: "diagram",
+          diagramType: "orgchart",
+          emphasis: "primary",
+          nodes: [
+            { id: "n1", label: "Orchestrator", emphasis: "primary" },
+            { id: "n2", label: "Design Engine", emphasis: "secondary" },
+            { id: "n3", label: "Layout Intelligence", emphasis: "secondary" },
+            { id: "n4", label: "Constraint Solver", emphasis: "secondary" },
+            { id: "n5", label: "Diagram Engine", emphasis: "tertiary" },
+            { id: "n6", label: "Chart Engine", emphasis: "tertiary" },
+          ],
+          edges: [
+            { from: "n1", to: "n2" },
+            { from: "n1", to: "n3" },
+            { from: "n1", to: "n4" },
+            { from: "n3", to: "n5" },
+            { from: "n3", to: "n6" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "s7",
+      type: "roadmap",
+      intent: "Show the delivery roadmap by track",
+      elements: [
+        { id: "e1", kind: "text", role: "heading", content: "Delivery Roadmap", emphasis: "primary" },
+        {
+          id: "e2",
+          kind: "diagram",
+          diagramType: "roadmap",
+          emphasis: "primary",
+          nodes: [
+            { id: "n1", label: "Core IR", group: "Platform", emphasis: "primary" },
+            { id: "n2", label: "PPTX Compiler", group: "Platform", emphasis: "secondary" },
+            { id: "n3", label: "Critic v2", group: "Quality", emphasis: "secondary" },
+            { id: "n4", label: "Benchmarks", group: "Quality", emphasis: "secondary" },
+            { id: "n5", label: "GSlides Target", group: "Targets", emphasis: "secondary" },
+            { id: "n6", label: "Figma Target", group: "Targets", emphasis: "tertiary" },
+          ],
+          edges: [],
+        },
+      ],
+    },
+    {
+      id: "s8",
       type: "closing",
       intent: "Call to action",
       elements: [

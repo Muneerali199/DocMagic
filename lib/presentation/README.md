@@ -62,6 +62,7 @@ Resolved IR ──► Presentation Compiler ──► native PPTX / HTML / PDF
 | `typography/apply.ts` | Token-driven text style resolution |
 | `color/engine.ts` | Contrast (WCAG), palette derivation, rgba/hex handling |
 | `diagrams/engine.ts` | Semantic diagrams → positioned native shapes (plugin) |
+| | 12 diagram engines: flow, flowchart, process, timeline, cycle, pyramid, funnel, comparison, swot, architecture, orgchart, roadmap |
 | `charts/engine.ts` | Chart normalization + palette assignment (plugin) |
 | `assets/intelligence.ts` | Multi-factor asset ranking |
 | `assets/providers.ts` | Asset provider adapters |
@@ -97,3 +98,17 @@ Resolved IR ──► Presentation Compiler ──► native PPTX / HTML / PDF
 4. Constraint solving and optimization are fully deterministic.
 5. Exports are native objects — never screenshots or rasterized slides.
 6. The legacy HTML-first pipeline is untouched; v2 runs in parallel.
+7. The LLM never draws. It classifies semantic intent (slide type = layout
+   intent) and emits structured JSON; specialized engines construct all
+   charts, diagrams, timelines, org charts, flowcharts, and roadmaps.
+8. Image generation is only for creative assets (hero art, backgrounds,
+   decorative imagery) — never for informational graphics.
+
+## Native engines (Phase 2)
+
+Slide-level: hero, KPI, dashboard, gallery, quote, agenda, section, closing,
+content (materializer + Layout Library). Element-level: chart, table, code
+block, metric, callout (materializer). Graph-level (diagram engine): flow,
+flowchart, process, timeline, cycle, pyramid, funnel, comparison, SWOT,
+architecture, org chart, roadmap. Roadmap uses node `group` as its swim-lane;
+org chart and architecture derive tiers from the edge graph.

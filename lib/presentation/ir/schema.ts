@@ -32,7 +32,13 @@ export const SlideTypeSchema = z.enum([
   "timeline",
   "comparison",
   "process",
+  "flowchart",
   "architecture",
+  "orgchart",
+  "swot",
+  "funnel",
+  "pyramid",
+  "roadmap",
   "gallery",
   "quote",
   "dashboard",
@@ -118,6 +124,8 @@ export const DiagramNodeSchema = z.object({
   id: z.string(),
   label: z.string(),
   sublabel: z.string().optional(),
+  /** semantic grouping — swim-lane / track name (roadmap), team (orgchart), tier (architecture) */
+  group: z.string().optional(),
   emphasis: EmphasisSchema.default("secondary"),
 });
 
@@ -132,6 +140,7 @@ export const SemanticDiagramSchema = z.object({
   kind: z.literal("diagram"),
   diagramType: z.enum([
     "flow",
+    "flowchart",
     "timeline",
     "comparison",
     "pyramid",
@@ -140,6 +149,8 @@ export const SemanticDiagramSchema = z.object({
     "cycle",
     "swot",
     "architecture",
+    "orgchart",
+    "roadmap",
   ]),
   nodes: z.array(DiagramNodeSchema).min(1),
   edges: z.array(DiagramEdgeSchema).default([]),

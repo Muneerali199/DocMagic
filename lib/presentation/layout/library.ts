@@ -366,7 +366,7 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
   {
     id: "timeline-horizontal",
     name: "Timeline — Horizontal Flow",
-    suitedTypes: ["timeline", "process"],
+    suitedTypes: ["timeline", "process", "roadmap"],
     metadata: {
       density: 0.5,
       hierarchy: 0.6,
@@ -410,7 +410,7 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
   {
     id: "comparison-two-col",
     name: "Comparison — Two Columns",
-    suitedTypes: ["comparison", "content"],
+    suitedTypes: ["comparison", "content", "swot"],
     metadata: {
       density: 0.55,
       hierarchy: 0.5,
@@ -457,7 +457,14 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
   {
     id: "process-flow",
     name: "Process — Stepped Flow",
-    suitedTypes: ["process", "timeline", "architecture"],
+    suitedTypes: [
+      "process",
+      "timeline",
+      "architecture",
+      "flowchart",
+      "funnel",
+      "pyramid",
+    ],
     metadata: {
       density: 0.5,
       hierarchy: 0.6,
@@ -500,7 +507,16 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
   {
     id: "architecture-canvas",
     name: "Architecture — Full Canvas Diagram",
-    suitedTypes: ["architecture", "process"],
+    suitedTypes: [
+      "architecture",
+      "process",
+      "flowchart",
+      "orgchart",
+      "swot",
+      "funnel",
+      "pyramid",
+      "roadmap",
+    ],
     metadata: {
       density: 0.65,
       hierarchy: 0.5,
