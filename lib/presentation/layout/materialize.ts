@@ -45,6 +45,78 @@ function materializeElement(
 ): ResolvedElement[] {
   switch (el.kind) {
     case "text": {
+      // Editorial numbered-list treatment: 3–6 short parallel bullets on a
+      // roomy frame become numbered rows (oversized accent numeral + text +
+      // hairline separators) instead of a bare stacked textbox — the way a
+      // designer sets a list, still fully editable text.
+      const items = el.items ?? [];
+      if (
+        el.role === "bullet" &&
+        items.length >= 3 &&
+        items.length <= 6 &&
+        frame.h >= items.length * 52 &&
+        frame.w >= 320 &&
+        items.every((i) => i.length <= 140)
+      ) {
+        const out: ResolvedElement[] = [];
+        const rowH = frame.h / items.length;
+        const numW = 56;
+        items.forEach((item, i) => {
+          const rowY = frame.y + i * rowH;
+          if (i > 0) {
+            out.push({
+              kind: "shape",
+              id: `${el.id}:rule-${i}`,
+              frame: { x: frame.x, y: rowY, w: frame.w, h: 1 },
+              emphasis: "tertiary",
+              z: 1,
+              shape: "rect",
+              box: { fill: tokens.colors.border, radius: 0, shadow: "none" },
+            });
+          }
+          out.push({
+            kind: "text",
+            id: `${el.id}:num-${i}`,
+            frame: {
+              x: frame.x,
+              y: rowY + rowH * 0.18,
+              w: numW,
+              h: rowH * 0.64,
+            },
+            emphasis: "primary",
+            z: 1,
+            role: "heading",
+            content: String(i + 1).padStart(2, "0"),
+            style: {
+              ...resolveTextStyle("heading", "primary", tokens),
+              fontSize: 26,
+              fontWeight: 700,
+              color: tokens.colors.primary,
+              letterSpacing: -0.5,
+            },
+          });
+          out.push({
+            kind: "text",
+            id: `${el.id}:item-${i}`,
+            frame: {
+              x: frame.x + numW + tokens.spacing.unit * 2,
+              y: rowY + rowH * 0.18,
+              w: frame.w - numW - tokens.spacing.unit * 2,
+              h: rowH * 0.64,
+            },
+            emphasis: el.emphasis,
+            z: 1,
+            role: "body",
+            content: item,
+            style: resolveTextStyle("body", el.emphasis, tokens, {
+              slideType: slide.type,
+              align: "left",
+            }),
+          });
+        });
+        return out;
+      }
+
       const align =
         centered &&
         (el.role === "title" || el.role === "subtitle" || el.role === "kicker")
@@ -306,8 +378,7 @@ export function materializeSlide(
       .filter((e) => e.role !== "caption" && e.role !== "label")
       .sort((a, b) => b.content.length - a.content.length)[0];
     const attributionEl = texts.find(
-      (e) =>
-        e !== quoteEl && (e.role === "caption" || e.role === "label"),
+      (e) => e !== quoteEl && (e.role === "caption" || e.role === "label"),
     );
     if (quoteEl) {
       const qf = frameById.get(quoteEl.id)!;

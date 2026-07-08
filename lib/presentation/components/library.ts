@@ -89,28 +89,36 @@ export function renderKPICard(
   }
 
   // Editorial stack: accent tick, oversized value, label directly beneath.
-  // Vertically centered as a group — no dead space between value and label.
-  const valueH = Math.min(Math.max(innerH * 0.4, 48), 88);
-  const unitH = unit ? 22 : 0;
-  const labelH = 24;
-  const stackGap = 6;
-  const tickH = 4;
-  const stackH =
-    tickH + 14 + valueH + (unit ? unitH + stackGap : 0) + stackGap + labelH;
+  // Vertically centered as a group. The stack is DERIVED from the frame so
+  // short cards (stacked side columns) compress gracefully instead of
+  // bleeding into their neighbors.
+  const compact = innerH < 110;
+  const tickH = compact ? 0 : 4;
+  const tickGap = compact ? 0 : 14;
+  const labelH = compact ? 18 : 24;
+  const unitH = unit ? (compact ? 16 : 22) : 0;
+  const stackGap = compact ? 3 : 6;
+  const fixed =
+    tickH + tickGap + (unit ? unitH + stackGap : 0) + stackGap + labelH;
+  // value gets whatever height remains, clamped to sane bounds
+  const valueH = Math.max(22, Math.min(88, innerH - fixed));
+  const stackH = fixed + valueH;
   let y = frame.y + Math.max(padding, (frame.h - stackH) / 2);
   const x = frame.x + padding;
 
-  // accent tick anchoring the card
-  out.push({
-    kind: "shape",
-    id: `kpi-tick-${label}`,
-    frame: { x, y, w: 32, h: tickH },
-    emphasis: "primary",
-    z: 1,
-    shape: "rect",
-    box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
-  });
-  y += tickH + 14;
+  // accent tick anchoring the card (dropped in compact mode)
+  if (tickH > 0) {
+    out.push({
+      kind: "shape",
+      id: `kpi-tick-${label}`,
+      frame: { x, y, w: 32, h: tickH },
+      emphasis: "primary",
+      z: 1,
+      shape: "rect",
+      box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
+    });
+    y += tickH + tickGap;
+  }
 
   // Value text (large, bold, left-aligned)
   out.push({
@@ -684,7 +692,11 @@ export function renderPricingCard(
     role: "label",
     content: plan.name.toUpperCase(),
     style: {
-      ...styleOnFill(resolveTextStyle("label", "tertiary", tokens), fill, tokens),
+      ...styleOnFill(
+        resolveTextStyle("label", "tertiary", tokens),
+        fill,
+        tokens,
+      ),
       letterSpacing: 1.2,
       fontWeight: 700,
     },
@@ -700,7 +712,11 @@ export function renderPricingCard(
     role: "title",
     content: plan.price,
     style: {
-      ...styleOnFill(resolveTextStyle("title", "primary", tokens), fill, tokens),
+      ...styleOnFill(
+        resolveTextStyle("title", "primary", tokens),
+        fill,
+        tokens,
+      ),
       fontSize: 44,
       fontWeight: 700,
       letterSpacing: -1,

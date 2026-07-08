@@ -101,6 +101,11 @@ function backgroundUnder(
   return bg;
 }
 
+/** RGBA → css string, since the color engine's contrastRatio takes strings */
+function toCss(c: RGBA): string {
+  return `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
+}
+
 /** crude but deterministic text-height estimate */
 function estimateTextHeight(
   content: string,
@@ -136,7 +141,7 @@ function repairContrast(
     if (!fg) continue;
     const bg = backgroundUnder(el, slide, tokens);
     const fgOpaque = composite(fg, bg);
-    const ratio = contrastRatio(fgOpaque, bg);
+    const ratio = contrastRatio(toCss(fgOpaque), toCss(bg));
     const large = (el.style.fontSize ?? 16) >= 24;
     const min = large ? 3 : 4.5;
     if (ratio >= min) continue;
@@ -152,7 +157,7 @@ function repairContrast(
     for (const cand of candidates) {
       const c = parseColor(cand);
       if (!c) continue;
-      const r = contrastRatio(composite(c, bg), bg);
+      const r = contrastRatio(toCss(composite(c, bg)), toCss(bg));
       if (r > bestRatio) {
         bestRatio = r;
         best = cand;
@@ -170,10 +175,7 @@ function repairContrast(
   }
 }
 
-function repairOverflow(
-  slide: ResolvedSlide,
-  issues: ValidationIssue[],
-): void {
+function repairOverflow(slide: ResolvedSlide, issues: ValidationIssue[]): void {
   for (const el of slide.elements) {
     if (el.kind !== "text" || !el.content || !el.style) continue;
     if (el.id.startsWith("craft:")) continue;
