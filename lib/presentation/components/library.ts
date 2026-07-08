@@ -253,89 +253,100 @@ export function renderCallout(
 ): ResolvedElement[] {
   const out: ResolvedElement[] = [];
   const padding = tokens.spacing.cardPadding;
-  const accentW = variant === "accent-left" ? 4 : 0;
-  const accentH = variant === "accent-top" ? 4 : 0;
 
-  // Background
-  if (variant === "gradient-bg") {
+  // A "title\nbody" payload becomes an eyebrow-style heading + body copy —
+  // how a designer structures an insight panel, not one undifferentiated blob.
+  const newline = text.indexOf("\n");
+  const heading = newline > 0 ? text.slice(0, newline).trim() : undefined;
+  const body = newline > 0 ? text.slice(newline + 1).trim() : text;
+
+  // All variants share the same quiet panel: surface fill, hairline border.
+  // The "insight" (gradient-bg) variant differentiates via a tinted surface
+  // and a heavier accent bar — never a saturated full-bleed slab.
+  const isInsight = variant === "gradient-bg";
+  const fill = isInsight ? tokens.colors.surfaceAlt : tokens.colors.surface;
+  const accentW = variant === "accent-top" ? 0 : isInsight ? 6 : 4;
+
+  out.push({
+    kind: "shape",
+    id: `callout-bg`,
+    frame,
+    emphasis: "tertiary",
+    z: 0,
+    shape: "rect",
+    box: {
+      fill,
+      borderColor: tokens.colors.border,
+      borderWidth: 1,
+      radius: tokens.shape.radius,
+      shadow: "none",
+    },
+  });
+
+  if (variant === "accent-top") {
     out.push({
       kind: "shape",
-      id: `callout-bg`,
-      frame,
+      id: `callout-accent`,
+      frame: { x: frame.x, y: frame.y, w: frame.w, h: 4 },
       emphasis: "primary",
-      z: 0,
+      z: 1,
       shape: "rect",
-      box: {
-        fill: tokens.colors.primary,
-        borderColor: "transparent",
-        borderWidth: 0,
-        radius: tokens.shape.radiusLg || tokens.shape.radius,
-        shadow: tokens.shape.shadow,
-      },
+      box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
     });
   } else {
     out.push({
       kind: "shape",
-      id: `callout-bg`,
-      frame,
-      emphasis: "tertiary",
-      z: 0,
+      id: `callout-accent`,
+      frame: { x: frame.x, y: frame.y, w: accentW, h: frame.h },
+      emphasis: "primary",
+      z: 1,
       shape: "rect",
-      box: {
-        fill: tokens.colors.surface,
-        borderColor: tokens.colors.border,
-        borderWidth: 1,
-        radius: tokens.shape.radius,
-        shadow: "none",
-      },
+      box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
     });
-
-    // Accent bar
-    if (accentW > 0) {
-      out.push({
-        kind: "shape",
-        id: `callout-accent`,
-        frame: {
-          x: frame.x,
-          y: frame.y,
-          w: accentW,
-          h: frame.h,
-        },
-        emphasis: "primary",
-        z: 1,
-        shape: "rect",
-        box: {
-          fill: tokens.colors.primary,
-          borderColor: "transparent",
-          borderWidth: 0,
-          radius: 0,
-          shadow: "none",
-        },
-      });
-    }
   }
 
-  // Text content
-  const textX = frame.x + padding + (accentW > 0 ? accentW : 0);
+  const textX = frame.x + padding + accentW;
   const textW = frame.w - padding * 2 - accentW;
-  const textEmphasis = variant === "gradient-bg" ? "primaryForeground" : "primary";
+  let textY = frame.y + padding;
+
+  if (heading) {
+    const headingStyle = {
+      ...resolveTextStyle("label", "primary", tokens),
+      color: tokens.colors.primary,
+      fontWeight: 700,
+      letterSpacing: 1.2,
+    };
+    out.push({
+      kind: "text",
+      id: `callout-heading`,
+      frame: { x: textX, y: textY, w: textW, h: 24 },
+      emphasis: "primary",
+      z: 2,
+      role: "label",
+      content: heading.toUpperCase(),
+      style: styleOnFill(headingStyle, fill, tokens),
+    });
+    textY += 24 + tokens.spacing.unit;
+  }
 
   out.push({
     kind: "text",
     id: `callout-text`,
     frame: {
       x: textX,
-      y: frame.y + padding + accentH,
+      y: textY,
       w: textW,
-      h: frame.h - padding * 2 - accentH,
+      h: Math.max(20, frame.y + frame.h - padding - textY),
     },
-    emphasis: textEmphasis as any,
+    emphasis: "secondary",
     z: 2,
     role: "body",
-    content: text,
-    style: resolveTextStyle("body", textEmphasis as any, tokens, {
-      align: "left",
-    }),
+    content: body,
+    style: styleOnFill(
+      resolveTextStyle("body", "secondary", tokens, { align: "left" }),
+      fill,
+      tokens,
+    ),
   });
 
   return out;
@@ -351,7 +362,11 @@ export function renderFeatureGrid(
   columns = 3,
 ): ResolvedElement[] {
   const out: ResolvedElement[] = [];
-  const gridCols = splitColumns(frame, Math.min(columns, features.length), tokens.spacing.itemGap);
+  const gridCols = splitColumns(
+    frame,
+    Math.min(columns, features.length),
+    tokens.spacing.itemGap,
+  );
 
   features.slice(0, gridCols.length).forEach((feature, i) => {
     const col = gridCols[i];
@@ -450,8 +465,14 @@ export function renderFeatureGrid(
 // ---------------------------------------------------------------------------
 
 export const PREMIUM_COMPONENTS = {
-  kpiCard: { render: renderKPICard, variants: ["minimal", "bordered", "gradient"] },
+  kpiCard: {
+    render: renderKPICard,
+    variants: ["minimal", "bordered", "gradient"],
+  },
   statStrip: { render: renderStatStrip },
-  callout: { render: renderCallout, variants: ["accent-left", "accent-top", "gradient-bg"] },
+  callout: {
+    render: renderCallout,
+    variants: ["accent-left", "accent-top", "gradient-bg"],
+  },
   featureGrid: { render: renderFeatureGrid },
 };

@@ -33,7 +33,10 @@ function analyzeContentGrouping(slide: ResolvedSlide): ElementGroup[] {
     } else if (el.frame.y - current.bottommost < gapThreshold) {
       // Element is close to the group; add it
       current.elements.push(el);
-      current.bottommost = Math.max(current.bottommost, el.frame.y + el.frame.h);
+      current.bottommost = Math.max(
+        current.bottommost,
+        el.frame.y + el.frame.h,
+      );
     } else {
       // Gap found; start a new group
       groups.push(current);
@@ -70,7 +73,10 @@ function optimizeGroupSpacing(
 
   const safe = tokens.spacing.safeMargin;
   const totalH = 720 - safe * 2;
-  const contentH = groups.reduce((sum, g) => sum + (g.bottommost - g.topmost), 0);
+  const contentH = groups.reduce(
+    (sum, g) => sum + (g.bottommost - g.topmost),
+    0,
+  );
   const availableSpace = totalH - contentH;
   const gaps = groups.length - 1;
   const gapSize = Math.floor(availableSpace / (gaps + 1)); // even spacing
@@ -98,80 +104,12 @@ function optimizeGroupSpacing(
   return { ...slide, elements: adjusted };
 }
 
-/**
- * Expand content cards to fill available whitespace while respecting
- * proportions (for dashboard, content, kpi slides).
- */
-function expandContentCards(
-  slide: ResolvedSlide,
-  tokens: DesignTokens,
-): ResolvedSlide {
-  if (!["dashboard", "kpi", "content"].includes(slide.type)) return slide;
-
-  const safe = tokens.spacing.safeMargin;
-  const canvasW = 1280 - safe * 2;
-  const canvasH = 720 - safe * 2;
-
-  // Find columns of elements and expand them proportionally
-  const elementsByX = new Map<number, ResolvedElement[]>();
-  for (const el of slide.elements) {
-    const keyX = Math.round(el.frame.x / 50) * 50; // bucket by rough position
-    if (!elementsByX.has(keyX)) elementsByX.set(keyX, []);
-    elementsByX.get(keyX)!.push(el);
-  }
-
-  const columnCount = elementsByX.size;
-  if (columnCount <= 1) return slide; // single column or scattered
-
-  const allocatedW = (canvasW - tokens.spacing.itemGap * (columnCount - 1)) / columnCount;
-
-  let colIndex = 0;
-  const adjusted = slide.elements.map((el) => {
-    const bucket = Math.round((el.frame.x - safe) / (allocatedW + tokens.spacing.itemGap));
-    const newX = safe + bucket * (allocatedW + tokens.spacing.itemGap);
-    const newW = Math.min(el.frame.w + 10, allocatedW); // mild expansion
-
-    return {
-      ...el,
-      frame: { ...el.frame, x: newX, w: newW },
-    };
-  });
-
-  return { ...slide, elements: adjusted };
-}
-
-/**
- * Ensure minimum breathing room around groups of elements
- * (visual padding from edges and peers).
- */
-function enforceBreathingRoom(
-  slide: ResolvedSlide,
-  tokens: DesignTokens,
-): ResolvedSlide {
-  const safe = tokens.spacing.safeMargin;
-  const minBreathing = tokens.spacing.unit * 3;
-
-  return {
-    ...slide,
-    elements: slide.elements.map((el) => {
-      // Ensure distance from edges
-      const frame = el.frame;
-      if (frame.x - safe < minBreathing && frame.x > safe) {
-        return {
-          ...el,
-          frame: { ...frame, x: safe + minBreathing },
-        };
-      }
-      if (frame.x + frame.w + safe > 1280 - minBreathing && frame.x + frame.w < 1280 - safe) {
-        return {
-          ...el,
-          frame: { ...frame, x: 1280 - safe - minBreathing - frame.w },
-        };
-      }
-      return el;
-    }),
-  };
-}
+// NOTE: an earlier version of this pass also "expanded" cards and nudged
+// x positions to enforce breathing room. Both mutations second-guessed the
+// deterministic layout engine's exact grid math and corrupted column
+// alignment (uneven gaps, squashed titles). Horizontal geometry is now
+// owned exclusively by the layout engine; this pass only redistributes
+// vertical whitespace on sparse editorial slides (hero/quote/section).
 
 export const premiumWhitespacePass: OptimizationPassPlugin = {
   id: "premium.whitespace-breathing",
@@ -180,9 +118,6 @@ export const premiumWhitespacePass: OptimizationPassPlugin = {
   order: 305,
   run: (ir, tokens) => ({
     ...ir,
-    slides: ir.slides
-      .map((slide) => optimizeGroupSpacing(slide, tokens))
-      .map((slide) => expandContentCards(slide, tokens))
-      .map((slide) => enforceBreathingRoom(slide, tokens)),
+    slides: ir.slides.map((slide) => optimizeGroupSpacing(slide, tokens)),
   }),
 };
