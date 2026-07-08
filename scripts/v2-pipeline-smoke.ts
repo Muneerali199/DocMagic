@@ -231,6 +231,15 @@ async function main() {
     throw new Error("Benchmark overall score missing")
   }
 
+  console.log("[v0] 4b. Reading Design Critic result (post-render)...")
+  const dc = result.designCritique
+  if (typeof dc.overallScore !== "number" || !Array.isArray(dc.issues) || !Array.isArray(dc.recommendations)) {
+    throw new Error("Design Critic result malformed")
+  }
+  console.log("[v0]    overallScore:", dc.overallScore, "- issues:", dc.issues.length, "- recommendations:", dc.recommendations.length)
+  for (const issue of dc.issues.slice(0, 4)) console.log("[v0]      issue:", issue)
+  for (const rec of dc.recommendations.slice(0, 3)) console.log("[v0]      rec:", rec)
+
   console.log("[v0] 5. Compiling native PPTX...")
   const pptx = buildPptx(resolved)
   const buf = (await pptx.write({ outputType: "nodebuffer" })) as Buffer

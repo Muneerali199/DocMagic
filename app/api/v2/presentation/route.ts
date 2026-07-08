@@ -63,6 +63,7 @@ export async function POST(request: Request): Promise<Response> {
           type: "result",
           resolved: result.resolved,
           benchmark: result.benchmark,
+          designCritique: result.designCritique,
           designLanguage: result.designLanguage,
           passesRun: result.passesRun,
         });

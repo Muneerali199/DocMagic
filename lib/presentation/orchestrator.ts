@@ -27,6 +27,10 @@ import { builtInPasses } from "./optimization/passes";
 import { selectAsset } from "./assets/intelligence";
 import { defaultAssetProviders } from "./assets/providers";
 import { ruleBasedCritic } from "./critic/rule-based";
+import {
+  ruleBasedDesignCritic,
+  type CriticResult,
+} from "./critic/design-critic";
 import { benchmarkDeck, type BenchmarkReport } from "./benchmark/metrics";
 import { PluginRegistry, defaultRegistry } from "./plugins/registry";
 import { builtinChartPlugin } from "./charts/engine";
@@ -60,6 +64,8 @@ export interface GenerateResult {
   semantic: SemanticIR;
   resolved: ResolvedIR;
   benchmark: BenchmarkReport;
+  /** post-render Design Critic feedback (analysis only, no regeneration) */
+  designCritique: CriticResult;
   designLanguage: string;
   passesRun: string[];
 }
@@ -156,10 +162,17 @@ export async function compileSemanticIR(
 
   const benchmark = benchmarkDeck(resolved, design.tokens);
 
+  progress("design-critique", "Evaluating rendered design");
+  const designCritique = await ruleBasedDesignCritic.evaluate(
+    resolved,
+    design.tokens,
+  );
+
   return {
     semantic,
     resolved,
     benchmark,
+    designCritique,
     designLanguage: design.language.id,
     passesRun: optimization.passesRun,
   };
