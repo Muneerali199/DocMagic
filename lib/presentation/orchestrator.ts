@@ -18,7 +18,8 @@
 import type { ResolvedIR, SemanticIR } from "./ir/schema";
 import { runStrategist } from "./brain/strategist";
 import { runNarrativePlanner } from "./brain/planner";
-import { resolveDesign } from "./design/engine";
+import { runDesignDirector, type DesignIR } from "./brain/design-director";
+import { resolveDesignWithDirector } from "./design/engine";
 import type { DesignTokens } from "./design/tokens";
 import { selectLayout } from "./layout/intelligence";
 import { materializeSlide } from "./layout/materialize";
@@ -31,6 +32,8 @@ import {
   ruleBasedDesignCritic,
   type CriticResult,
 } from "./critic/design-critic";
+import { runVisionCritic, type VisionCritique } from "./critic/vision-critic";
+import { applyRepairs } from "./optimization/repair";
 import { benchmarkDeck, type BenchmarkReport } from "./benchmark/metrics";
 import { PluginRegistry, defaultRegistry } from "./plugins/registry";
 import { builtinChartPlugin } from "./charts/engine";
@@ -57,6 +60,10 @@ export interface GenerateOptions {
   audienceHint?: string;
   /** explicit design language id (overrides Design Engine selection) */
   designLanguage?: string;
+  /** Design IR from the Design Director (style decisions, no coordinates) */
+  designIR?: DesignIR;
+  /** vision critic + repair loop (default true; needs NEBIUS_API_KEY) */
+  enableVisionCritic?: boolean;
   registry?: PluginRegistry;
   onProgress?: (stage: string, detail?: string) => void;
 }
@@ -67,6 +74,12 @@ export interface GenerateResult {
   benchmark: BenchmarkReport;
   /** post-render Design Critic feedback (analysis only, no regeneration) */
   designCritique: CriticResult;
+  /** Design Director output (style direction) */
+  designIR?: DesignIR;
+  /** vision model review of the rendered slides */
+  visionCritique?: VisionCritique;
+  /** repair actions actually applied by the Repair Loop */
+  repairsApplied?: string[];
   designLanguage: string;
   passesRun: string[];
 }
@@ -117,7 +130,11 @@ export async function compileSemanticIR(
   const progress = options.onProgress ?? (() => {});
 
   progress("design", "Selecting design language");
-  const design = resolveDesign(semanticInput.strategy, options.designLanguage);
+  const design = resolveDesignWithDirector(
+    semanticInput.strategy,
+    options.designIR,
+    options.designLanguage,
+  );
 
   progress("diagram-intelligence", "Detecting diagrammatic content");
   const diagramEnriched = enrichWithDiagrams(semanticInput);

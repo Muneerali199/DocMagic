@@ -16,12 +16,20 @@ const NEBIUS_BASE_URL =
   process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1/";
 
 /**
- * Default: Qwen3-235B-Instruct — sub-second latency on Nebius (measured),
- * vs ~100s queue latency for GLM-5.2. Override with PRESENTATION_BRAIN_MODEL
- * (e.g. "zai-org/GLM-5.2") to swap models without code changes.
+ * Reasoning model for Strategist / Planner / Design Director.
+ * Qwen3.5-397B — ~1s latency on Nebius (measured) with thinking disabled.
+ * Override with PRESENTATION_BRAIN_MODEL to swap without code changes.
  */
 export const BRAIN_MODEL =
-  process.env.PRESENTATION_BRAIN_MODEL ?? "Qwen/Qwen3-235B-A22B-Instruct-2507";
+  process.env.PRESENTATION_BRAIN_MODEL ?? "Qwen/Qwen3.5-397B-A17B";
+
+/**
+ * Vision model for the Design Critic — reviews rendered slide images.
+ * Kimi K2.6 accepts image_url content on Nebius (verified).
+ * Override with PRESENTATION_CRITIC_MODEL.
+ */
+export const VISION_MODEL =
+  process.env.PRESENTATION_CRITIC_MODEL ?? "moonshotai/Kimi-K2.6";
 
 let client: OpenAI | null = null;
 
@@ -119,5 +127,68 @@ export async function structuredCall<T>(
 
   throw new Error(
     `Brain model output failed schema validation after retry: ${lastError}`,
+  );
+}
+
+export interface VisionCallOptions {
+  system: string;
+  user: string;
+  /** PNG buffers rendered from slides; sent as base64 data URLs */
+  images: Buffer[];
+  temperature?: number;
+  maxTokens?: number;
+}
+
+/**
+ * Call the vision critic model with rendered slide images, expecting JSON
+ * that validates against `schema`. One retry with the validation report.
+ */
+export async function visionCall<T>(
+  schema: z.ZodType<T>,
+  options: VisionCallOptions,
+): Promise<T> {
+  const openai = getBrainClient();
+  let lastError = "";
+
+  const imageParts = options.images.map((buf) => ({
+    type: "image_url" as const,
+    image_url: { url: `data:image/png;base64,${buf.toString("base64")}` },
+  }));
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const userText =
+      attempt === 0
+        ? options.user
+        : `${options.user}\n\nYour previous response failed validation:\n${lastError}\n\nReturn corrected JSON only.`;
+
+    const completion = await openai.chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        { role: "system", content: options.system },
+        {
+          role: "user",
+          content: [{ type: "text", text: userText }, ...imageParts],
+        },
+      ],
+      temperature: options.temperature ?? 0.2,
+      max_tokens: options.maxTokens ?? 3000,
+    });
+
+    const raw = completion.choices[0]?.message?.content ?? "";
+    try {
+      const parsed = JSON.parse(extractJson(raw));
+      const result = schema.safeParse(parsed);
+      if (result.success) return result.data;
+      lastError = result.error.issues
+        .slice(0, 12)
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("\n");
+    } catch (err) {
+      lastError = `Invalid JSON: ${err instanceof Error ? err.message : "parse error"}`;
+    }
+  }
+
+  throw new Error(
+    `Vision critic output failed schema validation after retry: ${lastError}`,
   );
 }
