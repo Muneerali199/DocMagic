@@ -130,3 +130,20 @@ export function selectLayout(
   }
   return { layout: best, score: bestScore, result: best.place(slide, tokens) };
 }
+
+export interface RankedLayout {
+  layout: SlideLayout;
+  score: number;
+}
+
+/**
+ * Rank every layout in the library against a slide, best first.
+ * Used by the Visual Composition Engine to make deck-level decisions
+ * (anti-repetition, rhythm alternation) instead of greedy per-slide picks.
+ */
+export function rankLayouts(slide: SemanticSlide): RankedLayout[] {
+  return LAYOUT_LIBRARY.map((layout) => ({
+    layout,
+    score: scoreLayout(layout, slide),
+  })).sort((a, b) => b.score - a.score);
+}

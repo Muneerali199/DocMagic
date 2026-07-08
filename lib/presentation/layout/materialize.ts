@@ -22,6 +22,7 @@ import {
   renderCallout,
   renderStatStrip,
   renderFeatureGrid,
+  renderTestimonial,
 } from "../components/library";
 
 function card(tokens: DesignTokens) {
@@ -292,7 +293,49 @@ export function materializeSlide(
     layout.placements.map((p) => [p.elementId, p.frame]),
   );
   const elements: ResolvedElement[] = [];
+  const consumed = new Set<string>();
+
+  // Quote slides get the editorial testimonial treatment (oversized quote
+  // mark, hairline rule, attribution) instead of plain centered text.
+  if (slide.type === "quote") {
+    const texts = slide.elements.filter(
+      (e): e is Extract<SemanticElement, { kind: "text" }> =>
+        e.kind === "text" && Boolean(frameById.get(e.id)),
+    );
+    const quoteEl = texts
+      .filter((e) => e.role !== "caption" && e.role !== "label")
+      .sort((a, b) => b.content.length - a.content.length)[0];
+    const attributionEl = texts.find(
+      (e) =>
+        e !== quoteEl && (e.role === "caption" || e.role === "label"),
+    );
+    if (quoteEl) {
+      const qf = frameById.get(quoteEl.id)!;
+      const af = attributionEl ? frameById.get(attributionEl.id) : undefined;
+      const union: Frame = af
+        ? {
+            x: Math.min(qf.x, af.x),
+            y: Math.min(qf.y, af.y),
+            w: Math.max(qf.x + qf.w, af.x + af.w) - Math.min(qf.x, af.x),
+            h: Math.max(qf.y + qf.h, af.y + af.h) - Math.min(qf.y, af.y),
+          }
+        : qf;
+      elements.push(
+        ...renderTestimonial(
+          quoteEl.content,
+          attributionEl?.content,
+          union,
+          tokens,
+          "centered",
+        ),
+      );
+      consumed.add(quoteEl.id);
+      if (attributionEl) consumed.add(attributionEl.id);
+    }
+  }
+
   for (const el of slide.elements) {
+    if (consumed.has(el.id)) continue;
     const frame = frameById.get(el.id);
     if (!frame) continue; // layout chose to omit this element
     elements.push(

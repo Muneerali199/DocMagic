@@ -460,6 +460,385 @@ export function renderFeatureGrid(
   return out;
 }
 
+/**
+ * Testimonial / Quote panel — editorial pull-quote with oversized quotation
+ * mark, attribution line, and hairline rule. Variants: centered, offset-left.
+ */
+export function renderTestimonial(
+  quote: string,
+  attribution: string | undefined,
+  frame: Frame,
+  tokens: DesignTokens,
+  variant: "centered" | "offset-left" = "offset-left",
+): ResolvedElement[] {
+  const out: ResolvedElement[] = [];
+  const pad = tokens.spacing.cardPadding;
+  const centered = variant === "centered";
+  const textX = centered ? frame.x + frame.w * 0.12 : frame.x + pad + 56;
+  const textW = centered ? frame.w * 0.76 : frame.w - pad * 2 - 56;
+
+  // oversized decorative quotation mark — a designer signature, not clip art
+  out.push({
+    kind: "text",
+    id: "testimonial-mark",
+    frame: {
+      x: centered ? frame.x + frame.w / 2 - 40 : frame.x + pad,
+      y: frame.y,
+      w: 80,
+      h: 88,
+    },
+    emphasis: "primary",
+    z: 1,
+    role: "title",
+    content: "\u201C",
+    style: {
+      ...resolveTextStyle("title", "primary", tokens, {
+        align: centered ? "center" : "left",
+      }),
+      fontSize: 96,
+      fontWeight: 700,
+      color: tokens.colors.primary,
+      lineHeight: 1,
+    },
+  });
+
+  const quoteY = frame.y + (centered ? 96 : 24);
+  const quoteH = frame.h - (centered ? 96 : 24) - (attribution ? 56 : 0);
+  out.push({
+    kind: "text",
+    id: "testimonial-quote",
+    frame: { x: textX, y: quoteY, w: textW, h: quoteH },
+    emphasis: "primary",
+    z: 1,
+    role: "heading",
+    content: quote,
+    style: {
+      ...resolveTextStyle("heading", "primary", tokens, {
+        align: centered ? "center" : "left",
+      }),
+      fontSize: 28,
+      fontWeight: 500,
+      lineHeight: 1.45,
+      letterSpacing: -0.3,
+    },
+  });
+
+  if (attribution) {
+    // hairline rule + attribution
+    out.push({
+      kind: "shape",
+      id: "testimonial-rule",
+      frame: {
+        x: centered ? frame.x + frame.w / 2 - 24 : textX,
+        y: frame.y + frame.h - 44,
+        w: 48,
+        h: 2,
+      },
+      emphasis: "primary",
+      z: 1,
+      shape: "rect",
+      box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
+    });
+    out.push({
+      kind: "text",
+      id: "testimonial-attribution",
+      frame: {
+        x: textX,
+        y: frame.y + frame.h - 32,
+        w: textW,
+        h: 28,
+      },
+      emphasis: "tertiary",
+      z: 1,
+      role: "label",
+      content: attribution,
+      style: resolveTextStyle("label", "tertiary", tokens, {
+        align: centered ? "center" : "left",
+      }),
+    });
+  }
+
+  return out;
+}
+
+/**
+ * Comparison panel — two-column "A vs B" with a center divider and per-side
+ * accent headers. Sides are quiet surfaces; the divider carries the tension.
+ */
+export function renderComparison(
+  left: { title: string; body: string },
+  right: { title: string; body: string },
+  frame: Frame,
+  tokens: DesignTokens,
+): ResolvedElement[] {
+  const out: ResolvedElement[] = [];
+  const pad = tokens.spacing.cardPadding;
+  const gap = tokens.spacing.sectionGap;
+  const colW = (frame.w - gap) / 2;
+  const sides = [
+    { data: left, x: frame.x, accent: tokens.colors.primary },
+    { data: right, x: frame.x + colW + gap, accent: tokens.colors.accent },
+  ];
+
+  sides.forEach((side, i) => {
+    const col: Frame = { x: side.x, y: frame.y, w: colW, h: frame.h };
+    out.push({
+      kind: "shape",
+      id: `comparison-${i}-bg`,
+      frame: col,
+      emphasis: "tertiary",
+      z: 0,
+      shape: "rect",
+      box: {
+        fill: tokens.colors.surface,
+        borderColor: tokens.colors.border,
+        borderWidth: 1,
+        radius: tokens.shape.radius,
+        shadow: "none",
+      },
+    });
+    out.push({
+      kind: "shape",
+      id: `comparison-${i}-accent`,
+      frame: { x: col.x, y: col.y, w: col.w, h: 4 },
+      emphasis: "primary",
+      z: 1,
+      shape: "rect",
+      box: { fill: side.accent, radius: 0, shadow: "none" },
+    });
+    out.push({
+      kind: "text",
+      id: `comparison-${i}-title`,
+      frame: { x: col.x + pad, y: col.y + pad, w: col.w - pad * 2, h: 36 },
+      emphasis: "primary",
+      z: 1,
+      role: "heading",
+      content: side.data.title,
+      style: styleOnFill(
+        resolveTextStyle("heading", "primary", tokens),
+        tokens.colors.surface,
+        tokens,
+      ),
+    });
+    out.push({
+      kind: "text",
+      id: `comparison-${i}-body`,
+      frame: {
+        x: col.x + pad,
+        y: col.y + pad + 36 + tokens.spacing.unit,
+        w: col.w - pad * 2,
+        h: col.h - pad * 2 - 36 - tokens.spacing.unit,
+      },
+      emphasis: "secondary",
+      z: 1,
+      role: "body",
+      content: side.data.body,
+      style: styleOnFill(
+        resolveTextStyle("body", "secondary", tokens),
+        tokens.colors.surface,
+        tokens,
+      ),
+    });
+  });
+
+  return out;
+}
+
+/**
+ * Pricing tier card — plan name, oversized price, feature lines, optional
+ * "featured" treatment (accent border + tinted surface).
+ */
+export function renderPricingCard(
+  plan: { name: string; price: string; features: string[] },
+  frame: Frame,
+  tokens: DesignTokens,
+  featured = false,
+): ResolvedElement[] {
+  const out: ResolvedElement[] = [];
+  const pad = tokens.spacing.cardPadding;
+  const fill = featured ? tokens.colors.surfaceAlt : tokens.colors.surface;
+
+  out.push({
+    kind: "shape",
+    id: `pricing-${plan.name}-bg`,
+    frame,
+    emphasis: featured ? "primary" : "tertiary",
+    z: 0,
+    shape: "rect",
+    box: {
+      fill,
+      borderColor: featured ? tokens.colors.primary : tokens.colors.border,
+      borderWidth: featured ? 2 : 1,
+      radius: tokens.shape.radius,
+      shadow: featured ? tokens.shape.shadow : "none",
+    },
+  });
+
+  let y = frame.y + pad;
+  out.push({
+    kind: "text",
+    id: `pricing-${plan.name}-name`,
+    frame: { x: frame.x + pad, y, w: frame.w - pad * 2, h: 24 },
+    emphasis: "tertiary",
+    z: 1,
+    role: "label",
+    content: plan.name.toUpperCase(),
+    style: {
+      ...styleOnFill(resolveTextStyle("label", "tertiary", tokens), fill, tokens),
+      letterSpacing: 1.2,
+      fontWeight: 700,
+    },
+  });
+  y += 24 + tokens.spacing.unit;
+
+  out.push({
+    kind: "text",
+    id: `pricing-${plan.name}-price`,
+    frame: { x: frame.x + pad, y, w: frame.w - pad * 2, h: 56 },
+    emphasis: "primary",
+    z: 1,
+    role: "title",
+    content: plan.price,
+    style: {
+      ...styleOnFill(resolveTextStyle("title", "primary", tokens), fill, tokens),
+      fontSize: 44,
+      fontWeight: 700,
+      letterSpacing: -1,
+    },
+  });
+  y += 56 + tokens.spacing.unit * 2;
+
+  const lineH = 26;
+  plan.features.forEach((feat, i) => {
+    if (y + lineH > frame.y + frame.h - pad) return;
+    // accent dot bullet
+    out.push({
+      kind: "shape",
+      id: `pricing-${plan.name}-dot-${i}`,
+      frame: { x: frame.x + pad, y: y + 9, w: 6, h: 6 },
+      emphasis: "primary",
+      z: 1,
+      shape: "ellipse",
+      box: { fill: tokens.colors.primary, radius: 3, shadow: "none" },
+    });
+    out.push({
+      kind: "text",
+      id: `pricing-${plan.name}-feat-${i}`,
+      frame: {
+        x: frame.x + pad + 16,
+        y,
+        w: frame.w - pad * 2 - 16,
+        h: lineH,
+      },
+      emphasis: "secondary",
+      z: 1,
+      role: "body",
+      content: feat,
+      style: styleOnFill(
+        resolveTextStyle("body", "secondary", tokens),
+        fill,
+        tokens,
+      ),
+    });
+    y += lineH;
+  });
+
+  return out;
+}
+
+/**
+ * Horizontal milestone strip — dots on a baseline with staggered labels.
+ * A compact timeline treatment for footers/summaries (full timelines go
+ * through the Diagram Engine).
+ */
+export function renderMilestoneStrip(
+  milestones: Array<{ label: string; sublabel?: string }>,
+  frame: Frame,
+  tokens: DesignTokens,
+): ResolvedElement[] {
+  const out: ResolvedElement[] = [];
+  const n = Math.min(milestones.length, 6);
+  if (n === 0) return out;
+  const lineY = frame.y + frame.h * 0.45;
+  const stepW = frame.w / n;
+
+  // baseline
+  out.push({
+    kind: "shape",
+    id: "milestone-baseline",
+    frame: { x: frame.x, y: lineY - 1, w: frame.w, h: 2 },
+    emphasis: "tertiary",
+    z: 0,
+    shape: "rect",
+    box: { fill: tokens.colors.border, radius: 1, shadow: "none" },
+  });
+
+  milestones.slice(0, n).forEach((m, i) => {
+    const cx = frame.x + stepW * i + stepW / 2;
+    const first = i === 0;
+    const dotSize = first ? 16 : 12;
+    out.push({
+      kind: "shape",
+      id: `milestone-dot-${i}`,
+      frame: {
+        x: cx - dotSize / 2,
+        y: lineY - dotSize / 2,
+        w: dotSize,
+        h: dotSize,
+      },
+      emphasis: first ? "primary" : "secondary",
+      z: 1,
+      shape: "ellipse",
+      box: {
+        fill: first ? tokens.colors.primary : tokens.colors.surface,
+        borderColor: tokens.colors.primary,
+        borderWidth: 2,
+        radius: dotSize / 2,
+        shadow: "none",
+      },
+    });
+    out.push({
+      kind: "text",
+      id: `milestone-label-${i}`,
+      frame: {
+        x: cx - stepW / 2 + 8,
+        y: lineY + 16,
+        w: stepW - 16,
+        h: 24,
+      },
+      emphasis: "primary",
+      z: 1,
+      role: "label",
+      content: m.label,
+      style: {
+        ...resolveTextStyle("label", "primary", tokens, { align: "center" }),
+        fontWeight: 600,
+      },
+    });
+    if (m.sublabel) {
+      out.push({
+        kind: "text",
+        id: `milestone-sub-${i}`,
+        frame: {
+          x: cx - stepW / 2 + 8,
+          y: lineY + 40,
+          w: stepW - 16,
+          h: 20,
+        },
+        emphasis: "tertiary",
+        z: 1,
+        role: "caption",
+        content: m.sublabel,
+        style: resolveTextStyle("caption", "tertiary", tokens, {
+          align: "center",
+        }),
+      });
+    }
+  });
+
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Component Registry
 // ---------------------------------------------------------------------------
@@ -475,4 +854,11 @@ export const PREMIUM_COMPONENTS = {
     variants: ["accent-left", "accent-top", "gradient-bg"],
   },
   featureGrid: { render: renderFeatureGrid },
+  testimonial: {
+    render: renderTestimonial,
+    variants: ["centered", "offset-left"],
+  },
+  comparison: { render: renderComparison },
+  pricingCard: { render: renderPricingCard, variants: ["default", "featured"] },
+  milestoneStrip: { render: renderMilestoneStrip },
 };

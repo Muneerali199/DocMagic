@@ -22,8 +22,9 @@ import { runDesignDirector, type DesignIR } from "./brain/design-director";
 import { resolveDesignWithDirector } from "./design/engine";
 import { applyCraftLayer } from "./design/craft";
 import type { DesignTokens } from "./design/tokens";
-import { selectLayout } from "./layout/intelligence";
+import { composeDeck } from "./layout/composition";
 import { materializeSlide } from "./layout/materialize";
+import { validateAndRepair } from "./validation/engine";
 import { runOptimizationPipeline } from "./optimization/pipeline";
 import { builtInPasses } from "./optimization/passes";
 import { selectAsset } from "./assets/intelligence";
@@ -162,17 +163,11 @@ export async function compileSemanticIR(
   progress("assets", "Selecting imagery");
   const semantic = await attachAssets(diagramEnriched.ir, design.tokens);
 
-  progress("layout", "Laying out slides");
-  const resolvedSlides = semantic.slides.map((slide) => {
-    const selection = selectLayout(slide, design.tokens);
-    return materializeSlide(
-      slide,
-      selection.layout.id,
-      selection.result,
-      design.tokens,
-      registry,
-    );
-  });
+  progress("compose", "Composing deck (layout diversity + rhythm)");
+  const composition = composeDeck(semantic.slides, design.tokens);
+  const resolvedSlides = composition.map((c) =>
+    materializeSlide(c.slide, c.layout.id, c.result, design.tokens, registry),
+  );
 
   let resolved: ResolvedIR = {
     version: "2.0.0",
@@ -191,6 +186,18 @@ export async function compileSemanticIR(
     registry.all("optimization-pass"),
   );
   resolved = optimization.ir;
+
+  // Design Validation Engine: enforce professional design rules (contrast,
+  // overflow, bounds, alignment, paragraph measure) with auto-repair, before
+  // any scoring or decoration touches the deck.
+  progress("validate", "Validating design rules");
+  const validation = validateAndRepair(resolved, design.tokens);
+  if (validation.repairedCount > 0) {
+    progress(
+      "validate",
+      `Auto-repaired ${validation.repairedCount} design issues`,
+    );
+  }
 
   progress("critique", "Scoring quality");
   const critic = registry.all("critic")[0];
