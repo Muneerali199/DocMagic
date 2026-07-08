@@ -522,3 +522,7 @@ export const DESIGN_LANGUAGES: DesignLanguage[] = [
 export function getDesignLanguage(id: string): DesignLanguage | undefined {
   return DESIGN_LANGUAGES.find((l) => l.id === id);
 }
+
+export function designLanguageIds(): string[] {
+  return DESIGN_LANGUAGES.map((l) => l.id);
+}
