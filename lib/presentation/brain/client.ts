@@ -15,8 +15,13 @@ import type { z } from "zod";
 const NEBIUS_BASE_URL =
   process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1/";
 
+/**
+ * Default: Qwen3-235B-Instruct — sub-second latency on Nebius (measured),
+ * vs ~100s queue latency for GLM-5.2. Override with PRESENTATION_BRAIN_MODEL
+ * (e.g. "zai-org/GLM-5.2") to swap models without code changes.
+ */
 export const BRAIN_MODEL =
-  process.env.PRESENTATION_BRAIN_MODEL ?? "zai-org/GLM-5.2";
+  process.env.PRESENTATION_BRAIN_MODEL ?? "Qwen/Qwen3-235B-A22B-Instruct-2507";
 
 let client: OpenAI | null = null;
 
