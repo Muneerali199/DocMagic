@@ -20,7 +20,10 @@ export interface ValidationResult<T> {
   errors: string[];
 }
 
-function run<T>(schema: z.ZodType<T>, input: unknown): ValidationResult<T> {
+function run<T>(
+  schema: { safeParse: (input: unknown) => z.SafeParseReturnType<unknown, T> },
+  input: unknown,
+): ValidationResult<T> {
   const result = schema.safeParse(input);
   if (result.success) return { ok: true, data: result.data, errors: [] };
   return {
