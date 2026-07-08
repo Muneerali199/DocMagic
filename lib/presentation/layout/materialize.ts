@@ -101,7 +101,14 @@ function materializeElement(
     case "metric": {
       // Use premium KPI card component for metrics in KPI/dashboard contexts
       if (slide.type === "kpi" || slide.type === "dashboard") {
-        return renderKPICard(el.value, el.label, frame, tokens, el.unit, "bordered");
+        return renderKPICard(
+          el.value,
+          el.label,
+          frame,
+          tokens,
+          el.delta,
+          "bordered",
+        );
       }
 
       // Fallback to traditional card style

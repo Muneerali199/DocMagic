@@ -28,6 +28,13 @@ function nodeShape(
 ): ResolvedElement {
   const { fill, text } = emphasisFill(node.emphasis, tokens.colors);
   const base = resolveTextStyle("label", node.emphasis, tokens);
+  // Diagram nodes carry the story — labels must read at presentation
+  // distance. Semibold, slightly larger than form labels.
+  const label = {
+    ...styleOnFill(base, fill, tokens),
+    fontSize: Math.max(base.fontSize, 15),
+    fontWeight: 600,
+  };
   return {
     kind: "shape",
     id: id(diagram.id, `node-${node.id}`),
@@ -37,14 +44,16 @@ function nodeShape(
     shape: tokens.shape.radius > 0 ? "roundRect" : "rect",
     box: {
       fill,
-      borderColor: tokens.colors.border,
+      // primary nodes get a self-colored border so they read as solid
+      // chips; secondary nodes get the hairline token border
+      borderColor: node.emphasis === "primary" ? fill : tokens.colors.border,
       borderWidth: tokens.shape.borderWidth,
       radius: tokens.shape.radius,
       shadow: tokens.shape.shadow,
     },
     label: node.label,
     sublabel: node.sublabel,
-    labelStyle: styleOnFill(base, fill, tokens),
+    labelStyle: label,
   };
 }
 
@@ -642,7 +651,9 @@ const verticalProcessLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
         x: badgeX - 1,
         y: rows[0].y + rows[0].h / 2,
         w: 2,
-        h: rows[rows.length - 1].y + rows[rows.length - 1].h / 2 -
+        h:
+          rows[rows.length - 1].y +
+          rows[rows.length - 1].h / 2 -
           (rows[0].y + rows[0].h / 2),
       },
       emphasis: "tertiary",
@@ -713,11 +724,7 @@ const verticalProcessLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
  * Alternating timeline — labels alternate above/below the spine so twice as
  * many milestones fit without collisions. Best for 6+ milestones.
  */
-const alternatingTimelineLayout: DiagramLayoutFn = (
-  diagram,
-  frame,
-  tokens,
-) => {
+const alternatingTimelineLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
   const nodes = diagram.nodes;
   const out: ResolvedElement[] = [];
   const lineY = frame.y + frame.h / 2;
@@ -829,7 +836,8 @@ export const DIAGRAM_VARIANTS: Record<
     {
       id: "flow-horizontal",
       layout: flowLayout,
-      score: (d, f) => (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 6 ? 0.2 : 0),
+      score: (d, f) =>
+        (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 6 ? 0.2 : 0),
     },
     {
       id: "flow-vertical-steps",
@@ -842,7 +850,8 @@ export const DIAGRAM_VARIANTS: Record<
     {
       id: "process-horizontal",
       layout: flowLayout,
-      score: (d, f) => (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 5 ? 0.25 : 0),
+      score: (d, f) =>
+        (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 5 ? 0.25 : 0),
     },
     {
       id: "process-vertical-steps",
@@ -903,9 +912,7 @@ export const DIAGRAM_VARIANTS: Record<
       score: (d, f) => (wide(f) > 2 && d.edges.length > 0 ? 0.7 : 0.3),
     },
   ],
-  orgchart: [
-    { id: "orgchart-tree", layout: orgChartLayout, score: () => 0.9 },
-  ],
+  orgchart: [{ id: "orgchart-tree", layout: orgChartLayout, score: () => 0.9 }],
   roadmap: [
     {
       id: "roadmap-swimlanes",
@@ -926,7 +933,8 @@ export function chooseDiagramVariant(
   diagram: SemanticDiagram,
   frame: Frame,
 ): DiagramVariant {
-  const variants = DIAGRAM_VARIANTS[diagram.diagramType] ?? DIAGRAM_VARIANTS.flow;
+  const variants =
+    DIAGRAM_VARIANTS[diagram.diagramType] ?? DIAGRAM_VARIANTS.flow;
   let best = variants[0];
   let bestScore = -1;
   for (const v of variants) {
