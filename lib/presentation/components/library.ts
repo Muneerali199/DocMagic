@@ -88,72 +88,77 @@ export function renderKPICard(
     });
   }
 
-  // Value text (large, bold)
-  const valueH = Math.min(innerH * 0.55, 120);
+  // Editorial stack: accent tick, oversized value, label directly beneath.
+  // Vertically centered as a group — no dead space between value and label.
+  const valueH = Math.min(Math.max(innerH * 0.4, 48), 88);
+  const unitH = unit ? 22 : 0;
+  const labelH = 24;
+  const stackGap = 6;
+  const tickH = 4;
+  const stackH =
+    tickH + 14 + valueH + (unit ? unitH + stackGap : 0) + stackGap + labelH;
+  let y = frame.y + Math.max(padding, (frame.h - stackH) / 2);
+  const x = frame.x + padding;
+
+  // accent tick anchoring the card
+  out.push({
+    kind: "shape",
+    id: `kpi-tick-${label}`,
+    frame: { x, y, w: 32, h: tickH },
+    emphasis: "primary",
+    z: 1,
+    shape: "rect",
+    box: { fill: tokens.colors.primary, radius: 0, shadow: "none" },
+  });
+  y += tickH + 14;
+
+  // Value text (large, bold, left-aligned)
   out.push({
     kind: "text",
     id: `kpi-value-${label}`,
-    frame: {
-      x: frame.x + padding,
-      y: frame.y + padding + 8,
-      w: innerW,
-      h: valueH,
-    },
+    frame: { x, y, w: innerW, h: valueH },
     emphasis: "primary",
     z: 1,
     role: "title",
     content: value,
     style: {
-      ...resolveTextStyle("title", "primary", tokens, {
-        align: "center",
-      }),
-      fontSize: 56,
+      ...resolveTextStyle("title", "primary", tokens, { align: "left" }),
+      fontSize: Math.min(56, Math.round(valueH * 0.82)),
       fontWeight: 700,
+      letterSpacing: -1,
     },
   });
+  y += valueH;
 
   // Unit (small, muted)
   if (unit) {
+    y += stackGap;
     out.push({
       kind: "text",
       id: `kpi-unit-${label}`,
-      frame: {
-        x: frame.x + padding,
-        y: frame.y + padding + valueH + 2,
-        w: innerW,
-        h: 24,
-      },
+      frame: { x, y, w: innerW, h: unitH },
       emphasis: "tertiary",
       z: 1,
       role: "caption",
       content: unit,
       style: resolveTextStyle("caption", "tertiary", tokens, {
-        align: "center",
+        align: "left",
       }),
     });
+    y += unitH;
   }
 
-  // Label (muted text at bottom)
-  const labelY =
-    variant === "minimal"
-      ? frame.y + frame.h - padding - 32
-      : frame.y + frame.h - padding - 28;
+  // Label directly beneath the value
+  y += stackGap;
   out.push({
     kind: "text",
     id: `kpi-label-${label}`,
-    frame: {
-      x: frame.x + padding,
-      y: labelY,
-      w: innerW,
-      h: 24,
-    },
+    frame: { x, y, w: innerW, h: labelH },
     emphasis: "secondary",
     z: 1,
     role: "label",
     content: label,
-    style: resolveTextStyle("label", "secondary", tokens, {
-      align: "center",
-    }),
+    style: resolveTextStyle("label", "secondary", tokens, { align: "left" }),
   });
 
   return out;

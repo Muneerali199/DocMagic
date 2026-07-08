@@ -20,6 +20,7 @@ import { runStrategist } from "./brain/strategist";
 import { runNarrativePlanner } from "./brain/planner";
 import { runDesignDirector, type DesignIR } from "./brain/design-director";
 import { resolveDesignWithDirector } from "./design/engine";
+import { applyCraftLayer } from "./design/craft";
 import type { DesignTokens } from "./design/tokens";
 import { selectLayout } from "./layout/intelligence";
 import { materializeSlide } from "./layout/materialize";
@@ -206,6 +207,18 @@ export async function compileSemanticIR(
   const designCritique = await ruleBasedDesignCritic.evaluate(
     resolved,
     design.tokens,
+  );
+
+  // Craft layer: designer-signature details (eyebrow rules, footers, ghost
+  // numerals, corner accents, background rhythm). Applied after deterministic
+  // critics (which audit content) so intentional low-contrast decoration is
+  // not penalized; the vision critic reviews the final crafted result.
+  progress("craft", "Applying designer craft details");
+  applyCraftLayer(
+    resolved.slides,
+    design.tokens,
+    design.language.id,
+    resolved.title,
   );
 
   let visionCritique: VisionCritique | undefined;

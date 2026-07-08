@@ -797,7 +797,7 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
       const c = categorize(slide);
       const safe = safeFrame(tokens.spacing.safeMargin);
 
-      // Title at top if present
+      // Title at top if present (tall enough for a wrapped 2-line title)
       let contentStart = safe.y;
       if (c.title) {
         placements.push({
@@ -807,27 +807,28 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
             x: safe.x,
             y: safe.y,
             w: safe.w,
-            h: 60,
+            h: 96,
           },
         });
-        contentStart += 60 + tokens.spacing.sectionGap;
+        contentStart += 96 + tokens.spacing.sectionGap;
       }
 
-      // KPI cards in 2x2 grid
+      // KPI cards: 3 metrics → one row of 3; otherwise 2-column grid.
       const remaining = {
         ...safe,
         y: contentStart,
         h: safe.h - (contentStart - safe.y),
       };
       const metrics = c.metrics.slice(0, 4);
-      const cols = splitColumns(remaining, 2, tokens.spacing.itemGap);
-      const rows = metrics.length > 2 ? 2 : 1;
       const gap = tokens.spacing.itemGap;
+      const colCount = metrics.length === 3 ? 3 : 2;
+      const cols = splitColumns(remaining, colCount, gap);
+      const rows = Math.ceil(metrics.length / colCount);
       const cardH = (remaining.h - gap * (rows - 1)) / rows;
 
       metrics.forEach((metric, i) => {
-        const row = Math.floor(i / 2);
-        const col = i % 2;
+        const row = Math.floor(i / colCount);
+        const col = i % colCount;
         const colFrame = cols[col];
         placements.push({
           elementId: metric.id,
