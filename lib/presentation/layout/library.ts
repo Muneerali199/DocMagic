@@ -776,6 +776,264 @@ export const LAYOUT_LIBRARY: SlideLayout[] = [
       return { placements };
     },
   },
+  // -----------------------------------------------------------------------
+  // PREMIUM DESIGN-LED VARIANTS
+  // -----------------------------------------------------------------------
+  {
+    id: "kpi-premium-grid",
+    name: "KPI — Premium Grid (2x2)",
+    suitedTypes: ["kpi", "dashboard"],
+    metadata: {
+      density: 0.6,
+      hierarchy: 0.7,
+      emphasis: "data",
+      whitespace: 0.3,
+      visualRhythm: "grid",
+      imageRatio: 0,
+      contentCapacity: { min: 2, max: 4 },
+    },
+    place(slide, tokens) {
+      const placements: PlacedElement[] = [];
+      const c = categorize(slide);
+      const safe = safeFrame(tokens.spacing.safeMargin);
+
+      // Title at top if present
+      let contentStart = safe.y;
+      if (c.title) {
+        placements.push({
+          elementId: c.title.id,
+          region: "title",
+          frame: {
+            x: safe.x,
+            y: safe.y,
+            w: safe.w,
+            h: 60,
+          },
+        });
+        contentStart += 60 + tokens.spacing.sectionGap;
+      }
+
+      // KPI cards in 2x2 grid
+      const remaining = {
+        ...safe,
+        y: contentStart,
+        h: safe.h - (contentStart - safe.y),
+      };
+      const metrics = c.metrics.slice(0, 4);
+      const cols = splitColumns(remaining, 2, tokens.spacing.itemGap);
+      const rows = metrics.length > 2 ? 2 : 1;
+      const gap = tokens.spacing.itemGap;
+      const cardH = (remaining.h - gap * (rows - 1)) / rows;
+
+      metrics.forEach((metric, i) => {
+        const row = Math.floor(i / 2);
+        const col = i % 2;
+        const colFrame = cols[col];
+        placements.push({
+          elementId: metric.id,
+          region: `metric-${i + 1}`,
+          frame: {
+            x: colFrame.x,
+            y: remaining.y + row * (cardH + gap),
+            w: colFrame.w,
+            h: cardH,
+          },
+        });
+      });
+
+      return { placements };
+    },
+  },
+  {
+    id: "feature-cards-premium",
+    name: "Features — Premium Cards",
+    suitedTypes: ["content", "section"],
+    metadata: {
+      density: 0.55,
+      hierarchy: 0.6,
+      emphasis: "balanced",
+      whitespace: 0.4,
+      visualRhythm: "grid",
+      imageRatio: 0.15,
+      contentCapacity: { min: 3, max: 6 },
+    },
+    place(slide, tokens) {
+      const placements: PlacedElement[] = [];
+      const c = categorize(slide);
+      const safe = safeFrame(tokens.spacing.safeMargin);
+      let y = safe.y;
+
+      // Header section
+      if (c.title) {
+        placements.push({
+          elementId: c.title.id,
+          region: "title",
+          frame: { x: safe.x, y, w: safe.w, h: 56 },
+        });
+        y += 56 + tokens.spacing.sectionGap;
+      }
+      if (c.subtitle) {
+        placements.push({
+          elementId: c.subtitle.id,
+          region: "subtitle",
+          frame: { x: safe.x, y, w: safe.w, h: 40 },
+        });
+        y += 40 + tokens.spacing.unit * 2;
+      }
+
+      // Feature cards in 3-column grid
+      const features = c.texts.slice(0, 6);
+      const cardArea = { x: safe.x, y, w: safe.w, h: safe.h - (y - safe.y) };
+      const cols = splitColumns(cardArea, 3, tokens.spacing.itemGap);
+      const cardH = Math.min(200, (cardArea.h - tokens.spacing.itemGap * 1) / 2);
+
+      features.forEach((feature, i) => {
+        const colIdx = i % 3;
+        const rowIdx = Math.floor(i / 3);
+        const gap = tokens.spacing.itemGap;
+        placements.push({
+          elementId: feature.id,
+          region: `feature-${i + 1}`,
+          frame: {
+            x: cols[colIdx].x,
+            y: cardArea.y + rowIdx * (cardH + gap),
+            w: cols[colIdx].w,
+            h: cardH,
+          },
+        });
+      });
+
+      return { placements };
+    },
+  },
+  {
+    id: "metric-showcase",
+    name: "Metrics — Full-Width Showcase",
+    suitedTypes: ["kpi", "content"],
+    metadata: {
+      density: 0.4,
+      hierarchy: 0.8,
+      emphasis: "data",
+      whitespace: 0.5,
+      visualRhythm: "columns",
+      imageRatio: 0,
+      contentCapacity: { min: 2, max: 4 },
+    },
+    place(slide, tokens) {
+      const placements: PlacedElement[] = [];
+      const c = categorize(slide);
+      const safe = safeFrame(tokens.spacing.safeMargin);
+      let y = safe.y;
+
+      // Title
+      if (c.title) {
+        placements.push({
+          elementId: c.title.id,
+          region: "title",
+          frame: {
+            x: safe.x,
+            y,
+            w: safe.w,
+            h: 56,
+          },
+        });
+        y += 56 + tokens.spacing.sectionGap;
+      }
+
+      // Metrics as full-width cards stacked
+      const metrics = c.metrics.slice(0, 3);
+      const gap = tokens.spacing.sectionGap;
+      const metricH = (safe.h - (y - safe.y) - gap * (metrics.length - 1)) / metrics.length;
+
+      metrics.forEach((metric, i) => {
+        placements.push({
+          elementId: metric.id,
+          region: `metric-${i + 1}`,
+          frame: {
+            x: safe.x,
+            y: y + i * (metricH + gap),
+            w: safe.w,
+            h: Math.max(120, metricH),
+          },
+        });
+      });
+
+      return { placements };
+    },
+  },
+  {
+    id: "content-asymmetric-premium",
+    name: "Content — Asymmetric Premium",
+    suitedTypes: ["content"],
+    metadata: {
+      density: 0.5,
+      hierarchy: 0.7,
+      emphasis: "balanced",
+      whitespace: 0.45,
+      visualRhythm: "asymmetric",
+      imageRatio: 0.35,
+      contentCapacity: { min: 2, max: 8 },
+    },
+    place(slide, tokens) {
+      const placements: PlacedElement[] = [];
+      const c = categorize(slide);
+      const safe = safeFrame(tokens.spacing.safeMargin);
+
+      // Title/heading section (full width, top)
+      let y = safe.y;
+      if (c.title) {
+        placements.push({
+          elementId: c.title.id,
+          region: "title",
+          frame: {
+            x: safe.x,
+            y,
+            w: safe.w,
+            h: 52,
+          },
+        });
+        y += 52 + tokens.spacing.unit * 2;
+      }
+
+      // Split: 65% text, 35% media
+      const splitY = y;
+      const contentH = safe.h - (splitY - safe.y);
+      const leftW = safe.w * 0.62;
+      const gap = tokens.spacing.sectionGap;
+      const rightW = safe.w - leftW - gap;
+
+      // Left: text content
+      const leftFrame = { x: safe.x, y: splitY, w: leftW, h: contentH };
+      const textItems = c.texts.slice(0, 4);
+      if (textItems.length > 0) {
+        const rows = splitRows(leftFrame, textItems.length, tokens.spacing.itemGap);
+        textItems.forEach((text, i) => {
+          placements.push({
+            elementId: text.id,
+            region: `text-${i + 1}`,
+            frame: rows[i],
+          });
+        });
+      }
+
+      // Right: media or highlight
+      const media = c.media[0] ?? c.diagrams[0];
+      if (media) {
+        placements.push({
+          elementId: media.id,
+          region: "media",
+          frame: {
+            x: safe.x + leftW + gap,
+            y: splitY,
+            w: rightW,
+            h: contentH,
+          },
+        });
+      }
+
+      return { placements };
+    },
+  },
 ];
 
 export function getLayout(id: string): SlideLayout | undefined {

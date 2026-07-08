@@ -39,6 +39,8 @@ import { PluginRegistry, defaultRegistry } from "./plugins/registry";
 import { builtinChartPlugin } from "./charts/engine";
 import { builtinDiagramPlugin } from "./diagrams/engine";
 import { enrichWithDiagrams } from "./diagrams/intelligence";
+import { advancedTypographyPass } from "./optimization/typography-premium";
+import { premiumWhitespacePass } from "./optimization/whitespace-premium";
 
 // register built-ins once
 let registered = false;
@@ -48,6 +50,8 @@ function ensureBuiltins(registry: PluginRegistry) {
     builtinChartPlugin,
     builtinDiagramPlugin,
     ...builtInPasses,
+    advancedTypographyPass,
+    premiumWhitespacePass,
     ruleBasedCritic,
   ]) {
     if (!registry.get(plugin.kind, plugin.id)) registry.register(plugin);

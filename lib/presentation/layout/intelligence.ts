@@ -36,24 +36,24 @@ export function scoreLayout(layout: SlideLayout, slide: SemanticSlide): number {
   const meta = layout.metadata;
   let score = 0;
 
-  // 1. slide type affinity
-  if (layout.suitedTypes.includes(slide.type)) score += 20;
-  else if (layout.suitedTypes.includes("content")) score += 4;
+  // 1. slide type affinity (strong signal)
+  if (layout.suitedTypes.includes(slide.type)) score += 25;
+  else if (layout.suitedTypes.includes("content")) score += 8;
 
-  // 2. content capacity fit
+  // 2. content capacity fit (elastic penalty)
   const n = slide.elements.length;
-  if (n >= meta.contentCapacity.min && n <= meta.contentCapacity.max)
-    score += 10;
-  else
-    score -=
-      Math.abs(
-        n -
-          (n < meta.contentCapacity.min
-            ? meta.contentCapacity.min
-            : meta.contentCapacity.max),
-      ) * 3;
+  const inRange =
+    n >= meta.contentCapacity.min && n <= meta.contentCapacity.max;
+  if (inRange) score += 12;
+  else {
+    const distFromRange = Math.min(
+      Math.abs(n - meta.contentCapacity.min),
+      Math.abs(n - meta.contentCapacity.max),
+    );
+    score -= distFromRange * 2.5;
+  }
 
-  // 3. emphasis match against element mix
+  // 3. element mix vs layout emphasis (nuanced scoring)
   const mediaCount = c.media.length;
   const dataCount = c.metrics.length + c.charts.length + c.tables.length;
   const structureCount = c.diagrams.length;
@@ -68,27 +68,49 @@ export function scoreLayout(layout: SlideLayout, slide: SemanticSlide): number {
           ? "media"
           : "text";
 
-  if (meta.emphasis === dominant) score += 12;
-  else if (meta.emphasis === "balanced") score += 6;
+  const emphasismatch = {
+    text: textCount,
+    media: mediaCount,
+    data: dataCount,
+    structure: structureCount,
+    balanced: 1,
+  };
 
-  // 4. media availability vs image ratio
-  if (meta.imageRatio > 0.3 && mediaCount === 0) score -= 15;
-  if (meta.imageRatio === 0 && mediaCount > 1) score -= 6;
+  if (meta.emphasis === dominant) score += 16;
+  else if (meta.emphasis === "balanced") {
+    score += 10; // balanced layouts are forgiving
+  } else if (emphasismatch[meta.emphasis as keyof typeof emphasismatch] > 0) {
+    score += 6; // partial match
+  }
 
-  // 5. content volume vs density
+  // 4. media availability vs image ratio fit
+  if (meta.imageRatio > 0.3 && mediaCount === 0) score -= 18; // needs media
+  if (meta.imageRatio === 0 && mediaCount > 1) score -= 8; // too much media
+  if (meta.imageRatio > 0.2 && mediaCount > 0) score += 4; // media bonus
+
+  // 5. content volume vs density (sophisticated fit)
   const volume = contentVolume(slide);
   const volumeNorm = Math.min(1, volume / 900);
-  score -= Math.abs(volumeNorm - meta.density) * 8;
+  const densityDiff = Math.abs(volumeNorm - meta.density);
+  score -= densityDiff * 10; // increased penalty for mismatch
 
-  // 6. hero/quote/section slides deserve whitespace
+  // 6. whitespace preference for certain slide types
   if (
     (slide.type === "hero" ||
       slide.type === "quote" ||
       slide.type === "section") &&
-    meta.whitespace >= 0.6
+    meta.whitespace >= 0.5
   ) {
-    score += 6;
+    score += 8;
   }
+
+  // 7. visual rhythm bonus for premium variants
+  if (layout.id.includes("premium")) {
+    score += 3; // prefer premium variants when scores are close
+  }
+
+  // 8. structure match bonus
+  if (structureCount > 0 && meta.emphasis === "structure") score += 6;
 
   return score;
 }

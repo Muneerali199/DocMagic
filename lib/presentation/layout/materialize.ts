@@ -17,6 +17,12 @@ import { resolveTextStyle, styleOnFill } from "../typography/apply";
 import { emphasisFill } from "../color/engine";
 import type { PluginRegistry } from "../plugins/registry";
 import type { ChartPlugin, DiagramPlugin } from "../plugins/types";
+import {
+  renderKPICard,
+  renderCallout,
+  renderStatStrip,
+  renderFeatureGrid,
+} from "../components/library";
 
 function card(tokens: DesignTokens) {
   return {
@@ -93,6 +99,12 @@ function materializeElement(
       ];
 
     case "metric": {
+      // Use premium KPI card component for metrics in KPI/dashboard contexts
+      if (slide.type === "kpi" || slide.type === "dashboard") {
+        return renderKPICard(el.value, el.label, frame, tokens, el.unit, "bordered");
+      }
+
+      // Fallback to traditional card style
       const pad = tokens.spacing.cardPadding;
       const boxStyle = card(tokens);
       const valueStyle = {
@@ -186,75 +198,13 @@ function materializeElement(
     }
 
     case "callout": {
-      const pad = tokens.spacing.cardPadding;
-      const fill =
-        el.tone === "insight"
-          ? tokens.colors.surfaceAlt
-          : tokens.colors.surface;
-      const accent =
-        el.tone === "success"
-          ? tokens.colors.positive
-          : el.tone === "warning"
-            ? tokens.colors.negative
-            : tokens.colors.accent;
-      const bodyStyle = resolveTextStyle("body", el.emphasis, tokens);
-      const out: ResolvedElement[] = [
-        {
-          kind: "shape",
-          id: `${el.id}:card`,
-          frame,
-          emphasis: el.emphasis,
-          z: 0,
-          shape: tokens.shape.radius > 0 ? "roundRect" : "rect",
-          box: { ...card(tokens), fill },
-        },
-        {
-          kind: "shape",
-          id: `${el.id}:accent`,
-          frame: { x: frame.x, y: frame.y, w: 4, h: frame.h },
-          emphasis: el.emphasis,
-          z: 1,
-          shape: "rect",
-          box: { fill: accent, radius: 0, shadow: "none" },
-        },
-      ];
-      let textY = frame.y + pad;
-      if (el.title) {
-        out.push({
-          kind: "text",
-          id: `${el.id}:title`,
-          frame: { x: frame.x + pad, y: textY, w: frame.w - pad * 2, h: 28 },
-          emphasis: el.emphasis,
-          z: 1,
-          role: "heading",
-          content: el.title,
-          style: styleOnFill(
-            {
-              ...resolveTextStyle("heading", el.emphasis, tokens),
-              fontSize: tokens.typography.scale.body.size + 2,
-            },
-            fill,
-            tokens,
-          ),
-        });
-        textY += 28 + tokens.spacing.unit;
-      }
-      out.push({
-        kind: "text",
-        id: `${el.id}:content`,
-        frame: {
-          x: frame.x + pad,
-          y: textY,
-          w: frame.w - pad * 2,
-          h: Math.max(20, frame.y + frame.h - pad - textY),
-        },
-        emphasis: el.emphasis,
-        z: 1,
-        role: "body",
-        content: el.content,
-        style: styleOnFill(bodyStyle, fill, tokens),
-      });
-      return out;
+      // Use premium callout component for emphasis
+      return renderCallout(
+        el.title ? `${el.title}\n${el.content}` : el.content,
+        frame,
+        tokens,
+        el.tone === "insight" ? "gradient-bg" : "accent-left",
+      );
     }
 
     case "chart": {

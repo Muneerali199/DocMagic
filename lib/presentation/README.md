@@ -53,9 +53,10 @@ Resolved IR ──► Presentation Compiler ──► native PPTX / HTML / PDF
 | `design/tokens.ts` | Centralized design token contract |
 | `design/languages.ts` | 9 design languages (Apple, Stripe, Google, Notion, …) |
 | `design/engine.ts` | Design Engine: strategy → language → resolved tokens |
-| `layout/library.ts` | Semantic Layout Library with metadata (density, hierarchy, whitespace, capacity) |
-| `layout/intelligence.ts` | Layout Intelligence: semantic scoring, no template IDs |
-| `layout/materialize.ts` | Semantic elements → resolved elements in layout regions |
+| `layout/library.ts` | Semantic Layout Library: 15+ layouts with metadata (density, hierarchy, whitespace, capacity). Premium variants: kpi-premium-grid, metric-showcase, feature-cards-premium, content-asymmetric-premium |
+| `layout/intelligence.ts` | Layout Intelligence: nuanced semantic scoring, emphasis matching, element mix analysis. Prefers premium variants when scores are close |
+| `layout/materialize.ts` | Semantic elements → resolved elements in layout regions. Uses premium component renderers for KPI cards and callouts in dashboard contexts |
+| `components/library.ts` | Premium Visual Component Library: KPICard (bordered/gradient variants), StatStrip, Callout (accent/gradient), FeatureGrid. All rendered as native shapes, never images |
 | `constraints/geometry.ts` | Rect math, collision, balance helpers |
 | `constraints/solver.ts` | Deterministic constraint/optimization solver |
 | `typography/measure.ts` | Text measurement + fit estimation |
@@ -68,7 +69,9 @@ Resolved IR ──► Presentation Compiler ──► native PPTX / HTML / PDF
 | `assets/intelligence.ts` | Multi-factor asset ranking |
 | `assets/providers.ts` | Asset provider adapters |
 | `optimization/pipeline.ts` | Ordered pass runner |
-| `optimization/passes.ts` | Built-in optimization passes |
+| `optimization/passes.ts` | Built-in optimization passes: constraint solver, typography consistency, whitespace guard |
+| `optimization/typography-premium.ts` | Advanced typography: optical sizing (4–6% compensation per role), dynamic line-height, letter spacing compensation, baseline grid snapping, hierarchy emphasis |
+| `optimization/whitespace-premium.ts` | Premium whitespace: vertical redistribution for hero/quote slides, content card expansion, breathing room enforcement |
 | `critic/rule-based.ts` | Rule-based critic (implements `CriticPlugin`) |
 | `benchmark/metrics.ts` | 9-metric benchmark framework |
 | `plugins/types.ts` | Plugin contracts (diagram, chart, pass, critic, …) |
