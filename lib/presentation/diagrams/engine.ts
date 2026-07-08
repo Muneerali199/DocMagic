@@ -606,28 +606,57 @@ const flowchartLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
     });
   });
   // horizontal arrows along edges, with optional edge labels
-  for (const e of diagram.edges) {
+  diagram.edges.forEach((e, ei) => {
     const from = frameById.get(e.from);
     const to = frameById.get(e.to);
-    if (!from || !to) continue;
+    if (!from || !to) return;
     out.push(arrow(diagram, from, to, tokens, 0));
     if (e.label) {
-      const midX = (from.x + from.w + to.x) / 2;
+      // Chip-style edge label: pill background keeps the caption legible
+      // where it crosses connector lines; placed at the connector midpoint
+      // in the gap between columns so it never sits on a node.
+      const gapCenterX = (from.x + from.w + to.x) / 2;
       const midY = (from.y + from.h / 2 + to.y + to.h / 2) / 2;
+      const chipW = Math.min(112, Math.max(64, e.label.length * 7 + 16));
+      const chipH = 22;
+      const chip: Frame = {
+        x: gapCenterX - chipW / 2,
+        y: midY - chipH / 2,
+        w: chipW,
+        h: chipH,
+      };
       out.push({
-        kind: "text",
-        id: id(diagram.id, "edge-label"),
-        frame: { x: midX - 50, y: midY - 24, w: 100, h: 20 },
+        kind: "shape",
+        id: id(diagram.id, `edge-chip-${ei}`),
+        frame: chip,
         emphasis: "tertiary",
         z: 2,
+        shape: "roundRect",
+        box: {
+          fill: tokens.colors.background,
+          borderColor: tokens.colors.border,
+          borderWidth: 1,
+          radius: chipH / 2,
+          shadow: "none",
+        },
+      });
+      out.push({
+        kind: "text",
+        id: id(diagram.id, `edge-label-${ei}`),
+        frame: { x: chip.x, y: chip.y + 3, w: chip.w, h: chip.h - 6 },
+        emphasis: "tertiary",
+        z: 3,
         role: "caption",
         content: e.label,
-        style: resolveTextStyle("caption", "tertiary", tokens, {
-          align: "center",
-        }),
+        style: {
+          ...resolveTextStyle("caption", "tertiary", tokens, {
+            align: "center",
+          }),
+          fontSize: 11,
+        },
       });
     }
-  }
+  });
   return out;
 };
 
