@@ -180,6 +180,27 @@ const semantic: SemanticIR = {
       ],
     },
     {
+      id: "s7b",
+      type: "content",
+      intent: "Explain the onboarding workflow step by step",
+      elements: [
+        { id: "e1", kind: "text", role: "heading", content: "Onboarding Workflow", emphasis: "primary" },
+        {
+          id: "e2",
+          kind: "text",
+          role: "bullet",
+          content: "",
+          emphasis: "secondary",
+          items: [
+            "Step 1: Sign up — create the workspace",
+            "Step 2: Connect data — link your sources",
+            "Step 3: Invite team — assign roles",
+            "Step 4: Launch — go live in production",
+          ],
+        },
+      ],
+    },
+    {
       id: "s8",
       type: "closing",
       intent: "Call to action",
@@ -212,6 +233,18 @@ async function main() {
     }
   }
   console.log("[v0]    ok - layouts:", resolved.slides.map((s) => s.layoutId).join(", "))
+
+  console.log("[v0] 2b. Verifying Diagram Intelligence auto-conversion...")
+  const workflowSlide = result.semantic.slides.find((s) => s.id === "s7b")
+  if (!workflowSlide) throw new Error("s7b missing from semantic IR")
+  const converted = workflowSlide.elements.find((e) => e.kind === "diagram")
+  if (!converted || converted.kind !== "diagram") {
+    throw new Error("Diagram Intelligence did not convert step bullets to a native diagram")
+  }
+  if (converted.nodes.length !== 4 || converted.edges.length !== 3) {
+    throw new Error(`Converted diagram malformed: ${converted.nodes.length} nodes, ${converted.edges.length} edges`)
+  }
+  console.log(`[v0]    ok - bullets became native ${converted.diagramType} diagram (${converted.nodes.length} nodes, ${converted.edges.length} edges)`)
 
   console.log("[v0] 3. Reading critic report (attached by pipeline)...")
   const report = resolved.critic

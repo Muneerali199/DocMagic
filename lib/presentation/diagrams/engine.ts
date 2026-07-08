@@ -622,20 +622,322 @@ const flowchartLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
   return out;
 };
 
-const LAYOUTS: Record<SemanticDiagram["diagramType"], DiagramLayoutFn> = {
-  flow: flowLayout,
-  flowchart: flowchartLayout,
-  process: flowLayout,
-  timeline: timelineLayout,
-  cycle: cycleLayout,
-  pyramid: pyramidLayout,
-  funnel: funnelLayout,
-  comparison: comparisonLayout,
-  swot: swotLayout,
-  architecture: architectureLayout,
-  orgchart: orgChartLayout,
-  roadmap: roadmapLayout,
+/**
+ * Vertical stepped process — numbered badge + step card per node, stacked
+ * top-to-bottom with a connector spine. Best for narrow/tall frames or
+ * step-heavy processes where horizontal boxes would be cramped.
+ */
+const verticalProcessLayout: DiagramLayoutFn = (diagram, frame, tokens) => {
+  const nodes = diagram.nodes;
+  const out: ResolvedElement[] = [];
+  const rows = splitRows(frame, nodes.length, tokens.spacing.itemGap);
+  const badge = 36;
+  const badgeX = frame.x + badge / 2;
+  // connector spine behind the badges
+  if (nodes.length > 1) {
+    out.push({
+      kind: "shape",
+      id: id(diagram.id, "spine"),
+      frame: {
+        x: badgeX - 1,
+        y: rows[0].y + rows[0].h / 2,
+        w: 2,
+        h: rows[rows.length - 1].y + rows[rows.length - 1].h / 2 -
+          (rows[0].y + rows[0].h / 2),
+      },
+      emphasis: "tertiary",
+      z: 0,
+      shape: "line",
+      points: {
+        x1: 1,
+        y1: 0,
+        x2: 1,
+        y2:
+          rows[rows.length - 1].y +
+          rows[rows.length - 1].h / 2 -
+          (rows[0].y + rows[0].h / 2),
+      },
+      box: {
+        borderColor: tokens.colors.border,
+        borderWidth: 2,
+        radius: 0,
+        shadow: "none",
+      },
+    });
+  }
+  nodes.forEach((node, i) => {
+    const row = rows[i];
+    const cy = row.y + row.h / 2;
+    // numbered badge
+    out.push({
+      kind: "shape",
+      id: id(diagram.id, `badge-${node.id}`),
+      frame: { x: badgeX - badge / 2, y: cy - badge / 2, w: badge, h: badge },
+      emphasis: node.emphasis,
+      z: 2,
+      shape: "ellipse",
+      box: {
+        fill:
+          node.emphasis === "primary"
+            ? tokens.colors.primary
+            : tokens.colors.accent,
+        radius: badge / 2,
+        shadow: "none",
+      },
+      label: String(i + 1),
+      labelStyle: styleOnFill(
+        resolveTextStyle("label", node.emphasis, tokens, { align: "center" }),
+        node.emphasis === "primary"
+          ? tokens.colors.primary
+          : tokens.colors.accent,
+        tokens,
+      ),
+    });
+    // step card
+    const cardX = frame.x + badge + tokens.spacing.itemGap;
+    const h = Math.min(row.h, 88);
+    out.push(
+      nodeShape(
+        diagram,
+        node,
+        { x: cardX, y: cy - h / 2, w: frame.x + frame.w - cardX, h },
+        tokens,
+        1,
+      ),
+    );
+  });
+  return out;
 };
+
+/**
+ * Alternating timeline — labels alternate above/below the spine so twice as
+ * many milestones fit without collisions. Best for 6+ milestones.
+ */
+const alternatingTimelineLayout: DiagramLayoutFn = (
+  diagram,
+  frame,
+  tokens,
+) => {
+  const nodes = diagram.nodes;
+  const out: ResolvedElement[] = [];
+  const lineY = frame.y + frame.h / 2;
+  out.push({
+    kind: "shape",
+    id: id(diagram.id, "spine"),
+    frame: { x: frame.x, y: lineY - 1, w: frame.w, h: 2 },
+    emphasis: "tertiary",
+    z: 0,
+    shape: "line",
+    points: { x1: 0, y1: 1, x2: frame.w, y2: 1 },
+    box: {
+      borderColor: tokens.colors.border,
+      borderWidth: 2,
+      radius: 0,
+      shadow: "none",
+    },
+  });
+  const stepW = frame.w / nodes.length;
+  nodes.forEach((node, i) => {
+    const cx = frame.x + stepW * i + stepW / 2;
+    const above = i % 2 === 0;
+    const dotSize = 14;
+    out.push({
+      kind: "shape",
+      id: id(diagram.id, `dot-${node.id}`),
+      frame: {
+        x: cx - dotSize / 2,
+        y: lineY - dotSize / 2,
+        w: dotSize,
+        h: dotSize,
+      },
+      emphasis: node.emphasis,
+      z: 2,
+      shape: "ellipse",
+      box: {
+        fill:
+          node.emphasis === "primary"
+            ? tokens.colors.primary
+            : tokens.colors.accent,
+        radius: dotSize / 2,
+        shadow: "none",
+      },
+    });
+    const labelW = Math.min(stepW * 1.6, 220);
+    const blockH = frame.h / 2 - 24;
+    const labelY = above ? lineY - 20 - blockH : lineY + 20;
+    out.push({
+      kind: "text",
+      id: id(diagram.id, `label-${node.id}`),
+      frame: {
+        x: cx - labelW / 2,
+        y: above ? labelY + blockH - 28 : labelY,
+        w: labelW,
+        h: 28,
+      },
+      emphasis: node.emphasis,
+      z: 1,
+      role: "label",
+      content: node.label,
+      style: resolveTextStyle("label", node.emphasis, tokens, {
+        align: "center",
+      }),
+    });
+    if (node.sublabel) {
+      out.push({
+        kind: "text",
+        id: id(diagram.id, `sub-${node.id}`),
+        frame: {
+          x: cx - labelW / 2,
+          y: above ? labelY : labelY + 30,
+          w: labelW,
+          h: Math.max(24, blockH - 30),
+        },
+        emphasis: "tertiary",
+        z: 1,
+        role: "caption",
+        content: node.sublabel,
+        style: resolveTextStyle("caption", "tertiary", tokens, {
+          align: "center",
+        }),
+      });
+    }
+  });
+  return out;
+};
+
+// ---------------------------------------------------------------------------
+// Diagram layout library — variants with metadata, scored per diagram
+// ---------------------------------------------------------------------------
+
+export interface DiagramVariant {
+  id: string;
+  layout: DiagramLayoutFn;
+  /**
+   * Deterministic fit score (0..1) from the diagram's structure and the
+   * frame's aspect ratio. The highest-scoring variant is used.
+   */
+  score: (diagram: SemanticDiagram, frame: Frame) => number;
+}
+
+const wide = (frame: Frame) => frame.w / Math.max(1, frame.h);
+
+export const DIAGRAM_VARIANTS: Record<
+  SemanticDiagram["diagramType"],
+  DiagramVariant[]
+> = {
+  flow: [
+    {
+      id: "flow-horizontal",
+      layout: flowLayout,
+      score: (d, f) => (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 6 ? 0.2 : 0),
+    },
+    {
+      id: "flow-vertical-steps",
+      layout: verticalProcessLayout,
+      score: (d, f) =>
+        (wide(f) < 1.6 ? 0.85 : 0.4) + (d.nodes.length > 6 ? 0.15 : 0),
+    },
+  ],
+  process: [
+    {
+      id: "process-horizontal",
+      layout: flowLayout,
+      score: (d, f) => (wide(f) > 1.6 ? 0.9 : 0.6) - (d.nodes.length > 5 ? 0.25 : 0),
+    },
+    {
+      id: "process-vertical-steps",
+      layout: verticalProcessLayout,
+      score: (d, f) =>
+        (wide(f) < 1.6 ? 0.85 : 0.45) + (d.nodes.length > 5 ? 0.3 : 0),
+    },
+  ],
+  flowchart: [
+    {
+      id: "flowchart-branching",
+      layout: flowchartLayout,
+      score: () => 0.8,
+    },
+    {
+      id: "flowchart-linear",
+      layout: flowLayout,
+      score: (d) => (d.edges.length <= d.nodes.length - 1 ? 0.5 : 0.2),
+    },
+  ],
+  timeline: [
+    {
+      id: "timeline-horizontal",
+      layout: timelineLayout,
+      score: (d) => (d.nodes.length <= 5 ? 0.9 : 0.5),
+    },
+    {
+      id: "timeline-alternating",
+      layout: alternatingTimelineLayout,
+      score: (d) => (d.nodes.length >= 6 ? 0.9 : 0.45),
+    },
+  ],
+  cycle: [{ id: "cycle-radial", layout: cycleLayout, score: () => 0.8 }],
+  pyramid: [{ id: "pyramid-stacked", layout: pyramidLayout, score: () => 0.8 }],
+  funnel: [{ id: "funnel-stacked", layout: funnelLayout, score: () => 0.8 }],
+  comparison: [
+    {
+      id: "comparison-two-col",
+      layout: comparisonLayout,
+      score: () => 0.8,
+    },
+    {
+      id: "comparison-grid",
+      layout: swotLayout,
+      score: (d) => (d.nodes.length === 4 ? 0.85 : 0.2),
+    },
+  ],
+  swot: [{ id: "swot-quadrant", layout: swotLayout, score: () => 0.9 }],
+  architecture: [
+    {
+      id: "architecture-layered",
+      layout: architectureLayout,
+      score: () => 0.8,
+    },
+    {
+      id: "architecture-flow",
+      layout: flowchartLayout,
+      score: (d, f) => (wide(f) > 2 && d.edges.length > 0 ? 0.7 : 0.3),
+    },
+  ],
+  orgchart: [
+    { id: "orgchart-tree", layout: orgChartLayout, score: () => 0.9 },
+  ],
+  roadmap: [
+    {
+      id: "roadmap-swimlanes",
+      layout: roadmapLayout,
+      score: (d) => (d.nodes.some((n) => n.group) ? 0.95 : 0.6),
+    },
+    {
+      id: "roadmap-timeline",
+      layout: timelineLayout,
+      score: (d) =>
+        !d.nodes.some((n) => n.group) && d.nodes.length <= 6 ? 0.75 : 0.3,
+    },
+  ],
+};
+
+/** Pick the best-fitting variant for a diagram + frame. Deterministic. */
+export function chooseDiagramVariant(
+  diagram: SemanticDiagram,
+  frame: Frame,
+): DiagramVariant {
+  const variants = DIAGRAM_VARIANTS[diagram.diagramType] ?? DIAGRAM_VARIANTS.flow;
+  let best = variants[0];
+  let bestScore = -1;
+  for (const v of variants) {
+    const s = v.score(diagram, frame);
+    if (s > bestScore) {
+      best = v;
+      bestScore = s;
+    }
+  }
+  return best;
+}
 
 export function layoutDiagram(
   diagram: SemanticDiagram,
@@ -643,14 +945,13 @@ export function layoutDiagram(
   tokens: DesignTokens,
 ): ResolvedElement[] {
   uid = 0; // deterministic ids per diagram
-  const fn = LAYOUTS[diagram.diagramType] ?? flowLayout;
-  return fn(diagram, frame, tokens);
+  return chooseDiagramVariant(diagram, frame).layout(diagram, frame, tokens);
 }
 
 export const builtinDiagramPlugin: DiagramPlugin = {
   id: "builtin-diagrams",
   kind: "diagram",
   name: "Built-in Diagram Engine",
-  supports: Object.keys(LAYOUTS),
+  supports: Object.keys(DIAGRAM_VARIANTS),
   layout: layoutDiagram,
 };

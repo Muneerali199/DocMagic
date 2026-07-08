@@ -62,7 +62,8 @@ Resolved IR ──► Presentation Compiler ──► native PPTX / HTML / PDF
 | `typography/apply.ts` | Token-driven text style resolution |
 | `color/engine.ts` | Contrast (WCAG), palette derivation, rgba/hex handling |
 | `diagrams/engine.ts` | Semantic diagrams → positioned native shapes (plugin) |
-| | 12 diagram engines: flow, flowchart, process, timeline, cycle, pyramid, funnel, comparison, swot, architecture, orgchart, roadmap |
+| | 12 diagram types with a variant library (`DIAGRAM_VARIANTS`) — each type has scored layout variants (e.g. process: horizontal flow vs vertical numbered steps; timeline: single-side vs alternating) chosen deterministically by structure + frame aspect |
+| `diagrams/intelligence.ts` | Diagram Intelligence: detects process/timeline/hierarchy/comparison/system content authored as text bullets and auto-converts it to native diagram elements (no LLM, never images) |
 | `charts/engine.ts` | Chart normalization + palette assignment (plugin) |
 | `assets/intelligence.ts` | Multi-factor asset ranking |
 | `assets/providers.ts` | Asset provider adapters |

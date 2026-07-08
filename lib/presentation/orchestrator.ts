@@ -35,6 +35,7 @@ import { benchmarkDeck, type BenchmarkReport } from "./benchmark/metrics";
 import { PluginRegistry, defaultRegistry } from "./plugins/registry";
 import { builtinChartPlugin } from "./charts/engine";
 import { builtinDiagramPlugin } from "./diagrams/engine";
+import { enrichWithDiagrams } from "./diagrams/intelligence";
 
 // register built-ins once
 let registered = false;
@@ -118,8 +119,17 @@ export async function compileSemanticIR(
   progress("design", "Selecting design language");
   const design = resolveDesign(semanticInput.strategy, options.designLanguage);
 
+  progress("diagram-intelligence", "Detecting diagrammatic content");
+  const diagramEnriched = enrichWithDiagrams(semanticInput);
+  if (diagramEnriched.conversions.length > 0) {
+    progress(
+      "diagram-intelligence",
+      `Converted to native diagrams: ${diagramEnriched.conversions.length}`,
+    );
+  }
+
   progress("assets", "Selecting imagery");
-  const semantic = await attachAssets(semanticInput, design.tokens);
+  const semantic = await attachAssets(diagramEnriched.ir, design.tokens);
 
   progress("layout", "Laying out slides");
   const resolvedSlides = semantic.slides.map((slide) => {
