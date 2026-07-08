@@ -35,10 +35,10 @@ export const VisionCritiqueSchema = z.object({
   spacing: z.number().min(0).max(100),
   typography: z.number().min(0).max(100),
   balance: z.number().min(0).max(100),
-  issues: z.array(z.string()).default([]),
-  recommendations: z.array(z.string()).default([]),
+  issues: z.array(z.string()).optional().default([]),
+  recommendations: z.array(z.string()).optional().default([]),
   /** structured, deterministic-applicable fixes (max 2 applied) */
-  repairs: z.array(RepairActionSchema).default([]),
+  repairs: z.array(RepairActionSchema).optional().default([]),
 });
 export type VisionCritique = z.infer<typeof VisionCritiqueSchema>;
 
@@ -62,7 +62,10 @@ Return ONLY JSON:
 
 Only suggest repairs for real problems. A well-designed deck should return an empty repairs array. Score honestly: 85+ means ship-ready.`;
 
-export async function runVisionCritic(ir: ResolvedIR): Promise<VisionCritique> {
+export async function runVisionCritic(
+  ir: ResolvedIR,
+  tokens: any,
+): Promise<VisionCritique> {
   const indices = representativeSlideIndices(ir, 3);
   const images = await rasterizeSlides(ir, indices);
 
@@ -73,7 +76,7 @@ export async function runVisionCritic(ir: ResolvedIR): Promise<VisionCritique> {
     )
     .join("\n");
 
-  return visionCall(VisionCritiqueSchema, {
+  const raw = await visionCall(VisionCritiqueSchema, {
     system: SYSTEM,
     user: `Deck: "${ir.title}" — ${ir.slides.length} slides, design language "${ir.designLanguage}".
 
@@ -85,4 +88,17 @@ Review the visual design and return the critique JSON.`,
     temperature: 0.2,
     maxTokens: 2000,
   });
+
+  // Ensure all arrays are present
+  const result: VisionCritique = {
+    overallScore: raw.overallScore,
+    hierarchy: raw.hierarchy,
+    spacing: raw.spacing,
+    typography: raw.typography,
+    balance: raw.balance,
+    issues: raw.issues ?? [],
+    recommendations: raw.recommendations ?? [],
+    repairs: raw.repairs ?? [],
+  };
+  return result;
 }

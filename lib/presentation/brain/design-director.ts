@@ -66,10 +66,11 @@ Guidance:
 - Never pick a dark language for dense data-heavy decks unless the tone demands it.`;
 
 export async function runDesignDirector(
-  userPrompt: string,
-  strategy: PresentationStrategy,
   semantic: SemanticIR,
+  slideCount: number,
 ): Promise<DesignIR> {
+  const userPrompt = semantic.slides.map((s) => s.intent).join(" → ");
+  const strategy = semantic.strategy;
   const contentProfile = summarizeContent(semantic);
   const languages = designLanguageIds().join(", ");
 
@@ -98,9 +99,22 @@ Produce the Design IR JSON.`;
 
   // guard: unknown language ids fall back to the engine's own selection
   if (!designLanguageIds().includes(raw.designLanguage)) {
-    return { ...raw, designLanguage: "" };
+    return { ...raw, designLanguage: "" } as DesignIR;
   }
-  return raw;
+
+  // Cast to ensure all required fields exist (defaults applied)
+  const result: DesignIR = {
+    designLanguage: raw.designLanguage,
+    mood: raw.mood,
+    density: raw.density ?? "balanced",
+    typeScale: raw.typeScale ?? "regular",
+    contrast: raw.contrast ?? "standard",
+    rationale: raw.rationale ?? "",
+    accentColor: raw.accentColor,
+    corners: raw.corners,
+    imageTreatment: raw.imageTreatment,
+  };
+  return result;
 }
 
 /** Compact structural summary so the Director sees what it is styling. */

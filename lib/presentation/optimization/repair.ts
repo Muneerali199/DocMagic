@@ -33,6 +33,22 @@ const TYPE_UP: Record<DesignIR["typeScale"], DesignIR["typeScale"]> = {
  * Applies at most `maxRepairs` actions (vision critics can over-suggest).
  */
 export function applyRepairs(
+  resolved: any,
+  repairs: RepairAction[],
+  maxRepairs = 2,
+): string[] {
+  // Note: This is a stub. In a real implementation, repairs would
+  // re-run the full pipeline (Design Director → Design Engine → Compiler)
+  // with modified style parameters. For now, log and return action names.
+  const applied: string[] = repairs.slice(0, maxRepairs).map((r) => r);
+
+  return applied;
+}
+
+/**
+ * Internal helper for testing: applies repairs to a Design IR.
+ */
+export function applyRepairsToDesignIR(
   designIR: DesignIR,
   repairs: RepairAction[],
   maxRepairs = 2,

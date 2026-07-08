@@ -64,6 +64,9 @@ export async function POST(request: Request): Promise<Response> {
           resolved: result.resolved,
           benchmark: result.benchmark,
           designCritique: result.designCritique,
+          designIR: result.designIR,
+          visionCritique: result.visionCritique,
+          repairsApplied: result.repairsApplied,
           designLanguage: result.designLanguage,
           passesRun: result.passesRun,
         });

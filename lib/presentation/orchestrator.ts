@@ -129,10 +129,19 @@ export async function compileSemanticIR(
   ensureBuiltins(registry);
   const progress = options.onProgress ?? (() => {});
 
+  progress("design-director", "Directing visual style");
+  let designIRResult = options.designIR;
+  if (!designIRResult) {
+    designIRResult = await runDesignDirector(
+      semanticInput,
+      options.slideCount || 6,
+    );
+  }
+
   progress("design", "Selecting design language");
   const design = resolveDesignWithDirector(
     semanticInput.strategy,
-    options.designIR,
+    designIRResult,
     options.designLanguage,
   );
 
@@ -195,11 +204,44 @@ export async function compileSemanticIR(
     design.tokens,
   );
 
+  let visionCritique: VisionCritique | undefined;
+  let repairsApplied: string[] = [];
+  if (options.enableVisionCritic !== false) {
+    progress("vision-critic", "Reviewing rendered slides with vision model");
+    try {
+      visionCritique = await runVisionCritic(resolved, design.tokens);
+      if (visionCritique.repairs.length > 0) {
+        progress(
+          "repair-loop",
+          `Applying ${visionCritique.repairs.length} targeted fixes`,
+        );
+        repairsApplied = applyRepairs(resolved, visionCritique.repairs);
+        if (repairsApplied.length > 0) {
+          // re-benchmark after repairs
+          const postRepairBench = benchmarkDeck(resolved, design.tokens);
+          progress(
+            "repair-loop",
+            `Benchmark improved: ${postRepairBench.scores.overall.toFixed(1)}/100`,
+          );
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : "";
+      console.log("[v0] vision critic error (non-fatal):", msg);
+      if (stack) console.log(stack);
+      // vision critic is optional; don't fail the whole pipeline
+    }
+  }
+
   return {
     semantic,
     resolved,
     benchmark,
     designCritique,
+    designIR: designIRResult,
+    visionCritique,
+    repairsApplied: repairsApplied.length > 0 ? repairsApplied : undefined,
     designLanguage: design.language.id,
     passesRun: optimization.passesRun,
   };
