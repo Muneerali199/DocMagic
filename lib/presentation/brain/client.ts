@@ -52,6 +52,13 @@ export interface StructuredCallOptions {
   user: string;
   temperature?: number;
   maxTokens?: number;
+  /**
+   * Reasoning models like GLM emit long hidden thinking chains before the
+   * answer, multiplying latency 5-10x. We disable thinking by default —
+   * the pipeline needs structured classification, not deep reasoning.
+   * Set to true only for calls that genuinely benefit from it.
+   */
+  enableThinking?: boolean;
 }
 
 /**
@@ -83,6 +90,12 @@ export async function structuredCall<T>(
       temperature: options.temperature ?? 0.4,
       max_tokens: options.maxTokens ?? 8000,
       response_format: { type: "json_object" },
+      // vLLM-style flag Nebius supports for hybrid reasoning models
+      // (GLM, Qwen3). Unknown params are ignored by other backends.
+      // @ts-expect-error -- non-standard OpenAI param, passed through to Nebius
+      chat_template_kwargs: {
+        enable_thinking: options.enableThinking ?? false,
+      },
     });
 
     const raw = completion.choices[0]?.message?.content ?? "";

@@ -17,11 +17,38 @@ import {
 } from "../ir/schema";
 import { structuredCall } from "./client";
 
-/** What the planner returns (strategy is injected by us, not the model). */
-const PlannerOutputSchema = z.object({
+/** Stage 2a — a lightweight outline: fast to generate, sets the narrative. */
+const OutlineSchema = z.object({
   title: z.string(),
-  slides: z.array(SemanticSlideSchema).min(1),
+  slides: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        intent: z.string(),
+        headline: z.string(),
+        keyPoints: z.array(z.string()).default([]),
+      }),
+    )
+    .min(1),
 });
+
+/** Stage 2b — one fully-detailed slide, expanded in parallel per slide. */
+const SlideOutputSchema = z.object({
+  slide: SemanticSlideSchema,
+});
+
+const OUTLINE_SYSTEM = `You are a narrative planner inside a presentation compiler. You design the story arc of a deck as a compact outline.
+
+Slide types (pick the most specific): hero, kpi, timeline, comparison, process, flowchart, architecture, orgchart, swot, funnel, pyramid, roadmap, gallery, quote, dashboard, content, agenda, section, closing.
+
+Rules:
+- First slide is "hero", last is "closing". Vary types; never more than two consecutive "content" slides.
+- headline: max 6 words, punchy and concrete. intent: one sentence — what the slide must communicate.
+- keyPoints: 2-4 short phrases of the facts/numbers/entities the slide should contain (consistent across the deck).
+- Follow the storytelling strategy's arc.
+
+Return ONLY JSON: { "title": string, "slides": [{ "id": "slug", "type": string, "intent": string, "headline": string, "keyPoints": string[] }] }`;
 
 const SYSTEM = `You are a narrative planner inside a presentation compiler. You convert a presentation strategy into a structured slide plan (Semantic IR).
 
@@ -67,11 +94,32 @@ CONTENT QUALITY RULES:
 
 Return ONLY JSON: { "title": string, "slides": [ ... ] }`;
 
+/** Run async tasks with a concurrency cap so we don't hammer the provider. */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (next < items.length) {
+        const i = next++;
+        results[i] = await fn(items[i], i);
+      }
+    },
+  );
+  await Promise.all(workers);
+  return results;
+}
+
 export async function runNarrativePlanner(
   userPrompt: string,
   strategy: PresentationStrategy,
 ): Promise<SemanticIR> {
-  const user = `Presentation request: ${userPrompt}
+  const strategyBlock = `Presentation request: ${userPrompt}
 
 Strategy (follow it exactly):
 - Intent: ${strategy.intent}
@@ -79,22 +127,45 @@ Strategy (follow it exactly):
 - Goal: ${strategy.goal}
 - Storytelling strategy: ${strategy.storytellingStrategy}
 - Deck length: exactly ${strategy.deckLength} slides
-- Tone: ${strategy.tone}
+- Tone: ${strategy.tone}`;
 
-Produce the Semantic IR JSON with exactly ${strategy.deckLength} slides.`;
-
-  const output = await structuredCall(PlannerOutputSchema, {
-    system: SYSTEM,
-    user,
+  // Stage 2a: fast outline (small completion, sets the whole narrative)
+  const outline = await structuredCall(OutlineSchema, {
+    system: OUTLINE_SYSTEM,
+    user: `${strategyBlock}\n\nProduce the outline JSON with exactly ${strategy.deckLength} slides.`,
     temperature: 0.6,
-    maxTokens: 16000,
+    maxTokens: 3000,
   });
+
+  // Stage 2b: expand every slide in parallel — wall time ≈ one slide, not N
+  const deckContext = outline.slides
+    .map((s, i) => `${i + 1}. [${s.type}] ${s.headline} — ${s.intent}`)
+    .join("\n");
+
+  const slides = await mapWithConcurrency(outline.slides, 6, (o, i) =>
+    structuredCall(SlideOutputSchema, {
+      system: SYSTEM,
+      user: `${strategyBlock}
+
+Full deck outline (for consistency — numbers and entities must match across slides):
+${deckContext}
+
+Expand ONLY slide ${i + 1} into a complete Semantic IR slide:
+- id: "${o.id}", type: "${o.type}", intent: "${o.intent}"
+- headline: "${o.headline}"
+- key points to cover: ${(o.keyPoints ?? []).join("; ") || "planner's choice"}
+
+Return ONLY JSON: { "slide": { ...complete slide object... } }`,
+      temperature: 0.5,
+      maxTokens: 4000,
+    }).then((out) => out.slide),
+  );
 
   return SemanticIRSchema.parse({
     version: "2.0.0",
     stage: "semantic",
-    title: output.title,
+    title: outline.title,
     strategy,
-    slides: output.slides,
+    slides,
   });
 }
