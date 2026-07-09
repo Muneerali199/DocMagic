@@ -41,7 +41,8 @@ export interface ValidationIssue {
     | "overflow"
     | "oversized-text"
     | "out-of-bounds"
-    | "alignment";
+    | "alignment"
+    | "collision";
   detail: string;
   repaired: boolean;
 }
@@ -348,14 +349,73 @@ function repairAlignment(
   }
 }
 
+/**
+ * Detect text elements that vertically collide with a sibling text/shape
+ * on the same z-plane and push the lower one down into free space.
+ * Decorative elements (craft:, z=0 backgrounds) are ignored — text-on-panel
+ * is intentional; text-on-text never is.
+ */
+function repairTextCollisions(
+  slide: ResolvedSlide,
+  issues: ValidationIssue[],
+): void {
+  const texts = slide.elements
+    .filter(
+      (el) =>
+        el.kind === "text" &&
+        !el.id.startsWith("craft:") &&
+        (el.content || (el.kind === "text" && el.items?.length)),
+    )
+    .sort((a, b) => a.frame.y - b.frame.y);
+
+  for (let i = 0; i < texts.length; i++) {
+    for (let j = i + 1; j < texts.length; j++) {
+      const a = texts[i].frame;
+      const b = texts[j].frame;
+      const xOverlap = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+      const yOverlap = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+      // require substantial intersection — adjacent frames sharing an edge
+      // or 1–2px of rounding slack are fine
+      if (xOverlap < 24 || yOverlap < 10) continue;
+
+      // push the lower element below the upper one, clamped to canvas
+      const newY = a.y + a.h + 12;
+      if (newY + b.h <= CANVAS_H - 40) {
+        b.y = newY;
+        issues.push({
+          slideId: slide.id,
+          elementId: texts[j].id,
+          rule: "collision",
+          detail: `text pushed down ${Math.round(newY - b.y + yOverlap)}px off sibling ${texts[i].id}`,
+          repaired: true,
+        });
+      } else {
+        // no room below — shrink the upper frame to end above the lower
+        const maxH = Math.max(24, b.y - a.y - 12);
+        if (maxH < a.h) {
+          a.h = maxH;
+          issues.push({
+            slideId: slide.id,
+            elementId: texts[i].id,
+            rule: "collision",
+            detail: "upper text frame clipped to clear sibling below",
+            repaired: true,
+          });
+        }
+      }
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // public API
 // ---------------------------------------------------------------------------
 
 /**
  * Validate and auto-repair a Resolved IR in place.
- * Order matters: bounds → alignment → overflow → oversized → contrast
- * (contrast last, because earlier repairs can move text onto new surfaces).
+ * Order matters: bounds → alignment → overflow → collisions → oversized →
+ * contrast (contrast last, because earlier repairs can move text onto new
+ * surfaces; collisions after overflow because frame growth can create them).
  */
 export function validateAndRepair(
   ir: ResolvedIR,
@@ -366,6 +426,7 @@ export function validateAndRepair(
     repairBounds(slide, issues);
     repairAlignment(slide, issues);
     repairOverflow(slide, issues);
+    repairTextCollisions(slide, issues);
     repairOversizedText(slide, issues);
     repairContrast(slide, tokens, issues);
   }
