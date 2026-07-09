@@ -104,12 +104,57 @@ function optimizeGroupSpacing(
   return { ...slide, elements: adjusted };
 }
 
+/**
+ * Content slides: if the body content leaves a large dead band at the
+ * bottom of the canvas, shift the content block (everything below the
+ * title zone) down so top/bottom whitespace reads as balanced. The title
+ * stays anchored — designers keep the headline at a consistent height.
+ * Pure vertical translation: never touches x, w, h, or relative spacing.
+ */
+function rebalanceContentBlock(
+  slide: ResolvedSlide,
+  tokens: DesignTokens,
+): ResolvedSlide {
+  if (
+    slide.type === "hero" ||
+    slide.type === "quote" ||
+    slide.type === "section"
+  ) {
+    return slide; // handled by optimizeGroupSpacing
+  }
+
+  const TITLE_ZONE = 190; // y below which elements are part of the header
+  const FOOTER_CLEAR = 720 - 72; // keep clear of the craft footer band
+  const body = slide.elements.filter((el) => el.frame.y >= TITLE_ZONE);
+  if (body.length === 0) return slide;
+
+  const top = Math.min(...body.map((el) => el.frame.y));
+  const bottom = Math.max(...body.map((el) => el.frame.y + el.frame.h));
+  const bottomSpace = FOOTER_CLEAR - bottom;
+  const topSpace = top - TITLE_ZONE;
+  // only act on clearly top-heavy slides
+  if (bottomSpace - topSpace < 96) return slide;
+
+  const shift = Math.min(Math.floor((bottomSpace - topSpace) / 2), 110);
+  if (shift <= 0) return slide;
+
+  return {
+    ...slide,
+    elements: slide.elements.map((el) =>
+      el.frame.y >= TITLE_ZONE
+        ? { ...el, frame: { ...el.frame, y: el.frame.y + shift } }
+        : el,
+    ),
+  };
+}
+
 // NOTE: an earlier version of this pass also "expanded" cards and nudged
 // x positions to enforce breathing room. Both mutations second-guessed the
 // deterministic layout engine's exact grid math and corrupted column
 // alignment (uneven gaps, squashed titles). Horizontal geometry is now
 // owned exclusively by the layout engine; this pass only redistributes
-// vertical whitespace on sparse editorial slides (hero/quote/section).
+// vertical whitespace (even group spacing on sparse editorial slides,
+// balanced content blocks on top-heavy content slides).
 
 export const premiumWhitespacePass: OptimizationPassPlugin = {
   id: "premium.whitespace-breathing",
@@ -118,6 +163,8 @@ export const premiumWhitespacePass: OptimizationPassPlugin = {
   order: 305,
   run: (ir, tokens) => ({
     ...ir,
-    slides: ir.slides.map((slide) => optimizeGroupSpacing(slide, tokens)),
+    slides: ir.slides
+      .map((slide) => optimizeGroupSpacing(slide, tokens))
+      .map((slide) => rebalanceContentBlock(slide, tokens)),
   }),
 };

@@ -43,21 +43,33 @@ export const typographyConsistencyPass: OptimizationPassPlugin = {
   order: 200,
   run: (ir) =>
     mapSlides(ir, (slide) => {
-      const minSizeByRole = new Map<string, number>();
+      // Collect sizes per role. Only unify when the spread is small (≤4px):
+      // that's genuine solver drift. A large spread means one element was
+      // deliberately scaled to fit a cramped frame — propagating its minimum
+      // would drag every sibling down to unreadable sizes.
+      const sizesByRole = new Map<string, number[]>();
       for (const el of slide.elements) {
         if (el.kind !== "text") continue;
-        const prev = minSizeByRole.get(el.role);
-        if (prev === undefined || el.style.fontSize < prev) {
-          minSizeByRole.set(el.role, el.style.fontSize);
+        const arr = sizesByRole.get(el.role) ?? [];
+        arr.push(el.style.fontSize);
+        sizesByRole.set(el.role, arr);
+      }
+      const targetByRole = new Map<string, number>();
+      for (const [role, sizes] of sizesByRole) {
+        const min = Math.min(...sizes);
+        const max = Math.max(...sizes);
+        if (sizes.length > 1 && max - min > 0 && max - min <= 4) {
+          targetByRole.set(role, min);
         }
       }
+      if (targetByRole.size === 0) return slide;
       return {
         ...slide,
         elements: slide.elements.map((el) => {
           if (el.kind !== "text") return el;
-          const min = minSizeByRole.get(el.role);
-          if (min === undefined || el.style.fontSize === min) return el;
-          return { ...el, style: { ...el.style, fontSize: min } };
+          const target = targetByRole.get(el.role);
+          if (target === undefined || el.style.fontSize === target) return el;
+          return { ...el, style: { ...el.style, fontSize: target } };
         }),
       };
     }),

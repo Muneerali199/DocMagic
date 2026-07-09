@@ -68,9 +68,22 @@ export function fitTextElements(
       const innerW = Math.max(1, el.frame.w - padding * 2);
       const innerH = Math.max(1, el.frame.h - padding * 2);
 
+      // Absolute readable floor: body/bullet copy must stay presentation-
+      // legible. Relative MIN_FONT_SCALE alone let 16px text hit ~10px.
+      const floor =
+        el.role === "body" || el.role === "bullet"
+          ? 14
+          : el.role === "caption" || el.role === "label"
+            ? 11
+            : 14;
+
       let scale = 1;
       let metrics = measureText(el.content, el.items, el.style, innerW);
-      while (metrics.height > innerH && scale > MIN_FONT_SCALE) {
+      while (
+        metrics.height > innerH &&
+        scale > MIN_FONT_SCALE &&
+        el.style.fontSize * (scale - 0.05) >= floor
+      ) {
         scale -= 0.05;
         metrics = measureText(
           el.content,
@@ -84,7 +97,10 @@ export function fitTextElements(
         ...el,
         style: {
           ...el.style,
-          fontSize: Math.round(el.style.fontSize * scale * 10) / 10,
+          fontSize: Math.max(
+            floor,
+            Math.round(el.style.fontSize * scale * 10) / 10,
+          ),
         },
       };
     }),

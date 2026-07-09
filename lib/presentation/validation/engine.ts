@@ -106,21 +106,48 @@ function toCss(c: RGBA): string {
   return `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
 }
 
-/** crude but deterministic text-height estimate */
+/** crude but deterministic text-height estimate (content + list items) */
 function estimateTextHeight(
-  content: string,
+  el: ResolvedElement & { kind: "text" },
   fontSize: number,
   lineHeight: number,
   frameW: number,
 ): number {
   const avgCharW = fontSize * 0.52;
   const charsPerLine = Math.max(4, Math.floor(frameW / avgCharW));
-  const explicitLines = content.split("\n");
-  let lines = 0;
-  for (const l of explicitLines) {
-    lines += Math.max(1, Math.ceil(l.length / charsPerLine));
+  const countLines = (s: string): number => {
+    let lines = 0;
+    for (const l of s.split("\n")) {
+      lines += Math.max(1, Math.ceil(l.length / charsPerLine));
+    }
+    return lines;
+  };
+  let lines = el.content ? countLines(el.content) : 0;
+  for (const item of el.items ?? []) lines += countLines(item);
+  // list items carry extra vertical spacing between entries
+  const itemSpacing = (el.items?.length ?? 0) * fontSize * 0.35;
+  return lines * fontSize * lineHeight + itemSpacing;
+}
+
+/**
+ * How far a text frame can grow downward before hitting another element
+ * (horizontally overlapping, below) or the canvas bottom margin.
+ */
+function growableHeight(el: ResolvedElement, slide: ResolvedSlide): number {
+  const bottom = el.frame.y + el.frame.h;
+  let limit = CANVAS_H - 56; // keep clear of the craft footer band
+  for (const other of slide.elements) {
+    if (other.id === el.id) continue;
+    if (other.id.startsWith("craft:")) continue;
+    const horizOverlap =
+      other.frame.x < el.frame.x + el.frame.w &&
+      other.frame.x + other.frame.w > el.frame.x;
+    if (!horizOverlap) continue;
+    if (other.frame.y >= bottom - 2) {
+      limit = Math.min(limit, other.frame.y - 16);
+    }
   }
-  return lines * fontSize * lineHeight;
+  return Math.max(0, limit - bottom);
 }
 
 // ---------------------------------------------------------------------------
@@ -177,26 +204,51 @@ function repairContrast(
 
 function repairOverflow(slide: ResolvedSlide, issues: ValidationIssue[]): void {
   for (const el of slide.elements) {
-    if (el.kind !== "text" || !el.content || !el.style) continue;
+    if (el.kind !== "text" || !el.style) continue;
+    if (!el.content && !el.items?.length) continue;
     if (el.id.startsWith("craft:")) continue;
     const size = el.style.fontSize ?? 16;
     const lh = el.style.lineHeight ?? 1.4;
-    const est = estimateTextHeight(el.content, size, lh, el.frame.w);
-    if (est <= el.frame.h * 1.05) continue; // 5% tolerance
+    const est = estimateTextHeight(el, size, lh, el.frame.w);
+    if (est <= el.frame.h * 1.1) continue; // 10% tolerance
 
-    // step the font down until it fits, bounded at 62.5% of original / 12px
-    const minSize = Math.max(12, size * 0.625);
+    // Repair 1 (preferred): grow the frame into free space below.
+    // Designers fix a cramped textbox by giving it room, not by making
+    // the type unreadable.
+    const grow = growableHeight(el, slide);
+    if (grow > 0) {
+      const needed = Math.ceil(est - el.frame.h);
+      const applied = Math.min(grow, needed + 8);
+      el.frame.h += applied;
+      if (est <= el.frame.h * 1.1) {
+        issues.push({
+          slideId: slide.id,
+          elementId: el.id,
+          rule: "overflow",
+          detail: `frame grown +${applied}px to fit ~${Math.round(est)}px of text`,
+          repaired: true,
+        });
+        continue;
+      }
+    }
+
+    // Repair 2 (last resort): step the font down — but never below a
+    // readable floor. Body/bullet copy floors at 14px; labels at 12px.
+    const floor =
+      el.role === "body" || el.role === "bullet"
+        ? 14
+        : el.role === "caption" || el.role === "label"
+          ? 12
+          : Math.max(14, Math.round(size * 0.7));
     let newSize = size;
     while (
-      newSize > minSize &&
-      estimateTextHeight(el.content, newSize, lh, el.frame.w) >
-        el.frame.h * 1.05
+      newSize > floor &&
+      estimateTextHeight(el, newSize, lh, el.frame.w) > el.frame.h * 1.1
     ) {
       newSize -= 1;
     }
     const repaired =
-      estimateTextHeight(el.content, newSize, lh, el.frame.w) <=
-      el.frame.h * 1.05;
+      estimateTextHeight(el, newSize, lh, el.frame.w) <= el.frame.h * 1.1;
     if (newSize !== size) el.style.fontSize = newSize;
     issues.push({
       slideId: slide.id,
