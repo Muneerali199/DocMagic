@@ -177,6 +177,11 @@
                 title: ['.text-heading-xlarge', '.pv-text-details__left-panel h1', 'h1'],
                 description: ['.pv-about__summary-text', '#about', '.display-flex .ph5'],
                 difficulty: [] // Not applicable
+            },
+            'linkedin-jobs': {
+                title: ['.job-details-jobs-unified-top-card__job-title', '.jobs-unified-top-card__job-title', 'h1'],
+                description: ['.jobs-description-content__text', '.jobs-description__content', '.jobs-box__html-content'],
+                difficulty: []
             }
         };
         
@@ -230,6 +235,9 @@
         if (platform === 'linkedin') {
             return extractLinkedInData();
         }
+        if (platform === 'linkedin-jobs') {
+            return extractLinkedInJobData(title, description);
+        }
 
         return {
             title: title || 'Problem',
@@ -260,6 +268,22 @@
             title: name,
             description: `Headline: ${headline}\n\nAbout: ${about}\n\nExperience: ${experience}`,
             platform: 'linkedin',
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    function extractLinkedInJobData(title, description) {
+        const company = document
+            .querySelector('.job-details-jobs-unified-top-card__company-name, .jobs-unified-top-card__company-name')
+            ?.textContent
+            ?.replace(/\s+/g, ' ')
+            ?.trim() || '';
+
+        return {
+            title: title || 'LinkedIn Job',
+            description: `Company: ${company}\n\nJob Description: ${description || 'No job description found'}`,
+            platform: 'linkedin-jobs',
             url: window.location.href,
             timestamp: new Date().toISOString()
         };
@@ -393,6 +417,11 @@
                                 🚀 Optimize Profile
                             </button>
                             ` : ''}
+                            ${problemData.platform === 'linkedin-jobs' ? `
+                            <button class="draftdeckai-action-btn" data-action="tailor-application" style="background: #0A66C2; color: white;">
+                                Tailor Application
+                            </button>
+                            ` : ''}
                         </div>
                         <div id="draftdeckai-result" class="draftdeckai-result"></div>
                     </div>
@@ -498,7 +527,8 @@
                 approach: `Explain the approach to solve this problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide step-by-step approach without code.`,
                 solution: `Solve this coding problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide: approach, complete code in JavaScript, time/space complexity. Format as JSON.`,
                 complexity: `Analyze the complexity for this problem:\n\nTitle: ${problemData.title}\nDescription: ${problemData.description}\n\nProvide time and space complexity analysis.`,
-                'optimize-profile': `Analyze this LinkedIn profile and provide optimization tips:\n\nName: ${problemData.title}\n${problemData.description}\n\nProvide:\n1. Headline improvements\n2. About section rewrite\n3. Key skills to highlight\n4. General profile rating (0-10)`
+                'optimize-profile': `Analyze this LinkedIn profile and provide optimization tips:\n\nName: ${problemData.title}\n${problemData.description}\n\nProvide:\n1. Headline improvements\n2. About section rewrite\n3. Key skills to highlight\n4. General profile rating (0-10)`,
+                'tailor-application': `Analyze this LinkedIn job post and suggest how to tailor an application:\n\nRole: ${problemData.title}\n${problemData.description}\n\nProvide:\n1. Important keywords to include\n2. Resume bullets to emphasize\n3. Cover letter angle\n4. Interview preparation focus areas`
             };
             
             const prompt = prompts[action];
@@ -1068,6 +1098,12 @@
             case 'optimize-profile':
                 html = `<div class="draftdeckai-solution">
                     <h4>🚀 Profile Optimization:</h4>
+                    <div style="white-space: pre-wrap;">${data.content || data.reply || JSON.stringify(data, null, 2)}</div>
+                </div>`;
+                break;
+            case 'tailor-application':
+                html = `<div class="draftdeckai-solution">
+                    <h4>Tailored Application Guidance:</h4>
                     <div style="white-space: pre-wrap;">${data.content || data.reply || JSON.stringify(data, null, 2)}</div>
                 </div>`;
                 break;
