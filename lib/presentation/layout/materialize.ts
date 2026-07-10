@@ -13,6 +13,7 @@ import type {
 } from "../ir/schema";
 import type { DesignTokens } from "../design/tokens";
 import type { LayoutResult } from "./library";
+import type { ArtEmphasisEntry } from "../art-director/apply";
 import { resolveTextStyle, styleOnFill } from "../typography/apply";
 import { emphasisFill } from "../color/engine";
 import type { PluginRegistry } from "../plugins/registry";
@@ -349,12 +350,51 @@ function materializeElement(
   }
 }
 
+/**
+ * Apply the Art Director's per-element hierarchy to the ResolvedElements a
+ * single source element produced. The dominant/focal object is scaled up and
+ * emboldened; receding copy is scaled down and muted. Bounded so it reflects
+ * intent without breaking legibility (the constraint solver refits overflow).
+ * Mutates the produced array in place — every element here was freshly built.
+ */
+function applyEmphasis(
+  produced: ResolvedElement[],
+  entry: ArtEmphasisEntry,
+  tokens: DesignTokens,
+): void {
+  if (entry.fontScale === 1 && !entry.focal && entry.emphasis !== "muted") {
+    return;
+  }
+  for (let i = 0; i < produced.length; i++) {
+    const el = produced[i];
+    if (el.kind !== "text") continue;
+    const style = { ...el.style };
+    if (entry.fontScale !== 1) {
+      style.fontSize = Math.round(el.style.fontSize * entry.fontScale);
+    }
+    // Receding roles: mute the ink so the focal object wins the eye. Only for
+    // unboxed text — boxed/card text already resolves its own on-fill contrast.
+    if (
+      (entry.emphasis === "muted" || entry.emphasis === "tertiary") &&
+      !el.box?.fill
+    ) {
+      style.color = tokens.colors.mutedForeground;
+    }
+    // The single focal object never reads as light-weight body copy.
+    if (entry.focal && el.role !== "caption" && el.role !== "label") {
+      style.fontWeight = Math.max(style.fontWeight, 600);
+    }
+    produced[i] = { ...el, style };
+  }
+}
+
 export function materializeSlide(
   slide: SemanticSlide,
   layoutId: string,
   layout: LayoutResult,
   tokens: DesignTokens,
   registry: PluginRegistry,
+  artEmphasis?: Map<string, ArtEmphasisEntry>,
 ): ResolvedSlide {
   const centered =
     slide.type === "hero" ||
@@ -405,13 +445,37 @@ export function materializeSlide(
     }
   }
 
+  // De-duplication guard: upstream stages (visualization primitives that
+  // preserve title tiers, diagram enrichment, etc.) can occasionally emit two
+  // elements that render as the same title/component. Render each distinct
+  // (role + content) text once so slides never show a repeated headline.
+  const seenText = new Set<string>();
+
   for (const el of slide.elements) {
     if (consumed.has(el.id)) continue;
     const frame = frameById.get(el.id);
     if (!frame) continue; // layout chose to omit this element
-    elements.push(
-      ...materializeElement(el, frame, slide, tokens, registry, centered),
+
+    if (el.kind === "text") {
+      const content = el.content.trim().toLowerCase();
+      if (content.length > 0) {
+        const sig = `${el.role}:${content}`;
+        if (seenText.has(sig)) continue; // repeated title/heading/body — skip
+        seenText.add(sig);
+      }
+    }
+
+    const produced = materializeElement(
+      el,
+      frame,
+      slide,
+      tokens,
+      registry,
+      centered,
     );
+    const entry = artEmphasis?.get(el.id);
+    if (entry) applyEmphasis(produced, entry, tokens);
+    elements.push(...produced);
   }
   return {
     id: slide.id,

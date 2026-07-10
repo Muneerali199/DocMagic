@@ -6,9 +6,22 @@ function stableId(slideId: string, primitiveId: string, role: string, index = 0)
 }
 
 function titleElements(slide: SemanticSlide): SemanticElement[] {
-  return slide.elements.filter(
-    (element) => element.kind === "text" && (element.role === "title" || element.role === "heading" || element.role === "subtitle" || element.role === "kicker"),
+  const texts = slide.elements.filter(
+    (element): element is Extract<SemanticElement, { kind: "text" }> =>
+      element.kind === "text",
   );
+  const out: SemanticElement[] = [];
+  const kicker = texts.find((element) => element.role === "kicker");
+  // A single title tier only: prefer an explicit title, else the lead heading.
+  // Keeping both a title AND a heading is what produced repeated headlines.
+  const lead =
+    texts.find((element) => element.role === "title") ??
+    texts.find((element) => element.role === "heading");
+  const subtitle = texts.find((element) => element.role === "subtitle");
+  if (kicker) out.push(kicker);
+  if (lead) out.push(lead);
+  if (subtitle) out.push(subtitle);
+  return out;
 }
 
 function preserve(slide: SemanticSlide, kinds: SemanticElement["kind"][]): SemanticElement[] {

@@ -31,6 +31,7 @@ import { visualizeSlides } from "./visualization/engine";
 import type { VisualizationAssignment } from "./visualization/types";
 import { directPresentation } from "./art-director/director";
 import type { ArtDirection } from "./art-director/types";
+import { applyArtDirection } from "./art-director/apply";
 import { materializeSlide } from "./layout/materialize";
 import { validateAndRepair } from "./validation/engine";
 import { runOptimizationPipeline } from "./optimization/pipeline";
@@ -220,9 +221,34 @@ export async function compileSemanticIR(
     sceneAssignments,
     directedPlans,
   );
-  const resolvedSlides = composition.map((c) =>
-    materializeSlide(c.slide, c.layout.id, c.result, design.tokens, registry),
+
+  // Consume the Art Director's per-slide direction: its whitespace, bias, and
+  // per-object hierarchy are turned into concrete geometry + type emphasis
+  // here, so every semantic decision visibly changes the rendered slide.
+  const directionBySlide = new Map(
+    artDirection.directions.map((direction) => [direction.slideId, direction]),
   );
+  const resolvedSlides = composition.map((c) => {
+    const direction = directionBySlide.get(c.slide.id);
+    if (!direction) {
+      return materializeSlide(
+        c.slide,
+        c.layout.id,
+        c.result,
+        design.tokens,
+        registry,
+      );
+    }
+    const directed = applyArtDirection(c.result, direction, design.tokens);
+    return materializeSlide(
+      c.slide,
+      c.layout.id,
+      directed.result,
+      design.tokens,
+      registry,
+      directed.emphasis,
+    );
+  });
 
   let resolved: ResolvedIR = {
     version: "2.0.0",
