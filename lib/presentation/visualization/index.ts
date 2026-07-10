@@ -1,7 +1,13 @@
 export { visualizeSlides } from "./engine";
 export { buildSemanticProfile } from "./profile";
 export { BUILTIN_VISUALIZATION_PRIMITIVES } from "./primitives";
-export { VisualizationRegistry, createDefaultVisualizationRegistry, defaultVisualizationRegistry } from "./registry";
+export {
+  VisualizationRegistry,
+  createDefaultVisualizationRegistry,
+  defaultVisualizationRegistry,
+  defaultVisualizationPluginCatalog,
+} from "./registry";
+export * from "../visualizations";
 export type {
   PrimitiveBuildResult,
   SemanticProfile,
