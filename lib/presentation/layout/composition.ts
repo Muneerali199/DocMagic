@@ -19,7 +19,7 @@
 import type { SemanticSlide } from "../ir/schema";
 import type { DesignTokens } from "../design/tokens";
 import { rankLayouts } from "./intelligence";
-import type { SlideLayout, LayoutResult } from "./library";
+import type { SlideLayout, LayoutResult, LayoutMetadata } from "./library";
 import type { SceneAssignment } from "../scene/types";
 import type { CompositionPlan, CompositionRhythm } from "../composer/types";
 
@@ -113,7 +113,10 @@ function compositionAffinity(
 
   if (meta.visualRhythm === wantRhythm) bonus += 8;
   if (meta.emphasis === wantEmphasis) bonus += 6;
-  bonus += Math.max(0, 5 - Math.abs(meta.whitespace - plan.whitespaceDensity) * 10);
+  bonus += Math.max(
+    0,
+    5 - Math.abs(meta.whitespace - plan.whitespaceDensity) * 10,
+  );
   bonus += Math.max(0, 4 - Math.abs(meta.hierarchy - plan.hierarchyLevel) * 8);
   bonus += Math.max(0, 3 - Math.abs(meta.imageRatio - plan.imagePriority) * 6);
 
