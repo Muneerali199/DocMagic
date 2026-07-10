@@ -111,23 +111,31 @@ function compositionAffinity(
   const wantEmphasis = FOCAL_EMPHASIS[plan.focal] ?? "balanced";
   let bonus = 0;
 
-  if (meta.visualRhythm === wantRhythm) bonus += 8;
-  if (meta.emphasis === wantEmphasis) bonus += 6;
+  if (meta.visualRhythm === wantRhythm) bonus += 10;
+  if (meta.emphasis === wantEmphasis) bonus += 7;
   bonus += Math.max(
     0,
-    5 - Math.abs(meta.whitespace - plan.whitespaceDensity) * 10,
+    6 - Math.abs(meta.whitespace - plan.whitespaceDensity) * 12,
   );
-  bonus += Math.max(0, 4 - Math.abs(meta.hierarchy - plan.hierarchyLevel) * 8);
+  bonus += Math.max(0, 6 - Math.abs(meta.hierarchy - plan.hierarchyLevel) * 10);
   bonus += Math.max(0, 3 - Math.abs(meta.imageRatio - plan.imagePriority) * 6);
 
   // Break up "grids of reusable cards": if the composition wants a focal,
   // split, flowing or radial structure, a uniform grid is actively wrong.
-  if (plan.visualRhythm !== "grid" && meta.visualRhythm === "grid") bonus -= 9;
+  if (plan.visualRhythm !== "grid" && meta.visualRhythm === "grid") bonus -= 12;
+
+  // The Art Director raises hierarchyLevel for its single-focal-point slides;
+  // reward layouts that can actually deliver a strong focal point and punish
+  // flat, egalitarian structures when a dominant focus was directed.
+  if (plan.hierarchyLevel >= 0.75) {
+    if (meta.hierarchy >= 0.7) bonus += 6;
+    else if (meta.hierarchy <= 0.5) bonus -= 5;
+  }
 
   // Reserve space for diagrams — never funnel structural content into a grid.
   if (plan.diagramPriority >= 0.6) {
-    if (meta.emphasis === "structure") bonus += 6;
-    if (meta.visualRhythm === "grid") bonus -= 6;
+    if (meta.emphasis === "structure") bonus += 7;
+    if (meta.visualRhythm === "grid") bonus -= 8;
   }
 
   // Dominant-metric intent wants a strong hierarchy, not equal-size cards.
@@ -135,8 +143,8 @@ function compositionAffinity(
     plan.metricEmphasis === "dominant-one" ||
     plan.metricEmphasis === "hero-plus-support"
   ) {
-    if (meta.hierarchy >= 0.7) bonus += 5;
-    if (meta.visualRhythm === "grid") bonus -= 5;
+    if (meta.hierarchy >= 0.7) bonus += 6;
+    if (meta.visualRhythm === "grid") bonus -= 6;
   }
 
   // True comparison compositions favour asymmetric/column structure.
@@ -176,8 +184,10 @@ export function composeDeck(
     ranked.forEach((cand, idx) => {
       // Never let composition pressure push a slide onto a structurally
       // wrong layout: only the top candidates within a sane score band
-      // are eligible for substitution.
-      if (idx > 0 && ranked[0].score - cand.score > 18) return;
+      // are eligible for substitution. The band is wide enough that the Art
+      // Director's directed intent can decisively swap layouts, but not so
+      // wide it selects a semantically unsuitable structure.
+      if (idx > 0 && ranked[0].score - cand.score > 24) return;
 
       // Prefer the richer Presentation Composer intent when available;
       // fall back to the coarser scene-variant affinity otherwise.
