@@ -27,6 +27,8 @@ import { composeScenes } from "./scene/engine";
 import type { SceneAssignment } from "./scene/types";
 import { composePresentation } from "./composer/composer";
 import type { CompositionPlan } from "./composer/types";
+import { visualizeSlides } from "./visualization/engine";
+import type { VisualizationAssignment } from "./visualization/types";
 import { materializeSlide } from "./layout/materialize";
 import { validateAndRepair } from "./validation/engine";
 import { runOptimizationPipeline } from "./optimization/pipeline";
@@ -96,6 +98,8 @@ export interface GenerateResult {
   sceneAssignments: SceneAssignment[];
   /** Presentation Composer output (per-slide composition intent, no geometry) */
   compositionPlans: CompositionPlan[];
+  /** Semantic Visualization Engine output (native, editable, no geometry) */
+  visualizationAssignments: VisualizationAssignment[];
 }
 
 /** Attach the best-ranked asset to every semantic image element. */
@@ -178,9 +182,24 @@ export async function compileSemanticIR(
   const composition2 = composePresentation(semantic.slides, sceneAssignments);
   const compositionPlans = composition2.plans;
 
+  progress("visualization", "Inferring semantic visualization primitives");
+  const visualization = visualizeSlides(
+    semantic.slides,
+    sceneAssignments,
+    compositionPlans,
+  );
+  const visualSemantic: SemanticIR = {
+    ...semantic,
+    slides: visualization.slides,
+  };
+  progress(
+    "visualization",
+    `Converted ${visualization.assignments.filter((assignment) => assignment.primitiveId !== "generic-native").length} slides to native visualizations`,
+  );
+
   progress("compose", "Composing deck (layout diversity + rhythm)");
   const composition = composeDeck(
-    semantic.slides,
+    visualSemantic.slides,
     design.tokens,
     sceneAssignments,
     compositionPlans,
@@ -279,7 +298,7 @@ export async function compileSemanticIR(
   }
 
   return {
-    semantic,
+    semantic: visualSemantic,
     resolved,
     benchmark,
     designCritique,
@@ -290,6 +309,7 @@ export async function compileSemanticIR(
     passesRun: optimization.passesRun,
     sceneAssignments,
     compositionPlans,
+    visualizationAssignments: visualization.assignments,
   };
 }
 
