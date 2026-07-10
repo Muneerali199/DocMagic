@@ -20,6 +20,7 @@ import type { SemanticSlide } from "../ir/schema";
 import type { DesignTokens } from "../design/tokens";
 import { rankLayouts } from "./intelligence";
 import type { SlideLayout, LayoutResult } from "./library";
+import type { SceneAssignment } from "../scene/types";
 
 export interface ComposedSlide {
   slide: SemanticSlide;
@@ -48,9 +49,32 @@ const PENALTY = {
 /** Slide types where structure is dictated by content, not variety. */
 const EXEMPT_TYPES = new Set(["hero", "section", "quote"]);
 
+/**
+ * Scene affinity bonus — when the Scene Composition Engine has assigned a
+ * composition variant to a slide, layouts that harmonize with the variant's
+ * semantic direction (rhythm, emphasis, whitespace, hierarchy) get a small
+ * deterministic bonus. Semantics still dominate: the bonus never outweighs
+ * a structurally-wrong layout's deficit.
+ */
+function sceneAffinity(
+  layout: SlideLayout,
+  assignment: SceneAssignment | undefined,
+): number {
+  if (!assignment) return 0;
+  const v = assignment.variant;
+  const meta = layout.metadata;
+  let bonus = 0;
+  if (meta.visualRhythm === v.rhythmAffinity) bonus += 8;
+  if (meta.emphasis === v.emphasisAffinity) bonus += 6;
+  bonus += Math.max(0, 5 - Math.abs(meta.whitespace - v.whitespace) * 10);
+  bonus += Math.max(0, 4 - Math.abs(meta.hierarchy - v.hierarchy) * 8);
+  return bonus;
+}
+
 export function composeDeck(
   slides: SemanticSlide[],
   tokens: DesignTokens,
+  scenes?: SceneAssignment[],
 ): ComposedSlide[] {
   const composed: ComposedSlide[] = [];
   const usage = new Map<string, number>();
@@ -59,6 +83,7 @@ export function composeDeck(
     const ranked = rankLayouts(slide);
     const prev = composed[i - 1];
     const prev2 = composed[i - 2];
+    const assignment = scenes?.find((s) => s.slideId === slide.id);
 
     let bestIdx = 0;
     let bestFinal = Number.NEGATIVE_INFINITY;
@@ -69,7 +94,7 @@ export function composeDeck(
       // are eligible for substitution.
       if (idx > 0 && ranked[0].score - cand.score > 18) return;
 
-      let final = cand.score;
+      let final = cand.score + sceneAffinity(cand.layout, assignment);
 
       if (!EXEMPT_TYPES.has(slide.type)) {
         if (prev && cand.layout.id === prev.layout.id)

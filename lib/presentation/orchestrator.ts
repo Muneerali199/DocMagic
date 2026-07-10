@@ -23,6 +23,8 @@ import { resolveDesignWithDirector } from "./design/engine";
 import { applyCraftLayer } from "./design/craft";
 import type { DesignTokens } from "./design/tokens";
 import { composeDeck } from "./layout/composition";
+import { composeScenes } from "./scene/engine";
+import type { SceneAssignment } from "./scene/types";
 import { materializeSlide } from "./layout/materialize";
 import { validateAndRepair } from "./validation/engine";
 import { runOptimizationPipeline } from "./optimization/pipeline";
@@ -88,6 +90,8 @@ export interface GenerateResult {
   repairsApplied?: string[];
   designLanguage: string;
   passesRun: string[];
+  /** Scene Composition Engine output (semantic composition metadata) */
+  sceneAssignments: SceneAssignment[];
 }
 
 /** Attach the best-ranked asset to every semantic image element. */
@@ -163,8 +167,15 @@ export async function compileSemanticIR(
   progress("assets", "Selecting imagery");
   const semantic = await attachAssets(diagramEnriched.ir, design.tokens);
 
+  progress("scene", "Selecting presentation scenes");
+  const sceneAssignments = composeScenes(semantic.slides);
+
   progress("compose", "Composing deck (layout diversity + rhythm)");
-  const composition = composeDeck(semantic.slides, design.tokens);
+  const composition = composeDeck(
+    semantic.slides,
+    design.tokens,
+    sceneAssignments,
+  );
   const resolvedSlides = composition.map((c) =>
     materializeSlide(c.slide, c.layout.id, c.result, design.tokens, registry),
   );
@@ -268,6 +279,7 @@ export async function compileSemanticIR(
     repairsApplied: repairsApplied.length > 0 ? repairsApplied : undefined,
     designLanguage: design.language.id,
     passesRun: optimization.passesRun,
+    sceneAssignments,
   };
 }
 
