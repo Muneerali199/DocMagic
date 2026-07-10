@@ -29,6 +29,8 @@ import { composePresentation } from "./composer/composer";
 import type { CompositionPlan } from "./composer/types";
 import { visualizeSlides } from "./visualization/engine";
 import type { VisualizationAssignment } from "./visualization/types";
+import { directPresentation } from "./art-director/director";
+import type { ArtDirection } from "./art-director/types";
 import { materializeSlide } from "./layout/materialize";
 import { validateAndRepair } from "./validation/engine";
 import { runOptimizationPipeline } from "./optimization/pipeline";
@@ -100,6 +102,8 @@ export interface GenerateResult {
   compositionPlans: CompositionPlan[];
   /** Semantic Visualization Engine output (native, editable, no geometry) */
   visualizationAssignments: VisualizationAssignment[];
+  /** Presentation Art Director output (emotional intent, hierarchy, rhythm) */
+  artDirections: ArtDirection[];
 }
 
 /** Attach the best-ranked asset to every semantic image element. */
@@ -197,12 +201,24 @@ export async function compileSemanticIR(
     `Converted ${visualization.assignments.filter((assignment) => assignment.primitiveId !== "generic-native").length} slides to native visualizations`,
   );
 
+  progress("art-director", "Art-directing emotional intent and hierarchy");
+  const artDirection = directPresentation(
+    visualSemantic.slides,
+    sceneAssignments,
+    compositionPlans,
+  );
+  const directedPlans = artDirection.plans;
+  progress(
+    "art-director",
+    `Directed ${artDirection.directions.length} slides (one focal point each, alternating rhythm)`,
+  );
+
   progress("compose", "Composing deck (layout diversity + rhythm)");
   const composition = composeDeck(
     visualSemantic.slides,
     design.tokens,
     sceneAssignments,
-    compositionPlans,
+    directedPlans,
   );
   const resolvedSlides = composition.map((c) =>
     materializeSlide(c.slide, c.layout.id, c.result, design.tokens, registry),
@@ -310,6 +326,7 @@ export async function compileSemanticIR(
     sceneAssignments,
     compositionPlans,
     visualizationAssignments: visualization.assignments,
+    artDirections: artDirection.directions,
   };
 }
 
