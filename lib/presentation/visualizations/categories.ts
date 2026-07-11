@@ -16,6 +16,7 @@ import type {
   VisualizationCategory,
   VisualizationPlugin,
 } from "./types";
+import { selectDomainComponent } from "../components/domain-select";
 
 interface CategorySpec {
   category: VisualizationCategory;
@@ -253,6 +254,30 @@ const SPECS: CategorySpec[] = [
   },
 ];
 
+/**
+ * Attach the Domain Component directive to a build result's blueprint so the
+ * materializer composes native product chrome (editor / terminal / dashboard /
+ * phone / cloud topology …) instead of generic shapes. No-op when the slide has
+ * no strong domain signal.
+ */
+function withDomainComponent(
+  context: VisualizationContext,
+  result: PrimitiveBuildResult,
+): PrimitiveBuildResult {
+  const selection = selectDomainComponent(context.slide);
+  if (!selection) return result;
+  return {
+    ...result,
+    blueprint: {
+      ...result.blueprint,
+      domainComponent: {
+        componentId: selection.componentId,
+        domain: selection.domain,
+      },
+    },
+  };
+}
+
 function composeNative(
   spec: CategorySpec,
   context: VisualizationContext,
@@ -264,12 +289,9 @@ function composeNative(
     (spec.kinds.length === 1 ||
       preserve(context.slide, spec.kinds).length === 0)
   )
-    return diagramTreatment(
+    return withDomainComponent(
       context,
-      id,
-      spec.family,
-      variant,
-      spec.diagramType,
+      diagramTreatment(context, id, spec.family, variant, spec.diagramType),
     );
   const result = nativeTreatment(
     context,
@@ -279,7 +301,7 @@ function composeNative(
     `${spec.category}-treatment`,
   );
   if (result.elements.length > titleElements(context.slide).length)
-    return result;
+    return withDomainComponent(context, result);
   const fallback = {
     id: stableVisualId(context.slide.id, id, "callout"),
     kind: "callout" as const,
@@ -288,14 +310,14 @@ function composeNative(
     content: context.slide.intent,
     emphasis: "primary" as const,
   };
-  return {
+  return withDomainComponent(context, {
     ...result,
     elements: [...result.elements, fallback],
     blueprint: {
       ...result.blueprint,
       nativeKinds: [...result.blueprint.nativeKinds, "callout"],
     },
-  };
+  });
 }
 
 function pluginFor(

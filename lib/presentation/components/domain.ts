@@ -1872,7 +1872,7 @@ export function renderCloudArchitecture(
 function groupNodes(
   spec: DomainSpec,
 ): Array<{ name: string; nodes: DomainNode[] }> {
-  const nodes = spec.nodes.length
+  const nodes: DomainNode[] = spec.nodes.length
     ? spec.nodes
     : spec.bullets.length
       ? spec.bullets.map((label) => ({ label }))

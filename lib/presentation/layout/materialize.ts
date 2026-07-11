@@ -25,6 +25,12 @@ import {
   renderFeatureGrid,
   renderTestimonial,
 } from "../components/library";
+import { renderDomainComponent } from "../components/domain";
+import {
+  buildDomainSpec,
+  isChromeTitleRole,
+  type DomainSelection,
+} from "../components/domain-select";
 
 function card(tokens: DesignTokens) {
   return {
@@ -395,6 +401,7 @@ export function materializeSlide(
   tokens: DesignTokens,
   registry: PluginRegistry,
   artEmphasis?: Map<string, ArtEmphasisEntry>,
+  domainSelection?: DomainSelection,
 ): ResolvedSlide {
   const centered =
     slide.type === "hero" ||
@@ -442,6 +449,47 @@ export function materializeSlide(
       );
       consumed.add(quoteEl.id);
       if (attributionEl) consumed.add(attributionEl.id);
+    }
+  }
+
+  // Domain Component composition: when the visualization engine tagged this
+  // slide with a domain component (e.g. a VS Code editor, terminal, GitHub PR,
+  // AI model pipeline, SaaS dashboard, phone frame, cloud topology), render
+  // that native product chrome into the slide's visual region instead of
+  // laying out generic shapes/text. Title/kicker stay as native slide text;
+  // the component absorbs the remaining body elements (code, tables, metrics,
+  // bullets, diagram nodes) and is fully editable + theme-aware.
+  if (domainSelection && slide.type !== "quote") {
+    const visualEls = slide.elements.filter((el) => {
+      if (consumed.has(el.id)) return false;
+      if (!frameById.get(el.id)) return false;
+      if (el.kind === "text" && isChromeTitleRole(el.role)) return false;
+      return true;
+    });
+    const frames = visualEls
+      .map((el) => frameById.get(el.id))
+      .filter((f): f is Frame => Boolean(f));
+    if (frames.length > 0) {
+      const region: Frame = {
+        x: Math.min(...frames.map((f) => f.x)),
+        y: Math.min(...frames.map((f) => f.y)),
+        w: 0,
+        h: 0,
+      };
+      region.w = Math.max(...frames.map((f) => f.x + f.w)) - region.x;
+      region.h = Math.max(...frames.map((f) => f.y + f.h)) - region.y;
+
+      const spec = buildDomainSpec(slide, domainSelection);
+      const produced = renderDomainComponent(
+        domainSelection.componentId,
+        spec,
+        region,
+        tokens,
+      );
+      if (produced && produced.length > 0) {
+        elements.push(...produced);
+        for (const el of visualEls) consumed.add(el.id);
+      }
     }
   }
 
