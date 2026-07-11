@@ -828,8 +828,65 @@ export function renderCveAlert(
       },
     ),
   );
-  // CVSS score block
+  // Metadata grid: fills the vertical space between the header and the score
+  // block so the advisory card reads like a real CVE detail view rather than a
+  // sparse card with a big empty middle.
+  const metaTop = frame.y + pad + 78;
   const scoreY = frame.y + frame.h - pad - 58;
+  const metaGap = 12;
+  const metaW = frame.w - pad * 2 - 6;
+  const attackVector =
+    matchPattern(spec, /\b(network|remote|local|physical|adjacent)\b/i) ??
+    "Network";
+  const affected =
+    spec.nodes[0]?.label ??
+    matchPattern(spec, /[\w.-]+@[\w.-]+|[\w-]+\/[\w-]+/) ??
+    "app-core / session handler";
+  const metaRows: Array<[string, string]> = [
+    ["Affected component", affected],
+    ["Attack vector", attackVector],
+    ["Vector string", `CVSS:3.1 / severity ${sevWord}`],
+    ["Remediation", spec.bullets[1] ?? "Patch available — upgrade recommended"],
+  ];
+  const metaAvail = scoreY - metaTop - 16;
+  if (metaAvail > 40) {
+    const rowH = Math.min(
+      52,
+      Math.max(
+        28,
+        (metaAvail - metaGap * (metaRows.length - 1)) / metaRows.length,
+      ),
+    );
+    metaRows.forEach(([k, v], i) => {
+      const ry = metaTop + i * (rowH + metaGap);
+      if (ry + rowH > scoreY - 12) return;
+      out.push(
+        rect(
+          `${b}:metarow${i}`,
+          { x, y: ry, w: metaW, h: rowH },
+          tokens.colors.surfaceAlt,
+          0,
+          { radius: 6 },
+        ),
+        text(
+          `${b}:metakey${i}`,
+          { x: x + 12, y: ry + rowH / 2 - 8, w: 180, h: 16 },
+          k,
+          {
+            ...labelStyle(tokens, tokens.colors.mutedForeground, 11, 600),
+            textTransform: "uppercase",
+          },
+        ),
+        text(
+          `${b}:metaval${i}`,
+          { x: x + 200, y: ry + rowH / 2 - 9, w: metaW - 212, h: 18 },
+          v,
+          monoStyle(tokens, tokens.colors.foreground, 13, 500),
+        ),
+      );
+    });
+  }
+  // CVSS score block
   out.push(
     rect(
       `${b}:scorebox`,

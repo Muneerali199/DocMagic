@@ -122,22 +122,44 @@ interface Signals {
 
 function isShellLang(langs: string[]): boolean {
   return langs.some((l) =>
-    ["bash", "sh", "shell", "console", "zsh", "shellscript", "powershell"].includes(l),
+    [
+      "bash",
+      "sh",
+      "shell",
+      "console",
+      "zsh",
+      "shellscript",
+      "powershell",
+    ].includes(l),
   );
 }
 
 function selectSecurity(s: Signals): DomainComponentId {
-  if (has(s.text, /\bcve-\d|\bcve\b|vulnerabilit|zero.?day/)) return "cve-alert";
+  // Explicit product-surface intents win over the generic "cve"/"vulnerability"
+  // keyword, which shows up on almost every security slide. Otherwise a PR-
+  // review or terminal slide that merely mentions a CVE would collapse into a
+  // static alert card.
+  const shellSignal =
+    isShellLang(s.codeLangs) ||
+    has(s.text, /terminal|command line|\bcli\b|shell prompt|\$\s/);
+  const prSignal = has(
+    s.text,
+    /pull request|\bpr\b|code review|diff|merge|reviewer|approv/,
+  );
+  if (prSignal) return "git-pr";
   if (has(s.text, /owasp|top 10|top ten/)) return "owasp-badge";
-  if (s.hasCode) {
-    if (has(s.text, /pull request|\bpr\b|diff|review|merge|patch/)) return "git-pr";
-    if (isShellLang(s.codeLangs) || has(s.text, /terminal|command line|\bcli\b|shell/))
-      return "terminal";
-    return "code-editor";
-  }
-  if (has(s.text, /ci\/?cd|pipeline|build|deploy|stage|workflow|github actions/))
+  if (shellSignal) return "terminal";
+  if (
+    has(
+      s.text,
+      /ci\/?cd|pipeline|build stage|deploy|workflow|github actions/,
+    ) &&
+    !s.hasCode
+  )
     return "cicd-pipeline";
-  if (has(s.text, /terminal|command line|\bcli\b/)) return "terminal";
+  if (has(s.text, /\bcve-\d|\bcve\b|vulnerabilit|zero.?day|advisory/))
+    return "cve-alert";
+  if (s.hasCode) return "code-editor";
   return "code-editor";
 }
 
@@ -146,16 +168,24 @@ function selectAi(s: Signals): DomainComponentId {
     return "attention-block";
   if (has(s.text, /gpu|tpu|cluster|accelerator|compute node|h100|a100/))
     return "gpu-cluster";
-  if (has(s.text, /token|vocabulary|context window|sequence/)) return "token-flow";
+  if (has(s.text, /token|vocabulary|context window|sequence/))
+    return "token-flow";
   if (s.hasCode) return "code-editor";
   return "model-pipeline";
 }
 
-function selectDataFinanceSaas(s: Signals, domain: DomainId): DomainComponentId {
+function selectDataFinanceSaas(
+  s: Signals,
+  domain: DomainId,
+): DomainComponentId {
   if (s.hasCode && isShellLang(s.codeLangs)) return "terminal";
   if (s.hasCode) return "code-editor";
-  if (has(s.text, /browser|web app|website|landing|url|https?:/)) return "browser-window";
-  if (s.slideType === "dashboard" || has(s.text, /dashboard|admin|console|workspace/))
+  if (has(s.text, /browser|web app|website|landing|url|https?:/))
+    return "browser-window";
+  if (
+    s.slideType === "dashboard" ||
+    has(s.text, /dashboard|admin|console|workspace/)
+  )
     return "dashboard";
   if (s.hasTable && !s.hasChart) return "data-table";
   if (s.metricCount >= 1 || s.slideType === "kpi") {
@@ -169,7 +199,12 @@ function selectDataFinanceSaas(s: Signals, domain: DomainId): DomainComponentId 
 
 function selectCloud(s: Signals): DomainComponentId | null {
   if (s.hasCode && isShellLang(s.codeLangs)) return "terminal";
-  if (has(s.text, /architecture|topology|diagram|service|region|infrastructure|microservice|deploy/))
+  if (
+    has(
+      s.text,
+      /architecture|topology|diagram|service|region|infrastructure|microservice|deploy/,
+    )
+  )
     return "cloud-architecture";
   if (s.hasDiagram) return "cloud-architecture";
   if (s.metricCount >= 1) return "dashboard";
@@ -258,7 +293,8 @@ export function buildDomainSpec(
   for (const el of slide.elements) {
     if (el.kind === "text") {
       if (el.items?.length) bullets.push(...el.items);
-      else if (el.role === "bullet" || el.role === "body") bullets.push(el.content);
+      else if (el.role === "bullet" || el.role === "body")
+        bullets.push(el.content);
     } else if (el.kind === "callout") {
       bullets.push(el.content);
     }
@@ -305,11 +341,17 @@ export function buildDomainSpec(
     title: titleEl?.content ?? subtitleEl?.content,
     intent: slide.intent,
     code: codeEl
-      ? { language: codeEl.language, code: codeEl.code, caption: codeEl.caption }
+      ? {
+          language: codeEl.language,
+          code: codeEl.code,
+          caption: codeEl.caption,
+        }
       : undefined,
     bullets,
     metrics,
-    table: tableEl ? { headers: tableEl.headers, rows: tableEl.rows } : undefined,
+    table: tableEl
+      ? { headers: tableEl.headers, rows: tableEl.rows }
+      : undefined,
     chart: chartEl
       ? {
           chartType: chartEl.chartType,
