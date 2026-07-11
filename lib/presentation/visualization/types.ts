@@ -69,6 +69,16 @@ export interface VisualizationBlueprint {
   editable: true;
   surface?: "dashboard" | "terminal" | "editor" | "mobile" | "browser";
   chrome?: string[];
+  /**
+   * When set, the materializer composes a native Domain Component (see
+   * lib/presentation/components/domain.ts) for this slide instead of laying out
+   * generic shapes/text — e.g. a VS Code editor, terminal, GitHub PR, AI model
+   * pipeline, SaaS dashboard, or phone frame.
+   */
+  domainComponent?: {
+    componentId: string;
+    domain: string;
+  };
 }
 
 export interface VisualizationAssignment {
