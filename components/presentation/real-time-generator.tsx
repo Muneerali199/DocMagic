@@ -1,6 +1,9 @@
 "use client";
 import { logger } from "@/lib/logger";
-import { requestNotificationPermission, showDocumentNotification } from "@/lib/notifications";
+import {
+  requestNotificationPermission,
+  showDocumentNotification,
+} from "@/lib/notifications";
 
 import {
   useState,
@@ -11,6 +14,7 @@ import {
 } from "react";
 import { exportPremiumPresentation } from "@/lib/premium-presentation-export";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizeMarkup } from "@/lib/sanitize-markup";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Loader2,
@@ -172,13 +176,6 @@ function normalizeVisualType(value: unknown): CodeVisualType | "" {
     return "chart_data";
 
   return "";
-}
-
-function sanitizeMarkup(markup: string): string {
-  return markup
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    .replace(/\son[a-z]+=(["']).*?\1/gi, "")
-    .replace(/javascript:/gi, "");
 }
 
 function normalizeMermaidMarkup(markup: string): string {
@@ -1210,7 +1207,7 @@ export default function RealTimeGenerator() {
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [isGeneratingOutline]);
+  }, [isGeneratingOutline, loadingSteps.length]);
 
   // Export state
   const [isExporting, setIsExporting] = useState(false);
@@ -1515,6 +1512,11 @@ export default function RealTimeGenerator() {
       }, 2000); // Small delay to ensure state is settled
       return () => clearTimeout(timer);
     }
+    // handleSavePresentation is intentionally omitted: it's redefined every
+    // render (not memoized), so including it would refire the auto-save
+    // timer on every render instead of only when the generation actually
+    // completes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStreaming, slides.length, presentationId, view]);
 
   useEffect(() => {
@@ -1757,9 +1759,8 @@ export default function RealTimeGenerator() {
       // Show push notification
       showDocumentNotification("🎉 Presentation Ready!", {
         body: `${normalizedSlides.length} slides created successfully. Click to view!`,
-        data: { url: window.location.pathname }
+        data: { url: window.location.pathname },
       }).catch(console.error);
-
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to generate presentation";
@@ -1770,7 +1771,7 @@ export default function RealTimeGenerator() {
       // Show failure notification
       showDocumentNotification("❌ Generation Failed", {
         body: "Failed to generate your presentation. Please try again.",
-        data: { url: window.location.pathname }
+        data: { url: window.location.pathname },
       }).catch(console.error);
     } finally {
       setIsStreaming(false);
@@ -2015,15 +2016,15 @@ export default function RealTimeGenerator() {
       <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-b border-border z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div 
-              className="flex items-center gap-3 cursor-pointer group" 
-              onClick={() => !isStreaming && setView('dashboard')}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => !isStreaming && setView("dashboard")}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  if (!isStreaming) setView('dashboard');
+                  if (!isStreaming) setView("dashboard");
                 }
               }}
               aria-label="Go to dashboard"
@@ -4770,6 +4771,7 @@ export function SlideCard({
                             className="absolute -inset-2 rounded-3xl blur-2xl opacity-20 group-hover/image:opacity-40 transition-opacity"
                             style={{ backgroundColor: theme.colors.accent }}
                           />
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={slide.imageUrl}
                             alt={slide.title}
@@ -4843,6 +4845,7 @@ export function SlideCard({
                           className="absolute -inset-1 rounded-2xl blur-xl opacity-20 group-hover/image:opacity-35 transition-opacity"
                           style={{ backgroundColor: theme.colors.accent }}
                         />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={slide.imageUrl}
                           alt={slide.title}
@@ -4973,6 +4976,7 @@ export function SlideCard({
                           className="absolute -inset-1 rounded-2xl blur-xl opacity-20 group-hover/image:opacity-35 transition-opacity"
                           style={{ backgroundColor: theme.colors.accent }}
                         />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={slide.imageUrl}
                           alt={slide.title}
