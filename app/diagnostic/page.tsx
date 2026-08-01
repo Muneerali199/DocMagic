@@ -2,20 +2,6 @@ import { notFound } from 'next/navigation';
 import { createServer } from '@/lib/supabase/server';
 
 export default async function DiagnosticPage() {
- restrict-diagnostic-page
-
-    // Restrict diagnostic page in production
-  if (process.env.NODE_ENV === 'production') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-2xl font-bold">
-          Access Denied
-        </h1>
-      </div>
-    );
-  }
-  const supabase = createClient();
-
   const diagnosticsEnabled =
     process.env.NODE_ENV !== 'production' &&
     process.env.ENABLE_DIAGNOSTIC_PAGE === 'true';
@@ -24,7 +10,7 @@ export default async function DiagnosticPage() {
     notFound();
   }
 
- main
+  const supabase = await createServer();
 
   // Check if tables exist by trying to query them
   let tablesStatus = {
