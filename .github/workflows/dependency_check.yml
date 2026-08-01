@@ -97,10 +97,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .tsbuildinfo
-          key: ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.build.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          key: ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.json', 'tsconfig.build.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.build.json') }}-
-            ${{ runner.os }}-tsbuildinfo-
+            ${{ runner.os }}-tsbuildinfo-${{ hashFiles('tsconfig.json', 'tsconfig.build.json') }}-
 
       - name: Run Type Checking
         run: npm run typecheck

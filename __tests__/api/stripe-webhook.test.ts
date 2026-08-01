@@ -8,6 +8,7 @@ const getHeader = jest.fn();
 const createClient = jest.fn();
 const loggerError = jest.fn();
 const loggerInfo = jest.fn();
+const loggerWarn = jest.fn();
 
 jest.mock("@/lib/stripe", () => ({
   stripe: {
@@ -34,6 +35,7 @@ jest.mock("@/lib/logger", () => ({
   logger: {
     error: loggerError,
     info: loggerInfo,
+    warn: loggerWarn,
   },
 }));
 

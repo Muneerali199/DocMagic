@@ -15,21 +15,33 @@ export async function POST(req: Request) {
   const signature = headers().get("stripe-signature");
 
   if (!signature) {
+    logger.warn(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "Webhook request missing Stripe-Signature header"
+    );
     return NextResponse.json({ error: "No signature" }, { status: 400 });
+  }
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    logger.error(
+      { route: "app/api/webhooks/stripe/route.ts" },
+      "STRIPE_WEBHOOK_SECRET environment variable not configured"
+    );
+    return NextResponse.json(
+      { error: "Webhook configuration error" },
+      { status: 500 }
+    );
   }
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
-    );
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
     logger.error(
       { route: "app/api/webhooks/stripe/route.ts" },
-      "⚠️ Webhook signature verification failed:",
+      "Webhook signature verification failed:",
       err.message,
     );
     return NextResponse.json(
