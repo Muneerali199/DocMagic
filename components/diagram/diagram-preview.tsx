@@ -29,6 +29,7 @@ export function DiagramPreview({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
+  const [isLargeDiagram, setIsLargeDiagram] = useState(false);
 
   useEffect(() => {
     // Dynamically import mermaid to avoid SSR issues
@@ -53,12 +54,30 @@ export function DiagramPreview({
       return;
     }
 
+    // `mermaid.render()` is synchronous, CPU-bound SVG generation — it
+    // cannot be moved to a Web Worker because it depends on `document`,
+    // d3 selections, and DOM text-measurement APIs (getBBox,
+    // getComputedTextLength) that don't exist in a worker context, and
+    // mermaid has no official worker/offscreen mode. What we *can* do:
+    // - yield one frame so the "Rendering diagram..." overlay actually
+    //   paints before the freeze starts, instead of the tab looking dead
+    // - use a lighter layout for large diagrams (see isLargeDiagram below)
+    const LARGE_DIAGRAM_LINE_THRESHOLD = 50;
+
     const renderDiagram = async () => {
       setIsLoading(true);
       setError(null);
 
+      // Yield to the browser so the loading overlay paints before the
+      // heavy synchronous render call below blocks the main thread.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
       try {
         const mermaid = (await import("mermaid")).default;
+        const isLargeDiagram =
+          code.split("\n").filter((line) => line.trim().length > 0).length >
+          LARGE_DIAGRAM_LINE_THRESHOLD;
+        setIsLargeDiagram(isLargeDiagram);
         const styles = getComputedStyle(document.documentElement);
         const accent = themeColors?.accent || "#3b82f6";
         const background =
@@ -82,6 +101,15 @@ export function DiagramPreview({
           theme: "base",
           securityLevel: "loose",
           fontFamily: "Inter, system-ui, sans-serif",
+          // mermaid 11's node-shape label rendering reads `htmlLabels` from
+          // the top level of the config, not `flowchart.htmlLabels` (that
+          // nested path is deprecated and, for node labels specifically,
+          // has no fallback to the top-level value - only edge labels fall
+          // back via getEffectiveHtmlLabels()). Verified directly against
+          // mermaid@11.16.0: nesting this under `flowchart` is a silent
+          // no-op, foreignObject-based labels are still emitted regardless
+          // of the nested value. Must be set here to actually take effect.
+          htmlLabels: !isLargeDiagram,
           themeVariables: {
             primaryColor: card,
             primaryTextColor: foreground,
@@ -119,7 +147,6 @@ export function DiagramPreview({
           },
           flowchart: {
             useMaxWidth: false,
-            htmlLabels: true,
             curve: "basis",
             padding: 20,
             nodeSpacing: 50,
@@ -214,13 +241,18 @@ export function DiagramPreview({
               textEl.style.fontFamily = '\"Segoe UI\", \"Roboto\", sans-serif';
             });
 
-            // Enhance node styling with subtle shadows
-            const nodes = svgElement.querySelectorAll(
-              '[data-type="node"], .node, [class*="node"]',
-            );
-            nodes.forEach((node: any) => {
-              node.style.filter = "drop-shadow(0 2px 4px rgba(0,0,0,0.1))";
-            });
+            // Enhance node styling with subtle shadows. Skipped for large
+            // diagrams: per-node drop-shadow filters are paint-expensive
+            // and the effect is barely visible once dozens of nodes are
+            // on screen at once.
+            if (!isLargeDiagram) {
+              const nodes = svgElement.querySelectorAll(
+                '[data-type="node"], .node, [class*="node"]',
+              );
+              nodes.forEach((node: any) => {
+                node.style.filter = "drop-shadow(0 2px 4px rgba(0,0,0,0.1))";
+              });
+            }
             const shapes = svgElement.querySelectorAll(
               "rect, circle, ellipse, polygon, path",
             );
@@ -302,11 +334,18 @@ export function DiagramPreview({
             backgroundColor: `${themeColors?.background || "#ffffff"}cc`,
           }}
         >
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-sm text-muted-foreground">
-              Rendering diagram...
-            </span>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              <span className="text-sm text-muted-foreground">
+                Rendering diagram...
+              </span>
+            </div>
+            {isLargeDiagram && (
+              <span className="text-xs text-muted-foreground">
+                Large diagram detected — this may take a few seconds
+              </span>
+            )}
           </div>
         </div>
       )}
