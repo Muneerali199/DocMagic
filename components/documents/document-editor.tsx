@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
@@ -78,6 +78,7 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
   const [docData, setDocData] = useState<DocData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isImproving, setIsImproving] = useState(false);
   const [isExportingLatex, setIsExportingLatex] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -145,23 +146,85 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
     }
   };
 
+  const performSave = useCallback(async (
+    title: string,
+    sections: DocumentSection[],
+    edited: Record<string, string>
+  ) => {
+    if (!docData) return;
+
+    try {
+      const finalSections = sections.map(section => ({
+        ...section,
+        content: edited[section.id] || section.content
+      }));
+
+      const updatedMetadata = {
+        ...docData.metadata,
+        sections: finalSections
+      };
+
+      const response = await fetch(`/api/documents/${documentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          content: docData.content,
+          metadata: updatedMetadata
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save document');
+      }
+
+      const updatedDoc = await response.json();
+      setDocData(updatedDoc);
+      return true;
+    } catch (error) {
+      console.error('Error saving document:', error);
+      return false;
+    }
+  }, [docData, documentId]);
+
+  const debouncedAutoSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    let isScheduled = false;
+
+    return async () => {
+      if (isScheduled) {
+        clearTimeout(timeoutId);
+      }
+
+      isScheduled = true;
+      timeoutId = setTimeout(async () => {
+        setIsAutoSaving(true);
+        const success = await performSave(editedTitle, outlineSections, editedSections);
+        setIsAutoSaving(false);
+        isScheduled = false;
+        if (success) {
+          setEditedSections({});
+        }
+      }, 2000);
+    };
+  }, [editedTitle, outlineSections, editedSections, performSave]);
+
   const handleSave = async () => {
     if (!docData) return;
-    
+
     try {
       setIsSaving(true);
-      
-      // Merge edited sections with outline sections
+
       const finalSections = outlineSections.map(section => ({
         ...section,
         content: editedSections[section.id] || section.content
       }));
-      
-      const updatedMetadata = { 
+
+      const updatedMetadata = {
         ...docData.metadata,
         sections: finalSections
       };
-      
+
       const response = await fetch(`/api/documents/${documentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -171,14 +234,14 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
           metadata: updatedMetadata
         })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to save document');
       }
-      
+
       const updatedDoc = await response.json();
       setDocData(updatedDoc);
-      setEditedSections({}); // Clear edits after save
+      setEditedSections({});
       toast.success('Document saved successfully');
     } catch (error) {
       console.error('Error saving document:', error);
@@ -356,6 +419,7 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
       ...prev,
       [sectionId]: newContent
     }));
+    debouncedAutoSave();
   };
 
   // Outline editing functions
@@ -413,18 +477,21 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
   const handleMoveSection = (sectionId: string, direction: 'up' | 'down') => {
     const index = outlineSections.findIndex(s => s.id === sectionId);
     if (index === -1) return;
-    
+
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === outlineSections.length - 1) return;
-    
+
     const newSections = [...outlineSections];
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    // Swap sections
+
     [newSections[index], newSections[swapIndex]] = [newSections[swapIndex], newSections[index]];
-    
-    // Recalculate orders
+
     setOutlineSections(newSections.map((s, i) => ({ ...s, order: i + 1 })));
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setEditedTitle(newTitle);
+    debouncedAutoSave();
   };
 
   const hasChanges = Object.keys(editedSections).length > 0 || 
@@ -478,13 +545,13 @@ export function DocumentEditor({ documentId }: DocumentEditorProps) {
                 <div>
                   <Input
                     value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onChange={(e) => handleTitleChange(e.target.value)}
                     className="text-lg font-semibold border-none bg-transparent focus-visible:ring-0 px-0 w-auto min-w-[300px]"
                     placeholder="Document Title"
                   />
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Last edited {docData ? new Date(docData.updated_at).toLocaleDateString() : ''}
+                    {isAutoSaving ? 'Saving...' : `Last edited ${docData ? new Date(docData.updated_at).toLocaleDateString() : ''}`}
                   </p>
                 </div>
               </div>
