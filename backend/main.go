@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,10 +14,6 @@ import (
 const shutdownTimeout = 30 * time.Second
 
 func main() {
-	run()
-}
-
-func run() {
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      routes(),
@@ -37,7 +34,7 @@ func run() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-sigChan
-	log.Printf("Signal: %v - initiating shutdown", sig)
+	log.Printf("Signal received: %v", sig)
 
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
@@ -57,27 +54,13 @@ func routes() http.Handler {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, `{"status":"ok"}`)
 	})
 
-	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `{"ready":true}`)
-	})
-
-	mux.HandleFunc("/api/echo", func(w http.ResponseWriter, r *http.Request) {
-		msg := r.URL.Query().Get("msg")
-		if msg == "" {
-			msg = "empty"
-		}
-
+	mux.HandleFunc("/api/test", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(100 * time.Millisecond)
-
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"echo":"%s"}`, msg)
+		fmt.Fprint(w, `{"message":"success"}`)
 	})
 
 	return mux
