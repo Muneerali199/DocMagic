@@ -210,7 +210,7 @@ export function CollaborationPanel({
                       <AvatarFallback
                         style={{ backgroundColor: participant.color + "20" }}
                       >
-                        {participant.user_name.charAt(0).toUpperCase()}
+                        {participant.user_name[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>

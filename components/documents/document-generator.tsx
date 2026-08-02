@@ -280,7 +280,7 @@ export function DocumentGenerator() {
                     <SelectContent>
                       {input.options?.map((option) => (
                         <SelectItem key={option} value={option}>
-                          {option.charAt(0).toUpperCase() + option.slice(1)}
+                          {option[0].toUpperCase() + option.slice(1)}
                         </SelectItem>
                       ))}
                     </SelectContent>

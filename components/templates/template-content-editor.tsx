@@ -597,7 +597,7 @@ export function TemplateContentEditor({
                         >
                           {TEMPLATE_TYPES.map((type) => (
                             <option key={type} value={type}>
-                              {type.charAt(0).toUpperCase() + type.slice(1)}
+                              {type[0].toUpperCase() + type.slice(1)}
                             </option>
                           ))}
                         </select>

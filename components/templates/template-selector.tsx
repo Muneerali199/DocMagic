@@ -102,7 +102,7 @@ export function TemplateSelector({
                 size="sm"
                 onClick={() => setSelectedType(type)}
               >
-                {getTemplateTypeIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+                {getTemplateTypeIcon(type)} {type[0].toUpperCase() + type.slice(1)}
               </Button>
             ))}
           </div>

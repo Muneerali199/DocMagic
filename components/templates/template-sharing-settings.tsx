@@ -164,7 +164,7 @@ export function TemplateSharingSettings({ template, onClose }: TemplateSharingSe
               <Avatar className="h-8 w-8">
                 <AvatarImage src={template.user?.avatar_url} alt={template.user?.full_name} />
                 <AvatarFallback>
-                  {template.user?.full_name?.charAt(0) || 'U'}
+                  {template.user?.full_name?[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -195,7 +195,7 @@ export function TemplateSharingSettings({ template, onClose }: TemplateSharingSe
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={share.user?.avatar_url} alt={share.user?.full_name} />
                     <AvatarFallback>
-                      {share.user?.email?.charAt(0).toUpperCase() || 'U'}
+                      {share.user?.email?[0].toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
