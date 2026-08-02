@@ -397,7 +397,7 @@ export async function POST(request: Request) {
     const { getEnhancedImagePrompt } = await import('@/lib/presentation-styles');
     
     // Create enhanced image prompts from slide content
-    const imagePrompts = outlines.map((outline: any) => {
+    const imagePrompts = (outlines ?? []).map((outline: any) => {
       const slideType = outline.type || 'content';
       const title = outline.title || '';
       const content = outline.content || outline.bulletPoints?.join(', ') || '';
