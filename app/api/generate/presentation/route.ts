@@ -157,22 +157,4 @@ export async function POST(request: NextRequest) {
       .from('credit_usage_log')
       .insert({ user_id: user.id, action_type: 'presentation', credits_used: actualCreditCost, metadata: { pageCount: slides.length, prompt_length: prompt.length } })
       .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
-
-    return NextResponse.json({
-      slides,
-      credits: {
-        used: actualCreditCost,
-        remaining: calculateRemainingCredits(
-          userCredits.credits_total,
-          creditsUsedAfterRefund
-        )
-      }
-    });
-  } catch (error) {
-    logger.error({ route: 'app/api/generate/presentation/route.ts' }, 'Error generating presentation:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate presentation' },
-      { status: 500 }
-    );
-  }
-}
+      .catch(err => console.error(err))

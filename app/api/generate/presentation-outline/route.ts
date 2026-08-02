@@ -474,31 +474,4 @@ export async function POST(request: Request) {
         .from('credit_usage_log')
         .insert({ user_id: user.id, action_type: 'presentation', credits_used: actualCreditCost, metadata: { pageCount: enhancedOutlines.length, prompt_length: prompt.length } })
         .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
-    }
-
-    return NextResponse.json({
-      outlines: enhancedOutlines,
-      stats: {
-        totalSlides: enhancedOutlines.length,
-        withImages: enhancedOutlines.filter((o: any) => o.imageUrl).length,
-        withCharts: enhancedOutlines.filter((o: any) => o.chartData).length,
-      },
-      credits: {
-        used: hasUnlimitedCredits ? 0 : actualCreditCost,
-        remaining: hasUnlimitedCredits
-          ? Number.MAX_SAFE_INTEGER
-          : calculateRemainingCredits(
-            userCredits.credits_total,
-            creditsUsedAfter
-          )
-      }
-    });
-  } catch (error) {
-    logger.error({ route: 'app/api/generate/presentation-outline/route.ts' }, 'Error generating presentation outline:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate presentation outline', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
-  }
-}
-
+        .catch(err => console.error(err))
