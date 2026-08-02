@@ -80,7 +80,7 @@ export function TemplatePreview({
           <div className="flex items-center space-x-2">
             <Avatar className="h-5 w-5">
               <AvatarFallback>
-                {user?.name?.charAt(0) || 'U'}
+                {user?.name?[0] || 'U'}
               </AvatarFallback>
             </Avatar>
             <span>{user?.name || 'You'}</span>

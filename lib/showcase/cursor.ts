@@ -20,7 +20,7 @@ export function decodeCursor(cursor: string): { score: number; post_id: string }
     if (idx === -1) return null;
     const score   = parseFloat(raw.slice(0, idx));
     const post_id = raw.slice(idx + 1);
-    if (isNaN(score) || !post_id) return null;
+    if (Number.isNaN(score) || !post_id) return null;
     return { score, post_id };
   } catch {
     return null;

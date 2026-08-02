@@ -225,7 +225,7 @@ ${letterData.content || ''}
 
     // Pre-fill the email form
     setEmailTo(letterData.to.name ? `${letterData.to.name} <${letterData.to.email || ''}>` : '');
-    setEmailSubject(letterData.subject || `${letterType.charAt(0).toUpperCase() + letterType.slice(1)} Letter`);
+    setEmailSubject(letterData.subject || `${letterType[0].toUpperCase() + letterType.slice(1)} Letter`);
     setEmailContent('');
 
     setShowEmailDialog(true);

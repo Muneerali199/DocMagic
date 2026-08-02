@@ -606,7 +606,7 @@ export function TemplatePreviewModal({
                   <div>
                     <div className="text-sm font-medium">Type</div>
                     <Badge variant="outline" className="mt-1">
-                      {template.type.charAt(0).toUpperCase() + template.type.slice(1)}
+                      {template.type[0].toUpperCase() + template.type.slice(1)}
                     </Badge>
                   </div>
                   

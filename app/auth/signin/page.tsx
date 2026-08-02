@@ -93,7 +93,7 @@ export default function SignIn() {
     } catch (error: any) {
       console.error(`${provider} sign in error:`, error);
       toast({
-        title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Sign In Failed`,
+        title: `${provider[0].toUpperCase() + provider.slice(1)} Sign In Failed`,
         description: error.message || "Failed to sign in. Please try again.",
         variant: "destructive",
       });
