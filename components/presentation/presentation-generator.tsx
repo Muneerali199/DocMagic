@@ -490,7 +490,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
             
             // Draw simple bar chart
             if (slide.charts.type === 'bar' || !slide.charts.type) {
-              const maxValue = Math.max(...slide.charts.data.map((d: any) => d.value || 0));
+              const maxValue = Math.max(...slide.charts.(data ?? []).map((d: any) => d.value || 0));
               const barWidth = (chartWidth - 40) / slide.charts.data.length;
               const chartData = slide.charts.data.slice(0, 6); // Max 6 bars
               

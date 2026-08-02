@@ -396,7 +396,7 @@ export function EnhancedEditorToolbar({ sessionId }: EnhancedEditorToolbarProps)
               </DropdownMenuItem>
               <DropdownMenuSeparator />
                           <DropdownMenuLabel className="font-semibold text-gray-900">File</DropdownMenuLabel>
-              {zoomLevels.map((level) => (
+              {(zoomLevels ?? []).map((level) => (
                 <DropdownMenuItem key={level} onClick={() => setZoom(level)}>
                   {Math.round(level * 100)}%
                 </DropdownMenuItem>
