@@ -107,6 +107,6 @@ export function registerPluginPrimitives(
 ): void {
   for (const category of Object.keys(
     CATEGORY_PRIMITIVE_IDS,
-  ).sort() as VisualizationCategory[])
+  ).sort((a, b) => a - b) as VisualizationCategory[])
     registry.register(pluginPrimitive(category, catalog));
 }
