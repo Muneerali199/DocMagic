@@ -1575,7 +1575,7 @@ export default function RealTimeGenerator() {
         .map((item) => {
           let cardText = `${item.title}\n${item.description || item.content || ""}`;
           if (item.bullets) {
-            cardText += "\n" + item.bullets.map((b) => `* ${b}`).join("\n");
+            cardText += "\n" + item.(bullets ?? []).map((b) => `* ${b}`).join("\n");
           }
           return cardText;
         })
