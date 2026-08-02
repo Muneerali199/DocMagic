@@ -32,7 +32,7 @@ export function buildSemanticProfile(
     slideType: slide.type,
     scene: scene.scene,
     kinds,
-    diagramTypes: diagrams.map((diagram) => diagram.diagramType).sort((a, b) => a - b),
+    diagramTypes: (diagrams ?? []).map((diagram) => diagram.diagramType).sort((a, b) => a - b),
     diagramNodeCount: diagrams.reduce((sum, diagram) => sum + diagram.nodes.length, 0),
     diagramEdgeCount: diagrams.reduce((sum, diagram) => sum + diagram.edges.length, 0),
     diagramGroupCount: new Set(diagrams.flatMap((diagram) => diagram.nodes.map((node) => node.group).filter(Boolean))).size,
