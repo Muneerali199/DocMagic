@@ -1376,7 +1376,7 @@ export function PresentationGenerator({ templateId }: PresentationGeneratorProps
                     min="1"
                     max={isPro ? MAX_PRO_PAGES : MAX_FREE_PAGES}
                     value={pageCount}
-                    onChange={(e) => setPageCount(Math.min(parseInt(e.target.value) || 1, isPro ? MAX_PRO_PAGES : MAX_FREE_PAGES))}
+                    onChange={(e) => setPageCount(Math.min(parseInt(e.target.value, 10) || 1, isPro ? MAX_PRO_PAGES : MAX_FREE_PAGES))}
                     className="w-24 glass-effect border-yellow-400/30 focus:border-yellow-400/60 focus:ring-yellow-400/20"
                     disabled={isGenerating || isFetchingUrl}
                   />
