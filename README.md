@@ -12,8 +12,9 @@
 
 **Create stunning resumes, presentations, letters, and diagrams with AI magic ✨**
 
- [Documentation](#-documentation) • [Contributing](#-contributing)
- > ⚠️ **Live Demo temporarily unavailable** — production deployment is currently down. See [#631](https://github.com/Muneerali199/Draftdeckai/issues/631).
+[Documentation](#-documentation) • [Contributing](#-contributing)
+
+> ⚠️ **Live Demo temporarily unavailable** — production deployment is currently down. See [#631](https://github.com/Muneerali199/Draftdeckai/issues/631).
 
 </div>
 
@@ -22,6 +23,7 @@
 ## ✨ Features
 
 ### 📄 Resume Builder
+
 - **AI-Powered Generation** - Describe your experience, get a professional resume
 - **Multiple Templates** - Modern, Professional, Creative, and ATS-optimized styles
 - **ATS Score Checker** - Ensure your resume passes Applicant Tracking Systems
@@ -29,6 +31,7 @@
 - **LinkedIn Import** - Import your LinkedIn profile to create resumes
 
 ### 🎯 Presentation Creator
+
 - **Smart Slide Generation** - Enter a topic, get a complete presentation
 - **16:9 Format** - Professional widescreen presentations
 - **Multiple Themes** - Modern, Corporate, Creative, and more
@@ -36,12 +39,14 @@
 - **Export Options** - Download as PDF or share via link
 
 ### ✉️ Letter Generator
+
 - **Multiple Types** - Cover letters, formal letters, thank you notes
 - **Job URL Import** - Paste a job listing URL for tailored cover letters
 - **Professional Templates** - Business-ready formatting
 - **AI Enhancement** - Improve tone and content with AI
 
 ### 📊 Diagram Builder
+
 - **Architecture Diagrams** - System design with subgraphs and layers
 - **Flowcharts** - Create process diagrams easily
 - **Mind Maps** - Visualize ideas and concepts
@@ -57,7 +62,8 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Supabase account (for authentication)
 
@@ -89,6 +95,14 @@ Create a `.env.local` file with these variables:
 # Supabase (Required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# ⚠️ SECURITY: SUPABASE_SERVICE_ROLE_KEY is a privileged server-only secret.
+#   - NEVER prefix it with NEXT_PUBLIC_ (that exposes it to the browser bundle)
+#   - NEVER commit .env.local to git
+#   - NEVER log it or include it in error messages
+#   - Rotate it immediately in the Supabase dashboard if it is ever exposed
+# This key bypasses all Row Level Security policies and grants full
+# read/write access to your entire database.
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # AI Provider (Required)
@@ -106,6 +120,7 @@ STRIPE_SECRET_KEY=your_stripe_key
 Run the entire application including the database with one command — no manual Node.js or PostgreSQL installation required.
 
 ### Prerequisites
+
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Setup
@@ -129,6 +144,7 @@ docker compose up
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 The setup includes:
+
 - **App Service**: Next.js with hot reload (Port 3000)
 - **Database Service**: PostgreSQL 16 (Port 5432)
 - **Shared Network**: Inter-service communication
@@ -138,16 +154,16 @@ The setup includes:
 
 ## 🏗️ Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Framework** | Next.js 14.2 (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS, shadcn/ui |
-| **Database** | Supabase (PostgreSQL) |
-| **Authentication** | Supabase Auth |
-| **AI** | Mistral AI, Google Gemini |
-| **Payments** | Stripe |
-| **Deployment** | Vercel, Netlify |
+| Category           | Technology                |
+| ------------------ | ------------------------- |
+| **Framework**      | Next.js 14.2 (App Router) |
+| **Language**       | TypeScript                |
+| **Styling**        | Tailwind CSS, shadcn/ui   |
+| **Database**       | Supabase (PostgreSQL)     |
+| **Authentication** | Supabase Auth             |
+| **AI**             | Mistral AI, Google Gemini |
+| **Payments**       | Stripe                    |
+| **Deployment**     | Vercel, Netlify           |
 
 ---
 
@@ -178,6 +194,7 @@ DraftDeckAI/
 ## 🔐 Authentication
 
 DraftDeckAI uses Supabase Auth with:
+
 - Email/Password login
 - Password reset via email
 - Protected routes with middleware
@@ -187,13 +204,13 @@ DraftDeckAI uses Supabase Auth with:
 
 ## 💳 Credits System
 
-| Action | Credits |
-|--------|---------|
-| Generate Resume | 5 |
-| Generate Presentation | 10 |
-| Generate Letter | 3 |
-| Generate Diagram | 5 |
-| ATS Score Check | 2 |
+| Action                | Credits |
+| --------------------- | ------- |
+| Generate Resume       | 5       |
+| Generate Presentation | 10      |
+| Generate Letter       | 3       |
+| Generate Diagram      | 5       |
+| ATS Score Check       | 2       |
 
 Free tier: 50 credits/month
 
@@ -202,16 +219,19 @@ Free tier: 50 credits/month
 ## 📚 Documentation
 
 ### Getting Started (⭐ Start Here!)
+
 - **[docs/SETUP.md](./docs/SETUP.md)** - 📖 Complete setup guide with step-by-step API key generation and troubleshooting
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
 
 ### Architecture & Diagrams
+
 - [docs/DARK_MODE_PERSISTENCE.md](./docs/DARK_MODE_PERSISTENCE.md) - 🌓 Detailed dark mode persistence and FOUC prevention system guide
 - [docs/architecture/ARCHITECTURE_DIAGRAM_FEATURE.md](./docs/architecture/ARCHITECTURE_DIAGRAM_FEATURE.md) - Complete guide to architecture diagrams
 - [docs/architecture/SYSTEM_ARCHITECTURE.md](./docs/architecture/SYSTEM_ARCHITECTURE.md) - Technical system architecture
 - [docs/architecture/ARCHITECTURE_IMPROVEMENTS.md](./docs/architecture/ARCHITECTURE_IMPROVEMENTS.md) - Recent improvements summary
 
 ### Other Docs
+
 - [docs/Code_of_Conduct.md](./docs/Code_of_Conduct.md) - Community standards
 - [docs/CHANGELOG.md](./docs/CHANGELOG.md) - Version history
 - [docs/FAQ.md](./docs/FAQ.md) - Frequently asked questions
@@ -229,9 +249,10 @@ npm run lint     # Run ESLint
 ```
 
 ---
+
 ## 💬 Community and Support
 
-Join our official WhatsApp group to connect with other contributors, get help with your PRs, or discuss project ideas: 
+Join our official WhatsApp group to connect with other contributors, get help with your PRs, or discuss project ideas:
 [![WhatsApp Group](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://chat.whatsapp.com/JblK45aOdv9Ao0YhnMcPcQ)
 
 ---
@@ -245,6 +266,7 @@ If you discover any security vulnerabilities, please refer to our [Security Poli
 We appreciate all contributors who help improve DraftDeckAI ❤️
 
 ### 📊 All Contributors
+
 https://github.com/Muneerali199/Draftdeckai/graphs/contributors
 
 ### 🎨 Visual Contributors
@@ -260,10 +282,12 @@ https://github.com/Muneerali199/Draftdeckai/graphs/contributors
 Contributions are welcome! We've made it easy to get started:
 
 **First-time contributors?** Start here:
+
 1. 📖 Read [docs/SETUP.md](./docs/SETUP.md) - Complete setup guide with all API keys
 2. 📚 Check [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 
 **Ready to contribute?**
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
@@ -271,6 +295,7 @@ Contributions are welcome! We've made it easy to get started:
 5. Open a Pull Request
 
 **Get help:**
+
 - Check [GitHub Issues](https://github.com/Muneerali199/DraftDeckAI/issues) for tasks
 - Look for `good first issue` label for beginner-friendly tasks
 - Join our Discord community for mentorship

@@ -113,6 +113,14 @@ export const createRoute = async () => {
 // Use ONLY in server-side cron jobs that need full database access.
 // NEVER use this in client components or expose to the browser.
 export function createSupabaseAdmin() {
+  // SUPABASE_SERVICE_ROLE_KEY bypasses all Row Level Security and grants
+  // full database access. It must never be reachable from client bundles;
+  // this guard fails fast if this function is ever called in a browser
+  // context (e.g. accidentally imported into a client component).
+  if (typeof window !== "undefined") {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY must never be used client-side");
+  }
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
