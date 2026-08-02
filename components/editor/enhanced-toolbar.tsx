@@ -203,7 +203,7 @@ export function EnhancedEditorToolbar({ sessionId }: EnhancedEditorToolbarProps)
   };
 
   const handleFontSizeChange = (value: string) => {
-    const size = parseInt(value);
+    const size = parseInt(value, 10);
     setFontSize(size);
     if (!canvas) return;
     const activeObject = canvas.getActiveObject();

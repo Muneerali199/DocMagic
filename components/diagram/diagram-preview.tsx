@@ -190,7 +190,7 @@ export function DiagramPreview({
 
         if (containerRef.current) {
           // Clear previous content
-          containerRef.current.innerHTML = "";
+          containerRef.current.textContent = "";
 
           // Create a unique ID for this diagram
           const diagramId = `mermaid-diagram-${Date.now()}`;
@@ -201,7 +201,7 @@ export function DiagramPreview({
           // Create container div with the expected ID
           const diagramContainer = document.createElement("div");
           diagramContainer.id = "mermaid-diagram";
-          diagramContainer.innerHTML = svg;
+          diagramContainer.textContent = svg;
           diagramContainer.style.display = "flex";
           diagramContainer.style.justifyContent = "center";
           diagramContainer.style.alignItems = "center";
