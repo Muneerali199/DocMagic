@@ -226,7 +226,7 @@ export class AnalyticsService {
     const { total_views, total_shares, total_downloads, avg_view_duration, total_edits } = summary;
 
     const { data: doc } = await supabase.from('documents').select('created_at').eq('id', documentId).single();
-    const ageInDays = doc ? (new Date().getTime() - new Date(doc.created_at).getTime()) / (1000 * 3600 * 24) : 0;
+    const ageInDays = doc ? (Date.now() - new Date(doc.created_at).getTime()) / (1000 * 3600 * 24) : 0;
 
     if (total_views > 50 && total_shares === 0) {
       suggestions.push({
