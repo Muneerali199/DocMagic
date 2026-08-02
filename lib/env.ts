@@ -3,7 +3,7 @@
  */
 function requireEnv(key: string): string {
   const value = process.env[key];
-  if (!value || value.trim() === '') {
+  if (!value || value.trim().length === 0) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(`[env] Required env var "${key}" is not set.`);
     }
