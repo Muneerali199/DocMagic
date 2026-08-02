@@ -75,7 +75,8 @@ export default function SubscriptionPage() {
         method: 'POST',
       });
 
-      const data = await response.json();
+      if (!response.ok) throw new Error("Request failed");
+const data = await response.json();
 
       if (data.url) {
         window.location.href = data.url;

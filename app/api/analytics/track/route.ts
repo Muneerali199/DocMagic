@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       
       // Validate duration (must be a positive number and not unreasonably large)
       const validDuration = Number(duration);
-      if (isNaN(validDuration) || validDuration < 0 || validDuration > 86400) { // Max 24 hours
+      if (Number.isNaN(validDuration) || validDuration < 0 || validDuration > 86400) { // Max 24 hours
         return NextResponse.json({ error: 'Invalid duration' }, { status: 400 });
       }
       

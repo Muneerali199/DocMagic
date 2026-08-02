@@ -170,19 +170,4 @@ export async function POST(request: Request) {
       .from('credit_usage_log')
       .insert({ user_id: user.id, credits_used: creditsRequired, action_type: action, metadata: metadata || {} })
       .then(({ error }) => { if (error) console.error('Failed to log credit usage:', error); });
-
-    return NextResponse.json({
-      success: true,
-      creditsUsed: creditsRequired,
-      creditsRemaining: reserved.credits_total - reserved.credits_used,
-      tier: credits.tier,
-    });
-
-  } catch (error) {
-    logger.error({ route: 'app/api/credits/route.ts' }, 'Credits API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to use credits' },
-      { status: 500 }
-    );
-  }
-}
+      .catch(err => console.error(err))
