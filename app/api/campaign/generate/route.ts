@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     // Generate posts for each campaign and platform
     const campaigns = await Promise.all(
-      campaignIdeas.map(async (idea: CampaignIdea) => {
+      (campaignIdeas ?? []).map(async (idea: CampaignIdea) => {
         const posts: any = {};
         
         for (const platform of selectedPlatforms) {

@@ -76,7 +76,7 @@ async function fetchLatest(
   const hasMore = rows.length > limit;
   if (hasMore) rows.pop();
 
-  const items = rows.map(mapToFeedItem);
+  const items = (rows ?? []).map(mapToFeedItem);
   const next_cursor =
     hasMore && items.length > 0
       ? encodeTimeCursor(items[items.length - 1].created_at, items[items.length - 1].id)
