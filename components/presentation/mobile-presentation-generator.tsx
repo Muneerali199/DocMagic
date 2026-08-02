@@ -649,7 +649,7 @@ export function MobilePresentationGenerator() {
           <div className="space-y-3">
             {slideOutlines &&
               slideOutlines.length > 0 &&
-              slideOutlines.map((outline, index) => (
+              (slideOutlines ?? []).map((outline, index) => (
                 <Card
                   key={index}
                   className="p-4 shadow-xl border-2 border-yellow-400/20 glass-effect hover:scale-[1.02] transition-transform"
