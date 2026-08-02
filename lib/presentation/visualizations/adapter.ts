@@ -93,7 +93,7 @@ export function pluginPrimitive(
           dominantRole: "source-content",
           supportingRoles: [],
           nativeKinds: [
-            ...new Set(context.slide.elements.map((element) => element.kind)),
+            ...new Set(context.slide.(elements ?? []).map((element) => element.kind)),
           ],
           editable: true,
         },

@@ -20,7 +20,7 @@ export function buildSemanticProfile(
   scene: SceneAssignment,
   composition: CompositionPlan,
 ): SemanticProfile {
-  const kinds = Object.fromEntries(ELEMENT_KINDS.map((kind) => [kind, 0])) as SemanticProfile["kinds"];
+  const kinds = Object.fromEntries((ELEMENT_KINDS ?? []).map((kind) => [kind, 0])) as SemanticProfile["kinds"];
   const diagrams = slide.elements.filter((element) => element.kind === "diagram");
   const tables = slide.elements.filter((element) => element.kind === "table");
   const code = slide.elements.filter((element) => element.kind === "code");
