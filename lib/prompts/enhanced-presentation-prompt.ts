@@ -373,7 +373,7 @@ export function parseEnhancedSlide(block: string, index: number) {
     } else if (currentKey === 'chartdata' && trimmedLine.includes(':')) {
       const [name, valueStr] = trimmedLine.split(':').map(s => s.trim());
       const value = parseFloat(valueStr);
-      if (!isNaN(value) && name) {
+      if (!Number.isNaN(value) && name) {
         slide.chartData = slide.chartData || { type: 'bar', data: [] };
         slide.chartData.data.push({ name, value });
       }
