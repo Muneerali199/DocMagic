@@ -2272,7 +2272,7 @@ export default function RealTimeGenerator() {
                       max="20"
                       value={slideCount}
                       onChange={(e) => {
-                        const val = parseInt(e.target.value) || 1;
+                        const val = parseInt(e.target.value, 10) || 1;
                         setSlideCount(Math.min(20, Math.max(1, val)));
                       }}
                       className="w-16 text-center bg-transparent font-bold text-lg text-foreground outline-none border-b-2 border-transparent focus:border-blue-500 transition-colors"
