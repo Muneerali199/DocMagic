@@ -44,7 +44,7 @@ export function sanitizeObject<T>(data: T): T {
   if (data === null || data === undefined) return data;
   if (typeof data === "string") return sanitizeHtml(data) as unknown as T;
   if (Array.isArray(data))
-    return data.map((item) => sanitizeObject(item)) as unknown as T;
+    return (data ?? []).map((item) => sanitizeObject(item)) as unknown as T;
   if (typeof data === "object") {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(
