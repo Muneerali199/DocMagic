@@ -242,7 +242,7 @@
         return {
             title: title || 'Problem',
             description: description || 'No description found',
-            difficulty: difficulty,
+            difficulty,
             tags: tags,
             platform: platform,
             url: window.location.href,
