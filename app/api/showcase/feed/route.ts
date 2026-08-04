@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const feedType    = (searchParams.get("type") ?? "trending") as FeedType;
   const cursorParam = searchParams.get("cursor");
-  const limitParam  = parseInt(searchParams.get("limit") ?? String(FEED_DEFAULT_LIMIT));
+  const limitParam  = parseInt(searchParams.get("limit", 10) ?? String(FEED_DEFAULT_LIMIT));
   const limit       = Math.min(limitParam, FEED_MAX_LIMIT);
 
   if (!["trending", "latest", "for-you"].includes(feedType)) {
