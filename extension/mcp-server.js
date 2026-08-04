@@ -421,7 +421,7 @@ class MCPServer {
         for (const constraint of constraints) {
             const match = constraint.match(/n\s*[<=]+\s*(\d+)/i);
             if (match) {
-                maxN = Math.max(maxN, parseInt(match[1]));
+                maxN = Math.max(maxN, parseInt(match[1], 10));
             }
         }
         

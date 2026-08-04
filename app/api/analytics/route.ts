@@ -69,3 +69,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+.catch(err => console.error("Promise.all failed:", err));
