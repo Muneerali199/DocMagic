@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const { amount, currency = 'usd', metadata = {} } = await request.json() as RequestData;
 
-    if (!amount || isNaN(amount)) {
+    if (!amount || Number.isNaN(amount)) {
       return new Response(JSON.stringify({ error: 'Invalid amount' }), {
         status: 400,
         headers: {
