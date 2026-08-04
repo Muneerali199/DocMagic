@@ -291,7 +291,7 @@
 
     async function ensureLinkedInConsent() {
         const storedConsent = await getStoredValue(LINKEDIN_CONSENT_KEY);
-        if (storedConsent === true) return true;
+        if (storedConsent ) return true;
         if (storedConsent === false) return false;
 
         return showLinkedInConsentPrompt();
