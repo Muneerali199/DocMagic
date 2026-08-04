@@ -12,7 +12,7 @@ class BadRequestError extends Error {}
 
 function optionalString(value: unknown, field: string): string | undefined {
   if (value === undefined || value === null || value === '') {
-    return undefined;
+    return;
   }
   if (typeof value !== 'string') {
     throw new BadRequestError(`${field} must be a string`);
