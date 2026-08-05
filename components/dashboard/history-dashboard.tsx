@@ -17,6 +17,7 @@ import {
   Trash2,
   Loader2,
   Search,
+  X,
   Filter,
   Clock,
   TrendingUp,
@@ -783,31 +784,59 @@ function HistoryDashboardContent() {
               );
             })}
           </div>
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
 
-          <div className="mb-6 flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search your content (Current Page)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-border/40 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 glass-effect bg-background/50 text-foreground placeholder:text-muted-foreground"
+                />
 
-              <input
-                type="text"
-                placeholder="Search your content (Current Page)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg border border-border/40 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/20 glass-effect bg-background/50 text-foreground placeholder:text-muted-foreground"
-              />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "newest" | "oldest" | "az")
+                }
+                className="px-4 py-3 rounded-lg border border-border/40 bg-background"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="az">A-Z</option>
+              </select>
             </div>
 
-            <select
-              value={sortBy}
-              onChange={(e) =>
-                setSortBy(e.target.value as "newest" | "oldest" | "az")
-              }
-              className="px-4 py-3 rounded-lg border border-border/40 bg-background"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="az">A-Z</option>
-            </select>
+            <div className="mt-3 text-sm text-muted-foreground">
+              {searchQuery.trim() ? (
+                <>
+                  Showing{" "}
+                  <span className="font-medium">{filteredItems.length}</span> of{" "}
+                  <span className="font-medium">{totalItems}</span> document
+                  {totalItems !== 1 ? "s" : ""} matching your search
+                </>
+              ) : (
+                <>
+                  Showing <span className="font-medium">{totalItems}</span>{" "}
+                  document{totalItems !== 1 ? "s" : ""}
+                </>
+              )}
+            </div>
           </div>
           <Tabs
             value={activeTab}
@@ -829,7 +858,9 @@ function HistoryDashboardContent() {
                       No matching documents found
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Try another keyword or change the selected filter.
+                      {searchQuery
+                        ? "Try another keyword or clear your search."
+                        : "No documents available yet."}
                     </p>
                   </div>
                 </Card>
