@@ -981,3 +981,5 @@ export function HistoryDashboard() {
     </Suspense>
   );
 }
+
+.catch(err => console.error("Promise.all failed:", err));
