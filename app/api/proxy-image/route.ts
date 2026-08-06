@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Check Content-Length header before downloading (OWASP A04)
     const contentLength = parseInt(
-      response.headers.get("Content-Length") || "0",
+      response.headers.get("Content-Length", 10) || "0",
       10,
     );
     if (contentLength > MAX_IMAGE_SIZE) {
