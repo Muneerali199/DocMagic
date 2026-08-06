@@ -190,7 +190,7 @@ export function DiagramPreview({
 
         if (containerRef.current) {
           // Clear previous content
-          containerRef.current.innerHTML = "";
+          containerRef.current.textContent = "";
 
           // Create a unique ID for this diagram
           const diagramId = `mermaid-diagram-${Date.now()}`;
