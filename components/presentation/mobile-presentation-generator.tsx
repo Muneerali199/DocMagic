@@ -537,7 +537,7 @@ export function MobilePresentationGenerator() {
                     value={pageCount}
                     onChange={(e) =>
                       setPageCount(
-                        Math.min(parseInt(e.target.value) || 3, MAX_FREE_PAGES),
+                        Math.min(parseInt(e.target.value, 10) || 3, MAX_FREE_PAGES),
                       )
                     }
                     className="w-20 text-center border-gray-200"
