@@ -156,7 +156,7 @@ export const ResumePreview = forwardRef<ResumePreviewRef, ResumePreviewProps>(
         current = current[path[i]];
       }
       
-      current[path[path.length - 1]] = value;
+      current[path.at(-1)] = value;
       if (onChange) onChange(newResume);
       return newResume;
     });
