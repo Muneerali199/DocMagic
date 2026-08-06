@@ -259,3 +259,5 @@ Theme: ${idea.hook}.
 Include: subtle branding elements, engaging visual metaphor.
 No text overlay needed.`;
 }
+
+.catch(err => console.error("Promise.all failed:", err));
