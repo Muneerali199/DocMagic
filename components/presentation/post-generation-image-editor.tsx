@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 interface ImageEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  // duplicate key slideIndex removed
   slideIndex: number;
   slideTitle: string;
   slideContent: string;
