@@ -79,7 +79,7 @@ async function fetchLatest(
   const items = rows.map(mapToFeedItem);
   const next_cursor =
     hasMore && items.length > 0
-      ? encodeTimeCursor(items[items.length - 1].created_at, items[items.length - 1].id)
+      ? encodeTimeCursor(items.at(-1).created_at, items[items.length - 1].id)
       : null;
 
   return { items, next_cursor };
