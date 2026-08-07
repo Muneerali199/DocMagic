@@ -127,7 +127,7 @@ async function retryWithBackoff<T>(
       // If it's a quota error, wait longer
       if (error.status === 429) {
         const retryDelay = error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay;
-        const waitTime = retryDelay ? parseInt(retryDelay) * 1000 : initialDelay * Math.pow(2, i);
+        const waitTime = retryDelay ? parseInt(retryDelay, 10) * 1000 : initialDelay * Math.pow(2, i);
         
         
         await new Promise(resolve => setTimeout(resolve, waitTime));
